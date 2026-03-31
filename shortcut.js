@@ -1,4 +1,9 @@
+const crypto = require("crypto");
 const actionsData = require("./actions.json");
+
+function uuid() {
+  return crypto.randomUUID().toUpperCase();
+}
 
 function parseActionValue(raw) {
   return raw.split("\n").filter(Boolean).map((line) => JSON.parse(line));
@@ -64,17 +69,15 @@ class Shortcut {
       throw new Error(`Unknown action: "${actionName}". Use searchActions() to find valid names.`);
     }
     const base = resolved.variants[0];
+    const mergedParams = {
+      ...(base.WFWorkflowActionParameters || {}),
+      ...params,
+      UUID: uuid(),
+    };
     const action = {
       WFWorkflowActionIdentifier: base.WFWorkflowActionIdentifier,
-      WFWorkflowActionParameters: {
-        ...(base.WFWorkflowActionParameters || {}),
-        ...params,
-      },
+      WFWorkflowActionParameters: mergedParams,
     };
-    // Remove empty params object
-    if (Object.keys(action.WFWorkflowActionParameters).length === 0) {
-      delete action.WFWorkflowActionParameters;
-    }
     this.actions.push(action);
     return this;
   }
@@ -88,33 +91,42 @@ class Shortcut {
   }
 
   // -- Control flow helpers --
+  // All control flow blocks share a GroupingIdentifier UUID to link begin/else/end.
+
+  _controlFlow(identifier, mode, groupId, extraParams = {}) {
+    this.actions.push({
+      WFWorkflowActionIdentifier: identifier,
+      WFWorkflowActionParameters: {
+        GroupingIdentifier: groupId,
+        UUID: uuid(),
+        WFControlFlowMode: mode,
+        ...extraParams,
+      },
+    });
+  }
 
   /**
-   * Begin an if block. condition can include WFCondition, WFInput, etc.
+   * Begin an if block. Returns a groupId needed by otherwise() and ifEnd().
    */
   ifBegin(conditionParams = {}) {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.conditional",
-      WFWorkflowActionParameters: { WFControlFlowMode: 0, ...conditionParams },
-    });
+    const groupId = uuid();
+    this._groupStack = this._groupStack || [];
+    this._groupStack.push({ type: "if", groupId });
+    this._controlFlow("is.workflow.actions.conditional", 0, groupId, conditionParams);
     return this;
   }
 
   /** Otherwise (else) branch */
   otherwise() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.conditional",
-      WFWorkflowActionParameters: { WFControlFlowMode: 1 },
-    });
+    const group = this._groupStack[this._groupStack.length - 1];
+    this._controlFlow("is.workflow.actions.conditional", 1, group.groupId);
     return this;
   }
 
   /** End if block */
   ifEnd() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.conditional",
-      WFWorkflowActionParameters: { WFControlFlowMode: 2 },
-    });
+    const group = this._groupStack.pop();
+    this._controlFlow("is.workflow.actions.conditional", 2, group.groupId);
     return this;
   }
 
@@ -135,19 +147,17 @@ class Shortcut {
 
   /** Begin a repeat N times loop */
   repeatBegin(count) {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.repeat.count",
-      WFWorkflowActionParameters: { WFControlFlowMode: 0, WFRepeatCount: count },
-    });
+    const groupId = uuid();
+    this._groupStack = this._groupStack || [];
+    this._groupStack.push({ type: "repeat", groupId });
+    this._controlFlow("is.workflow.actions.repeat.count", 0, groupId, { WFRepeatCount: count });
     return this;
   }
 
   /** End repeat loop */
   repeatEnd() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.repeat.count",
-      WFWorkflowActionParameters: { WFControlFlowMode: 2 },
-    });
+    const group = this._groupStack.pop();
+    this._controlFlow("is.workflow.actions.repeat.count", 2, group.groupId);
     return this;
   }
 
@@ -164,49 +174,42 @@ class Shortcut {
 
   /** Begin a repeat with each loop */
   repeatEachBegin() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.repeat.each",
-      WFWorkflowActionParameters: { WFControlFlowMode: 0 },
-    });
+    const groupId = uuid();
+    this._groupStack = this._groupStack || [];
+    this._groupStack.push({ type: "repeatEach", groupId });
+    this._controlFlow("is.workflow.actions.repeat.each", 0, groupId);
     return this;
   }
 
   /** End repeat with each loop */
   repeatEachEnd() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.repeat.each",
-      WFWorkflowActionParameters: { WFControlFlowMode: 2 },
-    });
+    const group = this._groupStack.pop();
+    this._controlFlow("is.workflow.actions.repeat.each", 2, group.groupId);
     return this;
   }
 
   /** Begin a menu with a prompt */
   menuBegin(prompt = "") {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.choosefrommenu",
-      WFWorkflowActionParameters: {
-        WFControlFlowMode: 0,
-        ...(prompt ? { WFMenuPrompt: prompt } : {}),
-      },
-    });
+    const groupId = uuid();
+    this._groupStack = this._groupStack || [];
+    this._groupStack.push({ type: "menu", groupId });
+    this._controlFlow("is.workflow.actions.choosefrommenu", 0, groupId,
+      prompt ? { WFMenuPrompt: prompt } : {});
     return this;
   }
 
   /** Add a menu item/case */
   menuItem(title) {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.choosefrommenu",
-      WFWorkflowActionParameters: { WFControlFlowMode: 1, WFMenuItemTitle: title },
-    });
+    const group = this._groupStack[this._groupStack.length - 1];
+    this._controlFlow("is.workflow.actions.choosefrommenu", 1, group.groupId,
+      { WFMenuItemTitle: title });
     return this;
   }
 
   /** End menu */
   menuEnd() {
-    this.actions.push({
-      WFWorkflowActionIdentifier: "is.workflow.actions.choosefrommenu",
-      WFWorkflowActionParameters: { WFControlFlowMode: 2 },
-    });
+    const group = this._groupStack.pop();
+    this._controlFlow("is.workflow.actions.choosefrommenu", 2, group.groupId);
     return this;
   }
 
@@ -228,7 +231,7 @@ class Shortcut {
   comment(text) {
     this.actions.push({
       WFWorkflowActionIdentifier: "is.workflow.actions.comment",
-      WFWorkflowActionParameters: { WFCommentActionText: text },
+      WFWorkflowActionParameters: { WFCommentActionText: text, UUID: uuid() },
     });
     return this;
   }
