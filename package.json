@@ -1,7 +1,7 @@
 {
   "name": "shortcut-tools",
   "version": "1.0.0",
-  "description": "Search and look up iOS/macOS Shortcuts actions by name or identifier",
+  "description": "Search, look up, and programmatically build iOS/macOS Shortcuts",
   "main": "index.js",
   "bin": {
     "shortcut-tools": "./cli.js"
@@ -17,6 +17,7 @@
   "license": "MIT",
   "files": [
     "index.js",
+    "shortcut.js",
     "cli.js",
     "actions.json",
     "actions-grouped.json"

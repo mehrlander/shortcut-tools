@@ -75,6 +75,8 @@ function listActions() {
   return Array.from(allActions.keys());
 }
 
+const { Shortcut } = require("./shortcut");
+
 module.exports = {
   getAction,
   searchActions,
@@ -82,4 +84,5 @@ module.exports = {
   listApps,
   listActions,
   allActions,
+  Shortcut,
 };

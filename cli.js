@@ -13,14 +13,24 @@ Usage:
   shortcut-tools get <name>        Get exact action by name
   shortcut-tools apps              List all app sources
   shortcut-tools app <id>          List actions for a specific app
-  shortcut-tools help              Show this help message
+  shortcut-tools demo               Build a demo .shortcut file
+  shortcut-tools help               Show this help message
 
 Examples:
   shortcut-tools search screenshot
   shortcut-tools search safari
   shortcut-tools get takescreenshot
   shortcut-tools apps
-  shortcut-tools app com.apple.mobilesafari`);
+  shortcut-tools app com.apple.mobilesafari
+  shortcut-tools demo
+
+Programmatic usage:
+  const { Shortcut } = require("shortcut-tools");
+  const s = new Shortcut("My Shortcut");
+  s.add("getclipboard")
+   .add("replacetext", { WFFind: "hello", WFReplaceWith: "world" })
+   .add("setclipboard")
+   .export("my-shortcut.shortcut");`);
 }
 
 function formatVariant(v) {
@@ -100,6 +110,36 @@ switch (command) {
     }
     console.log(`${actions.length} actions in ${appId}:\n`);
     actions.forEach((a) => console.log(`  ${a}`));
+    break;
+  }
+
+  case "demo": {
+    const { Shortcut } = require("./shortcut");
+    const s = new Shortcut("Demo Shortcut");
+
+    s.comment("This shortcut was built programmatically with shortcut-tools!")
+     .add("askforinput", { WFAskActionPrompt: "What's your name?" })
+     .add("setvariable", { WFVariableName: "Name" })
+     .add("getclipboard")
+     .add("replacetext")
+     .menu("What do you want to do?", {
+       "Show Notification": (s) => {
+         s.add("shownotification", { WFNotificationActionBody: "Hello!" });
+       },
+       "Speak It": (s) => {
+         s.add("speaktext");
+       },
+       "Do Nothing": () => {},
+     })
+     .repeat(3, (s) => {
+       s.add("vibrate");
+     });
+
+    const outPath = args[1] || "demo.shortcut";
+    s.export(outPath);
+    console.log(`Built "${s.name}" with ${s.actions.length} actions`);
+    console.log(`Exported to: ${outPath}`);
+    console.log(`\nAirDrop this file to your iPhone/iPad to install it!`);
     break;
   }
 
