@@ -1,0 +1,8 @@
+{
+  "icon": "ph-lightning",
+  "estate": true,
+  "group": "tools",
+  "order": 40,
+  "quickLink": true,
+  "note": "Apple Shortcuts action reference dataset and tooling."
+}
