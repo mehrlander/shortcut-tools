@@ -1,27 +1,15 @@
 ---
 id: land-grouped-action-taxonomy-r79gj3
-title: Reconcile actions-grouped.json with the dictionary
+title: Make apps and app return usable action names
 status: backlog
 opened: 2026-08-09
 ---
-# Reconcile actions-grouped.json with the dictionary
+# Make apps and app return usable action names
 
-**Reframed 2026-08-09.** This was filed as "land the grouped action taxonomy,"
-on the belief that `actions-grouped.json` was a coarse but correct grouping of
-`actions.json` that wanted a better schema. It is not a grouping of it at all.
-
-The two files use **different key vocabularies**. Measured:
-
-- `actions.json`: 810 keys, lowercase action names (`takescreenshot`).
-- `actions-grouped.json`: 745 keys, mostly intent class names
-  (`NewChartIntent`, `AXToggleZoomIntent`) and short aliases (`gettext`,
-  `notification`, `conditional:if`).
-- **99 keys appear in both.** 711 dictionary entries are absent from the
-  grouped file; 646 grouped names do not exist in the dictionary.
-
-So the grouped file is a second, differently-keyed dataset, not a view of the
-first. That has a user-visible consequence today, since `listApps` and
-`getActionsByApp` (and the CLI's `apps` and `app`) read it:
+`listApps` and `getActionsByApp`, and the CLI's `apps` and `app` behind them,
+return the **leaf segment** of an action identifier rather than the action name
+the rest of the tool is keyed by. So the tool hands you a name it cannot itself
+resolve:
 
 ```
 $ shortcut-tools app com.brogrammers.charty
@@ -30,34 +18,36 @@ $ shortcut-tools get AccumulateValuesIntent
 Action "accumulatevalueintent" not found
 ```
 
-A name the CLI hands you usually cannot be passed back into the CLI. The README
-now carries the caveat, which is a patch over the problem, not a fix.
+The fix is a projection. `actions-grouped.json` decomposes each identifier into
+bundle root, source, and leaf, so reassembling `root.source.leaf` yields the
+identifier, and the identifier yields the dictionary name. Prototyped on
+2026-08-09: `AccumulateValuesIntent` resolves to `accumulatevalues` for all 792
+entries with no misses.
 
-The decision this task exists to make, and it is a fork rather than a
-refinement:
+The decision is what those commands should return, since all three are now
+cheap:
 
-1. **Rekey the grouped file onto the dictionary's names**, making it a true
-   view, and accept losing the 646 names with no dictionary entry. Cheapest,
-   and makes `app` output usable.
-2. **Treat it as a second dataset** and say so: rename it, document its
-   vocabulary, and split the API so `listApps` no longer looks like a sibling of
-   `getAction`. Honest, keeps the data, more work.
-3. **Absorb the 646 into `actions.json`** if their identifiers can be recovered,
-   then rekey. Largest, and only viable if those names carry enough to
-   reconstruct an identifier.
+1. **The action name** (`accumulatevalues`). Feeds straight back into `get` and
+   `add()`. Loses the intent class name, which is the more legible label.
+2. **Both**, as `accumulatevalues (AccumulateValuesIntent)`. Most informative,
+   and the CLI is already a human-facing surface. Changes the library return
+   shape from `string[]` to objects, which is a breaking change for
+   `getActionsByApp`.
+3. **The full identifier**. Unambiguous and useful for building, but longer, and
+   still not what `get` takes.
 
-Only after that is settled does the original domain-taxonomy question apply:
-grouping by domain (primitives, media, filter, communication, speech) rather
-than by bundle prefix, which the identifiers already encode. That design was
-worked out in October 2025 and revisited in March 2026, and both sessions ended
-without a schema locked. The open sub-question there is third-party bundles:
-138 Sindre Sorhus and 47 Actions for Obsidian entries do not decompose into the
-same domains as Apple's built-ins.
+Recommendation: 2 for the CLI, 1 for the library, so the human surface stays
+legible and the programmatic one stays composable.
 
-**Done when** the two files' relationship is stated in one place and enforced by
-a check, `apps` and `app` return names usable elsewhere in the tool or are
-documented as a separate vocabulary by design, and the README's caveat can be
-deleted rather than merely explaining the problem.
+Once that lands, the older question is worth revisiting on its own: whether the
+grouped file should also carry a **domain** taxonomy (primitives, media, filter,
+communication, speech) rather than only the bundle decomposition, which the
+identifiers already encode. That design was worked out in October 2025 and
+revisited in March 2026 and never locked. It is a separate outcome from this
+one and should be a separate task if it is wanted.
+
+**Done when** a name returned by `apps` or `app` can be passed to `get` and to
+`Shortcut.add()`, and the README caveat is deleted rather than explained.
 
 Sources: [Apple Shortcuts action dictionary catalogued and reorganized](https://claude.ai/chat/1d7cd64b-78f9-402c-9285-76c4a0214ee5)
 (2025-10-04) and [Apple Shortcut actions dictionary formatting](https://claude.ai/chat/633cf7cd-3fd2-48df-970e-fee34951d483)
@@ -66,7 +56,13 @@ Sources: [Apple Shortcuts action dictionary catalogued and reorganized](https://
 ## Progress log
 - 2026-08-09: Filed, from the Apple Shortcuts storyline in the `chat-histories`
   archive.
-- 2026-08-09: Reframed. The premise was wrong: the files do not share a key
-  vocabulary, so this is a reconciliation decision, not a schema exercise. Found
-  while documenting the CLI for `document-library-api-and-cli-lqkb9f`; the
-  counts above are measured against the files as committed.
+- 2026-08-09: Reframed as a reconciliation fork, on the finding that the two
+  files shared only 99 keys.
+- 2026-08-09: **That reframing was wrong and is retracted.** It compared the
+  dictionary's action names against the grouped file's leaf segments, which
+  differ by construction. Reconstructing `root.source.leaf` gives 792
+  identifiers covering all 774 in the dictionary, 792 of 792 resolving to a
+  name, zero missing. The files correspond exactly, and the grouped file is the
+  more precise on control flow, carrying suffixed forms (`conditional:if`) the
+  flat dictionary collapses. Held by `test/grouped.test.js` from PR #6. What
+  remains is the projection above, and the task is narrowed to it.

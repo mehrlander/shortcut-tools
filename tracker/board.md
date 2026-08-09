@@ -3,7 +3,7 @@
 _Generated from tasks/. Do not hand-edit._
 
 ## On deck
-- 🎫 [Reconcile actions-grouped.json with the dictionary](tasks/land-grouped-action-taxonomy-r79gj3.md)
+- 🎫 [Make apps and app return usable action names](tasks/land-grouped-action-taxonomy-r79gj3.md)
 - 🎫 [Validate that a generated shortcut imports on device](tasks/validate-builder-round-trip-zqposq.md)
 
 ## In progress
