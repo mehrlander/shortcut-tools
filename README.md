@@ -65,13 +65,14 @@ takescreenshot:
   identifier: is.workflow.actions.takescreenshot
 ```
 
-> **`apps` and `app` read a different namespace.** They are backed by
-> `actions-grouped.json`, whose keys are mostly intent class names
-> (`NewChartIntent`) and short aliases (`gettext`, `conditional:if`), not the
-> keys in `actions.json`. Only 99 of its 745 names also exist in the
-> dictionary, so a name from `app` usually **cannot** be passed to `get` or to
-> `Shortcut.add()`. Treat those two commands as a catalog of what exists, not
-> as a source of usable names. Tracked in [`tracker/`](tracker/board.md).
+> **`apps` and `app` print identifier segments, not action names.**
+> `actions-grouped.json` decomposes each `WFWorkflowActionIdentifier` into
+> bundle root, source, and leaf, and `app` prints the **leaf**. So
+> `app com.brogrammers.charty` gives `AccumulateValuesIntent`, which `get`
+> cannot find, because the dictionary is keyed by action name
+> (`accumulatevalues`). The two files describe the same 774 identifiers and
+> correspond exactly; only the projection at the API boundary is wrong.
+> Tracked in [`tracker/`](tracker/board.md).
 
 ## Library
 
