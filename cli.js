@@ -103,13 +103,16 @@ switch (command) {
       console.error("Error: provide an app identifier");
       process.exit(1);
     }
-    const actions = getActionsByApp(appId);
+    const actions = getActionsByApp(appId, { detailed: true });
     if (!actions) {
       console.log(`App "${appId}" not found`);
       process.exit(1);
     }
     console.log(`${actions.length} actions in ${appId}:\n`);
-    actions.forEach((a) => console.log(`  ${a}`));
+    actions.forEach(({ name, leaf, identifier }) => {
+      if (name) console.log(`  ${name}  (${leaf})`);
+      else console.log(`  ${identifier}  (no unambiguous action name)`);
+    });
     break;
   }
 

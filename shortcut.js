@@ -407,4 +407,4 @@ ${body}
 `;
 }
 
-module.exports = { Shortcut };
+module.exports = { Shortcut, buildXMLPlist };
