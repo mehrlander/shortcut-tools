@@ -12,14 +12,33 @@ validity is not importability: a file can be well-formed plist and still carry a
 wrong identifier, an unpaired control-flow block, or a missing key the app
 requires.
 
-Specific things a round trip would settle, none of which is currently known:
+## What the archive already settled
 
-- Whether the hardcoded `WFWorkflowMinimumClientVersion` of 900 and
-  `WFWorkflowClientVersion` of `2302.0.4` are accepted by current iOS.
-- Whether `WFWorkflowTypes: ["NCWidget", "WatchKit"]`, set on every shortcut the
-  builder emits, is right as a default.
-- Whether a shortcut built entirely through the control-flow helpers imports
-  with its blocks intact.
+26 chats in the `chat-histories` archive carry a workflow envelope, four of them
+real device exports rather than model-generated examples. Comparing the
+builder's `build()` against those, measured 2026-08-09:
+
+| Key | Builder emits | Real exports | Verdict |
+| --- | --- | --- | --- |
+| `WFWorkflowMinimumClientVersion` | `900` | `900` in every real export | correct |
+| `WFWorkflowMinimumClientVersionString` | `"900"` | `"900"` | correct |
+| `WFWorkflowClientVersion` | `"2302.0.4"` | `2605.0.5`, `3607.0.2`, `3612.0.2.1`, `4033.0.3.5` | **not observed anywhere** |
+| `WFWorkflowTypes` | `["NCWidget", "WatchKit"]` | `Watch`, `ActionExtension`, `WFWorkflowTypeShowInSearch`, `NCWidget` | **`WatchKit` not observed** |
+| envelope key set | 12 keys | same 12, `WFQuickActionSurfaces` and `WFWorkflowName` included | correct |
+
+`WatchKit` occurs twice in the whole corpus and both are model-generated. One is
+a near-exact template for the builder's envelope, carrying
+`WFWorkflowClientVersion: "1095"` and `WFWorkflowClientRelease: "3.1.1"`, which
+is Shortcuts 3.1.1, iOS 13, 2019. Real exports use `Watch`. The likely history
+is that the envelope was copied from that model-generated example rather than
+from an export, which would explain both discrepancies at once.
+
+So two values are suspect on evidence, and the device test is now a narrow
+confirmation rather than an open question:
+
+- Does an import succeed with `WatchKit` present, or must it be `Watch`?
+- Does a `WFWorkflowClientVersion` older than any observed release still import?
+- Do blocks built through the helpers survive the round trip intact?
 
 The method that worked before was to generate the plist, stamp the pasteboard
 UTI through the Actions app, and paste into the editor. That route is documented
@@ -34,3 +53,9 @@ plus any corrections to the builder's defaults are recorded here.
 ## Progress log
 - 2026-08-09: Filed. The builder's hardcoded version and type defaults are in
   `shortcut.js` `build()`.
+- 2026-08-09: Narrowed by evidence. Mined 26 workflow envelopes from the
+  `chat-histories` archive, four of them real exports, and compared them to
+  `build()`. `WFWorkflowMinimumClientVersion` 900 is confirmed correct.
+  `WatchKit` and `WFWorkflowClientVersion` `2302.0.4` appear in no real export
+  and both trace to a 2019-vintage model-generated template. Table added above.
+  The device test is now a confirmation of two specific values.
