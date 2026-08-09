@@ -14,6 +14,36 @@ for (const [name, raw] of Object.entries(actionsData.actions)) {
   actionMap.set(name, parseActionValue(raw));
 }
 
+/**
+ * Control-flow identifiers, mapped to the helpers that build them correctly.
+ *
+ * A block is three or more sibling actions sharing a GroupingIdentifier and
+ * differing in WFControlFlowMode (0 opens, 1 marks a middle branch or menu
+ * case, 2 closes). No entry in actions.json carries a GroupingIdentifier, so
+ * add() cannot produce a paired block and must refuse rather than emit a
+ * dangling opener. See docs/shortcuts-format-notes.md.
+ */
+const CONTROL_FLOW_HELPERS = {
+  "is.workflow.actions.conditional":
+    'ifBegin(params, "<name>")/otherwise()/ifEnd(), which takes this action name ' +
+    "as a preset, or ifElse()",
+  "is.workflow.actions.repeat.count": "repeatBegin()/repeatEnd(), or repeat()",
+  "is.workflow.actions.repeat.each": "repeatEachBegin()/repeatEachEnd()",
+  "is.workflow.actions.choosefrommenu": "menuBegin()/menuItem()/menuEnd(), or menu()",
+};
+
+function controlFlowHelperFor(variants) {
+  for (const variant of variants) {
+    const helper = CONTROL_FLOW_HELPERS[variant.WFWorkflowActionIdentifier];
+    if (helper) return helper;
+    if (variant.WFWorkflowActionParameters &&
+        "WFControlFlowMode" in variant.WFWorkflowActionParameters) {
+      return "the matching control-flow helper";
+    }
+  }
+  return null;
+}
+
 function resolveAction(name) {
   const key = name.toLowerCase().replace(/[\s_-]/g, "");
   const variants = actionMap.get(key);
@@ -68,6 +98,16 @@ class Shortcut {
     if (!resolved) {
       throw new Error(`Unknown action: "${actionName}". Use searchActions() to find valid names.`);
     }
+    const helper = controlFlowHelperFor(resolved.variants);
+    if (helper) {
+      throw new Error(
+        `"${actionName}" resolves to the control-flow action ` +
+        `"${resolved.variants[0].WFWorkflowActionIdentifier}" (matched as "${resolved.key}"). ` +
+        `add() cannot build a block: the parts must share a GroupingIdentifier, ` +
+        `and actions.json carries none. Use ${helper}. ` +
+        `To bypass this deliberately, use addRaw() and supply the grouping yourself.`
+      );
+    }
     const base = resolved.variants[0];
     const mergedParams = {
       ...(base.WFWorkflowActionParameters || {}),
@@ -106,13 +146,36 @@ class Shortcut {
   }
 
   /**
-   * Begin an if block. Returns a groupId needed by otherwise() and ifEnd().
+   * Begin an if block.
+   *
+   * `preset` optionally names one of the dictionary's pre-configured
+   * conditionals (ifclipboardcontains, ifcurrentdateisbefore, ...), whose
+   * WFInput and WFCondition are merged in first. Every one of them is
+   * is.workflow.actions.conditional underneath, so otherwise() and ifEnd()
+   * close them unchanged.
    */
-  ifBegin(conditionParams = {}) {
+  ifBegin(conditionParams = {}, preset) {
     const groupId = uuid();
     this._groupStack = this._groupStack || [];
     this._groupStack.push({ type: "if", groupId });
-    this._controlFlow("is.workflow.actions.conditional", 0, groupId, conditionParams);
+    let base = {};
+    if (preset) {
+      const resolved = resolveAction(preset);
+      if (!resolved) {
+        throw new Error(`Unknown conditional preset: "${preset}".`);
+      }
+      const variant = resolved.variants[0];
+      if (variant.WFWorkflowActionIdentifier !== "is.workflow.actions.conditional") {
+        throw new Error(
+          `"${preset}" is not a conditional preset; it resolves to ` +
+          `"${variant.WFWorkflowActionIdentifier}".`
+        );
+      }
+      base = { ...(variant.WFWorkflowActionParameters || {}) };
+      delete base.WFControlFlowMode;
+    }
+    this._controlFlow("is.workflow.actions.conditional", 0, groupId,
+      { ...base, ...conditionParams });
     return this;
   }
 
@@ -134,8 +197,8 @@ class Shortcut {
    * Convenience: if/else/end with builder callbacks.
    * shortcut.ifElse(condition, s => { s.add(...) }, s => { s.add(...) })
    */
-  ifElse(conditionParams, ifBranch, elseBranch) {
-    this.ifBegin(conditionParams);
+  ifElse(conditionParams, ifBranch, elseBranch, preset) {
+    this.ifBegin(conditionParams, preset);
     if (ifBranch) ifBranch(this);
     if (elseBranch) {
       this.otherwise();

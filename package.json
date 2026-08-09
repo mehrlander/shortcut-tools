@@ -6,6 +6,9 @@
   "bin": {
     "shortcut-tools": "./cli.js"
   },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  },
   "keywords": [
     "shortcuts",
     "apple",
