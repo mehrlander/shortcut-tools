@@ -20,6 +20,12 @@ A dictionary of iOS/macOS Shortcuts actions mapped to their internal workflow id
 
 Each key is a lowercase action name. Each value is a JSON-encoded string containing at minimum a `WFWorkflowActionIdentifier`. 38 of the 810 actions also include `WFWorkflowActionParameters` with pre-configured parameter templates.
 
+One entry, `choosefrommenu`, holds **three** newline-separated JSON objects rather than one, being a menu opener and two sample cases. `JSON.parse` on that value throws. Split on `\n` first, as `parseActionValue` in `index.js` and `shortcut.js` does.
+
+## Format notes
+
+[`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md) records what is known about the `.shortcut` plist format itself: how control-flow blocks pair through `GroupingIdentifier` and `WFControlFlowMode`, how variable references bind by producing UUID, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`. Apple does not document the format, so that file is the reference.
+
 ## Action Sources
 
 | Source | Actions | Description |
