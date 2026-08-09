@@ -1,8 +1,10 @@
 ---
 id: document-library-api-and-cli-lqkb9f
 title: Document the library API and CLI in the README
-status: backlog
+status: done
 opened: 2026-08-09
+closed: 2026-08-09
+session: claude/shortcut-tools-tracker-cpc8d7
 ---
 # Document the library API and CLI in the README
 
@@ -31,3 +33,10 @@ the package rather than only the dataset.
 ## Progress log
 - 2026-08-09: Filed. Surface enumerated by reading `index.js`, `cli.js`, and
   `shortcut.js` on this branch.
+- 2026-08-09: Done on `claude/shortcut-tools-tracker-cpc8d7`. The README now
+  carries a CLI table for all six commands, a library reference for every
+  export, and the two surprising behaviors: lookups return an array of variants,
+  and `add()`'s fuzzy fallback resolves `gettext` to `gettextfrompdf`. 6 API
+  tests added, one holding the README's opening example. Writing it surfaced the
+  `actions-grouped.json` namespace split, which reframed
+  `land-grouped-action-taxonomy-r79gj3` rather than being filed separately.
