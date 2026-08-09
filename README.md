@@ -20,6 +20,10 @@ A dictionary of iOS/macOS Shortcuts actions mapped to their internal workflow id
 
 Each key is a lowercase action name. Each value is a JSON-encoded string containing at minimum a `WFWorkflowActionIdentifier`. 38 of the 810 actions also include `WFWorkflowActionParameters` with pre-configured parameter templates.
 
+## Execution notes
+
+The action dictionary and builder describe how Shortcuts are serialized. [`docs/dataflow.md`](docs/dataflow.md) records observed runtime behavior that matters when constructing them efficiently, including implicit value passthrough through compact `If` actions and switch-like conditional chains.
+
 ## Action Sources
 
 | Source | Actions | Description |
