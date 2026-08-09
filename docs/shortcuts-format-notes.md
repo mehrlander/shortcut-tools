@@ -44,31 +44,28 @@ block that shared `GroupingIdentifier` `A7708770-4D68-41BE-B91B-F9E3CB301AE6`.
 
 ### The consequence for this repo
 
-`Shortcut.add()` is not safe for control-flow actions, and this is a live
-defect rather than a theoretical one. Run it and read the output:
+`Shortcut.add()` could not build a block, and used to try anyway. 38 entries in
+`actions.json` carry a `WFControlFlowMode`, and **not one carries a
+`GroupingIdentifier`**, so nothing `add()` could read would let it pair a block.
+Before the guard, `add('repeat')` emitted a mode-0 opener with no grouping and
+no closer, and `add('choosefrommenu')` took `variants[0]` and silently dropped
+the two other variants stored under that key.
+
+`add()` now refuses any action whose resolved variant is control flow, naming
+the helper to use instead. The dedicated helpers (`ifBegin`/`otherwise`/`ifEnd`,
+`repeatBegin`/`repeatEnd`, `menuBegin`/`menuItem`/`menuEnd`, and the
+`ifElse`/`repeat`/`menu` wrappers) mint a shared `GroupingIdentifier` and are
+the correct path. `addRaw()` remains the deliberate bypass.
+
+The 30 pre-configured conditionals in the dictionary (`ifclipboardcontains`,
+`ifcurrentdateisbefore`, and the rest) are all
+`is.workflow.actions.conditional` with a pre-filled `WFInput` and
+`WFCondition`, so `ifBegin` takes one by name as a preset and `ifEnd` closes it
+unchanged:
 
 ```js
-const s = new Shortcut('probe')
-s.add('repeat')
+s.ifBegin({}, 'ifclipboardcontains')
 ```
-
-emits `is.workflow.actions.repeat.count` with `WFControlFlowMode: 0`, no
-`GroupingIdentifier`, and no closer. The block is unpaired. Three further
-shapes of the same problem:
-
-- `add('choosefrommenu')` takes `variants[0]` and silently discards the other
-  two variants the dictionary holds for that key.
-- `add('if')`, `add('endif')`, and `add('otherwise')` all fuzzy-resolve to the
-  same `is.workflow.actions.conditional` identifier with no mode set, because
-  `conditional` is not a key in `actions.json` and `resolveAction`'s substring
-  fallback collapses the three.
-- No entry in `actions.json` carries a `GroupingIdentifier`, so no path through
-  `add()` can produce a paired block.
-
-The dedicated helpers (`ifBegin`/`otherwise`/`ifEnd`, `repeatBegin`/`repeatEnd`,
-`menuBegin`/`menuItem`/`menuEnd`, and the `ifElse`/`repeat`/`menu` wrappers) do
-mint a shared `GroupingIdentifier` and are correct. Use them. Tracked as a
-task in [`tracker/`](../tracker/board.md).
 
 ## Variable references bind by producing UUID
 
@@ -76,11 +73,36 @@ A variable reference is not a name lookup. The consuming action carries an
 `OutputUUID` that must equal the `UUID` of the action that produced the value.
 When building from scratch, mint the UUID once and write it into both places.
 
-Conditions are integers, not strings. Confirmed values: `0` is *is*, `1` is
-*is not*, `4` is *is greater than*. Text conditions (*contains*, *begins with*)
-sit in a higher range that has not been enumerated here.
+Conditions are integers, not strings. The full mapping below is derived
+mechanically from the 30 pre-configured conditionals in `actions.json`, by
+reading each one's `WFCondition` against the operator its name states, so it
+rests on the dataset rather than on recollection:
 
-Source: same chat as above.
+| `WFCondition` | Operator | Derived from |
+| --- | --- | --- |
+| `0` | is before | `ifcurrentdateisbefore`, `ifcurrenttimeisbefore` |
+| `2` | is after | `ifcurrentdateisafter`, `ifcurrenttimeisafter` |
+| `4` | is | `ifclipboardis`, `ifcurrentappis`, `ifcurrentdateisexactly` |
+| `5` | is not | `ifclipboardisnot`, `ifcurrentappisnot` |
+| `8` | begins with | `ifclipboardbeginswith` |
+| `9` | ends with | `ifclipboardendswith` |
+| `99` | contains | `ifclipboardcontains` |
+| `100` | has any value | `ifclipboardhasanyvalue`, `ifcurrentdatehasanyvalue` |
+| `101` | does not have any value | `ifclipboarddoesnothaveanyvalue` |
+| `999` | does not contain | `ifclipboarddoesnotcontain` |
+| `1000` | is in the next | `ifcurrentdateisinthenext`, `ifcurrenttimeisinthenext` |
+| `1001` | is in the last | `ifcurrentdateisinthelast`, `ifcurrenttimeisinthelast` |
+| `1002` | is today | `ifcurrentdateistoday` |
+| `1003` | is between | `ifcurrentdateisbetween`, `ifcurrenttimeisbetween` |
+
+**One conflict, left standing rather than resolved.** The chat cited above read
+`4` as *is greater than* on a numeric comparison; the dictionary has `4` as *is*
+on date, app, and clipboard comparisons. Both readings could hold if the integer
+is interpreted against the input's type, which would mean there is no single
+table. The derived column is the one to trust for the operators it covers, and
+numeric comparison is not among them.
+
+Sources: the chat above for the mechanism, `actions.json` for the table.
 
 ## `actions.json` values are newline-delimited JSON, not JSON
 
@@ -98,8 +120,17 @@ the file must do the same. Note that the stored variants are an incomplete
 example rather than a template: there is no mode-2 closer among them.
 
 Counted from the file as committed: 810 entries, 321 under
-`is.workflow.actions`, 38 carrying a `WFWorkflowActionParameters` block, 43
-distinct bundle prefixes, 1 multi-variant entry.
+`is.workflow.actions`, 43 distinct bundle prefixes, 1 multi-variant entry, and
+38 carrying a `WFWorkflowActionParameters` block.
+
+Those 38 are worth naming precisely, because the set is not what "parameter
+templates" suggests. They are **exactly** the 38 entries carrying a
+`WFControlFlowMode`: the block openers, closers, and the 30 pre-configured
+conditionals. The two sets are identical, verified in
+`test/actions.test.js`. So the dictionary carries no parameter examples for
+ordinary actions at all; 772 of 810 entries are a bare identifier and nothing
+more. Anything needing a real parameter shape has to get it from an exported
+action, by the method the `apple-shortcuts-actions` skill describes.
 
 ## The Run JavaScript action has a performance cliff
 
@@ -174,6 +205,26 @@ Source: [Apple binary plist parsing](https://claude.ai/chat/932f973c-30a5-40bd-9
 (2026-03-28).
 
 ---
+
+## Related
+
+[`docs/dataflow.md`](https://github.com/mehrlander/shortcut-tools/blob/agent/document-shortcuts-dataflow/docs/dataflow.md)
+is the complementary half: this file covers how a shortcut is **serialized**,
+that one covers how values **flow at runtime**, including the observation that
+an `If` whose condition fails still passes its incoming value through. It is
+landing via PR #3, so the link above points at that branch; repoint it at `main`
+once it merges.
+
+## Checks
+
+`npm test` runs `test/actions.test.js` (the dataset holds its shape: every value
+parses, every identifier is well formed, the multi-variant entry is the only one,
+nothing carries a `GroupingIdentifier`) and `test/builder.test.js` (`add()`
+refuses control flow, every block is balanced and shares one grouping, presets
+merge, the serializer escapes markup). Node's built-in runner, no dependencies.
+
+What the tests cannot tell you is whether the output imports. That needs a
+device, and is a separate open task.
 
 ## Where the rest of the record is
 
