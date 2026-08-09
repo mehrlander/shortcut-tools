@@ -1,0 +1,54 @@
+{
+  "label": "Wiring test (4 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Anchors at offset 0 and 15, fan-out from one producer."
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "A1B2C3D4-0001-4A00-8000-000000000001",
+        "WFTextActionText": "Hello from shortcut-tools"
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "A1B2C3D4-0001-4A00-8000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": {
+          "Value": {
+            "attachmentsByRange": {
+              "{15, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "A1B2C3D4-0001-4A00-8000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "The text said: ￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

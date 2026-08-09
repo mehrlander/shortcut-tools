@@ -1,0 +1,85 @@
+{
+  "label": "JavaScript via data: URL (5 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "2C3D4E50-0001-4A00-9000-000000000001",
+        "WFTextActionText": "<pre id=\"out\"></pre>\n<script>\n  var d = new Date(), y = d.getFullYear();\n  var doy = Math.floor((d - new Date(y,0,1)) / 86400000) + 1;\n  var leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0, total = leap ? 366 : 365;\n  document.getElementById('out').textContent =\n    'Day ' + doy + ' of ' + total + ', ' + Math.round(doy/total*100) + '% through ' + y;\n</script>"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "2C3D4E50-0002-4A00-9000-000000000002",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "2C3D4E50-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "2C3D4E50-0003-4A00-9000-000000000003",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{36, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "2C3D4E50-0002-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "data:text/html;charset=utf-8;base64,￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "2C3D4E50-0004-4A00-9000-000000000004",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "2C3D4E50-0003-4A00-9000-000000000003",
+            "Type": "ActionOutput",
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFRichTextContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "2C3D4E50-0004-4A00-9000-000000000004",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

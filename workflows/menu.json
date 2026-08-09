@@ -1,0 +1,67 @@
+{
+  "label": "Menu, 3 cases (8 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.choosefrommenu",
+      "p": {
+        "GroupingIdentifier": "2C3D4E50-9999-4A00-9000-000000009999",
+        "WFControlFlowMode": 0,
+        "WFMenuPrompt": "Pick one:",
+        "WFMenuItems": [
+          "One",
+          "Two",
+          "Three"
+        ]
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefrommenu",
+      "p": {
+        "GroupingIdentifier": "2C3D4E50-9999-4A00-9000-000000009999",
+        "WFControlFlowMode": 1,
+        "WFMenuItemTitle": "One"
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": "You picked One."
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefrommenu",
+      "p": {
+        "GroupingIdentifier": "2C3D4E50-9999-4A00-9000-000000009999",
+        "WFControlFlowMode": 1,
+        "WFMenuItemTitle": "Two"
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": "You picked Two."
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefrommenu",
+      "p": {
+        "GroupingIdentifier": "2C3D4E50-9999-4A00-9000-000000009999",
+        "WFControlFlowMode": 1,
+        "WFMenuItemTitle": "Three"
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": "You picked Three."
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefrommenu",
+      "p": {
+        "GroupingIdentifier": "2C3D4E50-9999-4A00-9000-000000009999",
+        "WFControlFlowMode": 2
+      }
+    }
+  ]
+}

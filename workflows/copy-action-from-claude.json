@@ -1,0 +1,101 @@
+{
+  "label": "Copy-ActionFromClaude (5 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.detect.dictionary",
+      "p": {
+        "UUID": "0A1B2C30-0001-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "0A1B2C30-0002-4A00-9000-000000000002",
+        "WFEncodeMode": "Decode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary",
+            "OutputUUID": "0A1B2C30-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput",
+            "Aggrandizements": [
+              {
+                "DictionaryKey": "actions",
+                "Type": "WFDictionaryValueVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "com.sindresorhus.Actions.SetUniformTypeIdentifier",
+      "p": {
+        "UUID": "0A1B2C30-0003-4A00-9000-000000000003",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "SetUniformTypeIdentifier",
+          "BundleIdentifier": "com.sindresorhus.Actions",
+          "Name": "Actions",
+          "TeamIdentifier": "YG56YK5RN5"
+        },
+        "file": {
+          "Value": {
+            "OutputName": "Decoded Text",
+            "OutputUUID": "0A1B2C30-0002-4A00-9000-000000000002",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "typeIdentifier": "com.apple.shortcuts.action"
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "0A1B2C30-0004-4A00-9000-000000000004",
+        "WFLocalOnly": true,
+        "WFInput": {
+          "Value": {
+            "OutputName": "Files with Updated Uniform Type Identifier",
+            "OutputUUID": "0A1B2C30-0003-4A00-9000-000000000003",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.notification",
+      "p": {
+        "UUID": "0A1B2C30-0005-4A00-9000-000000000005",
+        "WFNotificationActionSound": true,
+        "WFNotificationActionBody": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Dictionary",
+                "OutputUUID": "0A1B2C30-0001-4A00-9000-000000000001",
+                "Type": "ActionOutput",
+                "Aggrandizements": [
+                  {
+                    "DictionaryKey": "report",
+                    "Type": "WFDictionaryValueVariableAggrandizement"
+                  }
+                ]
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}
