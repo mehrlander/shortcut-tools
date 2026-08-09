@@ -1,8 +1,10 @@
 ---
 id: land-grouped-action-taxonomy-r79gj3
 title: Make apps and app return usable action names
-status: backlog
+status: done
 opened: 2026-08-09
+closed: 2026-08-09
+session: claude/shortcut-tools-tracker-cpc8d7
 ---
 # Make apps and app return usable action names
 
@@ -66,3 +68,12 @@ Sources: [Apple Shortcuts action dictionary catalogued and reorganized](https://
   more precise on control flow, carrying suffixed forms (`conditional:if`) the
   flat dictionary collapses. Held by `test/grouped.test.js` from PR #6. What
   remains is the projection above, and the task is narrowed to it.
+- 2026-08-09: Done on `claude/shortcut-tools-tracker-cpc8d7`; lands via PR #7.
+  Took the split recommendation: CLI prints `name (IntentClassName)`, library
+  returns plain names, `getActionsByApp` takes `{ detailed: true }` for both and
+  accepts a full bundle id or a bare source segment. `listApps` now reports full
+  bundle ids, fixing a second case of the same fault where the README's own
+  table listed ids that `app` rejected. 777 of 792 entries resolve to a name;
+  the other 15 report null rather than guessing, after a draft that resolved all
+  14 generic conditional operators to `ifcurrentdatehasanyvalue` on sort order
+  alone. The README caveat is deleted. 4 tests added, 30 in the suite.

@@ -27,12 +27,14 @@
   {
    "id": "land-grouped-action-taxonomy-r79gj3",
    "title": "Make apps and app return usable action names",
-   "status": "backlog",
+   "status": "done",
    "opened": "2026-08-09",
+   "closed": "2026-08-09",
+   "session": "claude/shortcut-tools-tracker-cpc8d7",
    "file": "land-grouped-action-taxonomy-r79gj3.md",
    "href": "tasks/land-grouped-action-taxonomy-r79gj3.md",
    "lastActivity": "2026-08-09",
-   "logEntries": 3
+   "logEntries": 4
   },
   {
    "id": "validate-builder-round-trip-zqposq",
