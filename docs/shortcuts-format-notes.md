@@ -208,12 +208,10 @@ Source: [Apple binary plist parsing](https://claude.ai/chat/932f973c-30a5-40bd-9
 
 ## Related
 
-[`docs/dataflow.md`](https://github.com/mehrlander/shortcut-tools/blob/agent/document-shortcuts-dataflow/docs/dataflow.md)
-is the complementary half: this file covers how a shortcut is **serialized**,
-that one covers how values **flow at runtime**, including the observation that
-an `If` whose condition fails still passes its incoming value through. It is
-landing via PR #3, so the link above points at that branch; repoint it at `main`
-once it merges.
+[`dataflow.md`](dataflow.md) is the complementary half: this file covers how a
+shortcut is **serialized**, that one covers how values **flow at runtime**,
+including the observation that an `If` whose condition fails still passes its
+incoming value through. Merged in PR #3.
 
 ## Checks
 

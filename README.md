@@ -24,13 +24,16 @@ One entry, `choosefrommenu`, holds **three** newline-separated JSON objects rath
 
 Those 38 parameter-bearing entries are exactly the 38 that carry a `WFControlFlowMode`: block openers, block closers, and 30 pre-configured conditionals. The dictionary holds no parameter examples for ordinary actions, so the other 772 entries are a bare identifier.
 
+## Documentation
+
+Apple documents neither the file format nor the runtime, so two files under `docs/` carry what is known. They split by question:
+
+- [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
+- [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
+
 ## Tests
 
 `npm test`. Node's built-in runner, no dependencies. Covers the dataset's shape and the builder's control-flow output.
-
-## Format notes
-
-[`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md) records what is known about the `.shortcut` plist format itself: how control-flow blocks pair through `GroupingIdentifier` and `WFControlFlowMode`, how variable references bind by producing UUID, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`. Apple does not document the format, so that file is the reference.
 
 ## Action Sources
 
