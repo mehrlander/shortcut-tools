@@ -53,8 +53,8 @@ Installed as `shortcut-tools`, or run with `npx shortcut-tools`.
 |---|---|
 | `search <query>` | Substring match on action name **and** identifier. Prints each match with its identifier and any parameter template. |
 | `get <name>` | Exact lookup. Lowercases the argument and joins multi-word arguments with no separator, so `get take screenshot` finds `takescreenshot`. Exits 1 if absent. |
-| `apps` | Lists app sources with counts, from `actions-grouped.json`. See the caveat below. |
-| `app <id>` | Lists action names for one source, from `actions-grouped.json`. |
+| `apps` | Lists every app source with its full bundle id and action count. |
+| `app <id>` | Lists one source's actions as `name (IntentClassName)`. Takes a full bundle id (`com.apple.mobilenotes`) or the bare segment (`mobilenotes`). |
 | `demo [path]` | Builds a 15-action demo shortcut and writes it to `demo.shortcut` or the given path. |
 | `help` | Usage. Also the default with no arguments. |
 
@@ -65,25 +65,26 @@ takescreenshot:
   identifier: is.workflow.actions.takescreenshot
 ```
 
-> **`apps` and `app` print identifier segments, not action names.**
-> `actions-grouped.json` decomposes each `WFWorkflowActionIdentifier` into
-> bundle root, source, and leaf, and `app` prints the **leaf**. So
-> `app com.brogrammers.charty` gives `AccumulateValuesIntent`, which `get`
-> cannot find, because the dictionary is keyed by action name
-> (`accumulatevalues`). The two files describe the same 774 identifiers and
-> correspond exactly; only the projection at the API boundary is wrong.
-> Tracked in [`tracker/`](tracker/board.md).
+```
+$ shortcut-tools app com.brogrammers.charty
+24 actions in com.brogrammers.charty:
+
+  accumulatevalues  (AccumulateValuesIntent)
+  addaverage  (AddAverageIntent)
+```
+
+Names printed on the left are the dictionary's, so they feed straight back into `get` and `Shortcut.add()`. The parenthesised name is the identifier's leaf segment, which is usually the app's intent class and is the more legible label. 15 of the 792 grouped entries have no unambiguous action name, mostly generic conditional operators; those print their full identifier instead of guessing.
 
 ## Library
 
 ```js
 const { getAction, searchActions, listApps, getActionsByApp,
-        listActions, allActions, Shortcut } = require("shortcut-tools");
+        listActions, allActions, Shortcut, buildXMLPlist } = require("shortcut-tools");
 ```
 
-`allActions` is the underlying `Map` of name to variant array, exported for anything the functions above do not cover.
+`allActions` is the underlying `Map` of name to variant array, and `buildXMLPlist(obj)` serializes any plain object to an XML plist. Both are exported for anything the functions above do not cover.
 
-**Lookup.** `getAction(name)` returns an array of variants or `undefined`; it is exact, lowercased, and does no fuzzy matching. `searchActions(query)` returns `{ name, variants }` objects matching on name or identifier. `listActions()` returns all 810 names. `listApps()` and `getActionsByApp(appId)` read the grouped file and carry the namespace caveat above.
+**Lookup.** `getAction(name)` returns an array of variants or `undefined`; it is exact, lowercased, and does no fuzzy matching. `searchActions(query)` returns `{ name, variants }` objects matching on name or identifier. `listActions()` returns all 810 names. `listApps()` returns `{ category, appId, count }` with full bundle ids. `getActionsByApp(appId)` returns action names, accepting a full bundle id or a bare source segment, and takes `{ detailed: true }` for `{ name, leaf, identifier }` objects; `name` is `null` where no single action name applies.
 
 Every lookup returns an **array**, because one name can hold several variants. Only `choosefrommenu` does today, but code that assumes a single object breaks on it.
 
