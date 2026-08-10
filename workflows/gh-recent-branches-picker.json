@@ -1,11 +1,13 @@
 {
-  "label": "GitHub: recent branches, as a picker (9 actions)",
+  "label": "GitHub: recent branches, as a picker (11 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "5D3A0000-0001-4A00-9000-000000000001",
-        "WFTextActionText": { "$file": "pages/gh-recent-branches.html" }
+        "WFTextActionText": {
+          "$file": "pages/gh-recent-branches.html"
+        }
       }
     },
     {
@@ -132,10 +134,10 @@
       }
     },
     {
-      "id": "is.workflow.actions.openurl",
+      "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "5D3A0000-0009-4A00-9000-000000000009",
-        "WFInput": {
+        "WFTextActionText": {
           "Value": {
             "attachmentsByRange": {
               "{60, 1}": {
@@ -147,6 +149,34 @@
             "string": "https://mehrlander.github.io/web-tools/pages/branch.html#gh=￼"
           },
           "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "5D3A0000-0010-4A00-9000-000000000010",
+        "WFURLActionURL": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "5D3A0000-0009-4A00-9000-000000000009",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "5D3A0000-0011-4A00-9000-000000000011",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "5D3A0000-0010-4A00-9000-000000000010",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     }

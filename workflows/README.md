@@ -19,7 +19,7 @@ the clipboard, ready to paste into any shortcut. Format in
 | `menu` | Three cases under one `GroupingIdentifier`, modes 0/1/1/1/2. |
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
 | `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
-| `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`. |
+| `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
 
 Both branch chains carry the same page, and the page is written to serve both:
 its visible text is only ever the list itself, and its rows are separated by

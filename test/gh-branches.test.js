@@ -203,3 +203,31 @@ test("the page still carries the placeholder, since Show-Html is what resolves i
   const html = fs.readFileSync(PAGE, "utf8");
   assert.ok(html.includes(PLACEHOLDER));
 });
+
+test("the picker opens its URL the way the exports do it", () => {
+  // Open URLs takes an attachment referencing a url action, which references a
+  // text action. Handing it a bare string skips the coercion the export shows.
+  const a = chain("gh-recent-branches-picker.json").actions.slice(-3);
+  assert.deepStrictEqual(a.map(x => x.id), [
+    "is.workflow.actions.gettext", "is.workflow.actions.url", "is.workflow.actions.openurl"]);
+  assert.strictEqual(a[1].p.WFURLActionURL.Value.OutputUUID, a[0].p.UUID);
+  assert.strictEqual(a[2].p.WFInput.Value.OutputUUID, a[1].p.UUID);
+  assert.strictEqual(a[1].p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment");
+});
+
+test("every anchor offset lands on the glyph it addresses", () => {
+  for (const f of ["gh-recent-branches.json", "gh-recent-branches-picker.json",
+                   "sync-xhr-probe.json"]) {
+    for (const action of chain(f).actions) {
+      for (const v of Object.values(action.p)) {
+        if (v && v.WFSerializationType !== "WFTextTokenString") continue;
+        if (!v || !v.Value || !v.Value.attachmentsByRange) continue;
+        for (const range of Object.keys(v.Value.attachmentsByRange)) {
+          const at = Number(range.replace(/[{}]/g, "").split(",")[0]);
+          assert.strictEqual(v.Value.string[at], "\uFFFC",
+            `${f} ${action.id}: anchor ${range} misses the glyph`);
+        }
+      }
+    }
+  }
+});
