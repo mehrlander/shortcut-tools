@@ -108,6 +108,8 @@ A matching branch replaces the flowing value. Later non-matching `If` actions pr
 
 This can eliminate repeated `Set Variable` and `Get Variable` actions whose only purpose is to carry a result across control flow.
 
+A shipped instance, for anyone who wants to read the pattern rather than the description: `Inject-🎟️GitHubToken` is two sequential top-level `If` actions with no `Otherwise` between them, one testing the input for a placeholder and one testing it for absence, each replacing the flowing value only when it matches. It is written up in [`shortcuts-format-notes.md`](shortcuts-format-notes.md#the-token-injection-pattern).
+
 ## Practical rule
 
 When building or simplifying a shortcut, distinguish three things:

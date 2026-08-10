@@ -1,0 +1,184 @@
+{
+  "label": "GitHub: recent branches, as a picker (11 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "5D3A0000-0001-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "$file": "pages/gh-recent-branches.html"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "5D3A0000-0002-4A00-9000-000000000002",
+        "WFWorkflowName": "Inject-🎟️GitHubToken",
+        "WFWorkflow": {
+          "isSelf": false,
+          "workflowIdentifier": "26251395-6EB8-4CEE-A8E9-CE4413918C2F",
+          "workflowName": "Inject-🎟️GitHubToken"
+        },
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "5D3A0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "5D3A0000-0003-4A00-9000-000000000003",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Shortcut Result",
+            "OutputUUID": "5D3A0000-0002-4A00-9000-000000000002",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "5D3A0000-0004-4A00-9000-000000000004",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{36, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "5D3A0000-0003-4A00-9000-000000000003",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "data:text/html;charset=utf-8;base64,￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "5D3A0000-0005-4A00-9000-000000000005",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "5D3A0000-0004-4A00-9000-000000000004",
+            "Type": "ActionOutput",
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFRichTextContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "5D3A0000-0006-4A00-9000-000000000006",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "5D3A0000-0005-4A00-9000-000000000005",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "5D3A0000-0007-4A00-9000-000000000007",
+        "WFChooseFromListActionPrompt": "Recent branches",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "5D3A0000-0006-4A00-9000-000000000006",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "5D3A0000-0008-4A00-9000-000000000008",
+        "WFReplaceTextFind": " · .*$",
+        "WFReplaceTextReplace": "",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextCaseSensitive": true,
+        "WFInput": {
+          "Value": {
+            "OutputName": "Chosen Item",
+            "OutputUUID": "5D3A0000-0007-4A00-9000-000000000007",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "5D3A0000-0009-4A00-9000-000000000009",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{60, 1}": {
+                "OutputName": "Updated Text",
+                "OutputUUID": "5D3A0000-0008-4A00-9000-000000000008",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://mehrlander.github.io/web-tools/pages/branch.html#gh=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "5D3A0000-0010-4A00-9000-000000000010",
+        "WFURLActionURL": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "5D3A0000-0009-4A00-9000-000000000009",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "5D3A0000-0011-4A00-9000-000000000011",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "5D3A0000-0010-4A00-9000-000000000010",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

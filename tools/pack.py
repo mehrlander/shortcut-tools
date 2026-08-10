@@ -11,17 +11,42 @@ computes nothing, so the report is composed here.
 Anchors: write the RAW U+FFFC glyph. Base64 protects it in transit and no
 browser renders it on this route, so the &#65532; entity rule that the {id, p}
 route requires does not apply and would be wrong here.
+
+Inlining: anywhere a parameter value may be a string, {"$file": "path"} reads
+that file's text instead. Paths are relative to the repository root, so a chain
+carrying an HTML payload references the real file rather than a pasted copy of
+it that drifts. Resolved before packing, so the plist sees only the text.
 """
 import argparse, base64, json, plistlib, re, sys, urllib.parse
+from pathlib import Path
 
 TARGET = "Copy-ActionFromClaude"
 GLYPH = "￼"
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def resolve(node):
+    """Replace every {"$file": path} with the file's text, in place, recursively."""
+    if isinstance(node, dict):
+        if set(node) == {"$file"}:
+            path = ROOT / node["$file"]
+            if not path.is_file():
+                raise SystemExit("no such $file: %s (relative to %s)" % (node["$file"], ROOT))
+            text = path.read_text()
+            if GLYPH in text:
+                raise SystemExit("$file %s contains a raw U+FFFC, which would "
+                                 "become an unbound anchor" % node["$file"])
+            return text
+        return {k: resolve(v) for k, v in node.items()}
+    if isinstance(node, list):
+        return [resolve(v) for v in node]
+    return node
 
 
 def pack_action(action):
     """One {id, p} to base64 plist XML. Compaction is verified, not assumed."""
     doc = {"WFWorkflowActionIdentifier": action["id"],
-           "WFWorkflowActionParameters": action["p"]}
+           "WFWorkflowActionParameters": resolve(action["p"])}
     xml = re.sub(r">\s+<", "><", plistlib.dumps(doc, fmt=plistlib.FMT_XML).decode())
     assert plistlib.loads(xml.encode()) == doc, "compaction altered " + action["id"]
     return base64.b64encode(xml.encode()).decode()

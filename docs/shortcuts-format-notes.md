@@ -130,6 +130,140 @@ without spending an action:
 Offsets count the rendered string, so `"The text said: ￼"` anchors at `{15, 1}`.
 Several consumers may share one producer.
 
+**Aggrandizements chain, in array order.** One attachment may carry a coercion
+and then a key lookup, which is how a file becomes a dictionary and then one of
+its values without spending an action on either step:
+
+```json
+"Aggrandizements": [
+  { "Type": "WFCoercionVariableAggrandizement", "CoercionItemClass": "WFDictionaryContentItem" },
+  { "Type": "WFDictionaryValueVariableAggrandizement", "DictionaryKey": "🎟️GitHubToken" }
+]
+```
+
+## Run Shortcut carries the target twice, and one half is device-local
+
+*Observed 2026-08-10, from an exported shortcut.*
+
+`is.workflow.actions.runworkflow` names its target in two places, and they are
+not redundant:
+
+```json
+"WFWorkflowName": "Show-Html",
+"WFWorkflow": { "isSelf": false,
+                "workflowIdentifier": "84B4AB5F-02B8-426D-BF6A-E051730CC0E4",
+                "workflowName": "Show-Html" }
+```
+
+`workflowIdentifier` is minted per install, so a chain written elsewhere cannot
+invent one; it has to be read off an export from the device it will run on. A
+shortcut that calls **itself** sets `isSelf` true, which is how one shortcut can
+be both a library and its own demo caller. Both halves appear in every
+`runworkflow` action across the two exports read so far.
+
+*Unconfirmed:* whether `WFWorkflowName` alone resolves by name when the dict is
+absent. Until that is tested, write both.
+
+The input attachment may be a plain variable rather than an action output, in
+which case it is `{"Type": "Variable", "VariableName": "content"}` inside the
+same `WFTextTokenAttachment` envelope.
+
+## An `If` with several conditions uses a different shape entirely
+
+*Observed 2026-08-10, from an exported shortcut.*
+
+The single-condition form documented above puts `WFCondition`, `WFInput`, and
+`WFConditionalActionString` directly in the action's parameters. A **multi**
+-condition `If` replaces all three with one `WFConditions` key holding a
+`WFContentPredicateTableTemplate`, whose `WFActionParameterFilterTemplates` is
+an array of the single-condition shape, each with its own `WFInput`:
+
+```json
+"WFConditions": {
+  "WFSerializationType": "WFContentPredicateTableTemplate",
+  "Value": { "WFActionParameterFilterPrefix": 0,
+             "WFContentPredicateBoundedDate": false,
+             "WFActionParameterFilterTemplates": [ { "WFCondition": 4, "…": "…" },
+                                                   { "WFCondition": 8, "…": "…" } ] }
+}
+```
+
+Each template may test a **different** input, which is what makes this more than
+a convenience: one `If` can ask whether the item's type is `URL` *and/or*
+whether its markdown begins with `http`.
+
+*Unresolved:* whether `WFActionParameterFilterPrefix` `0` means all or any. The
+observed instance is true under both readings, so it does not discriminate, and
+guessing here would be worse than leaving it open.
+
+## `Show-Html`: what it does to a page on the way through
+
+*Observed 2026-08-10, from an export.* Device-local
+`workflowIdentifier` `84B4AB5F-02B8-426D-BF6A-E051730CC0E4`.
+
+It is the general-purpose page runner behind this route, and its contract
+matters to anything that calls it:
+
+- **Input** is HTML text, a URL, or nothing. A URL is downloaded first, by the
+  multi-condition `If` above; nothing falls back to the clipboard through the
+  top-level `WFWorkflowNoInputBehavior` key, `WFWorkflowNoInputBehaviorGetClipboard`.
+- **It calls `Inject-🎟️GitHubToken` itself.** A caller that injects first is
+  doing nothing, since the second pass finds no placeholder. Hand it the page
+  with the placeholder intact.
+- It substitutes a second placeholder, `📋ClipboardBase64`, with the clipboard
+  base64-encoded, so a page can carry the clipboard into itself.
+- It repairs smart quotes and strips markdown code fences, which is what makes
+  a page pasted out of a chat window work without hand-cleaning.
+- **It opens the result with `Open URLs`, not an in-app view.** The page lands
+  in the browser, so it is fully interactive: links navigate, and async work has
+  no capture moment to race.
+- **It returns the cleaned HTML**, wrapped in a one-item `is.workflow.actions.list`.
+  Not a result from the page. Nothing useful chains after it.
+
+Two details worth carrying. The data URL it builds is
+`data:text/html;charset=utf-8, ￼` with a **space** after the comma, anchoring at
+offset 37 rather than 36, so whitespace there is tolerated;
+[`js-data-url`](../workflows/js-data-url.json) omits it and also works. And one
+of its five `Replace Text` actions, the one stripping `^```\w*\n|```$`, has its
+output referenced by nothing: the next action reads the same producer it does.
+The later ` ```\s* ` pass covers the same ground, so the effect is invisible.
+Flagged rather than fixed, since it is not this repo's shortcut, and since the
+note above about vestigial-looking actions counsels confirming on device first.
+
+## The token-injection pattern
+
+*Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
+
+Secrets do not belong in a chain, and a page delivered as a `data:` URL is
+nothing but a string, so the token is substituted into that string on device
+just before the page is encoded. The mechanism, worth copying because it
+generalizes past GitHub:
+
+- The placeholder is an **emoji-prefixed key**, `🎟️GitHubToken`. The emoji is
+  what makes it collision-proof against the page's own text without needing a
+  quoting convention.
+- One shortcut owns the substitution. Given text containing the placeholder
+  (`WFCondition` 99, *contains*), it opens `Snippets/Managed/config.json` from
+  the Shortcuts iCloud folder with `documentpicker.open` and a `WFGetFilePath`,
+  coerces the file to a dictionary, takes the key of the same name through the
+  chained aggrandizements above, and runs `text.replace`.
+- Given **no** input at all (`WFCondition` 101, *does not have any value*) the
+  same shortcut runs a demo of itself instead. The two branches are sequential
+  top-level `If`s with no `Otherwise`, which is the compact-`If` switch that
+  [`dataflow.md`](dataflow.md) describes, in the wild.
+- The stored value carries its own scheme, so the page writes
+  `Authorization: <placeholder>` rather than `'Bearer ' + placeholder`.
+
+Two rules follow for any page written against this, and
+[`test/gh-branches.test.js`](../test/gh-branches.test.js) holds both:
+
+1. **Build the sentinel from halves.** A page that wants to know whether it was
+   substituted cannot compare against the literal, because the substitution
+   rewrites the comparison too. Write `'🎟️' + 'GitHubToken'`.
+2. **The placeholder appears exactly once, comments included.** Naming the
+   injector in a comment is enough to paste the live token into that comment.
+   Caught by the test rather than by review.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -229,6 +363,42 @@ separately.
 
 Source: [Decoding siriZipped base64 and bplist parsing](https://claude.ai/chat/1600e47e-7680-49f9-bda2-98d92223f175)
 (2026-04-29).
+
+## The data: URL route can reach the network, and the capture moment is the risk
+
+*Measured 2026-08-10, in Chromium rather than on device.* A page delivered as
+`data:text/html;charset=utf-8;base64,…` and read back through a
+`WFRichTextContentItem` coercion runs its JavaScript, which
+[`js-data-url`](../workflows/js-data-url.json) already showed. The open question
+was whether a page that also fetches something can work this way, since the
+coercion captures rendered text at a moment nobody has written down.
+
+Two things are settled, and both were tested against a real `data:` URL rather
+than a local file, because the origin differs:
+
+- **A cross-origin request from a `data:` URL is allowed** where the server sends
+  `Access-Control-Allow-Origin: *`, which the GitHub API does. The opaque origin
+  does not block it. Sending credentials as an `Authorization` header is fine;
+  `credentials: 'include'` would not be.
+- **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
+  DOM before anything downstream can read the page. This is the reason to prefer
+  the deprecated synchronous form here: the behavior it is deprecated for is
+  exactly the guarantee this route needs.
+
+*Unconfirmed:* whether an **async** resolution lands before the coercion reads
+the page. If it does not, an `await` yields an empty result with no error, which
+is the worst failure shape available. Until someone runs
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
+both paths on separate lines from one tap, write the request synchronously.
+
+One layout trap, distinct from timing. Where the extracted text is split on
+newlines downstream, the page must not let a line wrap: set `white-space: pre`
+rather than `pre-wrap`, so a soft wrap cannot become a line the consumer counts
+as a separate item. Whether a rich-text coercion preserves soft wraps is itself
+unconfirmed, and not wrapping costs nothing.
+
+The performance cliff above does not apply here. That is the `Run JavaScript on
+Web Page` action's interpreter; this route is a real WebKit render.
 
 ## Generating the plist
 

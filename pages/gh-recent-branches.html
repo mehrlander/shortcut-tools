@@ -1,0 +1,137 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recent branches</title>
+<style>
+  body { font: 15px/1.5 ui-monospace, Menlo, monospace; margin: 0; padding: .75rem; }
+  /* The page has two consumers. Shown through Show-Html it is a tappable list;
+     read back through a rich-text coercion it is lines of text. So the visible
+     text is only ever the lines themselves: no headings, no buttons, nothing a
+     text extraction would pick up and a downstream split would miscount. */
+  /* The rows are separated by real newline text nodes rather than by block
+     layout, so the lines survive whichever way the text is extracted: rendered
+     text keeps them because white-space is pre, and a raw textContent read
+     keeps them because they are characters rather than layout. Block anchors
+     would satisfy only the first, and fail silently under the second. */
+  #out { white-space: pre; overflow-x: auto; }
+  a { display: inline-block; padding: .25rem 0; color: inherit; text-decoration: none; }
+  form { display: none; }
+  body.ask form { display: block; }
+  body.ask #out:empty { display: none; }
+  input { font: inherit; width: 20rem; max-width: 100%; }
+</style>
+
+<form onsubmit="run(this.tok.value); return false">
+  <p>Paste a GitHub token with <code>repo</code> scope, then Run.
+  <p><input name="tok" type="password" autocomplete="off" placeholder="ghp_..."> <button>Run</button>
+</form>
+<div id="out"></div>
+
+<script>
+// The token arrives by string substitution: the Inject shortcut reads
+// Snippets/Managed/config.json and swaps the placeholder below for the value
+// stored under the same key. Two rules follow, and a test holds both. The
+// sentinel is assembled from halves, so the substitution cannot reach the
+// comparison. And the placeholder appears exactly once in this file, including
+// in comments, so the token is never pasted anywhere it is not needed.
+var TOKEN = '🎟️GitHubToken';
+var SENTINEL = '🎟️' + 'GitHubToken';
+
+var BRANCH_PAGE = 'https://mehrlander.github.io/web-tools/pages/branch.html#gh=';
+var LIMIT = 25;        // branches shown
+var REPOS = 40;        // repositories scanned, most recently pushed first
+var BRANCHES = 30;     // branches read per repository
+
+var QUERY = [
+  'query {',
+  '  viewer {',
+  '    login',
+  '    repositories(first: ' + REPOS + ', orderBy: {field: PUSHED_AT, direction: DESC},',
+  '                 affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) {',
+  '      nodes {',
+  '        nameWithOwner',
+  '        refs(refPrefix: "refs/heads/", first: ' + BRANCHES + ',',
+  '             orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {',
+  '          nodes {',
+  '            name',
+  '            target { ... on Commit { committedDate author { user { login } } } }',
+  '          }',
+  '        }',
+  '      }',
+  '    }',
+  '  }',
+  '}'
+].join('\n');
+
+function ago(iso) {
+  var mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (mins < 60) return mins + 'm';
+  if (mins < 1440) return Math.round(mins / 60) + 'h';
+  if (mins < 43200) return Math.round(mins / 1440) + 'd';
+  return Math.round(mins / 43200) + 'mo';
+}
+
+// The stored value may or may not carry its scheme. Accept either rather than
+// making the config file's exact contents load-bearing.
+function auth(token) {
+  return /^(Bearer|token) /i.test(token) ? token : 'Bearer ' + token;
+}
+
+// Synchronous on purpose, because the page has two consumers and only one of
+// them is safe for async. Shown through Show-Html the page stays live, so a
+// promise would resolve fine. Read back through a rich-text coercion it is
+// captured at a moment nobody has documented, and a late resolution returns
+// empty with no error. Blocking the load is correct for both.
+function post(token) {
+  var x = new XMLHttpRequest();
+  x.open('POST', 'https://api.github.com/graphql', false);
+  x.setRequestHeader('Content-Type', 'application/json');
+  x.setRequestHeader('Authorization', auth(token));
+  x.send(JSON.stringify({ query: QUERY }));
+  if (x.status !== 200) throw new Error('HTTP ' + x.status + ': ' + x.responseText.slice(0, 300));
+  var body = JSON.parse(x.responseText);
+  if (body.errors) throw new Error(body.errors.map(function (e) { return e.message; }).join('; '));
+  return body.data;
+}
+
+function rows(data) {
+  var me = data.viewer.login, out = [];
+  data.viewer.repositories.nodes.forEach(function (repo) {
+    repo.refs.nodes.forEach(function (ref) {
+      var tip = ref.target;
+      if (!tip || !tip.author || !tip.author.user) return;   // unlinked email, cannot attribute
+      if (tip.author.user.login !== me) return;              // someone else pushed last
+      out.push({ at: tip.committedDate,
+                 address: repo.nameWithOwner + '@' + ref.name,
+                 line: repo.nameWithOwner + '@' + ref.name + ' · ' + ago(tip.committedDate) });
+    });
+  });
+  out.sort(function (a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
+  return out.slice(0, LIMIT);
+}
+
+function draw(list) {
+  var out = document.getElementById('out');
+  out.textContent = '';
+  if (!list.length) { out.textContent = 'No branches found whose latest commit is yours.'; return; }
+  list.forEach(function (r, i) {
+    var a = document.createElement('a');
+    a.href = BRANCH_PAGE + r.address;
+    a.textContent = r.line;
+    out.appendChild(a);
+    if (i < list.length - 1) out.appendChild(document.createTextNode('\n'));
+  });
+}
+
+function run(token) {
+  document.body.className = '';
+  try {
+    draw(rows(post(token)));
+  } catch (err) {
+    document.getElementById('out').textContent = 'ERROR ' + err.message;
+  }
+}
+
+if (TOKEN === SENTINEL) document.body.className = 'ask';   // opened raw in a browser
+else run(TOKEN);
+</script>
