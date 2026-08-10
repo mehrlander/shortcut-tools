@@ -130,6 +130,73 @@ without spending an action:
 Offsets count the rendered string, so `"The text said: ￼"` anchors at `{15, 1}`.
 Several consumers may share one producer.
 
+**Aggrandizements chain, in array order.** One attachment may carry a coercion
+and then a key lookup, which is how a file becomes a dictionary and then one of
+its values without spending an action on either step:
+
+```json
+"Aggrandizements": [
+  { "Type": "WFCoercionVariableAggrandizement", "CoercionItemClass": "WFDictionaryContentItem" },
+  { "Type": "WFDictionaryValueVariableAggrandizement", "DictionaryKey": "🎟️GitHubToken" }
+]
+```
+
+## Run Shortcut carries the target twice, and one half is device-local
+
+*Observed 2026-08-10, from an exported shortcut.*
+
+`is.workflow.actions.runworkflow` names its target in two places, and they are
+not redundant:
+
+```json
+"WFWorkflowName": "Show-Html",
+"WFWorkflow": { "isSelf": false,
+                "workflowIdentifier": "84B4AB5F-02B8-426D-BF6A-E051730CC0E4",
+                "workflowName": "Show-Html" }
+```
+
+`workflowIdentifier` is minted per install, so a chain written elsewhere cannot
+invent one; it has to be read off an export from the device it will run on. A
+shortcut that calls **itself** sets `isSelf` true, which is how one shortcut can
+be both a library and its own demo caller.
+
+*Unconfirmed:* whether `WFWorkflowName` alone resolves by name when the dict is
+absent. Until that is tested, write both.
+
+## The token-injection pattern
+
+*Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
+
+Secrets do not belong in a chain, and a page delivered as a `data:` URL is
+nothing but a string, so the token is substituted into that string on device
+just before the page is encoded. The mechanism, worth copying because it
+generalizes past GitHub:
+
+- The placeholder is an **emoji-prefixed key**, `🎟️GitHubToken`. The emoji is
+  what makes it collision-proof against the page's own text without needing a
+  quoting convention.
+- One shortcut owns the substitution. Given text containing the placeholder
+  (`WFCondition` 99, *contains*), it opens `Snippets/Managed/config.json` from
+  the Shortcuts iCloud folder with `documentpicker.open` and a `WFGetFilePath`,
+  coerces the file to a dictionary, takes the key of the same name through the
+  chained aggrandizements above, and runs `text.replace`.
+- Given **no** input at all (`WFCondition` 101, *does not have any value*) the
+  same shortcut runs a demo of itself instead. The two branches are sequential
+  top-level `If`s with no `Otherwise`, which is the compact-`If` switch that
+  [`dataflow.md`](dataflow.md) describes, in the wild.
+- The stored value carries its own scheme, so the page writes
+  `Authorization: <placeholder>` rather than `'Bearer ' + placeholder`.
+
+Two rules follow for any page written against this, and
+[`test/gh-branches.test.js`](../test/gh-branches.test.js) holds both:
+
+1. **Build the sentinel from halves.** A page that wants to know whether it was
+   substituted cannot compare against the literal, because the substitution
+   rewrites the comparison too. Write `'🎟️' + 'GitHubToken'`.
+2. **The placeholder appears exactly once, comments included.** Naming the
+   injector in a comment is enough to paste the live token into that comment.
+   Caught by the test rather than by review.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
