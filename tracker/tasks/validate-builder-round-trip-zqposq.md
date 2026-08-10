@@ -1,8 +1,11 @@
 ---
 id: validate-builder-round-trip-zqposq
 title: Validate that a generated shortcut imports on device
-status: backlog
+status: done
 opened: 2026-08-09
+closed: 2026-08-10
+session: claude/shortcut-tools-review-etjnrv
+resolution: superseded
 ---
 # Validate that a generated shortcut imports on device
 
@@ -59,7 +62,7 @@ plus any corrections to the builder's defaults are recorded here.
   `WatchKit` and `WFWorkflowClientVersion` `2302.0.4` appear in no real export
   and both trace to a 2019-vintage model-generated template. Table added above.
   The device test is now a confirmation of two specific values.
-- 2026-08-09: Two of the three questions are settled, and the premise moved. The
+- 2026-08-10: Two of the three questions are settled, and the premise moved. The
   delivery route that works is not a file at all: individual actions need only the
   `com.apple.shortcuts.action` pasteboard type, which a device shortcut stamps, so
   a chain behind a `shortcuts://` link installs and an unsigned `.shortcut` does
@@ -68,3 +71,9 @@ plus any corrections to the builder's defaults are recorded here.
   shortcuts read back today, so `build()` now emits both instead of the 2019
   values. What remains of this task is only whether an unsigned file imports at
   all, which nothing needs an answer to.
+- 2026-08-10: Closed as superseded on `claude/shortcut-tools-review-etjnrv`;
+  lands via PR #8. The task asked whether a generated `.shortcut` file imports.
+  Nothing needs that answer: delivery is a `shortcuts://` link carrying actions,
+  which needs no signature and is proven on device. Its version sub-question is
+  answered outright and `build()` now emits `4711` and `Watch`. What is left is a
+  question about a route the repo no longer takes.

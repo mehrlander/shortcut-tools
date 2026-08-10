@@ -39,12 +39,17 @@
   {
    "id": "validate-builder-round-trip-zqposq",
    "title": "Validate that a generated shortcut imports on device",
-   "status": "backlog",
+   "status": "done",
    "opened": "2026-08-09",
+   "closed": "2026-08-10",
+   "session": "claude/shortcut-tools-review-etjnrv",
    "file": "validate-builder-round-trip-zqposq.md",
    "href": "tasks/validate-builder-round-trip-zqposq.md",
-   "lastActivity": "2026-08-09",
-   "logEntries": 3
+   "lastActivity": "2026-08-10",
+   "logEntries": 4,
+   "tags": {
+    "resolution": "superseded"
+   }
   }
  ]
 }
