@@ -142,7 +142,9 @@ switch (command) {
     s.export(outPath);
     console.log(`Built "${s.name}" with ${s.actions.length} actions`);
     console.log(`Exported to: ${outPath}`);
-    console.log(`\nAirDrop this file to your iPhone/iPad to install it!`);
+    console.log(`\nA serialization of the workflow, not an installable file:`);
+    console.log(`an unsigned .shortcut will not import. To get these actions onto`);
+    console.log(`a device, pack the chain into a shortcuts:// link (see workflows/).`);
     break;
   }
 

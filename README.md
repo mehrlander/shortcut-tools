@@ -79,7 +79,8 @@ Names printed on the left are the dictionary's, so they feed straight back into 
 
 ```js
 const { getAction, searchActions, listApps, getActionsByApp,
-        listActions, allActions, Shortcut, buildXMLPlist } = require("shortcut-tools");
+        listActions, allActions, Shortcut, buildXMLPlist,
+        tokenString, variable, attachment, ANCHOR } = require("shortcut-tools");
 ```
 
 `allActions` is the underlying `Map` of name to variant array, and `buildXMLPlist(obj)` serializes any plain object to an XML plist. Both are exported for anything the functions above do not cover.
@@ -102,8 +103,17 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `repeatEachBegin()` / `repeatEachEnd()` | Repeat with each. |
 | `menuBegin(prompt)` / `menuItem(title)` / `menuEnd()`, `menu(prompt, items)` | `items` maps a title to a callback. |
 | `build()` | The workflow plist as a plain object. |
+| `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
+| `toActionChain(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |
-| `export(path)` | Write the XML plist to disk. |
+| `export(path)` | Write the XML plist. A serialization format, not an install path: an unsigned `.shortcut` will not import. |
+
+**Wiring.** `tokenString(parts)` builds a text value with variables embedded in it, taking an alternating list of strings and refs and **deriving the anchor offsets** rather than making you count characters. `variable(ref)` is the other form, where the value *is* an output. A ref is `{ uuid, name }`, or `{ input: true }` for Shortcut Input, plus optional `key` to take one dictionary key and `as` to coerce.
+
+```js
+s.add("text", { WFTextActionText: "hi" });
+s.add("showresult", { Text: tokenString(["The text said: ", { uuid: s.lastUUID() }]) });
+```
 
 **Control flow must go through the helpers.** A block is several sibling actions sharing a `GroupingIdentifier`, and no entry in `actions.json` carries one, so `add()` cannot build a block and refuses rather than emitting a dangling opener:
 

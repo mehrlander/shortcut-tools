@@ -15,6 +15,62 @@ for (const [name, raw] of Object.entries(actionsData.actions)) {
 }
 
 /**
+ * The inline-variable anchor. One UTF-16 unit, so a token occupies exactly one
+ * character position and attachmentsByRange offsets are just string lengths.
+ */
+const ANCHOR = "￼";
+
+/**
+ * A variable reference: { uuid, name } for an action's output, { input: true }
+ * for Shortcut Input. `key` pulls one key out of a dictionary and `as` coerces
+ * (WFStringContentItem for text, WFRichTextContentItem on a data: URL, which
+ * renders the page and so runs its JavaScript). See
+ * docs/shortcuts-format-notes.md.
+ */
+function attachment(ref) {
+  if (ref.input) return { Type: "ExtensionInput" };
+  if (!ref.uuid) throw new Error("attachment(): needs a uuid, or input: true");
+  const value = { OutputName: ref.name || "Text", OutputUUID: ref.uuid, Type: "ActionOutput" };
+  const aggrandizements = [];
+  if (ref.key) {
+    aggrandizements.push({ DictionaryKey: ref.key, Type: "WFDictionaryValueVariableAggrandizement" });
+  }
+  if (ref.as) {
+    aggrandizements.push({ CoercionItemClass: ref.as, Type: "WFCoercionVariableAggrandizement" });
+  }
+  if (aggrandizements.length) value.Aggrandizements = aggrandizements;
+  return value;
+}
+
+/**
+ * A whole value that IS another action's output, with no surrounding text.
+ */
+function variable(ref) {
+  return { Value: attachment(ref), WFSerializationType: "WFTextTokenAttachment" };
+}
+
+/**
+ * Text with variables embedded in it. Takes an alternating list of strings and
+ * refs; the anchor offsets are derived from the string built so far, never
+ * counted by hand:
+ *
+ *   tokenString(["The text said: ", { uuid: u }])   // anchor at {15, 1}
+ */
+function tokenString(parts) {
+  let string = "";
+  const attachmentsByRange = {};
+  for (const part of [].concat(parts)) {
+    if (typeof part === "string") {
+      string += part;
+      continue;
+    }
+    attachmentsByRange[`{${string.length}, 1}`] = attachment(part);
+    string += ANCHOR;
+  }
+  return { Value: { attachmentsByRange, string }, WFSerializationType: "WFTextTokenString" };
+}
+
+/**
  * Control-flow identifiers, mapped to the helpers that build them correctly.
  *
  * A block is three or more sibling actions sharing a GroupingIdentifier and
@@ -128,6 +184,17 @@ class Shortcut {
   addRaw(actionObj) {
     this.actions.push(actionObj);
     return this;
+  }
+
+  /**
+   * The UUID of the action just added, for wiring the next one to it.
+   *
+   *   s.add("text", { WFTextActionText: "hi" });
+   *   s.add("showresult", { Text: tokenString([{ uuid: s.lastUUID() }]) });
+   */
+  lastUUID() {
+    const last = this.actions[this.actions.length - 1];
+    return last && last.WFWorkflowActionParameters && last.WFWorkflowActionParameters.UUID;
   }
 
   // -- Control flow helpers --
@@ -316,13 +383,16 @@ class Shortcut {
         WFWorkflowIconStartColor: this.icon.color,
         WFWorkflowIconGlyphNumber: this.icon.glyph,
       },
-      WFWorkflowClientVersion: "2302.0.4",
+      // 4711 and "Watch" are what real exports carry. The former defaults
+      // ("2302.0.4", "WatchKit") appear in no export observed, and both trace
+      // to a model-generated example of 2019 vintage.
+      WFWorkflowClientVersion: "4711",
       WFWorkflowOutputContentItemClasses: [],
       WFWorkflowHasOutputFallback: false,
       WFWorkflowActions: this.actions,
       WFWorkflowInputContentItemClasses: this.inputContentItemClasses,
       WFWorkflowImportQuestions: [],
-      WFWorkflowTypes: ["NCWidget", "WatchKit"],
+      WFWorkflowTypes: ["Watch", "WFWorkflowTypeShowInSearch"],
       WFQuickActionSurfaces: [],
       WFWorkflowHasShortcutInputVariables: false,
       WFWorkflowName: this.name,
@@ -344,7 +414,30 @@ class Shortcut {
   }
 
   /**
-   * Write to a .shortcut file (XML plist format).
+   * The actions as a delivery chain: { label, actions: [{ id, p }] }.
+   *
+   * This is the shape tools/pack.py packs into a shortcuts:// link, which is
+   * the route that actually installs anything. Individual actions need only
+   * the com.apple.shortcuts.action pasteboard type; a whole .shortcut file
+   * needs Apple's signature, which is why export() below is a serialization
+   * format rather than a way to install.
+   */
+  toActionChain(label) {
+    return {
+      label: label || this.name,
+      actions: this.actions.map((action) => ({
+        id: action.WFWorkflowActionIdentifier,
+        p: action.WFWorkflowActionParameters || {},
+      })),
+    };
+  }
+
+  /**
+   * Write a .shortcut file (XML plist).
+   *
+   * A serialization format, not an install path: an unsigned .shortcut file is
+   * not something the Shortcuts app will take. Use toActionChain() and
+   * tools/pack.py to deliver actions to a device.
    */
   export(filePath) {
     const fs = require("fs");
@@ -407,4 +500,4 @@ ${body}
 `;
 }
 
-module.exports = { Shortcut, buildXMLPlist };
+module.exports = { Shortcut, buildXMLPlist, attachment, variable, tokenString, ANCHOR };

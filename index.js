@@ -147,7 +147,7 @@ function listActions() {
   return Array.from(allActions.keys());
 }
 
-const { Shortcut, buildXMLPlist } = require("./shortcut");
+const { Shortcut, buildXMLPlist, attachment, variable, tokenString, ANCHOR } = require("./shortcut");
 
 module.exports = {
   getAction,
@@ -158,4 +158,8 @@ module.exports = {
   allActions,
   Shortcut,
   buildXMLPlist,
+  attachment,
+  variable,
+  tokenString,
+  ANCHOR,
 };

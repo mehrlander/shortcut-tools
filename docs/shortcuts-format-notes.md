@@ -104,6 +104,48 @@ numeric comparison is not among them.
 
 Sources: the chat above for the mechanism, `actions.json` for the table.
 
+## Two attachment forms, and the aggrandizements
+
+*Observed 2026-08-10, from actions copied off the device and read back with
+`plistlib`.*
+
+A token **inside a string** uses `WFTextTokenString` with `attachmentsByRange`,
+keyed by offset. A token that **is** the whole value uses
+`WFTextTokenAttachment`, with no offset:
+
+```json
+"WFInput": { "Value": { "OutputUUID": "…", "Type": "ActionOutput", "OutputName": "…" },
+             "WFSerializationType": "WFTextTokenAttachment" }
+```
+
+`Type` is `ActionOutput` for another action's output, `ExtensionInput` for
+Shortcut Input. Either `Value` may carry `Aggrandizements`, which reach into it
+without spending an action:
+
+| Aggrandizement | Field | Does |
+| --- | --- | --- |
+| `WFDictionaryValueVariableAggrandizement` | `DictionaryKey` | Take one key from a dictionary |
+| `WFCoercionVariableAggrandizement` | `CoercionItemClass` | Coerce. `WFStringContentItem` gives text; `WFRichTextContentItem` on a `data:text/html` URL renders the page, which runs its JavaScript |
+
+Offsets count the rendered string, so `"The text said: ￼"` anchors at `{15, 1}`.
+Several consumers may share one producer.
+
+## The packed route inverts the glyph rule
+
+*Observed 2026-08-10.*
+
+Delivering actions as base64 plist XML ([`tools/pack.py`](../tools/pack.py))
+carries the **raw U+FFFC glyph**. The `&#65532;` entity exists only because a
+browser render strips the glyph, and this route has no browser in it. Where a
+payload does cross a rendered page, the entity rule still holds.
+
+Three more from the same day. Shortcuts **remints every UUID on paste**,
+rewriting references consistently within one paste but not across pastes, so a
+patch cannot address an action already in the shortcut; replace whole units.
+`Set Name` does not vectorize over a list, while base64 decode and `Get File of
+Type` do. And two real shortcuts both carry `WFWorkflowClientVersion` `4711`,
+against the `2302.0.4` that `shortcut.js` hardcodes.
+
 ## `actions.json` values are newline-delimited JSON, not JSON
 
 The README's per-value description is accurate for 809 of 810 entries. The
