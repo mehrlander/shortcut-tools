@@ -59,3 +59,12 @@ plus any corrections to the builder's defaults are recorded here.
   `WatchKit` and `WFWorkflowClientVersion` `2302.0.4` appear in no real export
   and both trace to a 2019-vintage model-generated template. Table added above.
   The device test is now a confirmation of two specific values.
+- 2026-08-09: Two of the three questions are settled, and the premise moved. The
+  delivery route that works is not a file at all: individual actions need only the
+  `com.apple.shortcuts.action` pasteboard type, which a device shortcut stamps, so
+  a chain behind a `shortcuts://` link installs and an unsigned `.shortcut` does
+  not. Proven on device this session; `tools/pack.py` and `workflows/` land it.
+  `WFWorkflowClientVersion` is `4711` and the type is `Watch` in two real
+  shortcuts read back today, so `build()` now emits both instead of the 2019
+  values. What remains of this task is only whether an unsigned file imports at
+  all, which nothing needs an answer to.
