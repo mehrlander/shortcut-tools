@@ -106,7 +106,7 @@ Sources: the chat above for the mechanism, `actions.json` for the table.
 
 ## Two attachment forms, and the aggrandizements
 
-*Observed 2026-08-09, from actions copied off the device and read back with
+*Observed 2026-08-10, from actions copied off the device and read back with
 `plistlib`.*
 
 A token **inside a string** uses `WFTextTokenString` with `attachmentsByRange`,
@@ -132,7 +132,7 @@ Several consumers may share one producer.
 
 ## The packed route inverts the glyph rule
 
-*Observed 2026-08-09.*
+*Observed 2026-08-10.*
 
 Delivering actions as base64 plist XML ([`tools/pack.py`](../tools/pack.py))
 carries the **raw U+FFFC glyph**. The `&#65532;` entity exists only because a
