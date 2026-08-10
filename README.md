@@ -45,6 +45,18 @@ Apple documents neither the file format nor the runtime, so two files under `doc
 - [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
 - [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
 
+## Chains and payloads
+
+`workflows/` holds action chains as source, and `tools/pack.py` turns one into a
+tappable link that pastes those actions onto the device clipboard. `pages/` holds
+the HTML payloads a chain carries, referenced as `{"$file": "pages/x.html"}` so
+each page has exactly one copy and stays testable in a browser.
+
+The worked example is `gh-recent-branches`: a page that queries the GitHub
+GraphQL API and returns the branches whose latest commit is yours, delivered as a
+picker that opens the one you choose. See
+[`workflows/README.md`](workflows/README.md).
+
 ## CLI
 
 Installed as `shortcut-tools`, or run with `npx shortcut-tools`.

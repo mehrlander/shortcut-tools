@@ -230,6 +230,42 @@ separately.
 Source: [Decoding siriZipped base64 and bplist parsing](https://claude.ai/chat/1600e47e-7680-49f9-bda2-98d92223f175)
 (2026-04-29).
 
+## The data: URL route can reach the network, and the capture moment is the risk
+
+*Measured 2026-08-10, in Chromium rather than on device.* A page delivered as
+`data:text/html;charset=utf-8;base64,…` and read back through a
+`WFRichTextContentItem` coercion runs its JavaScript, which
+[`js-data-url`](../workflows/js-data-url.json) already showed. The open question
+was whether a page that also fetches something can work this way, since the
+coercion captures rendered text at a moment nobody has written down.
+
+Two things are settled, and both were tested against a real `data:` URL rather
+than a local file, because the origin differs:
+
+- **A cross-origin request from a `data:` URL is allowed** where the server sends
+  `Access-Control-Allow-Origin: *`, which the GitHub API does. The opaque origin
+  does not block it. Sending credentials as an `Authorization` header is fine;
+  `credentials: 'include'` would not be.
+- **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
+  DOM before anything downstream can read the page. This is the reason to prefer
+  the deprecated synchronous form here: the behavior it is deprecated for is
+  exactly the guarantee this route needs.
+
+*Unconfirmed:* whether an **async** resolution lands before the coercion reads
+the page. If it does not, an `await` yields an empty result with no error, which
+is the worst failure shape available. Until someone runs
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
+both paths on separate lines from one tap, write the request synchronously.
+
+One layout trap, distinct from timing. Where the extracted text is split on
+newlines downstream, the page must not let a line wrap: set `white-space: pre`
+rather than `pre-wrap`, so a soft wrap cannot become a line the consumer counts
+as a separate item. Whether a rich-text coercion preserves soft wraps is itself
+unconfirmed, and not wrapping costs nothing.
+
+The performance cliff above does not apply here. That is the `Run JavaScript on
+Web Page` action's interpreter; this route is a real WebKit render.
+
 ## Generating the plist
 
 Python's `plistlib` produces guaranteed well-formed output from a plain dict via

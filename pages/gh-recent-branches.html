@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Recent branches</title>
+<style>
+  body { font: 15px/1.5 ui-monospace, Menlo, monospace; margin: 1rem; }
+  /* Never wrap. The shortcut splits this text on newlines, and a soft wrap that
+     a layout-based extraction turned into one would read as an extra branch. */
+  pre { white-space: pre; overflow-x: auto; margin: 0; }
+  form { display: none; }
+  body.ask form { display: block; }
+  input { font: inherit; width: 22rem; max-width: 100%; }
+</style>
+
+<form onsubmit="run(this.tok.value); return false">
+  <p>Paste a GitHub token with <code>repo</code> scope, then Run.
+  <p><input name="tok" type="password" autocomplete="off" placeholder="ghp_..."> <button>Run</button>
+</form>
+<pre id="out"></pre>
+
+<script>
+// The token arrives by string substitution before this page is base64'd into a
+// data: URL. The sentinel is assembled from halves so the Replace Text action
+// that swaps the literal above does not also rewrite this comparison.
+var TOKEN = '__GH_TOKEN__';
+var SENTINEL = '__GH' + '_TOKEN__';
+
+var LIMIT = 25;        // branches shown
+var REPOS = 40;        // repositories scanned, most recently pushed first
+var BRANCHES = 30;     // branches read per repository
+
+var QUERY = [
+  'query {',
+  '  viewer {',
+  '    login',
+  '    repositories(first: ' + REPOS + ', orderBy: {field: PUSHED_AT, direction: DESC},',
+  '                 affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) {',
+  '      nodes {',
+  '        nameWithOwner',
+  '        refs(refPrefix: "refs/heads/", first: ' + BRANCHES + ',',
+  '             orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {',
+  '          nodes {',
+  '            name',
+  '            target { ... on Commit { committedDate author { user { login } } } }',
+  '          }',
+  '        }',
+  '      }',
+  '    }',
+  '  }',
+  '}'
+].join('\n');
+
+function ago(iso) {
+  var mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (mins < 60) return mins + 'm';
+  if (mins < 1440) return Math.round(mins / 60) + 'h';
+  if (mins < 43200) return Math.round(mins / 1440) + 'd';
+  return Math.round(mins / 43200) + 'mo';
+}
+
+// Synchronous on purpose. The rich-text coercion captures the rendered page at
+// a moment nobody has documented, and an async resolution that lands after it
+// yields an empty result with no error. Blocking the load guarantees the text
+// is in the DOM before anything can read it.
+function post(token) {
+  var x = new XMLHttpRequest();
+  x.open('POST', 'https://api.github.com/graphql', false);
+  x.setRequestHeader('Content-Type', 'application/json');
+  x.setRequestHeader('Authorization', 'Bearer ' + token);
+  x.send(JSON.stringify({ query: QUERY }));
+  if (x.status !== 200) throw new Error('HTTP ' + x.status + ': ' + x.responseText.slice(0, 300));
+  var body = JSON.parse(x.responseText);
+  if (body.errors) throw new Error(body.errors.map(function (e) { return e.message; }).join('; '));
+  return body.data;
+}
+
+function lines(data) {
+  var me = data.viewer.login;
+  var rows = [];
+  data.viewer.repositories.nodes.forEach(function (repo) {
+    repo.refs.nodes.forEach(function (ref) {
+      var tip = ref.target;
+      if (!tip || !tip.author || !tip.author.user) return;   // unlinked email, cannot attribute
+      if (tip.author.user.login !== me) return;              // someone else pushed last
+      rows.push({ at: tip.committedDate,
+                  line: repo.nameWithOwner + '@' + ref.name + ' · ' + ago(tip.committedDate) });
+    });
+  });
+  rows.sort(function (a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
+  if (!rows.length) return 'No branches found whose latest commit is yours.';
+  return rows.slice(0, LIMIT).map(function (r) { return r.line; }).join('\n');
+}
+
+function run(token) {
+  document.body.className = '';
+  try {
+    document.getElementById('out').textContent = lines(post(token));
+  } catch (err) {
+    document.getElementById('out').textContent = 'ERROR ' + err.message;
+  }
+}
+
+if (TOKEN === SENTINEL) document.body.className = 'ask';   // opened raw in a browser
+else run(TOKEN);
+</script>

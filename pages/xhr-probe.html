@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Network probe</title>
+<pre id="out">sync: not reached
+async: pending</pre>
+
+<script>
+// Does the rich-text coercion of a data: URL wait for network work, and which
+// kind? Two requests to the same public, unauthenticated endpoint, reported on
+// separate lines so one tap answers both questions.
+//
+//   sync: <n> bytes   the coercion waited for a blocking XMLHttpRequest
+//   async: <n> bytes  it also waited for a promise to resolve
+//   async: pending    it did not, so anything awaited is lost silently
+//
+// Read the result as evidence about the capture moment, not about the network.
+var URL_ = 'https://api.github.com/zen';
+var sync = 'sync: not reached', async = 'async: pending';
+
+function draw() { document.getElementById('out').textContent = sync + '\n' + async; }
+
+try {
+  var x = new XMLHttpRequest();
+  x.open('GET', URL_, false);
+  x.send();
+  sync = 'sync: ' + x.status + ', ' + x.responseText.length + ' bytes';
+} catch (err) {
+  sync = 'sync: ERROR ' + err.message;
+}
+draw();
+
+fetch(URL_).then(function (r) { return r.text(); })
+  .then(function (t) { async = 'async: ' + t.length + ' bytes'; draw(); })
+  .catch(function (err) { async = 'async: ERROR ' + err.message; draw(); });
+</script>
