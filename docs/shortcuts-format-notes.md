@@ -158,10 +158,77 @@ not redundant:
 `workflowIdentifier` is minted per install, so a chain written elsewhere cannot
 invent one; it has to be read off an export from the device it will run on. A
 shortcut that calls **itself** sets `isSelf` true, which is how one shortcut can
-be both a library and its own demo caller.
+be both a library and its own demo caller. Both halves appear in every
+`runworkflow` action across the two exports read so far.
 
 *Unconfirmed:* whether `WFWorkflowName` alone resolves by name when the dict is
 absent. Until that is tested, write both.
+
+The input attachment may be a plain variable rather than an action output, in
+which case it is `{"Type": "Variable", "VariableName": "content"}` inside the
+same `WFTextTokenAttachment` envelope.
+
+## An `If` with several conditions uses a different shape entirely
+
+*Observed 2026-08-10, from an exported shortcut.*
+
+The single-condition form documented above puts `WFCondition`, `WFInput`, and
+`WFConditionalActionString` directly in the action's parameters. A **multi**
+-condition `If` replaces all three with one `WFConditions` key holding a
+`WFContentPredicateTableTemplate`, whose `WFActionParameterFilterTemplates` is
+an array of the single-condition shape, each with its own `WFInput`:
+
+```json
+"WFConditions": {
+  "WFSerializationType": "WFContentPredicateTableTemplate",
+  "Value": { "WFActionParameterFilterPrefix": 0,
+             "WFContentPredicateBoundedDate": false,
+             "WFActionParameterFilterTemplates": [ { "WFCondition": 4, "…": "…" },
+                                                   { "WFCondition": 8, "…": "…" } ] }
+}
+```
+
+Each template may test a **different** input, which is what makes this more than
+a convenience: one `If` can ask whether the item's type is `URL` *and/or*
+whether its markdown begins with `http`.
+
+*Unresolved:* whether `WFActionParameterFilterPrefix` `0` means all or any. The
+observed instance is true under both readings, so it does not discriminate, and
+guessing here would be worse than leaving it open.
+
+## `Show-Html`: what it does to a page on the way through
+
+*Observed 2026-08-10, from an export.* Device-local
+`workflowIdentifier` `84B4AB5F-02B8-426D-BF6A-E051730CC0E4`.
+
+It is the general-purpose page runner behind this route, and its contract
+matters to anything that calls it:
+
+- **Input** is HTML text, a URL, or nothing. A URL is downloaded first, by the
+  multi-condition `If` above; nothing falls back to the clipboard through the
+  top-level `WFWorkflowNoInputBehavior` key, `WFWorkflowNoInputBehaviorGetClipboard`.
+- **It calls `Inject-🎟️GitHubToken` itself.** A caller that injects first is
+  doing nothing, since the second pass finds no placeholder. Hand it the page
+  with the placeholder intact.
+- It substitutes a second placeholder, `📋ClipboardBase64`, with the clipboard
+  base64-encoded, so a page can carry the clipboard into itself.
+- It repairs smart quotes and strips markdown code fences, which is what makes
+  a page pasted out of a chat window work without hand-cleaning.
+- **It opens the result with `Open URLs`, not an in-app view.** The page lands
+  in the browser, so it is fully interactive: links navigate, and async work has
+  no capture moment to race.
+- **It returns the cleaned HTML**, wrapped in a one-item `is.workflow.actions.list`.
+  Not a result from the page. Nothing useful chains after it.
+
+Two details worth carrying. The data URL it builds is
+`data:text/html;charset=utf-8, ￼` with a **space** after the comma, anchoring at
+offset 37 rather than 36, so whitespace there is tolerated;
+[`js-data-url`](../workflows/js-data-url.json) omits it and also works. And one
+of its five `Replace Text` actions, the one stripping `^```\w*\n|```$`, has its
+output referenced by nothing: the next action reads the same producer it does.
+The later ` ```\s* ` pass covers the same ground, so the effect is invisible.
+Flagged rather than fixed, since it is not this repo's shortcut, and since the
+note above about vestigial-looking actions counsels confirming on device first.
 
 ## The token-injection pattern
 

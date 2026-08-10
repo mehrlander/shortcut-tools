@@ -176,12 +176,30 @@ test("the request is synchronous, which is the whole reason it is an XHR", () =>
   assert.match(html, /\.open\('POST', 'https:\/\/api\.github\.com\/graphql', false\)/);
 });
 
-test("both chains carry the placeholder the injector looks for", () => {
-  for (const f of ["gh-recent-branches.json", "gh-recent-branches-picker.json"]) {
-    const chain = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "workflows", f), "utf8"));
-    const inject = chain.actions.find(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER);
-    assert.ok(inject, f + " should call the injector");
-    assert.strictEqual(inject.p.WFWorkflow.workflowName, "Inject-" + PLACEHOLDER,
-      f + ": Run Shortcut needs the WFWorkflow dict, not only WFWorkflowName");
-  }
+const chain = (f) =>
+  JSON.parse(fs.readFileSync(path.join(__dirname, "..", "workflows", f), "utf8"));
+
+test("the picker calls the injector itself, since nothing else in that chain will", () => {
+  const inject = chain("gh-recent-branches-picker.json")
+    .actions.find(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER);
+  assert.ok(inject, "the picker should call the injector");
+  assert.strictEqual(inject.p.WFWorkflow.workflowName, "Inject-" + PLACEHOLDER,
+    "Run Shortcut needs the WFWorkflow dict, not only WFWorkflowName");
+});
+
+test("the Show-Html chain does not inject, because Show-Html already does", () => {
+  // Injecting first is harmless, since the second pass finds no placeholder to
+  // replace. It is still an action that does nothing, and the reason it does
+  // nothing is not visible from this chain.
+  const actions = chain("gh-recent-branches.json").actions;
+  assert.strictEqual(actions.length, 2);
+  assert.ok(!actions.some(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER),
+    "Show-Html substitutes the placeholder on the way through");
+  assert.strictEqual(actions[1].p.WFWorkflow.workflowIdentifier,
+    "84B4AB5F-02B8-426D-BF6A-E051730CC0E4");
+});
+
+test("the page still carries the placeholder, since Show-Html is what resolves it", () => {
+  const html = fs.readFileSync(PAGE, "utf8");
+  assert.ok(html.includes(PLACEHOLDER));
 });

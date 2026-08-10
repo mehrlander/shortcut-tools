@@ -52,12 +52,13 @@ tappable link that pastes those actions onto the device clipboard. `pages/` hold
 the HTML payloads a chain carries, referenced as `{"$file": "pages/x.html"}` so
 each page has exactly one copy and stays testable in a browser.
 
-The worked example is `gh-recent-branches`: three actions that build a page,
-hand it to `Inject-🎟️GitHubToken` for its credential, and show it. The page
+The worked example is `gh-recent-branches`: two actions that build a page and
+hand it to `Show-Html`, which substitutes the credential and opens it. The page
 queries the GitHub GraphQL API and lists the branches whose latest commit is
-yours, each one a link. See [`workflows/README.md`](workflows/README.md), and
-[the token-injection pattern](docs/shortcuts-format-notes.md#the-token-injection-pattern)
-for the substitution it depends on.
+yours, each one a link. See [`workflows/README.md`](workflows/README.md), plus
+[what `Show-Html` does to a page](docs/shortcuts-format-notes.md#show-html-what-it-does-to-a-page-on-the-way-through)
+and [the token-injection pattern](docs/shortcuts-format-notes.md#the-token-injection-pattern)
+behind it.
 
 ## CLI
 

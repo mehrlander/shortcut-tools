@@ -18,13 +18,20 @@ the clipboard, ready to paste into any shortcut. Format in
 | `js-data-url` | Runs JavaScript on device by coercing a `data:text/html` URL to rich text. |
 | `menu` | Three cases under one `GroupingIdentifier`, modes 0/1/1/1/2. |
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
-| `gh-recent-branches` | The branches you last committed on, shown as a tappable list. Three actions: build the page, inject the token, show it. |
+| `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
 | `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`. |
 
 Both branch chains carry the same page, and the page is written to serve both:
 its visible text is only ever the list itself, and its rows are separated by
 real newline characters rather than by block layout, so a text extraction
 yields the same lines whichever way it reads the DOM.
+
+They differ in who resolves the token. `Show-Html` injects on the way through,
+so the chain that uses it hands over the page with the placeholder intact and
+never mentions the injector. The picker has no such helper, so it calls
+`Inject-🎟️GitHubToken` for itself. Injecting in both places is harmless and
+still wrong: the second pass finds nothing to replace, and the action reads as
+load-bearing to anyone who did not know that.
 
 ## Payloads live in `pages/`, not pasted into the chain
 
