@@ -60,6 +60,44 @@ yours, each one a link. See [`workflows/README.md`](workflows/README.md), plus
 and [the token-injection pattern](docs/shortcuts-format-notes.md#the-token-injection-pattern)
 behind it.
 
+## Sending a page, not a chain
+
+`tools/pack.py` sends **actions to paste**. [`tools/show.py`](tools/show.py) is
+its sibling and sends **a page to run**: one link that hands an HTML file to a
+shortcut which base64-encodes it, builds `data:text/html;charset=utf-8;base64,`
+and opens it, so the page lands in Safari as a real document.
+
+```bash
+python3 tools/show.py pages/gh-recent-branches.html      # prints a tappable link
+python3 tools/show.py '<link>' --verify                  # read one back before sending
+```
+
+The page is gzipped and wrapped in [`tools/gz-shell.html`](tools/gz-shell.html),
+which inflates it in the browser with `DecompressionStream` and writes it out.
+Nothing on the device does the unpacking, so the shortcut stays three actions
+long. Percent-encoding is what this buys off. Sent raw, a page costs about 1.7x
+its own size, since markup is mostly characters the encoder escapes; compressed,
+it costs a fixed ~700 characters of shell plus base64url, which the encoder
+leaves almost entirely alone. A small page therefore gains little and a large
+one collapses.
+
+| Page | Raw link | Compressed link |
+| --- | ---: | ---: |
+| `pages/xhr-probe.html`, 1,256 chars | 2,126 | 1,799 |
+| `pages/gh-recent-branches.html`, 5,768 chars | 9,621 | 4,560 |
+| a 100 KB baked page | ~172,000 | ~5,200 |
+
+Token injection survives the compression, which is the part worth knowing.
+`Show-Html` substitutes by text replacement and cannot see inside a gzip stream,
+so the shell keeps an uncompressed copy of each placeholder the page needs, takes
+the substitution there, and applies it to the page after inflating. Only the
+placeholders a page actually uses are carried, so a page with no secret in it is
+never handed the token. Sending a token-bearing page to a target that does not
+inject is refused rather than quietly loaded unauthenticated.
+
+`--raw` skips the shell and sends the page as itself, which is what a device
+without `DecompressionStream` needs (Safari gained it in 16.4).
+
 ## CLI
 
 Installed as `shortcut-tools`, or run with `npx shortcut-tools`.

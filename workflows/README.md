@@ -20,6 +20,14 @@ the clipboard, ready to paste into any shortcut. Format in
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
 | `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
 | `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
+| `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
+
+`run-html` is the one chain here that is not a payload of its own. Paste it into
+a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
+which is the difference between the two delivery routes: the others are pasted
+once and then run from the Shortcuts app, while `Run-Html` exists to be handed a
+different page on every tap. `Show-Html` does the same job with credential
+injection and text repair on top, so `Run-Html` is for pages that need neither.
 
 Both branch chains carry the same page, and the page is written to serve both:
 its visible text is only ever the list itself, and its rows are separated by
@@ -57,7 +65,8 @@ inherited from `js-data-url` are confirmed by a chain that runs. `runworkflow`
 is confirmed against a real export, including the `WFWorkflow` dict and its
 device-local `workflowIdentifier`, which a chain cannot invent and has to read
 off the device it will run on. `text.split`, `choosefromlist`, `text.replace`,
-and `openurl`, all of them in the picker chain only, are still inferred from the
-documented naming. A wrong key does not fail loudly. It pastes an action with an
-empty field, which is a two-tap fix in the editor and worth watching for on
-first run.
+and `openurl` are still inferred from the documented naming, as is the
+`ExtensionInput` attachment `run-html` reads its page from, which the notes
+record but no chain here has yet run. A wrong key does not fail loudly. It
+pastes an action with an empty field, which is a two-tap fix in the editor and
+worth watching for on first run.

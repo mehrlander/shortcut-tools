@@ -215,9 +215,11 @@ test("the picker opens its URL the way the exports do it", () => {
   assert.strictEqual(a[1].p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment");
 });
 
+// Every chain, not a named few: an anchor is written by hand, the offset is
+// counted by hand, and a new chain is exactly where that goes wrong.
 test("every anchor offset lands on the glyph it addresses", () => {
-  for (const f of ["gh-recent-branches.json", "gh-recent-branches-picker.json",
-                   "sync-xhr-probe.json"]) {
+  const dir = path.join(__dirname, "..", "workflows");
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith(".json"))) {
     for (const action of chain(f).actions) {
       for (const v of Object.values(action.p)) {
         if (v && v.WFSerializationType !== "WFTextTokenString") continue;

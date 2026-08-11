@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><script>
+/* Written by tools/show.py, which strips these comments, collapses the
+   whitespace, and fills the two slots below: S with the placeholder pairs this
+   page actually needs, G with the base64url gzip. Comments are free here and
+   cost about 1,800 characters of link if they ship, so write them.
+
+   The shell is uncompressed on purpose. Show-Html substitutes into text, so it
+   can only reach a placeholder that is still legible when the link arrives.
+   Each pair is [search, value]: the search key is written as \u escapes so the
+   injector cannot see it, the value is the literal placeholder and is what the
+   injector rewrites. Written whole, the search key would be rewritten too and
+   the substitution would find nothing to replace. */
+var S = __SUBS__, G = "__GZ__";
+var b = atob(G.replace(/-/g, "+").replace(/_/g, "/"));
+new Response(new Blob([Uint8Array.from(b, function (c) { return c.charCodeAt(0) })])
+  .stream().pipeThrough(new DecompressionStream("gzip"))).text()
+  .then(function (h) {
+    for (var i = 0; i < S.length; i++) h = h.split(S[i][0]).join(S[i][1]);
+    /* document.write, not innerHTML: a script assigned through innerHTML never
+       runs, and every page on this route is a script. */
+    document.open(); document.write(h); document.close();
+  })
+  .catch(function (e) { document.body.textContent = "inflate failed: " + e });
+</script>

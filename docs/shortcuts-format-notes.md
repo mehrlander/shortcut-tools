@@ -264,6 +264,40 @@ Two rules follow for any page written against this, and
    injector in a comment is enough to paste the live token into that comment.
    Caught by the test rather than by review.
 
+## Injection reaches a compressed page, through the wrapper rather than into it
+
+*Measured 2026-08-11, in headless Chromium.*
+
+A page can be delivered gzipped, wrapped in a small uncompressed shell that
+inflates it in the browser ([`tools/show.py`](../tools/show.py),
+[`tools/gz-shell.html`](../tools/gz-shell.html)). Injection and compression look
+mutually exclusive at first, since the injector substitutes by text replacement
+and a gzip stream has no text in it. They are not: the **shell** is text, so it
+carries the placeholder, takes the substitution, and applies it to the page after
+inflating. The page's own source is unchanged either way, which is what keeps one
+page servable by both routes.
+
+Three constraints follow, and the first is the trap:
+
+1. **The shell needs both halves of the pair, and only one may be literal.** The
+   value slot is the literal placeholder, which the injector rewrites; the search
+   key is the same string written as `\u` escapes, which it cannot see. Written
+   whole, the key is rewritten too and the substitution finds nothing. Generating
+   the key with `json.dumps(placeholder)` rather than typing the escapes keeps the
+   two from drifting.
+2. **Carry only the placeholders the page uses.** A shell that carries all of them
+   hands the live token to a page with no use for it.
+3. **The wrapper's own comments are not free.** They ship inside the link and cost
+   about 1,800 characters, more than the compression saves on a small page, so
+   `show.py` strips them at build time.
+
+Rendering the result is a real navigation, not a webview: a `data:text/html`
+URL carrying the shell inflates, substitutes, and runs the page's own script,
+confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
+Safari 16.4 and later; a device below that needs the page sent raw.
+
+*Unconfirmed:* the whole route on device. Chromium is a proxy for Safari here.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -427,11 +461,15 @@ incoming value through. Merged in PR #3.
 
 ## Checks
 
-`npm test` runs `test/actions.test.js` (the dataset holds its shape: every value
-parses, every identifier is well formed, the multi-variant entry is the only one,
-nothing carries a `GroupingIdentifier`) and `test/builder.test.js` (`add()`
-refuses control flow, every block is balanced and shares one grouping, presets
-merge, the serializer escapes markup). Node's built-in runner, no dependencies.
+`npm test` runs every `test/*.test.js` on Node's built-in runner, no
+dependencies. The two that hold this file's claims are `test/actions.test.js`
+(the dataset holds its shape: every value parses, every identifier is well
+formed, the multi-variant entry is the only one, nothing carries a
+`GroupingIdentifier`) and `test/builder.test.js` (`add()` refuses control flow,
+every block is balanced and shares one grouping, presets merge, the serializer
+escapes markup). `test/show.test.js` is the exception to what follows: it runs
+the shell's real JavaScript out of a real link, so the compressed route is
+exercised rather than asserted about.
 
 What the tests cannot tell you is whether the output imports. That needs a
 device, and is a separate open task.
