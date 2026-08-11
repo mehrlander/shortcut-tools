@@ -2,6 +2,7 @@
 """Emit a tappable link that renders one HTML page on device.
 
     python3 tools/show.py pages/<page>.html [--target NAME] [--raw]
+    python3 tools/show.py - < page.html          # a page that is not committed yet
     python3 tools/show.py '<link>' --verify
 
 The sibling of tools/pack.py, and the other half of the delivery story. pack.py
@@ -84,11 +85,15 @@ def wrap(page):
 
 
 def build(path, target=TARGET, raw=False):
-    page = Path(path).read_text()
+    # `-` reads stdin, so a page written in a session can be sent before it is
+    # committed, which is most of them. Nothing else changes: the placeholders a
+    # page carries are read out of its text, never out of its name.
+    page = sys.stdin.read() if path == "-" else Path(path).read_text()
+    named = "<stdin>" if path == "-" else path
     carried = [p for p in PLACEHOLDERS if p in page]
     if carried and target not in INJECTORS:
         raise SystemExit("%s carries %s and %s does not substitute it; use --target Show-Html"
-                         % (path, ", ".join(carried), target))
+                         % (named, ", ".join(carried), target))
     payload = page if raw else wrap(page)
     return "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
         target, urllib.parse.quote(payload, safe=""))
@@ -136,7 +141,7 @@ def verify(link):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("page", help="an HTML file, or a link with --verify")
+    ap.add_argument("page", help="an HTML file, `-` for stdin, or a link with --verify")
     ap.add_argument("--target", default=TARGET, help="the shortcut to run (default %s)" % TARGET)
     ap.add_argument("--raw", action="store_true", help="send the page uncompressed")
     ap.add_argument("--verify", action="store_true", help="decode a link instead of building one")

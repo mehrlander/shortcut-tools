@@ -69,6 +69,7 @@ and opens it, so the page lands in Safari as a real document.
 
 ```bash
 python3 tools/show.py pages/gh-recent-branches.html      # prints a tappable link
+python3 tools/show.py - < draft.html                     # a page not committed yet
 python3 tools/show.py '<link>' --verify                  # read one back before sending
 ```
 

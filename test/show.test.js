@@ -105,6 +105,22 @@ test("the same page always yields the same link", () => {
   assert.strictEqual(show(f), show(f), "gzip's header mtime must be zeroed");
 });
 
+// Most pages worth sending are written in a session and not committed yet.
+test("a page arriving on stdin gives the same link as the file", () => {
+  const f = path.join("pages", "xhr-probe.html");
+  const piped = execFileSync("python3", [path.join("tools", "show.py"), "-"],
+    { cwd: ROOT, encoding: "utf8", input: page("xhr-probe.html"), stdio: ["pipe", "pipe", "pipe"] });
+  assert.strictEqual(piped.trim(), show(f));
+});
+
+test("stdin is checked for placeholders the same way a file is", () => {
+  assert.throws(() => execFileSync("python3",
+    [path.join("tools", "show.py"), "-", "--target", "Run-Html"],
+    { cwd: ROOT, encoding: "utf8", input: page("gh-recent-branches.html"),
+      stdio: ["pipe", "pipe", "pipe"] }),
+    /Command failed/, "the placeholders are read out of the text, not the filename");
+});
+
 test("--verify reads a link back rather than trusting it", () => {
   const link = show(path.join("pages", "gh-recent-branches.html"));
   const report = show(link, "--verify");
