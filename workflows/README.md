@@ -64,9 +64,10 @@ is reconstructed rather than looked up. Three tiers apply here. The five actions
 inherited from `js-data-url` are confirmed by a chain that runs. `runworkflow`
 is confirmed against a real export, including the `WFWorkflow` dict and its
 device-local `workflowIdentifier`, which a chain cannot invent and has to read
-off the device it will run on. `text.split`, `choosefromlist`, `text.replace`,
-and `openurl` are still inferred from the documented naming, as is the
-`ExtensionInput` attachment `run-html` reads its page from, which the notes
-record but no chain here has yet run. A wrong key does not fail loudly. It
+off the device it will run on. `run-html` is confirmed by a device run on
+2026-08-11, which promotes `openurl` and the `ExtensionInput` attachment it
+reads its page from out of the inferred tier. `text.split`, `choosefromlist`,
+and `text.replace`, all of them in the picker chain only, are still inferred
+from the documented naming. A wrong key does not fail loudly. It
 pastes an action with an empty field, which is a two-tap fix in the editor and
 worth watching for on first run.

@@ -296,7 +296,17 @@ URL carrying the shell inflates, substitutes, and runs the page's own script,
 confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
 Safari 16.4 and later; a device below that needs the page sent raw.
 
-*Unconfirmed:* the whole route on device. Chromium is a proxy for Safari here.
+**Confirmed on device 2026-08-11**, by pasting `run-html` into a shortcut named
+`Run-Html` and tapping a `show.py` link carrying
+[`xhr-probe`](../pages/xhr-probe.html). It reported `sync: 200, 33 bytes` and
+`async: 33 bytes`, replacing the static text the page ships with, so Safari
+inflated the payload, `document.write` produced a document whose script ran, and
+that script reached the network both ways. The chain's three actions are
+confirmed by that run, `ExtensionInput` among them.
+
+*Unconfirmed:* the substitution half. The page that ran carries no placeholder,
+so the shell's injection path is still Chromium-only. Tapping a `show.py` link
+for `gh-recent-branches` through `Show-Html` is the run that would settle it.
 
 ## The packed route inverts the glyph rule
 
@@ -424,6 +434,15 @@ the page. If it does not, an `await` yields an empty result with no error, which
 is the worst failure shape available. Until someone runs
 [`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
 both paths on separate lines from one tap, write the request synchronously.
+
+The same page was run on device 2026-08-11 through `Run-Html`, and reported both
+paths resolved. **That is not an answer to the question above**, and the reason
+is worth stating so the result is not mistaken for one later: `Run-Html` opens
+the URL in Safari, where the page is simply loaded and there is no capture
+moment for anything to race. The coercion is the whole subject here, and only the
+five-action probe exercises it. What the device run does settle is the browser
+half: a cross-origin request from a `data:` URL works on device, not only in
+Chromium.
 
 One layout trap, distinct from timing. Where the extracted text is split on
 newlines downstream, the page must not let a line wrap: set `white-space: pre`
