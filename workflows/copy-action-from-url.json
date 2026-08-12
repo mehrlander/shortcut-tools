@@ -1,0 +1,41 @@
+{
+  "label": "Copy-ActionFromUrl: fetch a packed payload and paste it (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.downloadurl",
+      "p": {
+        "UUID": "C0DE0000-0001-4A00-9000-000000000001",
+        "WFURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": { "Type": "ExtensionInput" }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "C0DE0000-0002-4A00-9000-000000000002",
+        "WFWorkflowName": "Copy-ActionFromClaude",
+        "WFInput": {
+          "Value": {
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFStringContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ],
+            "OutputName": "Contents of URL",
+            "OutputUUID": "C0DE0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

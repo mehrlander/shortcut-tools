@@ -11,6 +11,20 @@ Tapping runs `Copy-ActionFromClaude` on the device, which puts the actions on
 the clipboard, ready to paste into any shortcut. Format in
 [`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
 
+**Prefer the address to the payload.** `python3 tools/pack.py --publish` writes
+every chain's payload to [`packed/`](../packed/), so a link can carry a URL
+instead of several thousand characters of base64:
+
+```
+shortcuts://run-shortcut?name=Copy-ActionFromUrl&input=text&text=https://raw.githubusercontent.com/mehrlander/shortcut-tools/main/packed/<chain>.json
+```
+
+That is about 150 characters, it is legible, a wrong character 404s instead of
+misreporting, and it tracks the branch rather than freezing a snapshot. The
+embedded form remains correct and remains necessary for a payload that is not
+committed or not public. `--check` fails when `packed/` is behind `workflows/`,
+and the suite runs it.
+
 | Chain | What it is for |
 | --- | --- |
 | `wiring-test` | Anchors at offset 0 and 15, one producer feeding two consumers. The regression test for variable binding. |
@@ -23,6 +37,7 @@ the clipboard, ready to paste into any shortcut. Format in
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `dump-shortcuts` | Every shortcut on the device as one combined JSON, onto the clipboard. Two actions plus a copy, because `Use-Shortcut` already does the work. |
+| `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |

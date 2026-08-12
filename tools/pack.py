@@ -86,12 +86,44 @@ def verify(link):
     print("%d actions, %d chars" % (len(body["actions"]), len(link)))
 
 
+def publish(check=False):
+    """Write every chain's payload under packed/, so a link can address it.
+
+    A link that carries its payload has to be transcribed whole, and the one
+    transcribing it may be a model rather than a person; three links in one
+    session arrived with base64 in place of a label. A link that carries a URL
+    is short enough to get right and fails loudly when it is not. The payload
+    is deterministic, so --check holds packed/ to the chains rather than
+    trusting anyone to remember.
+    """
+    out = ROOT / "packed"
+    out.mkdir(exist_ok=True)
+    stale = []
+    for chain in sorted((ROOT / "workflows").glob("*.json")):
+        text = json.dumps(payload(json.load(open(chain))), ensure_ascii=False, separators=(",", ":"))
+        dest = out / chain.name
+        if check:
+            if not dest.is_file() or dest.read_text() != text:
+                stale.append(dest.relative_to(ROOT).as_posix())
+        else:
+            dest.write_text(text)
+    if check and stale:
+        raise SystemExit("stale, run `python3 tools/pack.py --publish`:\n  " + "\n  ".join(stale))
+    print("packed/ is current" if check else "wrote %d payloads to packed/" % len(list(out.glob("*.json"))))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("chain", help="a workflows/ chain file, or a link with --verify")
+    ap.add_argument("chain", nargs="?", help="a workflows/ chain file, or a link with --verify")
     ap.add_argument("--target", default=TARGET)
     ap.add_argument("--verify", action="store_true", help="decode a link instead of building one")
+    ap.add_argument("--publish", action="store_true", help="write every chain's payload to packed/")
+    ap.add_argument("--check", action="store_true", help="fail if packed/ is behind workflows/")
     args = ap.parse_args()
+    if args.publish or args.check:
+        return publish(args.check)
+    if not args.chain:
+        raise SystemExit("give a chain, or --publish")
     if args.verify:
         return verify(args.chain)
     chain = json.load(open(args.chain))

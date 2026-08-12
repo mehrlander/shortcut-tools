@@ -48,3 +48,35 @@ test("every committed chain packs and round-trips", () => {
     for (const action of declared.actions) assert.ok(report.includes(action.id), f + ": " + action.id);
   }
 });
+
+// A link that carries its payload has to be transcribed whole, and the party
+// transcribing it may be a model rather than a person. packed/ exists so a link
+// can carry an address instead, which is short enough to get right and 404s
+// when it is not.
+test("packed/ holds a payload for every chain, and is current", () => {
+  pack("--check");   // throws with the command to run when it is behind
+  const chains = fs.readdirSync(path.join(ROOT, "workflows")).filter(f => f.endsWith(".json"));
+  const packed = fs.readdirSync(path.join(ROOT, "packed")).filter(f => f.endsWith(".json"));
+  assert.deepStrictEqual(packed.sort(), chains.sort(), "one payload per chain, no orphans");
+});
+
+test("a published payload is what the receiver expects, not a link", () => {
+  const body = JSON.parse(fs.readFileSync(path.join(ROOT, "packed", "dump-shortcuts.json"), "utf8"));
+  assert.ok(Array.isArray(body.actions) && body.actions.length === 3);
+  assert.match(body.report, /^Dump-Shortcuts:/, "the label the banner shows, in plain text");
+  const doc = require("node:child_process").execFileSync("python3",
+    ["-c", "import base64,plistlib,sys;print(plistlib.loads(base64.b64decode(sys.argv[1]))['WFWorkflowActionIdentifier'])",
+     body.actions[0]], { encoding: "utf8" }).trim();
+  assert.strictEqual(doc, "is.workflow.actions.getmyworkflows");
+});
+
+test("Copy-ActionFromUrl coerces the download to text before handing it on", () => {
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "copy-action-from-url.json"), "utf8"));
+  const [get, run] = chain.actions;
+  assert.strictEqual(get.id, "is.workflow.actions.downloadurl");
+  assert.strictEqual(run.p.WFWorkflowName, "Copy-ActionFromClaude");
+  // Get Contents of URL parses a JSON response into a dictionary, and the
+  // receiver wants the text. The coercion is what undoes that.
+  assert.deepStrictEqual(run.p.WFInput.Value.Aggrandizements,
+    [{ CoercionItemClass: "WFStringContentItem", Type: "WFCoercionVariableAggrandizement" }]);
+});
