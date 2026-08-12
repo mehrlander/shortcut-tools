@@ -121,6 +121,21 @@ test("a branch whose tip is someone else's is dropped", () => {
   assert.strictEqual(ctx.lines(), "o/r@mine · 10m");
 });
 
+// The branch this page was written on was missing from it, because the session
+// that wrote it commits as the `claude` account rather than as the viewer.
+test("a branch an agent pushed for you is kept, since it is still your branch", () => {
+  const ctx = load(fixture([
+    { nameWithOwner: "o/r", refs: { nodes: [
+      { name: "agent", target: commit("claude", 3) },
+      { name: "mine", target: commit("mehrlander", 10) },
+      { name: "theirs", target: commit("someone-else", 5) }
+    ] } }
+  ]));
+  ctx.run("tok");
+  assert.strictEqual(ctx.lines(), "o/r@agent · 3m\no/r@mine · 10m",
+    "the agent branch sorts by its own date, and a stranger's is still dropped");
+});
+
 test("an unlinked commit author is dropped rather than throwing", () => {
   const ctx = load(fixture([
     { nameWithOwner: "o/r", refs: { nodes: [

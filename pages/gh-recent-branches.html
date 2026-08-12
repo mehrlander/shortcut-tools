@@ -43,6 +43,15 @@ var BRANCH_PAGE = 'https://mehrlander.github.io/web-tools/pages/branch.html#gh='
 // GitHub's classic-token form reads off the query, so the page arrives ready to
 // submit rather than needing the scope remembered on a phone.
 var NEW_TOKEN = 'https://github.com/settings/tokens/new?scopes=repo&description=shortcut-tools';
+// Accounts whose commits count as yours. A Claude Code session commits as
+// `Claude <noreply@anthropic.com>`, which GitHub resolves to the `claude`
+// account, so a branch an agent pushed on your behalf fails a strict is-it-me
+// test and vanishes from a list whose whole purpose is showing where you were
+// working. Measured 2026-08-12, when this page's own branch was missing from
+// it. The identity is not uniform across sessions, which is what made the
+// omission look arbitrary rather than systematic: some checkouts commit under
+// your own noreply address and their branches were showing all along.
+var AGENTS = ['claude'];
 var LIMIT = 25;        // branches shown
 var REPOS = 40;        // repositories scanned, most recently pushed first
 var BRANCHES = 30;     // branches read per repository
@@ -116,11 +125,14 @@ function post(token) {
 
 function rows(data) {
   var me = data.viewer.login, out = [];
+  var mine = {};
+  mine[me] = true;
+  AGENTS.forEach(function (a) { mine[a] = true; });
   data.viewer.repositories.nodes.forEach(function (repo) {
     repo.refs.nodes.forEach(function (ref) {
       var tip = ref.target;
       if (!tip || !tip.author || !tip.author.user) return;   // unlinked email, cannot attribute
-      if (tip.author.user.login !== me) return;              // someone else pushed last
+      if (!mine[tip.author.user.login]) return;              // someone else pushed last
       out.push({ at: tip.committedDate,
                  address: repo.nameWithOwner + '@' + ref.name,
                  line: repo.nameWithOwner + '@' + ref.name + ' · ' + ago(tip.committedDate) });
