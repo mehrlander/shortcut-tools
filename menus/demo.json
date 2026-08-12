@@ -1,6 +1,7 @@
 {
   "label": "Washington fiscal references",
   "file": "MainMenu.vcf",
+  "prompt": "Washington fiscal references",
   "weight": "regular",
   "rows": [
     { "icon": "scales",     "title": "RCW 41.50.255",     "subtitle": "app.leg.wa.gov/RCW" },

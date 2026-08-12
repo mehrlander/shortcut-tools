@@ -172,3 +172,10 @@ test("the type parameter is read off the bytes, not assumed", () => {
   const vcf = run(SPEC, ICONS);
   assert.match(vcf, /PHOTO;TYPE=JPEG;/, "these fixtures are JPEGs and should say so");
 });
+
+test("a spec's prompt titles the sheet, since the system default says 'Which one?'", () => {
+  const withPrompt = chain({ ...SPEC, prompt: "Pick a thing" }, ICONS);
+  assert.strictEqual(withPrompt.actions[2].p.WFChooseFromListActionPrompt, "Pick a thing");
+  assert.ok(!("WFChooseFromListActionPrompt" in chain(SPEC, ICONS).actions[2].p),
+    "and no key at all rather than an empty one when the spec is silent");
+});

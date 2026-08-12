@@ -1,8 +1,9 @@
 # menus
 
-Menu specs. `{"label", "weight", "rows": [{"icon", "title", "subtitle"}]}`,
+Menu specs. `{"label", "prompt", "file", "weight", "rows": [{"icon", "title", "subtitle", "actions"}]}`,
 where `icon` is a [Phosphor](https://phosphoricons.com) name and `weight` is a
-Phosphor weight (default `regular`).
+Phosphor weight (default `regular`). `prompt` titles the sheet; without it the
+system supplies one, which reads "Which one?".
 
 ```bash
 python3 tools/vcard.py menus/demo.json --out Choice.vcf

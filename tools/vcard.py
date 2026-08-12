@@ -233,6 +233,10 @@ def chain(spec, vcf):
                                      [{"CoercionItemClass": "WFContactContentItem",
                                        "Type": "WFCoercionVariableAggrandizement"}])}},
     ]
+    # Without this the sheet is titled by the system, which says "Which one?".
+    # The key is the one shape here still inferred rather than read off an export.
+    if spec.get("prompt"):
+        actions[2]["p"]["WFChooseFromListActionPrompt"] = spec["prompt"]
     chosen = attachment(uid(3), "Chosen Item",
                         [{"PropertyName": "Last Name", "PropertyUserInfo": 1,
                           "Type": "WFPropertyVariableAggrandizement"}])
