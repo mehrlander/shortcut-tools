@@ -419,6 +419,23 @@ carries the **raw U+FFFC glyph**. The `&#65532;` entity exists only because a
 browser render strips the glyph, and this route has no browser in it. Where a
 payload does cross a rendered page, the entity rule still holds.
 
+**The party retyping the link may be the agent, not a person.** *Observed
+2026-08-12, three times in one session.* The rule against shortening or editing
+a link was written for a human with a copy buffer. An agent has none: every
+character of a reply is generated, so a few thousand characters of opaque base64
+is a place where a plausible substitution can be made and not noticed. In all
+three cases the corruption landed in the `report` string at the tail, the actions
+at the head pasted correctly, and the only symptom was a banner reading
+`RHVtcC1TaG9ydGN1dHM=` where it should have read `Dump-Shortcuts`, which is that
+label's own base64.
+
+Two things follow. The payload is **verified before it is sent and unverifiable
+after**, since nothing can read back what was emitted; `--verify` checks the
+generator, not the transcription. And a legible payload is safer than an opaque
+one for this reason alone, which is a point in favor of the `--data` routes:
+corruption in a vCard or a page is visible to the reader, corruption in base64 is
+not. Making the receiver check a length or digest would close it properly.
+
 Three more from the same day. Shortcuts **remints every UUID on paste**,
 rewriting references consistently within one paste but not across pastes, so a
 patch cannot address an action already in the shortcut; replace whole units.
