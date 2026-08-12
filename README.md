@@ -99,6 +99,33 @@ inject is refused rather than quietly loaded unauthenticated.
 `--raw` skips the shell and sends the page as itself, which is what a device
 without `DecompressionStream` needs (Safari gained it in 16.4).
 
+## Menus with icons
+
+Choose from List shows one plain line per row. Given **contacts** it shows an
+image, a title, and a subtitle, so a `.vcf` is how a native menu gets an icon.
+[`tools/vcard.py`](tools/vcard.py) builds one from a spec in
+[`menus/`](menus/):
+
+```bash
+python3 tools/vcard.py menus/demo.json --out Choice.vcf
+```
+
+The icons are rasterized **here**, not on the device. A glyph is a constant, so
+fetching one per row per run costs a round trip before the menu can appear,
+fails offline, and puts the whole menu behind async work. Live row content is
+the opposite and has to be fetched there.
+
+Three decisions came out of measuring rather than taste. JPEG over PNG: a black
+glyph on white is visually identical either way, and three rows measured 5,604
+bytes gzipped against 9,329. 128px over 256px: it is a list thumbnail, and 256
+is four times what is shown. And the ICC profile canvas embeds gets stripped,
+being 472 bytes of color space that a black shape on white does not use, or 14%
+of every row. Together, about 2,900 bytes per row.
+
+Unlike a page, a `.vcf` cannot use the compression above, since that inflates in
+a browser and this payload has to land in Shortcuts. At these sizes it does not
+need to.
+
 ## CLI
 
 Installed as `shortcut-tools`, or run with `npx shortcut-tools`.
