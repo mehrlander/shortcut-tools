@@ -23,6 +23,7 @@
 
 <form onsubmit="run(this.tok.value); return false">
   <p>Paste a GitHub token with <code>repo</code> scope, then Run.
+     <a id="mint" href="">Get one</a>
   <p><input name="tok" type="password" autocomplete="off" placeholder="ghp_..."> <button>Run</button>
 </form>
 <div id="out"></div>
@@ -38,6 +39,10 @@ var TOKEN = '🎟️GitHubToken';
 var SENTINEL = '🎟️' + 'GitHubToken';
 
 var BRANCH_PAGE = 'https://mehrlander.github.io/web-tools/pages/branch.html#gh=';
+// Where an expired token is replaced. The scope and note are prefilled, which
+// GitHub's classic-token form reads off the query, so the page arrives ready to
+// submit rather than needing the scope remembered on a phone.
+var NEW_TOKEN = 'https://github.com/settings/tokens/new?scopes=repo&description=shortcut-tools';
 var LIMIT = 25;        // branches shown
 var REPOS = 40;        // repositories scanned, most recently pushed first
 var BRANCHES = 30;     // branches read per repository
@@ -82,15 +87,30 @@ function auth(token) {
 // promise would resolve fine. Read back through a rich-text coercion it is
 // captured at a moment nobody has documented, and a late resolution returns
 // empty with no error. Blocking the load is correct for both.
+// A credential failure is the only error here with an obvious next step, so it
+// is marked rather than merely reported. 401 is an expired or revoked token, 403
+// a token whose scopes no longer cover the query, and both are fixed at the same
+// page. The message is checked too, because a token that has lost access to a
+// resource can come back inside a GraphQL errors array at HTTP 200.
+function expired(status, message) {
+  return status === 401 || status === 403 || /bad credentials|expired|not authorized/i.test(message);
+}
+
+function fault(message, status) {
+  var err = new Error(message);
+  err.expired = expired(status, message);
+  return err;
+}
+
 function post(token) {
   var x = new XMLHttpRequest();
   x.open('POST', 'https://api.github.com/graphql', false);
   x.setRequestHeader('Content-Type', 'application/json');
   x.setRequestHeader('Authorization', auth(token));
   x.send(JSON.stringify({ query: QUERY }));
-  if (x.status !== 200) throw new Error('HTTP ' + x.status + ': ' + x.responseText.slice(0, 300));
+  if (x.status !== 200) throw fault('HTTP ' + x.status + ': ' + x.responseText.slice(0, 300), x.status);
   var body = JSON.parse(x.responseText);
-  if (body.errors) throw new Error(body.errors.map(function (e) { return e.message; }).join('; '));
+  if (body.errors) throw fault(body.errors.map(function (e) { return e.message; }).join('; '), 200);
   return body.data;
 }
 
@@ -123,14 +143,38 @@ function draw(list) {
   });
 }
 
+function fail(err) {
+  var out = document.getElementById('out');
+  out.textContent = '';
+  if (!err.expired) { out.textContent = 'ERROR ' + err.message; return; }
+  // An expired token has one fix, so hand over the page that makes a new one
+  // instead of a status code to interpret. The form comes back with it, so a
+  // fresh token can be pasted here for this run; the stored copy is what the
+  // next run reads, and SENTINEL is its key, spelled from halves because
+  // writing the name whole would paste the live token into this message.
+  document.body.className = 'ask';
+  out.appendChild(document.createTextNode('ERROR ' + err.message + '\n'));
+  var a = document.createElement('a');
+  a.href = NEW_TOKEN;
+  a.textContent = 'Get a new token';
+  out.appendChild(a);
+  out.appendChild(document.createTextNode('\nthen store it under ' + SENTINEL));
+  // Three short lines rather than one long one: #out does not wrap, so a link
+  // at the end of the status line would sit off the right edge of a phone and
+  // have to be scrolled to before it could be tapped.
+}
+
 function run(token) {
   document.body.className = '';
   try {
     draw(rows(post(token)));
   } catch (err) {
-    document.getElementById('out').textContent = 'ERROR ' + err.message;
+    fail(err);
   }
 }
+
+var mint = document.getElementById('mint');
+if (mint) mint.href = NEW_TOKEN;   // one copy of the URL, in the script
 
 if (TOKEN === SENTINEL) document.body.className = 'ask';   // opened raw in a browser
 else run(TOKEN);

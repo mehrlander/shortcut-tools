@@ -21,10 +21,13 @@ function load(response) {
     appendChild(el) { this.children.push(el); }
   };
   const sent = [];
+  // Distinct elements per id: the page wires the form's link by id, and a
+  // harness returning #out for everything would hide that it did.
+  const byId = { out };
   const ctx = {
     document: {
       body: { className: "" },
-      getElementById: () => out,
+      getElementById: (id) => (byId[id] = byId[id] || { textContent: "", href: "" }),
       createElement: () => ({ textContent: "", href: "" }),
       createTextNode: (t) => ({ textContent: t, text: true })
     },
@@ -34,7 +37,7 @@ function load(response) {
       this.send = () => { this.status = response.status || 200;
                           this.responseText = JSON.stringify(response.body); };
     },
-    Date, JSON, Math, Error, out, sent
+    Date, JSON, Math, Error, RegExp, out, sent, byId
   };
   vm.createContext(ctx);
   vm.runInContext(script, ctx);
@@ -159,16 +162,69 @@ test("no matches says so instead of returning an empty result", () => {
   assert.match(ctx.lines(), /^No branches found/);
 });
 
+// The fixture message used to be "Bad credentials", which now means something
+// specific; the claim under test is that any GraphQL error comes back as text
+// rather than throwing, so an ordinary one carries it.
 test("a GraphQL error surfaces as text, since the coercion returns text or nothing", () => {
-  const ctx = load({ body: { errors: [{ message: "Bad credentials" }] } });
+  const ctx = load({ body: { errors: [{ message: "Something went wrong" }] } });
   ctx.run("tok");
-  assert.strictEqual(ctx.lines(), "ERROR Bad credentials");
+  assert.strictEqual(ctx.lines(), "ERROR Something went wrong");
 });
 
 test("a non-200 surfaces its status", () => {
   const ctx = load({ status: 401, body: { message: "Unauthorized" } });
   ctx.run("tok");
   assert.match(ctx.lines(), /^ERROR HTTP 401/);
+});
+
+// An expired token is the one failure with a single obvious fix, and reading a
+// status code off a phone is not it.
+const TOKEN_PAGE = /^https:\/\/github\.com\/settings\/tokens\/new\?scopes=repo/;
+
+test("an expired token offers the page that makes a new one", () => {
+  const ctx = load({ status: 401, body: { message: "Bad credentials" } });
+  ctx.run("tok");
+  const link = ctx.out.children.find(c => c.href);
+  assert.ok(link, "the error should carry a link, not only a status");
+  assert.match(link.href, TOKEN_PAGE, "prefilled with the scope the page needs");
+  assert.match(ctx.lines(), /^ERROR HTTP 401/, "and still say what happened");
+});
+
+test("the form comes back with it, so a fresh token can be pasted in place", () => {
+  const ctx = load({ status: 401, body: { message: "Bad credentials" } });
+  ctx.run("tok");
+  assert.strictEqual(ctx.document.body.className, "ask");
+});
+
+test("the link names the config key without spelling the placeholder", () => {
+  const ctx = load({ status: 401, body: { message: "Bad credentials" } });
+  ctx.run("tok");
+  assert.ok(ctx.lines().includes(PLACEHOLDER),
+    "the key is what the next run reads, so the message has to name it");
+  assert.ok(!ctx.out.children.find(c => c.href).textContent.includes(PLACEHOLDER),
+    "but not inside the link, which stays short enough to sit on one phone line");
+  // Spelled whole in the source, the injector would paste the live token here.
+  assert.strictEqual(fs.readFileSync(PAGE, "utf8").split(PLACEHOLDER).length - 1, 1);
+});
+
+test("a credential failure inside a 200 is caught too", () => {
+  // A fine-grained token that has lost access to a resource answers this way
+  // rather than with a 401, so the status alone is not enough.
+  const ctx = load({ body: { errors: [{ message: "Bad credentials" }] } });
+  ctx.run("tok");
+  assert.ok(ctx.out.children.find(c => c.href), "the message should be enough on its own");
+});
+
+test("an ordinary failure is not dressed up as an expired token", () => {
+  const ctx = load({ status: 502, body: { message: "Bad gateway" } });
+  ctx.run("tok");
+  assert.ok(!ctx.out.children.find(c => c.href), "nothing to mint here");
+  assert.strictEqual(ctx.document.body.className, "", "and no form to fill in");
+});
+
+test("the form's own link is wired from the script, not a second copy of the URL", () => {
+  const ctx = load(fixture([]));
+  assert.match(ctx.byId.mint.href, TOKEN_PAGE);
 });
 
 test("the request is synchronous, which is the whole reason it is an XHR", () => {
