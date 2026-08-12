@@ -2,7 +2,9 @@
 """Build a menu as vCards, with the icons already rasterized.
 
     python3 tools/vcard.py menus/<name>.json [--out Choice.vcf]
-    python3 tools/vcard.py menus/<name>.json --icons icons.json   # no network, no browser
+    python3 tools/vcard.py menus/<name>.json --data              # a tappable link
+    python3 tools/vcard.py menus/<name>.json --chain             # the whole thing to paste
+    python3 tools/vcard.py menus/<name>.json --icons icons.json  # no network, no browser
 
 Choose from List shows a plain line per row. Given contacts it shows an image, a
 title, and a subtitle, so a `.vcf` is how a native menu gets an icon. The rows
@@ -28,11 +30,12 @@ that stores a photograph. Measured per row across four icons at 128px, as base64
 Rendered at list size the three are indistinguishable, because the display
 downsamples 128px to about 44 and averages the aliasing away.
 """
-import argparse, base64, json, os, re, shutil, struct, subprocess, sys, tempfile, urllib.request, zlib
+import argparse, base64, json, os, re, shutil, struct, subprocess, sys, tempfile, urllib.parse, urllib.request, zlib
 from pathlib import Path
 
 CDN = "https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/%s/%s.svg"
 FALLBACK = "question"
+RUNNER = "Show-Menu"   # the device-side receiver for --data, workflows/show-menu.json
 SIZE = 128          # a list thumbnail, not a portrait; 256 is four times what is shown
 BITS = 1            # see encode_png: 8 keeps the antialiased edge, 1 is six times smaller
 
@@ -183,10 +186,14 @@ def card(row, photo, fold=False):
         # form is the one already proven in this pipeline.
         head, body = photo_line[:75], photo_line[75:]
         photo_line = head + "".join("\r\n " + body[i:i + 74] for i in range(0, len(body), 74))
-    return "\r\n".join(["BEGIN:VCARD", "VERSION:3.0",
-                        "N:%s;;;;" % row["title"], "FN:%s" % row["title"],
-                        "ORG:%s" % row.get("subtitle", ""),
-                        photo_line, "END:VCARD"])
+    lines = ["BEGIN:VCARD", "VERSION:3.0",
+             "N:%s;;;;" % row["title"], "FN:%s" % row["title"],
+             "ORG:%s" % row.get("subtitle", "")]
+    # A generic runner cannot hold per-row behavior, so the row carries its own.
+    # NOTE is free text and the runner reads it back as the contact's Notes.
+    if row.get("action"):
+        lines.append("NOTE:%s" % row["action"])
+    return "\r\n".join(lines + [photo_line, "END:VCARD"])
 
 
 def uid(n):
@@ -280,13 +287,29 @@ def main():
     ap.add_argument("--fold", action="store_true", help="fold the photo line at 75 octets")
     ap.add_argument("--chain", action="store_true",
                     help="emit the whole menu as a pack.py chain rather than the file alone")
+    ap.add_argument("--data", action="store_true",
+                    help="emit a link handing the file to %s, which is already on the device" % RUNNER)
+    ap.add_argument("--runner", default=RUNNER, help="the shortcut --data addresses")
     ap.add_argument("--bits", type=int, choices=[1, 8], default=BITS,
                     help="photo depth: 1 is six times smaller, 8 keeps the antialiased edge")
     args = ap.parse_args()
     spec = json.load(open(args.spec))
     icons = json.load(open(args.icons)) if args.icons else None
     vcf = build(spec, icons, args.fold, args.bits)
-    out = json.dumps(chain(spec, vcf), ensure_ascii=False, indent=2) if args.chain else vcf
+    if args.chain and args.data:
+        raise SystemExit("--chain ships the behavior, --data ships only the menu; pick one")
+    if args.chain:
+        out = json.dumps(chain(spec, vcf), ensure_ascii=False, indent=2)
+    elif args.data:
+        # The runner takes the file as text. CRLF survives a URL, unlike a plist.
+        out = "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
+            args.runner, urllib.parse.quote(vcf, safe=""))
+        missing = [r["title"] for r in spec["rows"] if not r.get("action")]
+        if missing:
+            print("no action on: %s (those rows will open nothing)" % ", ".join(missing),
+                  file=sys.stderr)
+    else:
+        out = vcf
     if args.out:
         Path(args.out).write_text(out)
         print("%s: %d rows, %d bytes" % (args.out, len(spec["rows"]), len(out)), file=sys.stderr)

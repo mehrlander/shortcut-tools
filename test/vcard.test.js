@@ -179,3 +179,42 @@ test("a spec's prompt titles the sheet, since the system default says 'Which one
   assert.ok(!("WFChooseFromListActionPrompt" in chain(SPEC, ICONS).actions[2].p),
     "and no key at all rather than an empty one when the spec is silent");
 });
+
+// A generic runner cannot hold per-row behavior, so the row carries its own as a
+// URL in the card and the runner reads it back. This is what lets one shortcut
+// on the device serve every menu, with nothing to paste per menu.
+test("a row's action rides in NOTE, and a row without one omits the field", () => {
+  const vcf = run({ rows: [{ icon: "a", title: "Go", action: "shortcuts://run-shortcut?name=X" },
+                           { icon: "b", title: "Inert" }] }, ICONS);
+  assert.match(vcf, /NOTE:shortcuts:\/\/run-shortcut\?name=X/);
+  assert.strictEqual((vcf.match(/^NOTE:/gm) || []).length, 1);
+});
+
+test("--data hands the file to the runner rather than shipping the behavior", () => {
+  const link = run(SPEC, ICONS, ["--data"]).trim();
+  assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Show-Menu&input=text&text=/);
+  const vcf = decodeURIComponent(link.split("&text=")[1]);
+  assert.strictEqual(vcf, run(SPEC, ICONS), "the payload is the file, unchanged");
+  assert.ok(link.length < run(SPEC, ICONS, ["--chain"]).length,
+    "and it is smaller than shipping the chain");
+});
+
+test("--chain and --data are refused together, since they are opposite answers", () => {
+  assert.throws(() => run(SPEC, ICONS, ["--chain", "--data"]), /Command failed/);
+});
+
+test("Show-Menu reads the chosen row's Notes and opens it", () => {
+  const c = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "show-menu.json"), "utf8"));
+  const [name, choose, url, open] = c.actions;
+  assert.deepStrictEqual(c.actions.map(a => a.id), [
+    "is.workflow.actions.setitemname", "is.workflow.actions.choosefromlist",
+    "is.workflow.actions.url", "is.workflow.actions.openurl"]);
+  assert.strictEqual(name.p.WFInput.Value.Type, "ExtensionInput", "the menu arrives as input");
+  assert.match(name.p.WFName, /\.vcf$/, "the extension is the only type hint");
+  assert.strictEqual(choose.p.WFInput.Value.Aggrandizements[0].CoercionItemClass,
+    "WFContactContentItem");
+  assert.strictEqual(url.p.WFURLActionURL.Value.Aggrandizements[0].PropertyName, "Notes",
+    "which is the one shape here still inferred rather than read off an export");
+  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, choose.p.UUID);
+  assert.strictEqual(open.p.WFInput.Value.OutputUUID, url.p.UUID);
+});

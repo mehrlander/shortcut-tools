@@ -16,6 +16,31 @@ new Shortcut("Shout")
   .export("shout.shortcut");
 ```
 
+## On the device
+
+Everything here is delivered by a `shortcuts://run-shortcut` link, which needs a
+receiver on the device. There are three, each pasted once and then reused
+forever, and each is a chain in [`workflows/`](workflows/) that the previous one
+delivers:
+
+| Receiver | Takes | Does | Built by |
+| --- | --- | --- | --- |
+| `Copy-ActionFromClaude` | a packed action set | puts the actions on the clipboard, to paste into any shortcut | `python3 tools/pack.py workflows/<chain>.json` |
+| `Run-Html` | HTML | renders it as a `data:` URL in Safari | `python3 tools/show.py <page>.html` |
+| `Show-Menu` | a `.vcf` | shows it as a native menu with icons, and opens the chosen row's action | `python3 tools/vcard.py menus/<menu>.json --data` |
+
+`Copy-ActionFromClaude` bootstraps: paste it by hand once from
+[`workflows/copy-action-from-claude.json`](workflows/copy-action-from-claude.json),
+and every other receiver arrives as a link.
+
+**No such link is committed here, and that is deliberate.** A payload link is a
+snapshot with its content encoded inside it, so a committed one is stale the
+moment its source changes, silently and with nothing to notice. Generate the
+link when you want it; the command is in the table. Separately, GitHub renders
+markdown links only for a short list of URL schemes, so a `shortcuts://` link in
+a README arrives as plain text rather than something tappable, which makes a
+committed link doubly pointless.
+
 ## Overview
 
 `actions.json` contains **810 action definitions** that map human-readable action names to Apple's `WFWorkflowActionIdentifier` format used internally by the Shortcuts app.

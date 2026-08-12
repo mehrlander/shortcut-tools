@@ -20,6 +20,7 @@ the clipboard, ready to paste into any shortcut. Format in
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
 | `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
 | `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
+| `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
@@ -66,8 +67,11 @@ is confirmed against a real export, including the `WFWorkflow` dict and its
 device-local `workflowIdentifier`, which a chain cannot invent and has to read
 off the device it will run on. `run-html` is confirmed by a device run on
 2026-08-11, which promotes `openurl` and the `ExtensionInput` attachment it
-reads its page from out of the inferred tier. `text.split`, `choosefromlist`,
-and `text.replace`, all of them in the picker chain only, are still inferred
-from the documented naming. A wrong key does not fail loudly. It
+reads its page from out of the inferred tier, and a generated menu ran on
+2026-08-12, which does the same for `choosefromlist` and its contact coercion.
+`text.split` and `text.replace`, both in the picker chain only, are still
+inferred from the documented naming, as are two keys nothing has yet exercised:
+`WFChooseFromListActionPrompt`, and the `Notes` property `show-menu` reads the
+chosen row's action from. A wrong key does not fail loudly. It
 pastes an action with an empty field, which is a two-tap fix in the editor and
 worth watching for on first run.
