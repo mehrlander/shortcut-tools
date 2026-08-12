@@ -92,3 +92,60 @@ test("a row with no subtitle still emits ORG, since the field is positional", ()
   const vcf = run({ rows: [{ icon: "a", title: "Only" }] }, ICONS);
   assert.ok(vcf.includes("ORG:\r\n"));
 });
+
+// The dispatch half, whose two mechanisms came off an export rather than a
+// guess: Set Name supplies the type hint, and Choose from List coerces the
+// named text to contacts in its own input attachment, so there is no Get
+// Contacts from Input action anywhere in the chain.
+function chain(spec, icons, extra = []) {
+  return JSON.parse(run(spec, icons, ["--chain", ...extra]));
+}
+
+test("the chain names the file, then coerces it to contacts in place", () => {
+  const c = chain(SPEC, ICONS);
+  const [text, name, choose] = c.actions;
+  assert.strictEqual(text.id, "is.workflow.actions.gettext");
+  assert.strictEqual(name.p.WFName, "MainMenu.vcf", "the extension is the only type hint");
+  assert.strictEqual(name.p.WFInput.Value.OutputUUID, text.p.UUID);
+  assert.deepStrictEqual(choose.p.WFInput.Value.Aggrandizements,
+    [{ CoercionItemClass: "WFContactContentItem", Type: "WFCoercionVariableAggrandizement" }]);
+  assert.strictEqual(choose.p.WFInput.Value.OutputUUID, name.p.UUID);
+  assert.ok(!c.actions.some(a => /getcontacts|detect\.contacts/.test(a.id)));
+});
+
+test("each row is a compact If reading the choice's Last Name", () => {
+  const c = chain(SPEC, ICONS);
+  const opens = c.actions.filter(a => a.p.WFControlFlowMode === 0);
+  assert.strictEqual(opens.length, 2);
+  assert.deepStrictEqual(opens.map(a => a.p.WFConditionalActionString), ["First", "Second"]);
+  // N:Title;;;; puts the title in the family slot precisely so it reads back here.
+  assert.strictEqual(opens[0].p.WFInput.Variable.Value.Aggrandizements[0].PropertyName, "Last Name");
+  assert.strictEqual(opens[0].p.WFInput.Variable.Value.OutputUUID, c.actions[2].p.UUID);
+});
+
+test("every block is balanced and no two rows share a grouping", () => {
+  const c = chain(SPEC, ICONS);
+  const groups = {};
+  for (const a of c.actions.filter(a => a.p.GroupingIdentifier))
+    (groups[a.p.GroupingIdentifier] = groups[a.p.GroupingIdentifier] || []).push(a.p.WFControlFlowMode);
+  assert.strictEqual(Object.keys(groups).length, 2);
+  for (const modes of Object.values(groups)) assert.deepStrictEqual(modes, [0, 2]);
+});
+
+test("a row's own actions land inside its branch", () => {
+  const spec = { rows: [{ icon: "a", title: "First", actions: [{ id: "is.workflow.actions.nothing", p: {} }] },
+                        { icon: "b", title: "Second" }] };
+  const ids = chain(spec, ICONS).actions.map(a => a.id);
+  const i = ids.indexOf("is.workflow.actions.nothing");
+  assert.ok(i > 0 && ids[i - 1] === "is.workflow.actions.conditional");
+  assert.strictEqual(ids[i + 1], "is.workflow.actions.conditional");
+});
+
+// A plist is XML, and XML normalizes a literal CR in text content away on read,
+// so a CRLF card would not survive packing. pack.py asserts the round trip, so
+// this fails loudly rather than shipping a payload that quietly changed.
+test("the packed card carries no CR, which a plist cannot hold", () => {
+  const text = chain(SPEC, ICONS).actions[0].p.WFTextActionText;
+  assert.ok(!text.includes("\r"), "CRLF belongs to the standalone file, not this route");
+  assert.ok(text.includes("BEGIN:VCARD\nVERSION:3.0\n"));
+});

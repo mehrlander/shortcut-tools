@@ -131,6 +131,71 @@ def card(row, photo, fold=False):
                         photo_line, "END:VCARD"])
 
 
+def uid(n):
+    return "5CA1AB1E-%04d-4A00-9000-%012d" % (n, n)
+
+
+def attachment(uuid, name, aggrandizements=None):
+    value = {"OutputName": name, "OutputUUID": uuid, "Type": "ActionOutput"}
+    if aggrandizements:
+        value["Aggrandizements"] = aggrandizements
+    return {"Value": value, "WFSerializationType": "WFTextTokenAttachment"}
+
+
+def chain(spec, vcf):
+    """The whole menu as a pack.py chain: the file, the list, and the dispatch.
+
+    Confirmed against an export rather than inferred. Two steps are the ones
+    nobody would guess. Set Name gives the text a `.vcf` extension, which is the
+    only type hint the next step has; Choose from List then coerces it with
+    `WFContactContentItem` in the input attachment, so there is no Get Contacts
+    from Input action anywhere. And the choice is read back through the contact's
+    **Last Name**, which is why `N:Title;;;;` puts the title in the family slot.
+
+    One Text action carries the whole file. The export this follows built one
+    card per variable and combined them, which is the same thing with two
+    actions per row.
+    """
+    rows = spec["rows"]
+    # CRLF cannot survive this route and does not need to. A plist is XML, and
+    # XML normalizes a literal CR in text content away on read, so the packed
+    # action would not equal the one written; pack.py's round-trip assertion
+    # catches it rather than shipping a payload that quietly changed. The export
+    # this follows stores its cards with plain newlines for the same reason,
+    # which is also the evidence that Apple's parser accepts them.
+    actions = [
+        {"id": "is.workflow.actions.gettext",
+         "p": {"UUID": uid(1), "WFTextActionText": vcf.replace("\r\n", "\n")}},
+        {"id": "is.workflow.actions.setitemname",
+         "p": {"UUID": uid(2), "WFInput": attachment(uid(1), "Text"),
+               "WFName": spec.get("file", "MainMenu.vcf")}},
+        {"id": "is.workflow.actions.choosefromlist",
+         "p": {"UUID": uid(3),
+               "WFInput": attachment(uid(2), "Renamed Item",
+                                     [{"CoercionItemClass": "WFContactContentItem",
+                                       "Type": "WFCoercionVariableAggrandizement"}])}},
+    ]
+    chosen = attachment(uid(3), "Chosen Item",
+                        [{"PropertyName": "Last Name", "PropertyUserInfo": 1,
+                          "Type": "WFPropertyVariableAggrandizement"}])
+    for i, row in enumerate(rows):
+        group = "5CA1AB1E-%04d-4A00-9000-CA5E00000000" % i
+        # A flat If per row with no Otherwise: the compact-If switch, and the
+        # reason a row that does nothing yet is still a legal branch.
+        actions.append({"id": "is.workflow.actions.conditional",
+                        "p": {"GroupingIdentifier": group, "WFCondition": 4,
+                              "WFConditionalActionString": row["title"],
+                              "WFControlFlowMode": 0,
+                              "WFInput": {"Type": "Variable", "Variable": chosen}}})
+        actions.extend(row.get("actions", []))
+        actions.append({"id": "is.workflow.actions.conditional",
+                        "p": {"GroupingIdentifier": group, "UUID": uid(100 + i),
+                              "WFControlFlowMode": 2}})
+    return {"label": "%s (%d rows, %d actions)" % (spec.get("label", "Menu"),
+                                                   len(rows), len(actions)),
+            "actions": actions}
+
+
 def build(spec, icons=None, fold=False):
     rows = spec["rows"]
     if icons is None:
@@ -149,15 +214,18 @@ def main():
     ap.add_argument("--icons", help="prerendered {name: base64 jpeg}, skipping network and browser")
     ap.add_argument("--out", help="write here instead of stdout")
     ap.add_argument("--fold", action="store_true", help="fold the photo line at 75 octets")
+    ap.add_argument("--chain", action="store_true",
+                    help="emit the whole menu as a pack.py chain rather than the file alone")
     args = ap.parse_args()
     spec = json.load(open(args.spec))
     icons = json.load(open(args.icons)) if args.icons else None
     vcf = build(spec, icons, args.fold)
+    out = json.dumps(chain(spec, vcf), ensure_ascii=False, indent=2) if args.chain else vcf
     if args.out:
-        Path(args.out).write_text(vcf)
-        print("%s: %d rows, %d bytes" % (args.out, len(spec["rows"]), len(vcf)), file=sys.stderr)
+        Path(args.out).write_text(out)
+        print("%s: %d rows, %d bytes" % (args.out, len(spec["rows"]), len(out)), file=sys.stderr)
     else:
-        sys.stdout.write(vcf)
+        sys.stdout.write(out)
 
 
 if __name__ == "__main__":

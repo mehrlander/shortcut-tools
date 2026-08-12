@@ -322,6 +322,47 @@ made the omission read as staleness rather than as a filter: in the same
 container, `web-tools` commits under the viewer's own noreply address and its
 agent branches were listing normally.
 
+## A menu with icons is a list of contacts, coerced in place
+
+*Observed 2026-08-12, from an export.*
+
+`Choose from List` shows one plain line per row. Given **contacts** it shows an
+image, a title, and a subtitle, so a `.vcf` is how a native menu gets an icon.
+Three steps make that work and two of them are not guessable:
+
+1. **`Set Name` to something ending `.vcf`.** The extension is the only type hint
+   the next step has.
+2. **`Choose from List` coerces the named text itself**, through a
+   `WFContactContentItem` aggrandizement on its own `WFInput`. There is no Get
+   Contacts from Input action anywhere in the chain. Same mechanism as the rich
+   text and dictionary coercions above; contacts is simply another member.
+3. **The choice reads back through `Last Name`**, a
+   `WFPropertyVariableAggrandizement` on the Chosen Item. This is why the cards
+   are written `N:<title>;;;;`: vCard's `N` is
+   `family;given;additional;prefix;suffix`, so the title has to sit in the family
+   slot to be readable as Last Name. It looks like a sloppy field choice and is
+   load-bearing.
+
+The dispatch is then one flat `If` per row with no `Otherwise`, which is the
+compact-`If` switch [`dataflow.md`](dataflow.md) describes, and a row that does
+nothing yet is still a legal empty branch.
+
+**A packed card cannot carry CRLF.** vCard says lines end `\r\n`, but a plist is
+XML and XML normalizes a literal CR in text content away on read, so a card
+written with CRLF does not survive a pack and reparse. `tools/pack.py` asserts
+its own round trip, so this fails loudly instead of shipping a payload that
+quietly changed. The export this was read from stores its cards with plain
+newlines, which is both the workaround and the evidence that Apple's parser
+accepts them. `tools/vcard.py` keeps CRLF in the standalone `.vcf` it writes and
+converts on the way into a chain.
+
+Two size notes from building these, since a menu ships its own images. Canvas
+embeds a **472-byte ICC profile** in every JPEG it encodes, 14% of a 128px glyph,
+describing a color space a black shape on white does not use; stripping APP1
+through APP15 and keeping the JFIF header removes it. And JPEG beats PNG here by
+a wide margin, 5,604 bytes gzipped against 9,329 across three rows, with no
+visible difference.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
