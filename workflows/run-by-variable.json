@@ -1,0 +1,46 @@
+{
+  "label": "Probe: can Run Shortcut take its target from a variable? (3 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0011-4A00-9000-000000000011",
+        "WFTextActionText": "Run-Html"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0012-4A00-9000-000000000012",
+        "WFTextActionText": "<!doctype html><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><body style=\"font:17px -apple-system;padding:2rem\"><h1>Variable name resolved.</h1><p>The target was computed at run time, which is what a generic <code>Run-Steps</code> needs."
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-0013-4A00-9000-000000000013",
+        "WFWorkflowName": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "B0BE0000-0011-4A00-9000-000000000011",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-0012-4A00-9000-000000000012",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

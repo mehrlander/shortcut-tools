@@ -20,6 +20,8 @@ the clipboard, ready to paste into any shortcut. Format in
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
 | `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
 | `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
+| `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
+| `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 
@@ -75,3 +77,23 @@ inferred from the documented naming, as are two keys nothing has yet exercised:
 chosen row's action from. A wrong key does not fail loudly. It
 pastes an action with an empty field, which is a two-tap fix in the editor and
 worth watching for on first run.
+
+## The two probes, and why they are worth a tap
+
+`runworkflow` carries its target twice, and the second half is a
+`workflowIdentifier` minted per install, which a chain written elsewhere cannot
+invent. Every `runworkflow` in this repo therefore hardcodes an identifier read
+off one device, and is wrong on any other. If the **name alone** resolves, that
+constraint disappears and a chain becomes portable.
+
+`run-by-variable` asks the harder half. `Open URLs` on a constructed
+`shortcuts://run-shortcut?name=<computed>` already runs a shortcut chosen at run
+time, but control leaves and nothing comes back, so it cannot be a loop body. A
+`runworkflow` that accepts a variable name would return, which is what a generic
+`Run-Steps` needs: one shortcut that takes a list of names and runs them in
+order, with no new shortcut per sequence.
+
+Both open a page through `Run-Html` when they succeed, so the result is legible
+without reading anything. Failure is legible too and arrives earlier: a target
+Shortcuts cannot resolve pastes as an action with an empty picker, visible in
+the editor before the shortcut is ever run.

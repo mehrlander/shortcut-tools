@@ -1,0 +1,27 @@
+{
+  "label": "Probe: does Run Shortcut resolve by name alone? (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0001-4A00-9000-000000000001",
+        "WFTextActionText": "<!doctype html><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><body style=\"font:17px -apple-system;padding:2rem\"><h1>Name-only resolved.</h1><p>Run Shortcut found <code>Run-Html</code> from <code>WFWorkflowName</code> with no <code>WFWorkflow</code> dict, so a chain written elsewhere can name a target it has never seen."
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-0002-4A00-9000-000000000002",
+        "WFWorkflowName": "Run-Html",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
