@@ -1,0 +1,126 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Push shortcuts</title>
+<style>
+  body { font: 15px/1.5 -apple-system, sans-serif; margin: 0; padding: 1rem; }
+  #out { white-space: pre-wrap; font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  button { font: inherit; padding: .6rem 1rem; margin: .5rem 0; }
+  .warn { color: #b00; }
+</style>
+
+<div id="out">reading the clipboard…</div>
+<button id="go" hidden>Push to web-tools-private</button>
+
+<script>
+// Both values arrive by substitution on the way through Show-Html: the token
+// from Snippets/Managed/config.json, and the clipboard base64-encoded. Each
+// placeholder appears exactly once in this file, and each sentinel is built
+// from halves so the substitution cannot rewrite the comparison too.
+var TOKEN = '🎟️GitHubToken';
+var CLIP = '📋ClipboardBase64';
+var TOKEN_SENTINEL = '🎟️' + 'GitHubToken';
+var CLIP_SENTINEL = '📋' + 'ClipboardBase64';
+
+var REPO = 'mehrlander/web-tools-private';
+var BRANCH = 'main';
+
+// The dump is a snapshot of a device, so it lands whole and gets split in the
+// repo, where a bad split costs a commit rather than another trip through the
+// clipboard. Named by day: pushing twice in one day updates that day's file.
+function path() {
+  var d = new Date();
+  var day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+            '-' + String(d.getDate()).padStart(2, '0');
+  return 'shortcuts/dump-' + day + '.json';
+}
+
+function auth(token) {
+  return /^(Bearer|token) /i.test(token) ? token : 'Bearer ' + token;
+}
+
+// Cheap and deliberately noisy. A shortcut library routinely carries API keys
+// inline, and this pushes to a private repo precisely because a scan is a
+// heuristic and not a guarantee.
+var SECRETS = [
+  [/ghp_[A-Za-z0-9]{20,}/, 'a GitHub token'],
+  [/github_pat_[A-Za-z0-9_]{20,}/, 'a GitHub fine-grained token'],
+  [/sk-[A-Za-z0-9]{20,}/, 'an OpenAI-shaped key'],
+  [/xox[baprs]-[A-Za-z0-9-]{10,}/, 'a Slack token'],
+  [/AKIA[0-9A-Z]{16}/, 'an AWS access key id'],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, 'a private key']
+];
+
+function scan(text) {
+  return SECRETS.filter(function (s) { return s[0].test(text); }).map(function (s) { return s[1]; });
+}
+
+function decode(b64) {
+  var raw = atob(b64), bytes = Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
+  return new TextDecoder().decode(bytes);   // the dump is UTF-8, and atob is not
+}
+
+function show(msg) { document.getElementById('out').textContent = msg; }
+
+// Synchronous, for the same reason every page on this route is: it may be read
+// back through a coercion that captures at a moment nobody has documented.
+function put(token, body) {
+  var x = new XMLHttpRequest();
+  x.open('PUT', 'https://api.github.com/repos/' + REPO + '/contents/' + path(), false);
+  x.setRequestHeader('Authorization', auth(token));
+  x.setRequestHeader('Content-Type', 'application/json');
+  x.send(JSON.stringify(body));
+  return { status: x.status, text: x.responseText };
+}
+
+function existingSha(token) {
+  var x = new XMLHttpRequest();
+  x.open('GET', 'https://api.github.com/repos/' + REPO + '/contents/' + path() + '?ref=' + BRANCH, false);
+  x.setRequestHeader('Authorization', auth(token));
+  x.send();
+  if (x.status !== 200) return null;          // absent is the normal case
+  return JSON.parse(x.responseText).sha;      // present means today's file is being replaced
+}
+
+function push(dump) {
+  var body = { message: 'Dump shortcuts from device', branch: BRANCH, content: CLIP };
+  var sha = existingSha(TOKEN);
+  if (sha) body.sha = sha;
+  var r = put(TOKEN, body);
+  if (r.status !== 200 && r.status !== 201) {
+    show('ERROR HTTP ' + r.status + '\n' + r.text.slice(0, 400));
+    return;
+  }
+  show('Pushed ' + dump.length + ' characters to ' + REPO + '\n' + path() +
+       (sha ? '\n(replaced today\'s earlier dump)' : ''));
+}
+
+function start() {
+  if (CLIP === CLIP_SENTINEL) { show('No clipboard was substituted. Run this through Show-Html.'); return; }
+  if (TOKEN === TOKEN_SENTINEL) { show('No token was substituted. Run this through Show-Html.'); return; }
+
+  var dump;
+  try { dump = decode(CLIP); } catch (err) { show('The clipboard did not decode: ' + err.message); return; }
+
+  var found = scan(dump), lines = [];
+  lines.push(dump.length.toLocaleString() + ' characters on the clipboard.');
+  try {
+    var parsed = JSON.parse(dump);
+    lines.push('Parses as JSON: ' + (Array.isArray(parsed) ? parsed.length + ' items' : typeof parsed));
+    if (Array.isArray(parsed) && parsed.length) {
+      lines.push('First item keys: ' + Object.keys(parsed[0]).slice(0, 8).join(', '));
+    }
+  } catch (err) {
+    lines.push('Does not parse as JSON, which is worth knowing before it lands.');
+  }
+  if (found.length) lines.push('\nWARNING: found ' + found.join(', ') + '. Pushing anyway is your call.');
+  show(lines.join('\n'));
+  if (found.length) document.getElementById('out').className = 'warn';
+
+  var go = document.getElementById('go');
+  go.hidden = false;
+  go.onclick = function () { go.disabled = true; push(dump); };
+}
+
+start();
+</script>

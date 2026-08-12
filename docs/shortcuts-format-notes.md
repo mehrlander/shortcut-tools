@@ -384,6 +384,32 @@ the PNG itself. Worth knowing separately: canvas embeds a **472-byte ICC
 profile** in every JPEG, 14% of a 128px glyph, describing a color space a black
 shape on white does not use.
 
+## A shortcut exports itself through Get File of Type
+
+*Observed 2026-08-12, from `Use-Shortcut`.*
+
+There is no export action, and nothing in the dictionary is named for one. The
+mechanism is a coercion in disguise: `is.workflow.actions.gettypeaction` with
+`WFFileType` set to **`com.apple.plist`** turns a shortcut item into that
+shortcut's plist, and **`public.json`** turns it into JSON. Fed a shortcut from
+`is.workflow.actions.getmyworkflows`, it is a complete unsigned export, with no
+iCloud link, no signing step, and no Mac.
+
+Two consequences worth having:
+
+- **A whole library dumps in one pass.** `Get File of Type` vectorizes over a
+  list, so `getmyworkflows` into `public.json` yields one file per shortcut, and
+  a combiner folds them into a single document.
+- **The name is not in the file.** A shortcut's plist has no field naming it, so
+  the name lives only in the item's file name. Anything that flattens a list into
+  one blob has to carry names itself or lose them.
+
+The iCloud route is the other half of the same shortcut and answers a different
+question. `https://www.icloud.com/shortcuts/<id>` rewritten to
+`https://www.icloud.com/shortcuts/api/records/<id>` returns a record whose
+`fields.name.value` is the shortcut's name, which is how a shared link becomes a
+name that `getmyworkflows` can then be filtered against.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
