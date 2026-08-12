@@ -22,6 +22,7 @@ the clipboard, ready to paste into any shortcut. Format in
 | `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
+| `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 
@@ -78,7 +79,23 @@ chosen row's action from. A wrong key does not fail loudly. It
 pastes an action with an empty field, which is a two-tap fix in the editor and
 worth watching for on first run.
 
-## The two probes, and why they are worth a tap
+## Both probes ran, 2026-08-12
+
+`WFWorkflowName` alone resolves, and it accepts a variable. Two things follow
+and both are in this directory now.
+
+**No chain here pins a target any more.** `gh-recent-branches` and its picker
+carried a `WFWorkflow` dict holding a `workflowIdentifier` minted on one install,
+which made them wrong on any other device. The dict is gone from both, and a
+test refuses a new one.
+
+**`run-steps` exists.** A list of shortcut names in, each one run with the
+previous one's result as its input, the last result out. It is the thing that
+ends the rule that a sequence needs a shortcut of its own: the verbs are named
+shortcuts, and the program is a newline-separated list that can ride in a link.
+`text.split` is the one inferred shape in it; everything else comes off exports.
+
+## The two probes, and why they were worth a tap
 
 `runworkflow` carries its target twice, and the second half is a
 `workflowIdentifier` minted per install, which a chain written elsewhere cannot

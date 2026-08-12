@@ -254,8 +254,19 @@ test("the picker calls the injector itself, since nothing else in that chain wil
   const inject = chain("gh-recent-branches-picker.json")
     .actions.find(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER);
   assert.ok(inject, "the picker should call the injector");
-  assert.strictEqual(inject.p.WFWorkflow.workflowName, "Inject-" + PLACEHOLDER,
-    "Run Shortcut needs the WFWorkflow dict, not only WFWorkflowName");
+});
+
+// The WFWorkflow dict carries a workflowIdentifier minted per install, which
+// pinned every chain here to one device. run-by-name showed the name alone
+// resolves, so carrying it is not portability-neutral, it is the opposite.
+test("no chain pins a target by device-local identifier", () => {
+  for (const f of fs.readdirSync(path.join(__dirname, "..", "workflows")).filter(f => f.endsWith(".json"))) {
+    for (const a of chain(f).actions) {
+      if (a.id !== "is.workflow.actions.runworkflow") continue;
+      assert.ok(a.p.WFWorkflowName, f + ": a target needs a name");
+      assert.ok(!a.p.WFWorkflow, f + ": WFWorkflow pins this chain to one install");
+    }
+  }
 });
 
 test("the Show-Html chain does not inject, because Show-Html already does", () => {
@@ -266,8 +277,7 @@ test("the Show-Html chain does not inject, because Show-Html already does", () =
   assert.strictEqual(actions.length, 2);
   assert.ok(!actions.some(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER),
     "Show-Html substitutes the placeholder on the way through");
-  assert.strictEqual(actions[1].p.WFWorkflow.workflowIdentifier,
-    "84B4AB5F-02B8-426D-BF6A-E051730CC0E4");
+  assert.strictEqual(actions[1].p.WFWorkflowName, "Show-Html");
 });
 
 test("the page still carries the placeholder, since Show-Html is what resolves it", () => {

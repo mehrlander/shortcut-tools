@@ -141,12 +141,12 @@ its values without spending an action on either step:
 ]
 ```
 
-## Run Shortcut carries the target twice, and one half is device-local
+## Run Shortcut names its target twice, and the second half is optional
 
-*Observed 2026-08-10, from an exported shortcut.*
+*Observed 2026-08-10 from an exported shortcut; the constraint retired
+2026-08-12 by two probes that ran.*
 
-`is.workflow.actions.runworkflow` names its target in two places, and they are
-not redundant:
+`is.workflow.actions.runworkflow` names its target in two places:
 
 ```json
 "WFWorkflowName": "Show-Html",
@@ -155,18 +155,30 @@ not redundant:
                 "workflowName": "Show-Html" }
 ```
 
-`workflowIdentifier` is minted per install, so a chain written elsewhere cannot
-invent one; it has to be read off an export from the device it will run on. A
-shortcut that calls **itself** sets `isSelf` true, which is how one shortcut can
-be both a library and its own demo caller. Both halves appear in every
-`runworkflow` action across the two exports read so far.
+Every export read carries both, and `workflowIdentifier` is minted per install,
+which made the dict look load-bearing and a chain written elsewhere look
+unportable. **It is not.** Two things are now measured, by
+[`run-by-name`](../workflows/run-by-name.json) and
+[`run-by-variable`](../workflows/run-by-variable.json), each pasted and run:
 
-*Unconfirmed:* whether `WFWorkflowName` alone resolves by name when the dict is
-absent. Until that is tested, write both.
+1. **`WFWorkflowName` alone resolves.** With no `WFWorkflow` dict at all, Run
+   Shortcut finds the target by name. So a chain can call a shortcut on a device
+   it has never seen, and nothing here needs an identifier read off an export.
+2. **The name may be a variable.** `WFWorkflowName` accepts a `WFTextTokenString`
+   with an attachment, so the target can be computed at run time.
 
-The input attachment may be a plain variable rather than an action output, in
-which case it is `{"Type": "Variable", "VariableName": "content"}` inside the
-same `WFTextTokenAttachment` envelope.
+The second is the one that changes what is buildable, and it is invisible from
+inside the app: the editor offers a shortcut picker with no variable slot, so the
+documented workaround is to fetch every shortcut, filter by name, and run the
+survivor. The format needs none of that. **The picker is a limit of the UI, not
+of the file**, which is worth holding onto generally, since this file exists to
+describe the file rather than the editor.
+
+A shortcut that calls **itself** still sets `isSelf` true, which is how one
+shortcut can be both a library and its own demo caller.
+
+*Unconfirmed:* what happens when two shortcuts share a name, and whether a name
+that does not resolve fails loudly at run time or silently does nothing.
 
 ## An `If` with several conditions uses a different shape entirely
 

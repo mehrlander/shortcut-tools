@@ -1,0 +1,92 @@
+{
+  "label": "Run-Steps: run named shortcuts in order, piping each into the next (6 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "57E93000-0001-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.repeat.each",
+      "p": {
+        "GroupingIdentifier": "57E93000-9000-4A00-9000-000000009000",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "57E93000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "57E93000-0002-4A00-9000-000000000002",
+        "WFWorkflowName": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "Repeat Item"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Carry"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Shortcut Result",
+            "OutputUUID": "57E93000-0002-4A00-9000-000000000002",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "Carry"
+      }
+    },
+    {
+      "id": "is.workflow.actions.repeat.each",
+      "p": {
+        "GroupingIdentifier": "57E93000-9000-4A00-9000-000000009000",
+        "UUID": "57E93000-0003-4A00-9000-000000000003",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvariable",
+      "p": {
+        "WFVariable": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Carry"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
