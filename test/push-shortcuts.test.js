@@ -52,14 +52,23 @@ test("an unsubstituted token is reported before anything is read", () => {
 test("the clipboard is decoded as UTF-8, not as bytes", () => {
   // atob returns a binary string, so a multi-byte character survives only if it
   // is decoded properly afterwards. Shortcut names contain emoji routinely.
-  const ctx = load({ clipboard: JSON.stringify([{ name: "Inject-🎟️Token" }]) });
-  assert.match(ctx.out(), /Parses as JSON: 1 items/);
-  assert.match(ctx.out(), /First item keys: name/);
+  const ctx = load({ clipboard: JSON.stringify({ name: "Inject-🎟️Token", shortcut: {} }) });
+  assert.match(ctx.out(), /1 shortcuts: Inject-🎟️Token/);
 });
 
-test("a dump that is not JSON says so instead of failing at push time", () => {
-  const ctx = load({ clipboard: "not json at all" });
-  assert.match(ctx.out(), /Does not parse as JSON/);
+// The dump is one object per line, so the whole thing is not JSON and the names
+// are what a reader wants to see before letting it land.
+test("the summary names the shortcuts, one line each", () => {
+  const rows = ["Alpha", "Beta", "Gamma"]
+    .map(n => JSON.stringify({ name: n, shortcut: { WFWorkflowActions: [] } })).join("\n");
+  const ctx = load({ clipboard: rows });
+  assert.match(ctx.out(), /3 shortcuts: Alpha, Beta, Gamma/);
+});
+
+test("a line that does not parse is counted rather than swallowed", () => {
+  const ctx = load({ clipboard: JSON.stringify({ name: "Fine", shortcut: {} }) + "\nnot json at all" });
+  assert.match(ctx.out(), /1 shortcuts: Fine/);
+  assert.match(ctx.out(), /1 line\(s\) did not parse/);
   assert.ok(!ctx.els.go.hidden, "and the push is still offered, since the bytes are the point");
 });
 

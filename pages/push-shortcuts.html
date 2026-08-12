@@ -104,15 +104,18 @@ function start() {
 
   var found = scan(dump), lines = [];
   lines.push(dump.length.toLocaleString() + ' characters on the clipboard.');
-  try {
-    var parsed = JSON.parse(dump);
-    lines.push('Parses as JSON: ' + (Array.isArray(parsed) ? parsed.length + ' items' : typeof parsed));
-    if (Array.isArray(parsed) && parsed.length) {
-      lines.push('First item keys: ' + Object.keys(parsed[0]).slice(0, 8).join(', '));
-    }
-  } catch (err) {
-    lines.push('Does not parse as JSON, which is worth knowing before it lands.');
+  // Dump-Selected emits one object per line, so the whole thing is not JSON but
+  // each line is. Report the names, which is the useful summary either way.
+  var rows = dump.split('\n').filter(function (l) { return l.trim(); });
+  var names = [], bad = 0;
+  rows.forEach(function (line) {
+    try { names.push(JSON.parse(line).name); } catch (err) { bad++; }
+  });
+  if (names.length) {
+    lines.push(names.length + ' shortcuts: ' + names.slice(0, 12).join(', ') +
+               (names.length > 12 ? ', …' : ''));
   }
+  if (bad) lines.push(bad + ' line(s) did not parse, which is worth knowing before it lands.');
   if (found.length) lines.push('\nWARNING: found ' + found.join(', ') + '. Pushing anyway is your call.');
   show(lines.join('\n'));
   if (found.length) document.getElementById('out').className = 'warn';

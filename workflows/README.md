@@ -37,6 +37,7 @@ and the suite runs it.
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `dump-shortcuts` | Every shortcut on the device as one combined JSON, onto the clipboard. Two actions plus a copy, because `Use-Shortcut` already does the work. |
+| `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
@@ -130,3 +131,23 @@ Both open a page through `Run-Html` when they succeed, so the result is legible
 without reading anything. Failure is legible too and arrives earlier: a target
 Shortcuts cannot resolve pastes as an action with an empty picker, visible in
 the editor before the shortcut is ever run.
+
+## Why `dump-selected` exists beside `dump-shortcuts`
+
+`dump-shortcuts` is three actions because it delegates to `Use-Shortcut`, which
+already knows how to export and combine. That is the smaller chain and the one to
+read first, but it inherits a dependency and it dumps everything.
+
+`dump-selected` does the export itself: `Get File of Type` with `public.json` per
+shortcut, paired with `Get Name` because **a shortcut's plist does not contain its
+own name**. The output is one JSON object per line rather than one array, which
+means a single run cannot be broken by one unencodable name, and a splitter reads
+it a line at a time rather than holding the whole library in memory.
+
+The picker is the size guard. `Choose from List` with multiple selection and a
+select-all button lets a first run take five shortcuts, which answers whether the
+route works before anything large is attempted.
+
+One known sharp edge: the name is interpolated into JSON as text, so a shortcut
+named with a `"` or a `\` produces a line that does not parse. The push page
+counts unparseable lines rather than hiding them.
