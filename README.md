@@ -60,6 +60,79 @@ yours, each one a link. See [`workflows/README.md`](workflows/README.md), plus
 and [the token-injection pattern](docs/shortcuts-format-notes.md#the-token-injection-pattern)
 behind it.
 
+## Sending a page, not a chain
+
+`tools/pack.py` sends **actions to paste**. [`tools/show.py`](tools/show.py) is
+its sibling and sends **a page to run**: one link that hands an HTML file to a
+shortcut which base64-encodes it, builds `data:text/html;charset=utf-8;base64,`
+and opens it, so the page lands in Safari as a real document.
+
+```bash
+python3 tools/show.py pages/gh-recent-branches.html      # prints a tappable link
+python3 tools/show.py - < draft.html                     # a page not committed yet
+python3 tools/show.py '<link>' --verify                  # read one back before sending
+```
+
+The page is gzipped and wrapped in [`tools/gz-shell.html`](tools/gz-shell.html),
+which inflates it in the browser with `DecompressionStream` and writes it out.
+Nothing on the device does the unpacking, so the shortcut stays three actions
+long. Percent-encoding is what this buys off. Sent raw, a page costs about 1.7x
+its own size, since markup is mostly characters the encoder escapes; compressed,
+it costs a fixed ~700 characters of shell plus base64url, which the encoder
+leaves almost entirely alone. A small page therefore gains little and a large
+one collapses.
+
+| Page | Raw link | Compressed link |
+| --- | ---: | ---: |
+| `pages/xhr-probe.html`, 1,256 chars | 2,126 | 1,799 |
+| `pages/gh-recent-branches.html`, 5,768 chars | 9,621 | 4,560 |
+| a 100 KB baked page | ~172,000 | ~5,200 |
+
+Token injection survives the compression, which is the part worth knowing.
+`Show-Html` substitutes by text replacement and cannot see inside a gzip stream,
+so the shell keeps an uncompressed copy of each placeholder the page needs, takes
+the substitution there, and applies it to the page after inflating. Only the
+placeholders a page actually uses are carried, so a page with no secret in it is
+never handed the token. Sending a token-bearing page to a target that does not
+inject is refused rather than quietly loaded unauthenticated.
+
+`--raw` skips the shell and sends the page as itself, which is what a device
+without `DecompressionStream` needs (Safari gained it in 16.4).
+
+## Menus with icons
+
+Choose from List shows one plain line per row. Given **contacts** it shows an
+image, a title, and a subtitle, so a `.vcf` is how a native menu gets an icon.
+[`tools/vcard.py`](tools/vcard.py) builds one from a spec in
+[`menus/`](menus/):
+
+```bash
+python3 tools/vcard.py menus/demo.json --out Choice.vcf
+```
+
+The icons are rasterized **here**, not on the device. A glyph is a constant, so
+fetching one per row per run costs a round trip before the menu can appear,
+fails offline, and puts the whole menu behind async work. Live row content is
+the opposite and has to be fetched there.
+
+The photo is a **1-bit PNG built here, not by the canvas**, which is the whole
+size story. A Phosphor glyph is two colors, so an encoder that stores two colors
+beats one built for photographs. Per row at 128px, as base64:
+
+| Encoding | Bytes per row |
+| --- | ---: |
+| Canvas JPEG, q0.8, profile stripped | 2,594 |
+| 8-bit grayscale PNG | 1,172 |
+| 1-bit PNG | **425** |
+
+At list size the three are indistinguishable, because the display downsamples
+128px to about 44 and averages the aliasing away. `--bits 8` keeps the
+antialiased edge if a larger presentation ever needs it.
+
+Unlike a page, a `.vcf` cannot use the compression above, since that inflates in
+a browser and this payload has to land in Shortcuts. Picking the right encoder
+turned out to matter more than compression would have.
+
 ## CLI
 
 Installed as `shortcut-tools`, or run with `npx shortcut-tools`.

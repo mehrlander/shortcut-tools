@@ -264,6 +264,114 @@ Two rules follow for any page written against this, and
    injector in a comment is enough to paste the live token into that comment.
    Caught by the test rather than by review.
 
+## Injection reaches a compressed page, through the wrapper rather than into it
+
+*Measured 2026-08-11, in headless Chromium.*
+
+A page can be delivered gzipped, wrapped in a small uncompressed shell that
+inflates it in the browser ([`tools/show.py`](../tools/show.py),
+[`tools/gz-shell.html`](../tools/gz-shell.html)). Injection and compression look
+mutually exclusive at first, since the injector substitutes by text replacement
+and a gzip stream has no text in it. They are not: the **shell** is text, so it
+carries the placeholder, takes the substitution, and applies it to the page after
+inflating. The page's own source is unchanged either way, which is what keeps one
+page servable by both routes.
+
+Three constraints follow, and the first is the trap:
+
+1. **The shell needs both halves of the pair, and only one may be literal.** The
+   value slot is the literal placeholder, which the injector rewrites; the search
+   key is the same string written as `\u` escapes, which it cannot see. Written
+   whole, the key is rewritten too and the substitution finds nothing. Generating
+   the key with `json.dumps(placeholder)` rather than typing the escapes keeps the
+   two from drifting.
+2. **Carry only the placeholders the page uses.** A shell that carries all of them
+   hands the live token to a page with no use for it.
+3. **The wrapper's own comments are not free.** They ship inside the link and cost
+   about 1,800 characters, more than the compression saves on a small page, so
+   `show.py` strips them at build time.
+
+Rendering the result is a real navigation, not a webview: a `data:text/html`
+URL carrying the shell inflates, substitutes, and runs the page's own script,
+confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
+Safari 16.4 and later; a device below that needs the page sent raw.
+
+**Confirmed on device 2026-08-11**, by pasting `run-html` into a shortcut named
+`Run-Html` and tapping a `show.py` link carrying
+[`xhr-probe`](../pages/xhr-probe.html). It reported `sync: 200, 33 bytes` and
+`async: 33 bytes`, replacing the static text the page ships with, so Safari
+inflated the payload, `document.write` produced a document whose script ran, and
+that script reached the network both ways. The chain's three actions are
+confirmed by that run, `ExtensionInput` among them.
+
+**The substitution half is confirmed too, 2026-08-12**, by tapping a `show.py`
+link for [`gh-recent-branches`](../pages/gh-recent-branches.html) through
+`Show-Html`. The branch list rendered with no prompt, which is the tell: the page
+compares its token against a sentinel built from halves and shows a paste-a-token
+form when they still match, so a list can only appear if something replaced the
+placeholder. Nothing on device can reach into the gzip stream, so what it
+replaced was the copy in the shell, and the shell carried it into the page after
+inflating. The whole route is now measured on device rather than in Chromium.
+
+That run also exposed a defect nothing else would have: **the page's own branch
+was missing from the page.** A Claude Code session commits as
+`Claude <noreply@anthropic.com>`, which GitHub resolves to the `claude` account,
+so a branch an agent pushed failed the viewer-is-the-author test and was dropped
+as someone else's. The identity is not uniform across checkouts, which is what
+made the omission read as staleness rather than as a filter: in the same
+container, `web-tools` commits under the viewer's own noreply address and its
+agent branches were listing normally.
+
+## A menu with icons is a list of contacts, coerced in place
+
+*Observed 2026-08-12, from an export.*
+
+`Choose from List` shows one plain line per row. Given **contacts** it shows an
+image, a title, and a subtitle, so a `.vcf` is how a native menu gets an icon.
+Three steps make that work and two of them are not guessable:
+
+1. **`Set Name` to something ending `.vcf`.** The extension is the only type hint
+   the next step has.
+2. **`Choose from List` coerces the named text itself**, through a
+   `WFContactContentItem` aggrandizement on its own `WFInput`. There is no Get
+   Contacts from Input action anywhere in the chain. Same mechanism as the rich
+   text and dictionary coercions above; contacts is simply another member.
+3. **The choice reads back through `Last Name`**, a
+   `WFPropertyVariableAggrandizement` on the Chosen Item. This is why the cards
+   are written `N:<title>;;;;`: vCard's `N` is
+   `family;given;additional;prefix;suffix`, so the title has to sit in the family
+   slot to be readable as Last Name. It looks like a sloppy field choice and is
+   load-bearing.
+
+The dispatch is then one flat `If` per row with no `Otherwise`, which is the
+compact-`If` switch [`dataflow.md`](dataflow.md) describes, and a row that does
+nothing yet is still a legal empty branch.
+
+**Confirmed on device 2026-08-12**, from a menu generated by `tools/vcard.py`
+and delivered through the paste route: four rows rendered with icon, title, and
+subtitle, and the dispatch fired. Without `WFChooseFromListActionPrompt` the
+sheet is titled by the system, which asks "Which one?".
+
+**A packed card cannot carry CRLF.** vCard says lines end `\r\n`, but a plist is
+XML and XML normalizes a literal CR in text content away on read, so a card
+written with CRLF does not survive a pack and reparse. `tools/pack.py` asserts
+its own round trip, so this fails loudly instead of shipping a payload that
+quietly changed. The export this was read from stores its cards with plain
+newlines, which is both the workaround and the evidence that Apple's parser
+accepts them. `tools/vcard.py` keeps CRLF in the standalone `.vcf` it writes and
+converts on the way into a chain.
+
+**A menu ships its own images, so the encoder is the size story.** A glyph is two
+colors and a browser's canvas encoders are built for photographs, so neither of
+its outputs is the right one. Measured per row across four icons at 128px, as
+base64: 2,594 bytes for JPEG at q0.8 with the profile stripped, 1,172 for 8-bit
+grayscale PNG, 425 for 1-bit PNG, all three indistinguishable at list size
+because the display downsamples 128px to about 44 and averages the aliasing
+away. `tools/vcard.py` therefore reads raw pixels out of the canvas and writes
+the PNG itself. Worth knowing separately: canvas embeds a **472-byte ICC
+profile** in every JPEG, 14% of a 128px glyph, describing a color space a black
+shape on white does not use.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -391,6 +499,15 @@ is the worst failure shape available. Until someone runs
 [`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
 both paths on separate lines from one tap, write the request synchronously.
 
+The same page was run on device 2026-08-11 through `Run-Html`, and reported both
+paths resolved. **That is not an answer to the question above**, and the reason
+is worth stating so the result is not mistaken for one later: `Run-Html` opens
+the URL in Safari, where the page is simply loaded and there is no capture
+moment for anything to race. The coercion is the whole subject here, and only the
+five-action probe exercises it. What the device run does settle is the browser
+half: a cross-origin request from a `data:` URL works on device, not only in
+Chromium.
+
 One layout trap, distinct from timing. Where the extracted text is split on
 newlines downstream, the page must not let a line wrap: set `white-space: pre`
 rather than `pre-wrap`, so a soft wrap cannot become a line the consumer counts
@@ -427,11 +544,15 @@ incoming value through. Merged in PR #3.
 
 ## Checks
 
-`npm test` runs `test/actions.test.js` (the dataset holds its shape: every value
-parses, every identifier is well formed, the multi-variant entry is the only one,
-nothing carries a `GroupingIdentifier`) and `test/builder.test.js` (`add()`
-refuses control flow, every block is balanced and shares one grouping, presets
-merge, the serializer escapes markup). Node's built-in runner, no dependencies.
+`npm test` runs every `test/*.test.js` on Node's built-in runner, no
+dependencies. The two that hold this file's claims are `test/actions.test.js`
+(the dataset holds its shape: every value parses, every identifier is well
+formed, the multi-variant entry is the only one, nothing carries a
+`GroupingIdentifier`) and `test/builder.test.js` (`add()` refuses control flow,
+every block is balanced and shares one grouping, presets merge, the serializer
+escapes markup). `test/show.test.js` is the exception to what follows: it runs
+the shell's real JavaScript out of a real link, so the compressed route is
+exercised rather than asserted about.
 
 What the tests cannot tell you is whether the output imports. That needs a
 device, and is a separate open task.

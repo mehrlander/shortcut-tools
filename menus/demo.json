@@ -1,0 +1,13 @@
+{
+  "label": "Washington fiscal references",
+  "file": "MainMenu.vcf",
+  "prompt": "Washington fiscal references",
+  "weight": "regular",
+  "rows": [
+    { "icon": "scales",     "title": "RCW 41.50.255",     "subtitle": "app.leg.wa.gov/RCW" },
+    { "icon": "chart-line", "title": "ERFC Forecast",     "subtitle": "erfc.wa.gov/forecasts" },
+    { "icon": "buildings",  "title": "OFM Budget Office", "subtitle": "ofm.wa.gov/budget" },
+    { "icon": "flashlight", "title": "Flashlight",        "subtitle": "Toggles the light.",
+      "actions": [ { "id": "is.workflow.actions.flashlight", "p": { "operation": "toggle" } } ] }
+  ]
+}

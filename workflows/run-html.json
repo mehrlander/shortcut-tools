@@ -1,0 +1,52 @@
+{
+  "label": "Run-Html: render Shortcut Input as a page (3 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "7A11E000-0001-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "7A11E000-0002-4A00-9000-000000000002",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{36, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "7A11E000-0001-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "data:text/html;charset=utf-8;base64,￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "7A11E000-0003-4A00-9000-000000000003",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "7A11E000-0002-4A00-9000-000000000002",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
