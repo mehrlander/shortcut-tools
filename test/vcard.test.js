@@ -38,7 +38,9 @@ function jpeg({ withProfile = true } = {}) {
 }
 
 const ICONS = { a: jpeg(), b: jpeg() };
-const photos = (vcf) => [...vcf.matchAll(/PHOTO;TYPE=JPEG;ENCODING=BASE64:(\S+)/g)].map(m => m[1]);
+// Type-agnostic on purpose: the type parameter is read off the image's bytes,
+// so a test that hardcoded one would stop seeing the other.
+const photos = (vcf) => [...vcf.matchAll(/PHOTO;TYPE=\w+;ENCODING=BASE64:(\S+)/g)].map(m => m[1]);
 
 test("one card per row, in the order the spec gives them", () => {
   const vcf = run(SPEC, ICONS);
@@ -148,4 +150,25 @@ test("the packed card carries no CR, which a plist cannot hold", () => {
   const text = chain(SPEC, ICONS).actions[0].p.WFTextActionText;
   assert.ok(!text.includes("\r"), "CRLF belongs to the standalone file, not this route");
   assert.ok(text.includes("BEGIN:VCARD\nVERSION:3.0\n"));
+});
+
+// The photos are built here rather than by the canvas, because a Phosphor glyph
+// is two colors and a browser's encoders are built for photographs. Per row at
+// 128px, as base64: 2,594 bytes for canvas JPEG q0.8, 1,172 for 8-bit
+// grayscale, 425 for 1-bit.
+test("a PNG icon is labelled PNG and passed through untouched", () => {
+  // A 1x1 1-bit grayscale PNG, built the way encode_png builds one.
+  const png = Buffer.concat([
+    Buffer.from("89504e470d0a1a0a", "hex"),
+    Buffer.from("0000000d49484452000000010000000101000000003718f6", "hex"), // IHDR + crc
+    Buffer.from("0000000a4944415408d76360000000020001e221bc33", "hex"),     // IDAT + crc
+    Buffer.from("0000000049454e44ae426082", "hex")]).toString("base64");
+  const vcf = run({ rows: [{ icon: "a", title: "T" }] }, { a: png });
+  assert.match(vcf, /PHOTO;TYPE=PNG;ENCODING=BASE64:/);
+  assert.strictEqual(photos(vcf)[0], png, "a PNG has no profile to strip");
+});
+
+test("the type parameter is read off the bytes, not assumed", () => {
+  const vcf = run(SPEC, ICONS);
+  assert.match(vcf, /PHOTO;TYPE=JPEG;/, "these fixtures are JPEGs and should say so");
 });

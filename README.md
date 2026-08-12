@@ -115,16 +115,23 @@ fetching one per row per run costs a round trip before the menu can appear,
 fails offline, and puts the whole menu behind async work. Live row content is
 the opposite and has to be fetched there.
 
-Three decisions came out of measuring rather than taste. JPEG over PNG: a black
-glyph on white is visually identical either way, and three rows measured 5,604
-bytes gzipped against 9,329. 128px over 256px: it is a list thumbnail, and 256
-is four times what is shown. And the ICC profile canvas embeds gets stripped,
-being 472 bytes of color space that a black shape on white does not use, or 14%
-of every row. Together, about 2,900 bytes per row.
+The photo is a **1-bit PNG built here, not by the canvas**, which is the whole
+size story. A Phosphor glyph is two colors, so an encoder that stores two colors
+beats one built for photographs. Per row at 128px, as base64:
+
+| Encoding | Bytes per row |
+| --- | ---: |
+| Canvas JPEG, q0.8, profile stripped | 2,594 |
+| 8-bit grayscale PNG | 1,172 |
+| 1-bit PNG | **425** |
+
+At list size the three are indistinguishable, because the display downsamples
+128px to about 44 and averages the aliasing away. `--bits 8` keeps the
+antialiased edge if a larger presentation ever needs it.
 
 Unlike a page, a `.vcf` cannot use the compression above, since that inflates in
-a browser and this payload has to land in Shortcuts. At these sizes it does not
-need to.
+a browser and this payload has to land in Shortcuts. Picking the right encoder
+turned out to matter more than compression would have.
 
 ## CLI
 

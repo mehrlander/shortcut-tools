@@ -356,12 +356,16 @@ newlines, which is both the workaround and the evidence that Apple's parser
 accepts them. `tools/vcard.py` keeps CRLF in the standalone `.vcf` it writes and
 converts on the way into a chain.
 
-Two size notes from building these, since a menu ships its own images. Canvas
-embeds a **472-byte ICC profile** in every JPEG it encodes, 14% of a 128px glyph,
-describing a color space a black shape on white does not use; stripping APP1
-through APP15 and keeping the JFIF header removes it. And JPEG beats PNG here by
-a wide margin, 5,604 bytes gzipped against 9,329 across three rows, with no
-visible difference.
+**A menu ships its own images, so the encoder is the size story.** A glyph is two
+colors and a browser's canvas encoders are built for photographs, so neither of
+its outputs is the right one. Measured per row across four icons at 128px, as
+base64: 2,594 bytes for JPEG at q0.8 with the profile stripped, 1,172 for 8-bit
+grayscale PNG, 425 for 1-bit PNG, all three indistinguishable at list size
+because the display downsamples 128px to about 44 and averages the aliasing
+away. `tools/vcard.py` therefore reads raw pixels out of the canvas and writes
+the PNG itself. Worth knowing separately: canvas embeds a **472-byte ICC
+profile** in every JPEG, 14% of a 128px glyph, describing a color space a black
+shape on white does not use.
 
 ## The packed route inverts the glyph rule
 

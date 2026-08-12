@@ -16,20 +16,25 @@ behind async work in a context where async timing is still an open question.
 Live row *content* is a different matter and has to be fetched there.
 
 Rasterizing needs a renderer, so this drives headless Chromium once for the
-whole set and reads the encoded images back out of the DOM. `--icons` supplies
-them instead, which is what makes the assembly testable without a browser.
+whole set and reads the raw pixels back out of the DOM, encoding them here.
+`--icons` supplies finished images instead, which is what makes the assembly
+testable without a browser.
 
-Format follows the generator page: vCard 3.0 with VERSION and FN present, and
-JPEG rather than PNG. A glyph on white is visually identical in either and JPEG
-measured 5,604 bytes gzipped against 9,329 for PNG across three rows at 128px.
+Format is vCard 3.0 with VERSION and FN present. The photo is a **1-bit PNG,
+built here rather than by the canvas**, and that is the whole size story: a
+Phosphor glyph is two colors, so an encoder that stores two colors beats one
+that stores a photograph. Measured per row across four icons at 128px, as base64:
+2,594 bytes for canvas JPEG at q0.8, 1,172 for 8-bit grayscale, 425 for 1-bit.
+Rendered at list size the three are indistinguishable, because the display
+downsamples 128px to about 44 and averages the aliasing away.
 """
-import argparse, base64, json, os, re, shutil, subprocess, sys, tempfile, urllib.request
+import argparse, base64, json, os, re, shutil, struct, subprocess, sys, tempfile, urllib.request, zlib
 from pathlib import Path
 
 CDN = "https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/%s/%s.svg"
 FALLBACK = "question"
 SIZE = 128          # a list thumbnail, not a portrait; 256 is four times what is shown
-QUALITY = 0.8
+BITS = 1            # see encode_png: 8 keeps the antialiased edge, 1 is six times smaller
 
 
 def chrome():
@@ -57,13 +62,18 @@ def fetch_svg(name, weight):
 
 
 def rasterize(svgs):
-    """SVG text to base64 JPEG, all of them in one browser run.
+    """SVG text to raw luminance, one byte per pixel, all of them in one run.
+
+    The browser is here to rasterize and nothing else. It hands back pixels
+    rather than an encoded image, because its encoders are built for
+    photographs and these are two-color glyphs; `encode_png` below does far
+    better on exactly this input.
 
     The SVG is inlined as a data: URL rather than linked, which is what keeps
-    the canvas untainted: a cross-origin image makes toDataURL throw.
+    the canvas untainted: a cross-origin image makes getImageData throw.
     """
     page = """<!doctype html><meta charset=utf-8><pre id=out></pre><script>
-const SVGS = %s, SIZE = %d, Q = %s;
+const SVGS = %s, SIZE = %d;
 (async () => {
   const out = {};
   for (const [name, svg] of Object.entries(SVGS)) {
@@ -75,11 +85,13 @@ const SVGS = %s, SIZE = %d, Q = %s;
     const ctx = c.getContext('2d');
     ctx.fillStyle = 'white'; ctx.fillRect(0, 0, SIZE, SIZE);
     ctx.drawImage(img, 0, 0, SIZE, SIZE);
-    out[name] = c.toDataURL('image/jpeg', Q).split(',')[1];
+    const d = ctx.getImageData(0, 0, SIZE, SIZE).data, g = new Uint8Array(SIZE * SIZE);
+    for (let i = 0; i < g.length; i++) g[i] = d[i * 4];
+    out[name] = btoa(String.fromCharCode.apply(null, g));
   }
   document.getElementById('out').textContent = JSON.stringify(out);
 })();
-</script>""" % (json.dumps(svgs), SIZE, QUALITY)
+</script>""" % (json.dumps(svgs), SIZE)
     with tempfile.TemporaryDirectory() as tmp:
         html = Path(tmp) / "raster.html"
         html.write_text(page)
@@ -90,6 +102,37 @@ const SVGS = %s, SIZE = %d, Q = %s;
     if not found or not found.group(1).strip():
         raise SystemExit("the rasterizer produced nothing; run with --icons or check CHROME")
     return json.loads(found.group(1))
+
+
+def encode_png(gray, size, bits):
+    """Grayscale bytes to a PNG, without a library.
+
+    Two color types are worth having. `8` keeps the antialiased edge; `1`
+    thresholds it away and is six times smaller, which at list size is
+    invisible because the display is downsampling 128px to about 44 and doing
+    its own averaging. Filter 0 on every scanline: deflate already handles a
+    glyph's long runs, and a predictor buys nothing on flat fields.
+    """
+    if bits == 8:
+        rows = b"".join(b"\0" + gray[y * size:(y + 1) * size] for y in range(size))
+    else:
+        rows = bytearray()
+        for y in range(size):
+            packed, acc, n = bytearray(), 0, 0
+            for x in range(size):
+                acc = (acc << 1) | (1 if gray[y * size + x] >= 128 else 0)
+                n += 1
+                if n == 8:
+                    packed.append(acc)
+                    acc, n = 0, 0
+            if n:
+                packed.append(acc << (8 - n))
+            rows += b"\0" + bytes(packed)
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data))
+    header = struct.pack(">IIBBBBB", size, size, bits, 0, 0, 0, 0)   # color type 0: grayscale
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header)
+            + chunk(b"IDAT", zlib.compress(bytes(rows), 9)) + chunk(b"IEND", b""))
 
 
 def strip_profile(b64):
@@ -115,10 +158,25 @@ def strip_profile(b64):
     return b64                                 # unrecognized layout, leave it alone
 
 
+def photo_of(b64):
+    """(type, payload) for the PHOTO line, read off the bytes rather than told.
+
+    A prerendered image arriving through --icons could be either, and the type
+    parameter has to agree with what is actually there.
+    """
+    data = base64.b64decode(b64)
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "PNG", b64
+    if data[:2] == b"\xff\xd8":
+        return "JPEG", strip_profile(b64)
+    return "JPEG", b64          # unrecognized: pass it through rather than mangle it
+
+
 def card(row, photo, fold=False):
     """One vCard. VERSION and FN are required by 3.0 and both were missing from
     the first shortcut that built these by hand."""
-    photo_line = "PHOTO;TYPE=JPEG;ENCODING=BASE64:" + strip_profile(photo)
+    kind, payload = photo_of(photo)
+    photo_line = "PHOTO;TYPE=%s;ENCODING=BASE64:%s" % (kind, payload)
     if fold:
         # The spec caps a line at 75 octets and continues with CRLF plus a space.
         # Off by default: Apple's parser accepts the long line, and the unfolded
@@ -196,12 +254,14 @@ def chain(spec, vcf):
             "actions": actions}
 
 
-def build(spec, icons=None, fold=False):
+def build(spec, icons=None, fold=False, bits=BITS):
     rows = spec["rows"]
     if icons is None:
         weight = spec.get("weight", "regular")
         names = sorted({r["icon"] for r in rows})
-        icons = rasterize({n: fetch_svg(n, weight) for n in names})
+        gray = rasterize({n: fetch_svg(n, weight) for n in names})
+        icons = {n: base64.b64encode(encode_png(base64.b64decode(g), SIZE, bits)).decode()
+                 for n, g in gray.items()}
     missing = [r["icon"] for r in rows if r["icon"] not in icons]
     if missing:
         raise SystemExit("no icon for: %s" % ", ".join(sorted(set(missing))))
@@ -216,10 +276,12 @@ def main():
     ap.add_argument("--fold", action="store_true", help="fold the photo line at 75 octets")
     ap.add_argument("--chain", action="store_true",
                     help="emit the whole menu as a pack.py chain rather than the file alone")
+    ap.add_argument("--bits", type=int, choices=[1, 8], default=BITS,
+                    help="photo depth: 1 is six times smaller, 8 keeps the antialiased edge")
     args = ap.parse_args()
     spec = json.load(open(args.spec))
     icons = json.load(open(args.icons)) if args.icons else None
-    vcf = build(spec, icons, args.fold)
+    vcf = build(spec, icons, args.fold, args.bits)
     out = json.dumps(chain(spec, vcf), ensure_ascii=False, indent=2) if args.chain else vcf
     if args.out:
         Path(args.out).write_text(out)
