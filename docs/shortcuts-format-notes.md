@@ -304,9 +304,23 @@ inflated the payload, `document.write` produced a document whose script ran, and
 that script reached the network both ways. The chain's three actions are
 confirmed by that run, `ExtensionInput` among them.
 
-*Unconfirmed:* the substitution half. The page that ran carries no placeholder,
-so the shell's injection path is still Chromium-only. Tapping a `show.py` link
-for `gh-recent-branches` through `Show-Html` is the run that would settle it.
+**The substitution half is confirmed too, 2026-08-12**, by tapping a `show.py`
+link for [`gh-recent-branches`](../pages/gh-recent-branches.html) through
+`Show-Html`. The branch list rendered with no prompt, which is the tell: the page
+compares its token against a sentinel built from halves and shows a paste-a-token
+form when they still match, so a list can only appear if something replaced the
+placeholder. Nothing on device can reach into the gzip stream, so what it
+replaced was the copy in the shell, and the shell carried it into the page after
+inflating. The whole route is now measured on device rather than in Chromium.
+
+That run also exposed a defect nothing else would have: **the page's own branch
+was missing from the page.** A Claude Code session commits as
+`Claude <noreply@anthropic.com>`, which GitHub resolves to the `claude` account,
+so a branch an agent pushed failed the viewer-is-the-author test and was dropped
+as someone else's. The identity is not uniform across checkouts, which is what
+made the omission read as staleness rather than as a filter: in the same
+container, `web-tools` commits under the viewer's own noreply address and its
+agent branches were listing normally.
 
 ## The packed route inverts the glyph rule
 
