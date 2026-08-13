@@ -22,6 +22,25 @@ The tiering is mechanical, and each rule is a claim that can be wrong:
 - **rest** is authored and outside the core, split by whether anything calls
   it. The uncalled half is the prune candidate list, and it is the largest
   tier, which is the finding rather than a failure of the rule.
+
+**The tier is a cascade, not a taxonomy, and it loses information.** Three
+independent things are being decided: where a shortcut came from
+(**provenance**), whether it is a duplicate-on-edit leftover (**lifecycle**),
+and how the graph reaches it (**connectivity**). Every shortcut has a value on
+all three, and collapsing them to one bucket hides pairs: 28 imported shortcuts
+are numbered duplicates and get reported as sediment rather than as imports, so
+the Imported count understates the real 237; 5 of the 42 core shortcuts are
+imported rather than authored; and 2 core shortcuts are numbered duplicates.
+Each row therefore also carries `provenance`, `lifecycle`, and `connectivity`,
+and those are the facts. Read the tier as a recommended action over them,
+useful for a first pass and wrong to quote as a count.
+
+**And the core is a floor, not a fact.** It is the closure of the named hubs,
+so it grows with every entry point the graph cannot see: a shortcut launched
+from the Home Screen, a widget, the share sheet, or Siri is invisible here.
+Measured by adding random uncalled shortcuts as extra hubs, the core runs about
+42 with none, 48 with five, and 57 with ten. Treat 42 as "at least this much is
+live."
 """
 import argparse, collections, difflib, json, re, sys
 from pathlib import Path
@@ -78,7 +97,12 @@ def tier(index, hubs):
             t = "imported"
         else:
             t = "kept" if callers.get(n) else "prune"
-        out.append({"name": n, "tier": t, "actions": s.get("actions", 0),
+        out.append({"name": n, "tier": t,
+                    "provenance": "authored" if authored(n) else "imported",
+                    "lifecycle": "residue" if is_sediment(n) else "live",
+                    "connectivity": ("reachable" if n in core
+                                     else "called" if callers.get(n) else "uncalled"),
+                    "actions": s.get("actions", 0),
                     "calls": calls(n), "callers": sorted(callers.get(n, [])),
                     "depth": depth.get(n), "menu": s.get("menu", False),
                     "input": s.get("takes_input", False), "from": s.get("from", ""),

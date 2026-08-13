@@ -4,6 +4,22 @@
 [`tools/sketch.py`](../tools/sketch.py) renders. Frequencies are counted over
 that whole corpus; the readings are of the 42 in the working core.*
 
+**Reach, checked 2026-08-13 after a first draft overstated four of these.** A
+raw frequency over 577 shortcuts is not evidence about the author's design,
+because 237 of them are imported. Each idiom below carries the number of
+shortcuts that use it and where they sit, and the table is the honest summary:
+
+| Idiom | Shortcuts | Where they sit |
+| --- | ---: | --- |
+| Self-demo prologue | 72 | 17 core, 16 called, 27 uncalled, 6 residue, 6 imported |
+| Menus | 79 | **54 imported**, 8 core, 12 uncalled |
+| Calls `Choose-Sample` | 24 | 1 core, 3 called, 9 uncalled, 8 residue, 3 imported |
+| Calls `Run-List` | 20 | 6 core, 2 called, 10 uncalled |
+| Calls `Get-FileInfo` | 14 | 4 core, 2 called, 8 uncalled |
+
+Only the first is broadly distributed. The rest are narrow, and the menu row
+inverts the reading a raw count gives: menus are mostly an imported trait.
+
 A library this size is not a pile of scripts. It has a design, arrived at over
 years and never written down, and most of it is better than what a fresh start
 would produce. This is what the corpus says the design is, what each pattern
@@ -34,14 +50,20 @@ on a sample. Call it from another shortcut and the branch is skipped. It costs
 five actions and one branch.
 
 What makes it more than a convenience is where the sample comes from.
-`Choose-Sample` has **24 callers** and `Supply-Sample` 6, and each offers a menu:
+`Choose-Sample` has **24 callers** and `Supply-Sample` 6. Only one of those 24
+is in the core, and 8 are residue, so the injector is used more widely outside
+the working set than inside it: the pattern is real and the core is not where
+it is concentrated. Each offers a menu:
 clipboard, a list, a JSON API, a fixed text, a URL, a shortcut, a snippet, a
 question to Claude or ChatGPT, dictation. So the prologue is not a hardcoded
 fixture, it is **dependency injection with a picker**: any verb can be exercised
 against any input in the library without editing it.
 
-That is the single most valuable property here, and it is the one a rebuild is
-most likely to drop, because from the outside it reads as boilerplate.
+It is the one property here a rebuild is most likely to drop, because from the
+outside it reads as boilerplate. Calling it "the single most valuable" was the
+first draft's phrase and is more than the evidence carries: 72 of 577 shortcuts
+have the prologue, and it is the only idiom here spread across every tier
+rather than concentrated in one.
 
 **The cost, and it is real:** a self-call looks like recursion to anything
 reading the graph, and it inflates every caller count. Read
@@ -61,10 +83,15 @@ An item that looks like `Verb-Noun` and is under 30 characters **is run as a
 shortcut**. Anything else becomes a parameter. An explicit `shortcut:` prefix
 forces the first reading.
 
-So `Verb-Noun` is not a filing convention that helps humans skim. It is a
-**type**, tested at run time, and the library dispatches on it. That explains
-why the convention held for 340 shortcuts when nothing enforced it: breaking it
-broke `Run-List`.
+So `Verb-Noun` is not only a filing convention. Where `Run-List` is involved it
+is a **type**, tested at run time.
+
+**But its reach is 20 shortcuts, not 340,** and the first draft of this
+paragraph claimed the convention held because breaking it broke `Run-List`.
+That is unsupported. 340 names follow the convention and 20 shortcuts route
+through the interpreter, so discipline explains the convention and `Run-List`
+explains almost none of it. The mechanism is real and worth keeping; it is not
+why the library is consistent.
 
 Two consequences worth stating. A shortcut named with a space cannot be
 dispatched, which is why every imported shortcut sits outside this machinery.
@@ -73,7 +100,10 @@ plain-parameter, with no error.
 
 ## 3. One type system, consulted by everything
 
-`Get-FileInfo` has **14 callers** and answers "what am I holding." It gathers
+`Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
+holding." That is a core mechanism rather than a library-wide one, and the
+section heading below overstates it: read "consulted by everything" as
+"consulted by everything that dispatches on type." It gathers
 context, folds it to JSON, and runs a 4,449-character JavaScript function to
 produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
 `detail.caption`.
@@ -124,18 +154,26 @@ needs a third-party app where the `data:` route needs nothing.
 
 ## 5. A menu is the API surface
 
-`choosefrommenu` appears **1,961 times across 79 files**, behind only
-`conditional` (7,297 in 240 files) and `gettext` (2,248 in 371). The shape is
-always the same: a menu whose every case is one to three actions, usually a
-single `run`.
+**Wrong 2026-08-13:** the first draft read the raw count, 1,961 uses across 79
+files, as evidence that the menu is this library's API surface. It is not.
+**54 of those 79 files are imported shortcuts**, and only 8 are in the core. A
+menu is overwhelmingly how third-party authors present a shortcut, and the raw
+frequency measures their habit, not this one.
+
+What survives is narrower and still worth keeping. Two core shortcuts,
+`Show-Convert` and `Get-Text`, are built as menus, and they are the two with the
+widest surface.
 
 `Show-Convert` is the pattern at full size, fifteen cases, each a conversion:
 base64 either way, unzip, to dictionary, to markdown, to rtf, to html, link
 summary, condense lines, fetch. No case is longer than four actions.
 
-This is why the library is usable without documentation. There is no argument
-syntax to remember: run the verb, read the menu. It is also why action counts
-mislead, since a 56-action shortcut can be fifteen two-action operations.
+Where a verb has many operations, the menu is why it needs no documented
+argument syntax: run it and read the cases. It is also why action counts
+mislead, since a 56-action shortcut can be fifteen two-action operations. What
+cannot be claimed from the corpus is that this is the library's general
+interface, because most verbs take an input and return a value with no menu at
+all.
 
 ## 6. Rich menus smuggle data through contacts
 
@@ -226,6 +264,27 @@ happens by opening `Show-Loop` and stepping.
 - **`Show-Html` carries a dead branch**, two `text.replace` actions reading the
   same source where one feeds nothing. Detail in
   [`shortcuts-format-notes.md`](shortcuts-format-notes.md).
+
+## The recommendation, after checking
+
+The grammar holds. Four of its claims did not, and all four failed the same
+way: a raw frequency over 577 shortcuts was read as evidence about one author's
+design, when 237 of those shortcuts are someone else's. The menu claim inverted
+under that check, and it was the confident one.
+
+So the rule this document now follows, and the reason to trust the rest of it:
+**a claim about the design cites shortcuts in the core, and a claim about the
+corpus says so.** Where an idiom is used mostly outside the working set, as
+`Choose-Sample` is, that is stated rather than smoothed over.
+
+Two things follow for the tiers as well, and both are in
+[`tools/survey.py`](../tools/survey.py) now. The five tiers are a cascade over
+three independent facts, not a taxonomy, so each row carries `provenance`,
+`lifecycle`, and `connectivity` and the tier is a recommended action over them.
+And the core is a floor: it is the closure of the named hubs, so it grows with
+every entry point the graph cannot see, running about 42 with none, 48 with
+five, 57 with ten. Quote 42 as "at least this much is live," never as the size
+of the working library.
 
 ## What a core library has to keep
 
