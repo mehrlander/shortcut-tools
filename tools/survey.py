@@ -23,7 +23,7 @@ The tiering is mechanical, and each rule is a claim that can be wrong:
   it. The uncalled half is the prune candidate list, and it is the largest
   tier, which is the finding rather than a failure of the rule.
 """
-import argparse, collections, json, re, sys
+import argparse, collections, difflib, json, re, sys
 from pathlib import Path
 
 HUBS = ["Show-Loop", "Use-Shortcut", "Get-Text"]
@@ -85,6 +85,58 @@ def tier(index, hubs):
                     "kinds": [k for k, _ in s.get("kinds", [])][:3]})
     missing = sorted({t for t in callers if t not in by})
     return out, missing
+
+
+def suggest(name, names):
+    """The shortcut a dangling reference was probably renamed to.
+
+    Two passes, because a rename is not always a small edit. `Get-Jina` became
+    `Get-LinkSummaryJina`, which is far apart as strings and obvious once the
+    distinctive word is matched instead of the whole name.
+    """
+    close = difflib.get_close_matches(name, names, n=1, cutoff=0.75)
+    if close:
+        return close[0]
+    words = [w for w in re.findall(r"[A-Z][a-z]+|[A-Z]{2,}", name) if len(w) > 3]
+    for w in sorted(words, key=len, reverse=True):
+        hits = [n for n in names if w in n]
+        if len(hits) == 1:
+            return hits[0]
+    return None
+
+
+def dangling(index, rows):
+    """Names something calls that the archive does not hold.
+
+    A dangling reference is usually not a missing backup. It is a rename whose
+    callers were never updated, and the cost is a menu branch that fails when
+    tapped rather than anything lost. Grouping by who calls it is what separates
+    the two: a name only imported shortcuts want is a third-party companion
+    never installed, and a name a live shortcut wants is a branch to fix.
+    """
+    tiers = {r["name"]: r["tier"] for r in rows}
+    names = set(tiers)
+    callers = collections.defaultdict(list)
+    for s in index:
+        for t in s.get("calls", []):
+            if t != s["name"] and t not in names:
+                callers[t].append(s["name"])
+
+    out = []
+    for target in sorted(callers):
+        who = sorted(callers[target])
+        kinds = {tiers.get(c, "?") for c in who}
+        if kinds == {"imported"}:
+            verdict = "imported callers only"
+        elif "core" in kinds:
+            verdict = "reachable from the core"
+        elif kinds <= {"sediment", "prune"}:
+            verdict = "dead code calling dead code"
+        else:
+            verdict = "called from the kept tier"
+        out.append({"target": target, "callers": who, "verdict": verdict,
+                    "maybe": suggest(target, names)})
+    return out
 
 
 TIERS = [
@@ -191,11 +243,27 @@ def main():
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--hub", action="append", default=None,
                     help="a hub to reach from; repeatable (default: %s)" % ", ".join(HUBS))
+    ap.add_argument("--dangling", action="store_true",
+                    help="report calls to names the archive does not hold, and stop")
     args = ap.parse_args()
 
     index = json.load(open(args.index))
     rows, missing = tier(index, args.hub or HUBS)
     counts = collections.Counter(r["tier"] for r in rows)
+
+    if args.dangling:
+        rep = dangling(index, rows)
+        for verdict, n in collections.Counter(r["verdict"] for r in rep).most_common():
+            print("%3d  %s" % (n, verdict))
+        print()
+        for r in rep:
+            if r["verdict"] != "reachable from the core":
+                continue
+            live = [c for c in r["callers"] if
+                    next(x["tier"] for x in rows if x["name"] == c) == "core"]
+            print("%-22s <- %s%s" % (r["target"], ", ".join(live),
+                                     "   maybe now: " + r["maybe"] if r["maybe"] else ""))
+        return
 
     cards = "".join(
         '<button class="t" data-t="%s" aria-pressed="false"><b>%d</b><span>%s</span></button>'
