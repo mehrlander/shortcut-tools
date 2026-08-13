@@ -88,6 +88,31 @@ test("a condition prints its operand whichever key holds it", () => {
     `</dict></dict>`), /if is 1 MB/);
 });
 
+// An earlier table guessed 2 and 3 from their neighbours and had them inverted,
+// which made Combine-JsonList's correct "if count > 1 then join" read as
+// "count < 1" and got reported as a bug. A renderer is a claim about semantics.
+test("the ordering codes read the way the corpus and the dictionary agree they do", () => {
+  const cond = (code, value) => sketch(wflow(
+    flow("is.workflow.actions.conditional", 0,
+         `<key>WFCondition</key><integer>${code}</integer>` +
+         `<key>WFNumberValue</key><integer>${value}</integer>`) +
+    flow("is.workflow.actions.conditional", 2)));
+  assert.match(cond(2, 1), /if > 1/, "2 is greater than: count > 1 then combine");
+  assert.match(cond(0, 1), /if < 1/, "0 is less than, the dictionary's 'is before'");
+  assert.match(cond(3, 1), /if >= 1/);
+  assert.match(cond(1, 0), /if <= 0/);
+  assert.match(cond(4, 1), /if is 1/, "4 is equality, never an ordering");
+});
+
+// 100 and 101 are pinned by the self-demo prologue, which fires on NO input.
+test("the value tests are named, not left as a shrug", () => {
+  const out = sketch(wflow(
+    flow("is.workflow.actions.conditional", 0, `<key>WFCondition</key><integer>101</integer>`) +
+    flow("is.workflow.actions.conditional", 2)));
+  assert.match(out, /no value/);
+  assert.ok(!/value\?/.test(out), "the earlier placeholder should be gone");
+});
+
 test("an unmapped action still prints its identifier rather than vanishing", () => {
   const out = sketch(wflow(act("is.workflow.actions.somethingnew")));
   assert.match(out, /somethingnew/, "a reader must be able to see what was not named");

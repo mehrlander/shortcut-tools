@@ -95,12 +95,22 @@ rests on the dataset rather than on recollection:
 | `1002` | is today | `ifcurrentdateistoday` |
 | `1003` | is between | `ifcurrentdateisbetween`, `ifcurrenttimeisbetween` |
 
-**One conflict, left standing rather than resolved.** The chat cited above read
-`4` as *is greater than* on a numeric comparison; the dictionary has `4` as *is*
-on date, app, and clipboard comparisons. Both readings could hold if the integer
-is interpreted against the input's type, which would mean there is no single
-table. The derived column is the one to trust for the operators it covers, and
-numeric comparison is not among them.
+**The conflict this table carried is resolved, 2026-08-13.** It read: a chat had
+`4` as *is greater than* on a numeric comparison while the dictionary has `4` as
+*is*, and the note wondered whether the integer is interpreted against the
+input's type, meaning no single table. It is a single table, and the chat was
+wrong about `4`.
+
+The corpus settles it, because the same integers appear on numeric comparisons
+with branch bodies that name the operator. `2` is *is greater than*, which is
+exactly the dictionary's *is after* read on a date rather than a number; `0` is
+*is less than*, the dictionary's *is before*. One operator, rendered by type,
+which is what the editor does with the same picker. `1` and `3` are the
+non-strict pair, `<=` and `>=`, and appear only on numbers so the dictionary has
+no name for them. Nothing here reads `4` as an ordering.
+
+The full corpus-side table, with the branch evidence behind each row, is under
+[Condition codes, settled by branch semantics](#condition-codes-settled-by-branch-semantics).
 
 Sources: the chat above for the mechanism, `actions.json` for the table.
 
@@ -558,6 +568,104 @@ string and the key are both literals, so a second credential needs a second
 shortcut, or a rewrite taking the key as input.
 
 The other six actions are the self-demo idiom below.
+
+## The device can gzip, and it is one action
+
+*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
+
+`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
+value beside the default zip. So compression is available on device, in one
+action, with no tool and no library:
+
+```
+Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
+Base64 Encode  WFBase64LineBreakMode: "None"
+```
+
+That is worth knowing because this repo compresses in Python
+([`tools/show.py`](../tools/show.py)) and had no record that the device could do
+it at all. The two solve different problems and both are right: `show.py`
+compresses so the **link** is short, since a link is transcribed and a long one
+is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
+is short, for a page assembled on device where no link exists to shorten.
+
+The distilled variant is five actions: `makezip` → `base64encode` →
+`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
+Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
+arrived at independently, which is some evidence the shape is forced rather than
+chosen.
+
+One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
+so the page fetches a CDN script before it can render itself. `gz-shell.html`
+uses `DecompressionStream('gzip')`, which is native, needs no network, and
+cannot fail because a CDN is slow or a captive portal is in the way. A
+self-extracting page that depends on the network to extract itself gives up the
+property that made it worth making. Prefer the native stream.
+
+## Every verb demos itself, and it shows up as a self-call
+
+*Measured 2026-08-13 across 579 shortcuts.*
+
+**55 shortcuts call themselves**, and almost all for one reason. The opening
+action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
+and runs the shortcut on it:
+
+```
+If  Shortcut Input  <101>
+  Text        <a sample payload>
+  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
+  Run Shortcut  Show-Html            (or Stop and Output)
+  Stop and Output
+End If
+<the real body>
+```
+
+Run it from the Shortcuts app with nothing selected and it demonstrates itself;
+run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
+`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
+all open this way.
+
+That explains two things the index reports. A self-call is a demo, not
+recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
+under **called by nothing** is often an entry point precisely because it is
+runnable alone.
+
+`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
+Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
+without it.
+
+### Condition codes, settled by branch semantics
+
+*Settled 2026-08-13. An earlier version of this table guessed 2 and 3 from
+their neighbours, had them inverted, and left 100 and 101 open. That mistake
+propagated: it made `sketch.py` read a correct shortcut as buggy, and this
+document reported the phantom bug.*
+
+The ordering codes cannot be read off a single action, because nothing beside
+them names the operator. They can be read off **what the true branch does**,
+across the corpus:
+
+| Code | Meaning | The evidence |
+| ---: | --- | --- |
+| 0 | is less than | `count [0] 1` then alert and exit: nothing was picked |
+| 1 | is less than or equal | `count [1] 0` then output: empty, return early |
+| 2 | is greater than | `count [2] 1` then combine, or repeat each, or choose from a list. Seven shortcuts, and choosing needs more than one |
+| 3 | is greater than or equal | `File Size [3] 1 MB` then skip the descriptor |
+| 4 | is | 326 uses, string beside it |
+| 5 | is not | |
+| 8 | begins with | `[8] "http"` in `Show-Html`'s URL test |
+| 9 | ends with | |
+| 99 | contains | `[99] "🎟️GitHubToken"` in the injector |
+| 999 | does not contain | |
+| 100 | has any value | `[100]` then process the input |
+| 101 | does not have any value | `[101]` then build a sample and self-demo, in 72 shortcuts |
+
+100 and 101 fall out of the self-demo prologue, which is the most repeated
+shape in the library and fires precisely when there is **no** input.
+
+The operand rides one of four keys and reading only the first drops the rest
+silently: `WFConditionalActionString`, `WFNumberValue`, `WFAnotherNumber`, and
+`WFMeasurement`, the last a `{Magnitude, Unit}` pair.
 
 ## The device can gzip, and it is one action
 

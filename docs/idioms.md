@@ -252,12 +252,24 @@ happens by opening `Show-Loop` and stepping.
 ## What the corpus says is wrong
 
 - **A rename is not propagated.** Twelve calls in the working core point at
-  names that no longer exist. The cost is a menu branch that fails when tapped,
-  and the survey's `--dangling` lists them with a probable successor.
-- **`Combine-JsonList` reads `if count < 1` then joins a list**, which cannot be
-  right for a single item and looks like an inverted comparison. `Use-Shortcut`
-  carries the same `< 1` shape around a "combining json for N files" notice.
-  Worth a look before either is reused.
+  names that no longer exist, and they are not one problem. Three are settled
+  and applied in the harvested core: `Get-Jina` to `Get-LinkSummaryJina`,
+  `Select-File` to `Select-FileText` (`Get-Text`'s own menu key reads
+  `selectfiletext`), and `Supply-Sample` to `Choose-Sample`. Two are probable:
+  `Speak-Text` to `Say-Input`, since the `Say-*` family exists and `Speak-Text`
+  does not, and `Show-Template` to `Show-Template 1`, a numbered copy that
+  outlived its original. **Two are not renames at all**: `Get-SafariVersions`
+  and `Get-JsonVersions` are missing handlers in `Show-Versions`'s type
+  dispatch, so `Text` and `Dictionary` inputs fall through a branch that calls
+  nothing. Five stay ambiguous. `survey.py --dangling` lists all of them.
+- **~~`Combine-JsonList` compares `count < 1` before joining~~. Wrong
+  2026-08-13: it does not.** `WFCondition` 2 is *greater than*, and an earlier
+  guess in `sketch.py` had it inverted, so a correct shortcut read as buggy and
+  this list reported it. `if count > 1 then join else pass through` is right.
+  The seven shortcuts that share the shape are all correct. Kept here rather
+  than deleted, because the lesson is the reusable part: a pseudocode renderer
+  is a claim about semantics, and a wrong word in its table manufactures bugs
+  that read as findings.
 - **Duplicate-on-edit is never cleaned up.** 69 names are numbered copies or
   `Old`/`Test` suffixes, and in 8 cases the numbered copy is the live one
   because the original was deleted. See the survey's Sediment tier.

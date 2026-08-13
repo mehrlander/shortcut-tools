@@ -96,6 +96,36 @@ VERB = {
     "number": ("number", "WFNumberActionNumber"),
     "getbatterylevel": ("battery", None),
     "nothing": ("nothing", None),
+    # The next block was added 2026-08-13 after measuring the gap: 247 distinct
+    # identifiers had no word, over 1,958 uses. These 26 are the head of that
+    # distribution. An unnamed action still prints its raw identifier, so the
+    # table is a legibility improvement and never a correctness one.
+    "openapp": ("open app", "WFAppIdentifier"),
+    "getdevicedetails": ("device", "WFDeviceDetail"),
+    "getwebpagecontents": ("page contents", None),
+    "showwebpage": ("show page", "WFURL"),
+    "getrichtextfromhtml": ("html -> rich", None),
+    "gethtmlfromrichtext": ("rich -> html", None),
+    "getrichtextfrommarkdown": ("md -> rich", None),
+    "file.getfoldercontents": ("folder contents", None),
+    "detect.contacts": ("as contacts", None),
+    "detect.link": ("as link", None),
+    "detect.number": ("as number", None),
+    "properties.files": ("file prop", "WFContentItemPropertyName"),
+    "date": ("date", "WFDateActionDate"),
+    "adjustdate": ("shift date", "WFDuration"),
+    "format.date": ("format date", "WFDateFormatStyle"),
+    "number.random": ("random", None),
+    "selectphoto": ("pick photo", None),
+    "image.crop": ("crop", None),
+    "calculateexpression": ("eval", None),
+    "text.match.getgroup": ("group", "WFGroupIndex"),
+    "unzip": ("unzip", None),
+    "setvolume": ("volume", "WFVolume"),
+    "speak": ("speak", "WFText"),
+    "round": ("round", "WFRoundTo"),
+    "statistics": ("stats", "WFStatisticsOperation"),
+    "returntohomescreen": ("home screen", None),
     # Third-party. Named because the JavaScript transform is load-bearing here:
     # it is how a shortcut runs real code without a data: URL.
     "com.sindresorhus.Actions.TransformTextWithJavaScriptIntent": ("js", "javaScriptCode"),
@@ -212,8 +242,15 @@ def flow_arg(key, p, produced):
     return ""
 
 
-CONDITION = {4: "is", 8: "starts with", 99: "contains", 2: "<", 3: ">",
-             5: "is not", 9: "ends with", 100: "value?", 101: "value?"}
+# Settled 2026-08-13 against branch semantics across the corpus, after an
+# earlier guess had 2 and 3 inverted and read a correct shortcut as buggy.
+# The ordering test is what pins them: every `count [2] 1` in the library has a
+# true branch that handles several items (combine, repeat each, choose from a
+# list), so 2 is "greater than". 0 and 1 are its mirror, and 100/101 fall out of
+# the self-demo prologue, which fires when there is NO input.
+CONDITION = {0: "<", 1: "<=", 2: ">", 3: ">=", 4: "is", 5: "is not",
+             8: "starts with", 9: "ends with", 99: "contains",
+             999: "does not contain", 100: "has value", 101: "no value"}
 
 
 def one_condition(p, produced):
