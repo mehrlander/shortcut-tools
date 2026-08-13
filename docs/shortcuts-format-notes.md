@@ -384,6 +384,50 @@ the PNG itself. Worth knowing separately: canvas embeds a **472-byte ICC
 profile** in every JPEG, 14% of a 128px glyph, describing a color space a black
 shape on white does not use.
 
+## `Type: "Ask"` is the fourth attachment value
+
+*Observed 2026-08-12, from a copied action.*
+
+The `Value` inside a `WFTextTokenAttachment` carries a `Type`, and the table
+above lists `ActionOutput`, `ExtensionInput`, and `Variable`. There is a fourth:
+**`Ask`**, which is the editor's *Ask Each Time*, and it needs nothing but the
+type.
+
+```json
+"Folder": { "Value": { "Type": "Ask" }, "WFSerializationType": "WFTextTokenAttachment" }
+```
+
+That example is the one that matters here: `is.workflow.actions.getmyworkflows`
+takes a **`Folder`** parameter, which nothing in `actions.json` reveals, since
+the dictionary holds a bare identifier for it. So the library can be dumped a
+folder at a time with no filtering logic, and `Ask` is how the chain defers the
+choice to run time rather than hardcoding a folder that only exists on one
+device.
+
+Worth generalizing: a parameter that is absent from a chain is not necessarily a
+parameter the action lacks. Copying the action out of the editor and reading it
+with `tools/unpack.py` is the only way to see the full set.
+
+## Do not index the property names, just compress
+
+*Measured 2026-08-12, over 72 real actions in the JSON shape a dump carries.*
+
+A shortcut's JSON is dominated by long repeated keys, so replacing them with
+short tokens looks like the obvious saving. It is not:
+
+| | Bytes | Of raw |
+| --- | ---: | ---: |
+| raw JSON | 42,016 | 100% |
+| property names indexed | 33,486 | 80% |
+| gzipped | 6,971 | 17% |
+| indexed, then gzipped | 7,117 | 17% |
+
+Indexing first makes the result **slightly larger**. Deflate replaces each repeat
+of `WFWorkflowActionIdentifier` with a back-reference already, and long repeated
+strings are what it handles best; swapping them for `$7` removes the redundancy
+it feeds on and adds a table to carry. The saving is real only if the payload is
+never compressed, which on any of these routes it is.
+
 ## A shortcut exports itself through Get File of Type
 
 *Observed 2026-08-12, from `Use-Shortcut`.*
