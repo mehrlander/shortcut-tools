@@ -454,6 +454,48 @@ question. `https://www.icloud.com/shortcuts/<id>` rewritten to
 `fields.name.value` is the shortcut's name, which is how a shared link becomes a
 name that `getmyworkflows` can then be filtered against.
 
+## The library settles four inferred shapes
+
+*Measured 2026-08-13, across ten folder dumps: 211 shortcuts, 5,905 actions.*
+
+A dump is not only a backup. It is a corpus of working actions, and reading it
+against this repo's chains promotes four shapes out of the inferred tier, where
+a wrong key would have pasted an action with an empty field.
+
+**`Show-Menu` exists on the device and matches `workflows/show-menu.json`
+action for action**, including the two keys nothing had exercised: the
+`WFPropertyVariableAggrandizement` reading `PropertyName: "Notes"` with
+`PropertyUserInfo: 1`, and the contact coercion feeding `choosefromlist`. The
+device version is five actions to our four, the extra one a trailing
+`showresult` that displays the URL it just opened. Nothing else differs.
+
+**`WFChooseFromListActionPrompt` is real**, carried by `vCard 64bit` as
+`"Choose one"` beside `WFChooseFromListActionSelectMultiple: false`.
+
+**`text.split` and `text.combine` take their input under a lowercase `text`
+key**, not `WFInput`, and `WFTextSeparator` takes a display string. Three
+values appear across 22 uses: `New Lines`, `Spaces`, and `Custom`, the last
+paired with `WFTextCustomSeparator`. The chains here already wrote
+`"New Lines"` and are correct.
+
+**`text.replace` has five keys and every one is optional.** Across 76 uses,
+twelve distinct key subsets appear: `WFReplaceTextFind` alone is a valid
+action, and `WFInput`, `WFReplaceTextReplace`,
+`WFReplaceTextRegularExpression`, `WFReplaceTextCaseSensitive`, and
+`CustomOutputName` each come and go independently. An omitted key is the
+editor's default, not a malformed action.
+
+One shape the corpus adds that this repo did not have: **aggrandizements
+chain.** `Get-vCardChoice` feeds `choosefromlist` a coercion to
+`WFContactContentItem` *followed by* `PropertyName: "Phone Numbers"` with
+`PropertyUserInfo: 3`, in one `Aggrandizements` array. That is how a menu
+displays a field other than the name while still being a contact list, and it
+is the general form of the single-element arrays used throughout this repo.
+
+`Inject-🎟️GitHubToken` is still absent after ten folders, which is the one
+gap that matters: `Show-Html` is the only caller and every token-carrying
+route runs through it.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*

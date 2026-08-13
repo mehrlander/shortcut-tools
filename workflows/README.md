@@ -83,20 +83,23 @@ containing a raw U+FFFC is refused, since it would arrive as an unbound anchor.
 ## Parameter shapes are load-bearing and only partly confirmed
 
 `actions.json` holds a bare identifier for 772 of 810 actions, so a chain's `p`
-is reconstructed rather than looked up. Three tiers apply here. The five actions
-inherited from `js-data-url` are confirmed by a chain that runs. `runworkflow`
-is confirmed against a real export, including the `WFWorkflow` dict and its
-device-local `workflowIdentifier`, which a chain cannot invent and has to read
-off the device it will run on. `run-html` is confirmed by a device run on
-2026-08-11, which promotes `openurl` and the `ExtensionInput` attachment it
-reads its page from out of the inferred tier, and a generated menu ran on
-2026-08-12, which does the same for `choosefromlist` and its contact coercion.
-`text.split` and `text.replace`, both in the picker chain only, are still
-inferred from the documented naming, as are two keys nothing has yet exercised:
-`WFChooseFromListActionPrompt`, and the `Notes` property `show-menu` reads the
-chosen row's action from. A wrong key does not fail loudly. It
-pastes an action with an empty field, which is a two-tap fix in the editor and
-worth watching for on first run.
+is reconstructed rather than looked up. Three tiers applied here, and as of
+2026-08-13 the inferred tier is empty. The five actions inherited from
+`js-data-url` are confirmed by a chain that runs. `runworkflow` is confirmed
+against a real export, including the `WFWorkflow` dict and its device-local
+`workflowIdentifier`, which a chain cannot invent and has to read off the device
+it will run on. `run-html` is confirmed by a device run on 2026-08-11, which
+promotes `openurl` and the `ExtensionInput` attachment it reads its page from,
+and a generated menu ran on 2026-08-12, which does the same for `choosefromlist`
+and its contact coercion.
+
+The last four came from the library itself. Ten folder dumps hold 211 shortcuts,
+and reading them against these chains confirms `text.split` and `text.replace`
+(76 uses of the latter, every key optional), `WFChooseFromListActionPrompt`, and
+the `Notes` property `show-menu` reads the chosen row's action from. The device
+carries its own `Show-Menu`, and it matches the chain here action for action
+apart from a trailing `showresult`. Details in
+[`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
 
 ## Both probes ran, 2026-08-12
 
