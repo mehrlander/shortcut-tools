@@ -37,6 +37,7 @@ and the suite runs it.
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `dump-shortcuts` | Every shortcut on the device as one combined JSON, onto the clipboard. Two actions plus a copy, because `Use-Shortcut` already does the work. |
+| `dump-folder-zip` | The same folder, as a zip. Four actions: `Get Dictionary from Input` keys the shortcuts by name, `Make Archive` compresses. The shortest route and the one to prefer. |
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
@@ -132,6 +133,19 @@ Both open a page through `Run-Html` when they succeed, so the result is legible
 without reading anything. Failure is legible too and arrives earlier: a target
 Shortcuts cannot resolve pastes as an action with an empty picker, visible in
 the editor before the shortcut is ever run.
+
+## Three dumps, and which to use
+
+`dump-folder-zip` is the one to reach for: four actions, names preserved, and
+compressed. `Get Dictionary from Input` over a list of shortcuts keys them by
+name, which removes the whole reason the other two pair `Get Name` with `Get File
+of Type` by hand, and `Make Archive` answers the size question that folder
+scoping only bounds.
+
+The other two remain because they emit **text**, which a diff can read and a
+reviewer can skim. A zip in a repository is one opaque blob per commit. So the
+zip is the transport, and unpacking it into per-shortcut files is a job for the
+repo rather than the device.
 
 ## Why `dump-selected` exists beside `dump-shortcuts`
 

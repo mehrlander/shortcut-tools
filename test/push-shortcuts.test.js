@@ -11,10 +11,11 @@ const CLIP = "📋ClipboardBase64";
 // The page runs inside a data: URL after Show-Html has rewritten two
 // placeholders in it, so the harness rewrites them the same way and runs the
 // script. Substitution is a plain text replace, exactly as the injector does it.
-function load({ clipboard = null, token = "ghp_test", requests = [] } = {}) {
+function load({ clipboard = null, token = "ghp_test", requests = [], raw = null } = {}) {
   let script = fs.readFileSync(PAGE, "utf8");
   script = script.slice(script.indexOf("<script>") + 8, script.lastIndexOf("</script>"));
-  if (clipboard !== null) script = script.split(CLIP).join(Buffer.from(clipboard).toString("base64"));
+  if (raw !== null) script = script.split(CLIP).join(Buffer.from(raw, "binary").toString("base64"));
+  else if (clipboard !== null) script = script.split(CLIP).join(Buffer.from(clipboard).toString("base64"));
   if (token !== null) script = script.split(TOKEN).join(token);
 
   const els = {};
@@ -30,6 +31,7 @@ function load({ clipboard = null, token = "ghp_test", requests = [] } = {}) {
         ctx.sent.push({ method: this.method, url: this.url, headers: this.headers, body });
       };
     },
+    DataView, TextEncoder, Promise, Blob, Response, DecompressionStream, setImmediate,
     document: { getElementById: el }, JSON, Object, Array, Date, Error, RegExp, els, sent: []
   };
   vm.createContext(ctx);
@@ -93,12 +95,13 @@ test("pushing sends the base64 the injector supplied, not a re-encoding", () => 
   assert.strictEqual(head.method, "GET", "the existing file is looked up first");
   assert.strictEqual(write.method, "PUT");
   assert.match(write.url, /repos\/mehrlander\/web-tools-private\/contents\/shortcuts\/dump-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.match(head.url, /dump-\d{4}-\d{2}-\d{2}\.json\?ref=main$/, "the lookup uses the same path");
   const body = JSON.parse(write.body);
   assert.strictEqual(body.content, Buffer.from(payload).toString("base64"),
     "re-encoding here would double-encode what Show-Html already encoded");
   assert.ok(!("sha" in body), "absent means a new file");
   assert.match(write.headers.Authorization, /^Bearer ghp_test$/);
-  assert.match(ctx.out(), /Pushed \d+ characters/);
+  assert.match(ctx.out(), /Pushed \d+ bytes/);
 });
 
 test("a second push the same day replaces rather than failing", () => {
@@ -124,4 +127,57 @@ test("each placeholder appears exactly once, comments included", () => {
   }
   assert.ok(html.includes("'🎟️' + 'GitHubToken'") && html.includes("'📋' + 'ClipboardBase64'"),
     "both sentinels must be assembled from halves");
+});
+
+// Make Archive puts a zip on the clipboard, so the page has to read one to keep
+// its gate: without the entry list and the scan it could only push bytes it
+// cannot describe.
+function zip(files) {
+  const enc = new TextEncoder();
+  const local = [], central = [];
+  let offset = 0;
+  files.forEach(([name, body]) => {
+    const n = enc.encode(name), d = enc.encode(body);
+    const lh = Buffer.alloc(30);
+    lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(0, 8);      // stored, not deflated
+    lh.writeUInt32LE(d.length, 18); lh.writeUInt32LE(d.length, 22);
+    lh.writeUInt16LE(n.length, 26);
+    local.push(lh, Buffer.from(n), Buffer.from(d));
+    const ch = Buffer.alloc(46);
+    ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(0, 10);
+    ch.writeUInt32LE(d.length, 20); ch.writeUInt32LE(d.length, 24);
+    ch.writeUInt16LE(n.length, 28); ch.writeUInt32LE(offset, 42);
+    central.push(ch, Buffer.from(n));
+    offset += 30 + n.length + d.length;
+  });
+  const cd = Buffer.concat(central), eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(files.length, 8); eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(cd.length, 12); eocd.writeUInt32LE(offset, 16);
+  return Buffer.concat([...local, cd, eocd]).toString("binary");
+}
+
+const settle = () => new Promise(r => setImmediate(r));
+
+test("a zipped dump is described by its entries, not by its bytes", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test",
+                     raw: zip([["Alpha.json", "{}"], ["Beta.json", "{}"]]) });
+  await settle();
+  assert.match(ctx.out(), /zipped, 2 entries/);
+  assert.match(ctx.out(), /Alpha\.json, Beta\.json/);
+});
+
+test("the scan reaches inside the archive", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test",
+                     raw: zip([["Leaky.json", 'key ghp_' + "a".repeat(30)]]) });
+  await settle();
+  assert.match(ctx.out(), /WARNING: found a GitHub token/);
+});
+
+test("a zip is pushed as .zip, so the repo does not claim it is JSON", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test", raw: zip([["One.json", "{}"]]),
+                     requests: [{ status: 404, text: "{}" }, { status: 201, text: "{}" }] });
+  await settle();
+  ctx.els.go.onclick();
+  assert.match(ctx.sent[1].url, /dump-\d{4}-\d{2}-\d{2}\.zip$/);
 });
