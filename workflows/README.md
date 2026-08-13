@@ -44,6 +44,7 @@ and the suite runs it.
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
+| `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
 a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
@@ -70,6 +71,52 @@ placeholder turns out to be a key in `Shortcuts/Managed/config.json` rather than
 an arbitrary sentinel, and one of the four text repairs is a dangling branch
 that never runs. All three in
 [`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
+
+## `show-html-js`: the same job, mostly in JavaScript
+
+`Show-Html` is 23 actions and calls a 10-action injector. Most of that is text
+work: decide whether the input is a page or a URL, fetch it if it is a URL,
+substitute two values, run four regex repairs. All of it is string manipulation,
+and the route already ends by handing the result to a JavaScript engine. Doing
+it in Shortcuts is doing it in the worse language, one action per operation.
+
+[`tools/show-shell.html`](../tools/show-shell.html) is a fixed page that does
+that work in about thirty lines, and `show-html-js` is the nine actions around
+it: base64 the input, base64 the clipboard, load the shell, replace two slots,
+call the injector for the third, base64 the result, open it. Nine plus the
+injector's ten, against twenty-three plus the same ten.
+
+Three things fall out of the shape rather than being designed in.
+
+**The payload is base64, so it is opaque to the substitutions.** The replaces
+run against the shell, which means a page that itself mentions
+`📋ClipboardBase64` cannot be rewritten out from under itself. Its own
+placeholders are resolved in JavaScript afterwards, against the same values.
+
+**The repair runs before the substitutions**, not after as the shortcut does, so
+a value carrying a curly quote is delivered as written.
+
+**The dead branch cannot recur.** Two `text.replace` actions reading the same
+source is invisible in the editor; two lines of JavaScript in sequence are not,
+and a test runs them.
+
+Two differences worth stating rather than discovering.
+
+**The shell always carries the token**, where the shortcut gave it only to pages
+containing the placeholder. The shell has to hold it because a page fetched from
+a URL is not visible to Shortcuts at substitution time, and that is the case the
+committed pages use. The data URL goes straight to Safari on the device, which
+is the same exposure the shortcut already had for a token-bearing page, but it
+now applies to every page sent through this route.
+
+**It calls `Inject-🎟️GitHubToken` rather than inlining the file read.** Inlining
+would need a `WFFile` location carrying a `crossDeviceItemID` and a
+`fileProviderDomainID`, both minted per install, which is the same portability
+problem as a pinned `workflowIdentifier`. The name resolves anywhere; the file
+reference does not.
+
+The payload is 14,190 characters, well past where a pasted link stops being
+trustworthy, so take it from [`packed/`](../packed/) by address.
 
 ## Payloads live in `pages/`, not pasted into the chain
 
