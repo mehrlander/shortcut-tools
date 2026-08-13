@@ -12,18 +12,24 @@ the clipboard, ready to paste into any shortcut. Format in
 [`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
 
 **Prefer the address to the payload.** `python3 tools/pack.py --publish` writes
-every chain's payload to [`packed/`](../packed/), so a link can carry a URL
-instead of several thousand characters of base64:
+every chain's payload to [`packed/`](../packed/), and `--url` emits a link that
+carries the address instead of several thousand characters of base64:
 
-```
-shortcuts://run-shortcut?name=Copy-ActionFromUrl&input=text&text=https://raw.githubusercontent.com/mehrlander/shortcut-tools/main/packed/<chain>.json
+```bash
+python3 tools/pack.py workflows/<chain>.json --url            # main
+python3 tools/pack.py workflows/<chain>.json --url --ref <branch>
 ```
 
 That is about 150 characters, it is legible, a wrong character 404s instead of
-misreporting, and it tracks the branch rather than freezing a snapshot. The
+misreporting, and it tracks the ref rather than freezing a snapshot. The
 embedded form remains correct and remains necessary for a payload that is not
 committed or not public. `--check` fails when `packed/` is behind `workflows/`,
 and the suite runs it.
+
+`--url` exists because this section previously showed the URL shape and nothing
+emitted it, so it was assembled by hand on every use, which is the exact failure
+`packed/` was built to end: the sender types a long string and the reader cannot
+tell a wrong one from a right one. **Emit both forms, never type either.**
 
 | Chain | What it is for |
 | --- | --- |

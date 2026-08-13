@@ -60,6 +60,27 @@ test("packed/ holds a payload for every chain, and is current", () => {
   assert.deepStrictEqual(packed.sort(), chains.sort(), "one payload per chain, no orphans");
 });
 
+// The address form was documented and not emitted, so it was typed by hand
+// every time, which is exactly the failure packed/ was built to end.
+test("--url emits the address link rather than leaving it to be typed", () => {
+  const link = pack("workflows/show-html-js.json", "--url").trim();
+  assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Copy-ActionFromUrl&input=text&text=/);
+  const url = decodeURIComponent(link.split("&text=")[1]);
+  assert.strictEqual(url,
+    "https://raw.githubusercontent.com/mehrlander/shortcut-tools/main/packed/show-html-js.json");
+  assert.ok(link.length < 200, `an address link should stay short, got ${link.length}`);
+});
+
+test("--ref addresses a branch, since a chain is testable before it merges", () => {
+  const url = decodeURIComponent(
+    pack("workflows/show-html-js.json", "--url", "--ref", "claude/x").trim().split("&text=")[1]);
+  assert.match(url, /shortcut-tools\/claude\/x\/packed\/show-html-js\.json$/);
+});
+
+test("--url refuses a chain that is not published, rather than minting a 404", () => {
+  assert.throws(() => pack("workflows/nonesuch.json", "--url"), /Command failed/);
+});
+
 test("a published payload is what the receiver expects, not a link", () => {
   const body = JSON.parse(fs.readFileSync(path.join(ROOT, "packed", "dump-shortcuts.json"), "utf8"));
   assert.ok(Array.isArray(body.actions) && body.actions.length === 3);
