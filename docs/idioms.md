@@ -260,8 +260,24 @@ happens by opening `Show-Loop` and stepping.
   does not, and `Show-Template` to `Show-Template 1`, a numbered copy that
   outlived its original. **Two are not renames at all**: `Get-SafariVersions`
   and `Get-JsonVersions` are missing handlers in `Show-Versions`'s type
-  dispatch, so `Text` and `Dictionary` inputs fall through a branch that calls
-  nothing. Five stay ambiguous. `survey.py --dangling` lists all of them.
+  dispatch, so `Text` and `Dictionary` inputs entered a branch that called
+  nothing; both branches are deleted in the harvested core, taking it from 27
+  actions to 21. Writing the handlers instead would grow a library being
+  pruned, and adding one back is one shortcut plus one branch, which is the
+  documented extension.
+
+  Two more looked like renames and are not, checked 2026-08-13.
+  **`Speak-Text` is not `Say-Input`**: `Say-Input` is `setvolume, ask "What
+  should I say?", speak`, so it prompts rather than speaking what it is handed,
+  and `Show-Loop` pipes a value in. The fix there is the native Speak Text
+  action, one action and no dependency. **`Show-Template` is not
+  `Show-Template 1`**: the numbered copy names its input `Input.txt` and gzips
+  the whole thing, where `Show-Ace` hands over a dictionary keyed `components`
+  expecting injection into a template. Different contracts.
+
+  That leaves five genuinely ambiguous: `Run-Choice`, `Show-URLs`,
+  `Select-Link`, `Get-RecentShortcut`, `Use-RecentShortcut`. `survey.py
+  --dangling` lists all of them.
 - **~~`Combine-JsonList` compares `count < 1` before joining~~. Wrong
   2026-08-13: it does not.** `WFCondition` 2 is *greater than*, and an earlier
   guess in `sketch.py` had it inverted, so a correct shortcut read as buggy and
