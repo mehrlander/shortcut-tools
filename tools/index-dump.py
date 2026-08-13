@@ -81,7 +81,9 @@ def load(paths):
             except Exception as err:
                 out.append({"name": name, "error": str(err)})
                 continue
-            out.append(describe(name, doc))
+            entry = describe(name, doc)
+            entry["from"] = Path(path).name
+            out.append(entry)
     return out
 
 

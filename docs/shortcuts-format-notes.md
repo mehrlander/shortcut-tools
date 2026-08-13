@@ -559,6 +559,39 @@ shortcut, or a rewrite taking the key as input.
 
 The other six actions are the self-demo idiom below.
 
+## The device can gzip, and it is one action
+
+*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
+
+`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
+value beside the default zip. So compression is available on device, in one
+action, with no tool and no library:
+
+```
+Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
+Base64 Encode  WFBase64LineBreakMode: "None"
+```
+
+That is worth knowing because this repo compresses in Python
+([`tools/show.py`](../tools/show.py)) and had no record that the device could do
+it at all. The two solve different problems and both are right: `show.py`
+compresses so the **link** is short, since a link is transcribed and a long one
+is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
+is short, for a page assembled on device where no link exists to shorten.
+
+The distilled variant is five actions: `makezip` → `base64encode` →
+`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
+Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
+arrived at independently, which is some evidence the shape is forced rather than
+chosen.
+
+One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
+so the page fetches a CDN script before it can render itself. `gz-shell.html`
+uses `DecompressionStream('gzip')`, which is native, needs no network, and
+cannot fail because a CDN is slow or a captive portal is in the way. A
+self-extracting page that depends on the network to extract itself gives up the
+property that made it worth making. Prefer the native stream.
+
 ## Every verb demos itself, and it shows up as a self-call
 
 *Measured 2026-08-13 across 579 shortcuts.*
