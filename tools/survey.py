@@ -156,12 +156,12 @@ PAGE = """<!doctype html>
   body { font: 15px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 1rem 1rem 4rem; }
   h1 { font-size: 1.2rem; margin: 0 0 .2rem; }
   .sub { color: var(--dim); margin: 0 0 1rem; font-size: .85rem; }
-  .tiers { display: grid; gap: .4rem; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); }
-  .t { border: 1px solid var(--line); border-radius: .5rem; padding: .5rem .6rem; cursor: pointer;
-       background: none; color: inherit; font: inherit; text-align: left; }
+  .tiers { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .t { border: 1px solid var(--line); border-radius: 999px; padding: .25rem .7rem; cursor: pointer;
+       background: none; color: inherit; font: inherit; font-size: .85rem; white-space: nowrap; }
   .t[aria-pressed="true"] { border-color: currentColor; background: #8882; }
-  .t b { display: block; font-size: 1.35rem; line-height: 1.1; }
-  .t span { font-size: .78rem; color: var(--dim); }
+  .t b { font-weight: 600; }
+  .t span { color: var(--dim); }
   .why { font-size: .82rem; color: var(--dim); margin: .7rem 0 .4rem; min-height: 2.4em; }
   input { width: 100%; box-sizing: border-box; font: inherit; padding: .5rem .6rem;
           border: 1px solid var(--line); border-radius: .5rem; background: none; color: inherit; }
@@ -266,8 +266,8 @@ def main():
         return
 
     cards = "".join(
-        '<button class="t" data-t="%s" aria-pressed="false"><b>%d</b><span>%s</span></button>'
-        % (key, counts.get(key, 0), label) for key, label, _ in TIERS)
+        '<button class="t" data-t="%s" aria-pressed="false"><b>%s</b> <span>%d</span></button>'
+        % (key, label, counts.get(key, 0)) for key, label, _ in TIERS)
     sub = "%d shortcuts, %d actions. Hubs: %s." % (
         len(rows), sum(r["actions"] for r in rows), ", ".join(args.hub or HUBS))
     note = "%d names are called and absent from the archive. Tap a tier." % len(missing)
