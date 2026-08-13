@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Index a zipped shortcut dump: what each one is, and what calls what.
 
-    python3 tools/index-dump.py dump.zip [--json index.json]
+    python3 tools/index-dump.py dump.zip [more.zip …] [--json index.json]
 
 The dump comes from `workflows/dump-folder-zip.json`: one `.wflow` per shortcut,
 named by the shortcut, each an unsigned XML plist. What that leaves is a pile of
@@ -62,19 +62,26 @@ def describe(name, doc):
     }
 
 
-def load(path):
-    z = zipfile.ZipFile(path)
-    out = []
-    for info in z.infolist():
-        if info.is_dir():
-            continue
-        name = name_of(info)
-        try:
-            doc = plistlib.loads(z.read(info))
-        except Exception as err:
-            out.append({"name": name, "error": str(err)})
-            continue
-        out.append(describe(name.rsplit(".", 1)[0], doc))
+def load(paths):
+    """Several dumps merge into one index, because a folder-scoped dump names
+    dependencies outside itself and the graph only closes across folders. A name
+    seen twice is kept once; the same shortcut in two folders is the same verb."""
+    out, seen = [], set()
+    for path in paths:
+        z = zipfile.ZipFile(path)
+        for info in z.infolist():
+            if info.is_dir():
+                continue
+            name = name_of(info).rsplit(".", 1)[0]
+            if name in seen:
+                continue
+            seen.add(name)
+            try:
+                doc = plistlib.loads(z.read(info))
+            except Exception as err:
+                out.append({"name": name, "error": str(err)})
+                continue
+            out.append(describe(name, doc))
     return out
 
 
@@ -111,7 +118,7 @@ def report(index):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("zip", help="a dump from dump-folder-zip")
+    ap.add_argument("zip", nargs="+", help="one or more dumps from dump-folder-zip")
     ap.add_argument("--json", help="also write the index here")
     args = ap.parse_args()
     index = load(args.zip)
