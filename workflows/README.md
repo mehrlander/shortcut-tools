@@ -166,3 +166,24 @@ route works before anything large is attempted.
 One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
+
+## Reading a dump back
+
+[`tools/index-dump.py`](../tools/index-dump.py) takes the zip and prints what
+each shortcut is and what it calls, which is the part a pile of `.wflow` files
+does not give you:
+
+```bash
+python3 tools/index-dump.py dump.zip --json index.json
+```
+
+The call graph reads `runworkflow` targets by name, ignoring the device-local
+identifier, and separates three cases worth separating: a **computed** target,
+which is a name resolved at run time and therefore invisible to static reading;
+a target **named but absent** from the dump, which is how a folder-scoped dump
+tells you what it depends on outside itself; and a shortcut **called by nothing**,
+which is either an entry point or dead.
+
+One encoding detail it has to handle: zip filenames are UTF-8 bytes with the
+UTF-8 flag usually unset, so a naive reader decodes them as cp437 and every
+emoji-named shortcut arrives as mojibake. `Inject-📲Fetch` is the tell.
