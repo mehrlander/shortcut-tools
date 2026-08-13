@@ -1,0 +1,79 @@
+{
+  "label": "Self-Name: read your own name from config, so a rename cannot break your callers (5 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.documentpicker.open",
+      "p": {
+        "UUID": "5E1F0000-0001-4A00-9000-000000000001",
+        "WFGetFilePath": "config.json",
+        "WFFile": {
+          "displayName": "Managed",
+          "fileLocation": { "WFFileLocationType": "Shortcuts", "relativeSubpath": "Snippets/Managed" },
+          "filename": "Managed"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFVariableName": "Settings",
+        "WFInput": {
+          "Value": {
+            "Aggrandizements": [
+              { "CoercionItemClass": "WFDictionaryContentItem", "Type": "WFCoercionVariableAggrandizement" }
+            ],
+            "OutputName": "File",
+            "OutputUUID": "5E1F0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "5E1F0000-0003-4A00-9000-000000000003",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Aggrandizements": [
+                  { "DictionaryKey": "SelfName", "Type": "WFDictionaryValueVariableAggrandizement" }
+                ],
+                "Type": "Variable",
+                "VariableName": "Settings"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFVariableName": "SelfName",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "5E1F0000-0003-4A00-9000-000000000003",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "5E1F0000-0005-4A00-9000-000000000005",
+        "WFWorkflowName": {
+          "Value": { "Type": "Variable", "VariableName": "SelfName" },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

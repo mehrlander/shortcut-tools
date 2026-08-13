@@ -47,11 +47,20 @@ def resolve(node):
 
 
 def pack_action(action):
-    """One {id, p} to base64 plist XML. Compaction is verified, not assumed."""
+    """One {id, p} to base64 plist XML.
+
+    Compaction collapses whitespace between tags, which is worth a third of the
+    payload. It is unsafe for a value that itself contains `>` whitespace `<`,
+    which real shortcuts do: any embedded HTML, and any regex spanning a line.
+    So compaction is verified rather than assumed, and a payload it would alter
+    ships uncompacted. Correct and larger beats smaller and wrong.
+    """
     doc = {"WFWorkflowActionIdentifier": action["id"],
            "WFWorkflowActionParameters": resolve(action["p"])}
-    xml = re.sub(r">\s+<", "><", plistlib.dumps(doc, fmt=plistlib.FMT_XML).decode())
-    assert plistlib.loads(xml.encode()) == doc, "compaction altered " + action["id"]
+    full = plistlib.dumps(doc, fmt=plistlib.FMT_XML).decode()
+    tight = re.sub(r">\s+<", "><", full)
+    xml = tight if plistlib.loads(tight.encode()) == doc else full
+    assert plistlib.loads(xml.encode()) == doc, "plist did not round-trip: " + action["id"]
     return base64.b64encode(xml.encode()).decode()
 
 

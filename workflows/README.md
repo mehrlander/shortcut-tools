@@ -51,6 +51,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 | `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
+| `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
+| `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
 a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
@@ -123,6 +125,35 @@ reference does not.
 
 The payload is 14,190 characters, well past where a pasted link stops being
 trustworthy, so take it from [`packed/`](../packed/) by address.
+
+## The two mechanisms the device library lacks
+
+[`docs/idioms.md`](../docs/idioms.md) reads all 577 shortcuts and finds the
+design mostly better than a fresh start would produce. Two things it does not
+have come from imported shortcuts, and both are here as chains.
+
+**`self-name`.** A shortcut cannot ask its own name, so every self-call in the
+library hardcodes one, and a rename leaves the caller pointing at nothing:
+twelve live instances of exactly that. `vCard Menu Creator` solves it by
+keeping its name in a config dictionary and re-entering with
+`run $Settings[Name]`. Five actions:
+
+```
+get file config.json
+set Settings
+text $Settings[SelfName]
+set SelfName
+run $SelfName
+```
+
+The last action is the confirmed variable-target `runworkflow`, so this only
+became writable once that probe ran on 2026-08-12.
+
+**`trace`.** One timestamped line, guarded by a `Trace` variable, so a shortcut
+can say what it saw without a dialog. `Multi-stop navigation` guards 52 traces
+this way. The chain stops at building the line rather than appending to a file,
+because the destination is a per-library choice and a file action pins a
+device-local location.
 
 ## Payloads live in `pages/`, not pasted into the chain
 

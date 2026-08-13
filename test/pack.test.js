@@ -81,6 +81,46 @@ test("--url refuses a chain that is not published, rather than minting a 404", (
   assert.throws(() => pack("workflows/nonesuch.json", "--url"), /Command failed/);
 });
 
+// Compaction strips whitespace between tags. plistlib escapes < and > inside
+// string content, so the danger is not embedded markup: it is a value that is
+// ITSELF only whitespace, where `<string>\n\n</string>` collapses to an empty
+// string. Show-Convert's "Condense lines" replaces with "\n\n", so compacting
+// it would have deleted blank lines instead of collapsing them, silently.
+test("a whitespace-only value survives, since compaction would erase it", () => {
+  const chain = path.join(ROOT, "workflows", ".tmp-compact.json");
+  fs.writeFileSync(chain, JSON.stringify({
+    label: "x", actions: [{ id: "is.workflow.actions.text.replace",
+                            p: { WFReplaceTextFind: "a", WFReplaceTextReplace: "\n\n" } }]
+  }));
+  try {
+    const body = JSON.parse(decodeURIComponent(
+      pack(path.join("workflows", ".tmp-compact.json")).trim().split("&text=")[1]));
+    const decoded = execFileSync("python3", ["-c",
+      "import base64,json,plistlib,sys;print(json.dumps(plistlib.loads(base64.b64decode(sys.argv[1]))" +
+      "['WFWorkflowActionParameters']['WFReplaceTextReplace']))", body.actions[0]], { encoding: "utf8" });
+    assert.strictEqual(JSON.parse(decoded), "\n\n",
+      "the replacement must arrive as two newlines, not as an empty string");
+  } finally {
+    fs.unlinkSync(chain);
+  }
+});
+
+test("a payload compaction leaves alone is still compacted", () => {
+  const chain = path.join(ROOT, "workflows", ".tmp-tight.json");
+  fs.writeFileSync(chain, JSON.stringify({
+    label: "x", actions: [{ id: "is.workflow.actions.gettext",
+                            p: { WFTextActionText: "plain" } }]
+  }));
+  try {
+    const body = JSON.parse(decodeURIComponent(
+      pack(path.join("workflows", ".tmp-tight.json")).trim().split("&text=")[1]));
+    const xml = Buffer.from(body.actions[0], "base64").toString();
+    assert.ok(!/>\s+</.test(xml), "nothing here needs the loose form");
+  } finally {
+    fs.unlinkSync(chain);
+  }
+});
+
 test("a published payload is what the receiver expects, not a link", () => {
   const body = JSON.parse(fs.readFileSync(path.join(ROOT, "packed", "dump-shortcuts.json"), "utf8"));
   assert.ok(Array.isArray(body.actions) && body.actions.length === 3);
