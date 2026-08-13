@@ -5,7 +5,9 @@
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "4C2F0000-0001-4A00-9000-000000000001",
-        "WFTextActionText": { "$file": "pages/gh-recent-branches.html" }
+        "WFTextActionText": {
+          "$file": "pages/gh-recent-branches.html"
+        }
       }
     },
     {
@@ -13,11 +15,6 @@
       "p": {
         "UUID": "4C2F0000-0002-4A00-9000-000000000002",
         "WFWorkflowName": "Show-Html",
-        "WFWorkflow": {
-          "isSelf": false,
-          "workflowIdentifier": "84B4AB5F-02B8-426D-BF6A-E051730CC0E4",
-          "workflowName": "Show-Html"
-        },
         "WFInput": {
           "Value": {
             "OutputName": "Text",

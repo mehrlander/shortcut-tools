@@ -95,12 +95,22 @@ rests on the dataset rather than on recollection:
 | `1002` | is today | `ifcurrentdateistoday` |
 | `1003` | is between | `ifcurrentdateisbetween`, `ifcurrenttimeisbetween` |
 
-**One conflict, left standing rather than resolved.** The chat cited above read
-`4` as *is greater than* on a numeric comparison; the dictionary has `4` as *is*
-on date, app, and clipboard comparisons. Both readings could hold if the integer
-is interpreted against the input's type, which would mean there is no single
-table. The derived column is the one to trust for the operators it covers, and
-numeric comparison is not among them.
+**The conflict this table carried is resolved, 2026-08-13.** It read: a chat had
+`4` as *is greater than* on a numeric comparison while the dictionary has `4` as
+*is*, and the note wondered whether the integer is interpreted against the
+input's type, meaning no single table. It is a single table, and the chat was
+wrong about `4`.
+
+The corpus settles it, because the same integers appear on numeric comparisons
+with branch bodies that name the operator. `2` is *is greater than*, which is
+exactly the dictionary's *is after* read on a date rather than a number; `0` is
+*is less than*, the dictionary's *is before*. One operator, rendered by type,
+which is what the editor does with the same picker. `1` and `3` are the
+non-strict pair, `<=` and `>=`, and appear only on numbers so the dictionary has
+no name for them. Nothing here reads `4` as an ordering.
+
+The full corpus-side table, with the branch evidence behind each row, is under
+[Condition codes, settled by branch semantics](#condition-codes-settled-by-branch-semantics).
 
 Sources: the chat above for the mechanism, `actions.json` for the table.
 
@@ -141,12 +151,12 @@ its values without spending an action on either step:
 ]
 ```
 
-## Run Shortcut carries the target twice, and one half is device-local
+## Run Shortcut names its target twice, and the second half is optional
 
-*Observed 2026-08-10, from an exported shortcut.*
+*Observed 2026-08-10 from an exported shortcut; the constraint retired
+2026-08-12 by two probes that ran.*
 
-`is.workflow.actions.runworkflow` names its target in two places, and they are
-not redundant:
+`is.workflow.actions.runworkflow` names its target in two places:
 
 ```json
 "WFWorkflowName": "Show-Html",
@@ -155,18 +165,30 @@ not redundant:
                 "workflowName": "Show-Html" }
 ```
 
-`workflowIdentifier` is minted per install, so a chain written elsewhere cannot
-invent one; it has to be read off an export from the device it will run on. A
-shortcut that calls **itself** sets `isSelf` true, which is how one shortcut can
-be both a library and its own demo caller. Both halves appear in every
-`runworkflow` action across the two exports read so far.
+Every export read carries both, and `workflowIdentifier` is minted per install,
+which made the dict look load-bearing and a chain written elsewhere look
+unportable. **It is not.** Two things are now measured, by
+[`run-by-name`](../workflows/run-by-name.json) and
+[`run-by-variable`](../workflows/run-by-variable.json), each pasted and run:
 
-*Unconfirmed:* whether `WFWorkflowName` alone resolves by name when the dict is
-absent. Until that is tested, write both.
+1. **`WFWorkflowName` alone resolves.** With no `WFWorkflow` dict at all, Run
+   Shortcut finds the target by name. So a chain can call a shortcut on a device
+   it has never seen, and nothing here needs an identifier read off an export.
+2. **The name may be a variable.** `WFWorkflowName` accepts a `WFTextTokenString`
+   with an attachment, so the target can be computed at run time.
 
-The input attachment may be a plain variable rather than an action output, in
-which case it is `{"Type": "Variable", "VariableName": "content"}` inside the
-same `WFTextTokenAttachment` envelope.
+The second is the one that changes what is buildable, and it is invisible from
+inside the app: the editor offers a shortcut picker with no variable slot, so the
+documented workaround is to fetch every shortcut, filter by name, and run the
+survivor. The format needs none of that. **The picker is a limit of the UI, not
+of the file**, which is worth holding onto generally, since this file exists to
+describe the file rather than the editor.
+
+A shortcut that calls **itself** still sets `isSelf` true, which is how one
+shortcut can be both a library and its own demo caller.
+
+*Unconfirmed:* what happens when two shortcuts share a name, and whether a name
+that does not resolve fails loudly at run time or silently does nothing.
 
 ## An `If` with several conditions uses a different shape entirely
 
@@ -372,6 +394,361 @@ the PNG itself. Worth knowing separately: canvas embeds a **472-byte ICC
 profile** in every JPEG, 14% of a 128px glyph, describing a color space a black
 shape on white does not use.
 
+## `Type: "Ask"` is the fourth attachment value
+
+*Observed 2026-08-12, from a copied action.*
+
+The `Value` inside a `WFTextTokenAttachment` carries a `Type`, and the table
+above lists `ActionOutput`, `ExtensionInput`, and `Variable`. There is a fourth:
+**`Ask`**, which is the editor's *Ask Each Time*, and it needs nothing but the
+type.
+
+```json
+"Folder": { "Value": { "Type": "Ask" }, "WFSerializationType": "WFTextTokenAttachment" }
+```
+
+That example is the one that matters here: `is.workflow.actions.getmyworkflows`
+takes a **`Folder`** parameter, which nothing in `actions.json` reveals, since
+the dictionary holds a bare identifier for it. So the library can be dumped a
+folder at a time with no filtering logic, and `Ask` is how the chain defers the
+choice to run time rather than hardcoding a folder that only exists on one
+device.
+
+Worth generalizing: a parameter that is absent from a chain is not necessarily a
+parameter the action lacks. Copying the action out of the editor and reading it
+with `tools/unpack.py` is the only way to see the full set.
+
+## Do not index the property names, just compress
+
+*Measured 2026-08-12, over 72 real actions in the JSON shape a dump carries.*
+
+A shortcut's JSON is dominated by long repeated keys, so replacing them with
+short tokens looks like the obvious saving. It is not:
+
+| | Bytes | Of raw |
+| --- | ---: | ---: |
+| raw JSON | 42,016 | 100% |
+| property names indexed | 33,486 | 80% |
+| gzipped | 6,971 | 17% |
+| indexed, then gzipped | 7,117 | 17% |
+
+Indexing first makes the result **slightly larger**. Deflate replaces each repeat
+of `WFWorkflowActionIdentifier` with a back-reference already, and long repeated
+strings are what it handles best; swapping them for `$7` removes the redundancy
+it feeds on and adds a table to carry. The saving is real only if the payload is
+never compressed, which on any of these routes it is.
+
+## A shortcut exports itself through Get File of Type
+
+*Observed 2026-08-12, from `Use-Shortcut`.*
+
+There is no export action, and nothing in the dictionary is named for one. The
+mechanism is a coercion in disguise: `is.workflow.actions.gettypeaction` with
+`WFFileType` set to **`com.apple.plist`** turns a shortcut item into that
+shortcut's plist, and **`public.json`** turns it into JSON. Fed a shortcut from
+`is.workflow.actions.getmyworkflows`, it is a complete unsigned export, with no
+iCloud link, no signing step, and no Mac.
+
+Two consequences worth having:
+
+- **A whole library dumps in one pass.** `Get File of Type` vectorizes over a
+  list, so `getmyworkflows` into `public.json` yields one file per shortcut, and
+  a combiner folds them into a single document.
+- **The name is not in the file.** A shortcut's plist has no field naming it, so
+  the name lives only in the item's file name. Anything that flattens a list into
+  one blob has to carry names itself or lose them.
+
+The iCloud route is the other half of the same shortcut and answers a different
+question. `https://www.icloud.com/shortcuts/<id>` rewritten to
+`https://www.icloud.com/shortcuts/api/records/<id>` returns a record whose
+`fields.name.value` is the shortcut's name, which is how a shared link becomes a
+name that `getmyworkflows` can then be filtered against.
+
+## The library settles four inferred shapes
+
+*Measured 2026-08-13, across ten folder dumps: 211 shortcuts, 5,905 actions.*
+
+A dump is not only a backup. It is a corpus of working actions, and reading it
+against this repo's chains promotes four shapes out of the inferred tier, where
+a wrong key would have pasted an action with an empty field.
+
+**`Show-Menu` exists on the device and matches `workflows/show-menu.json`
+action for action**, including the two keys nothing had exercised: the
+`WFPropertyVariableAggrandizement` reading `PropertyName: "Notes"` with
+`PropertyUserInfo: 1`, and the contact coercion feeding `choosefromlist`. The
+device version is five actions to our four, the extra one a trailing
+`showresult` that displays the URL it just opened. Nothing else differs.
+
+**`WFChooseFromListActionPrompt` is real**, carried by `vCard 64bit` as
+`"Choose one"` beside `WFChooseFromListActionSelectMultiple: false`.
+
+**`text.split` and `text.combine` take their input under a lowercase `text`
+key**, not `WFInput`, and `WFTextSeparator` takes a display string. Three
+values appear across 22 uses: `New Lines`, `Spaces`, and `Custom`, the last
+paired with `WFTextCustomSeparator`. The chains here already wrote
+`"New Lines"` and are correct.
+
+**`text.replace` has five keys and every one is optional.** Across 76 uses,
+twelve distinct key subsets appear: `WFReplaceTextFind` alone is a valid
+action, and `WFInput`, `WFReplaceTextReplace`,
+`WFReplaceTextRegularExpression`, `WFReplaceTextCaseSensitive`, and
+`CustomOutputName` each come and go independently. An omitted key is the
+editor's default, not a malformed action.
+
+One shape the corpus adds that this repo did not have: **aggrandizements
+chain.** `Get-vCardChoice` feeds `choosefromlist` a coercion to
+`WFContactContentItem` *followed by* `PropertyName: "Phone Numbers"` with
+`PropertyUserInfo: 3`, in one `Aggrandizements` array. That is how a menu
+displays a field other than the name while still being a contact list, and it
+is the general form of the single-element arrays used throughout this repo.
+
+## `Show-Html` and the injector, read rather than described
+
+*Read 2026-08-13 from the exports, after fourteen folder dumps closed the gap.
+Everything in this repo about these two was previously inferred from behavior.*
+
+`Show-Html` is 23 actions in five stages, and the order is the part that
+matters, since each stage assumes the previous one ran:
+
+1. **Accept a page or a URL.** `getitemtype` and `getmarkdownfromrichtext`
+   feed a two-condition `If` (`WFCondition: 4` on type `is` `URL`, OR
+   `WFCondition: 8` on the text `begins with` `http`, joined by
+   `WFActionParameterFilterPrefix: 0`). A URL is fetched with `downloadurl`;
+   anything else is used as given. Both branches land in a `content` variable.
+2. **Inject the token** by calling `Inject-🎟️GitHubToken` on `content`.
+3. **Inject the clipboard.** `base64encode` of `{"Type": "Clipboard"}` with
+   `WFBase64LineBreakMode: "None"`, replacing `📋ClipboardBase64`.
+4. **Repair the text.** Four regex `text.replace` actions: `“|”` → `"`,
+   `‘|’` → `'`, and two fence strippers.
+5. **Open it.** `base64encode`, then a `gettext` holding the literal
+   `data:text/html;charset=utf-8;base64, ￼` with the anchor at offset **37**,
+   then `url`, then `openurl`.
+
+Three things follow that were not knowable from outside.
+
+**The repair runs after both substitutions**, so an injected value passes
+through the smart-quote and fence rules. Base64 is safe by alphabet, but a
+token or a page fragment carrying a curly quote would be rewritten.
+
+**There is a literal space after the comma** in the data URL, which is why the
+anchor sits at 37 and not 36. Browsers ignore whitespace in a base64 data URL,
+so it works. `workflows/run-html.json` writes the prefix without the space and
+anchors at 36, which is the tighter form and equally correct.
+
+**One of the four repairs is dead.** Actions 15 and 16 both read action 14's
+output, and action 17 encodes action 16's. Action 15, the one stripping
+`^```\w*\n|```$`, feeds nothing. The surviving fence rule is `` ```\s* ``,
+which is broader, so nothing is visibly broken; the anchored rule simply never
+runs. This is what a dangling branch looks like in the plist, and it is
+invisible in the editor, where both actions read as consecutive steps.
+
+### The injector is a dictionary lookup against a config file
+
+`Inject-🎟️GitHubToken` is ten actions, and the working half is four:
+
+```
+If  Shortcut Input (as string)  contains  "🎟️GitHubToken"      WFCondition: 99
+  Get File   Shortcuts/Managed/config.json                     documentpicker.open
+  Replace    "🎟️GitHubToken"  with  <config.json>["🎟️GitHubToken"]
+End If
+```
+
+The file is reached by `is.workflow.actions.documentpicker.open` with
+`WFGetFilePath: "config.json"` and a `WFFile` location of
+`{"WFFileLocationType": "Shortcuts", "displayName": "Managed"}`, which is the
+app's own iCloud folder rather than a picker prompt. The replacement value is a
+second aggrandizement chain: coerce to `WFDictionaryContentItem`, then
+`DictionaryKey: "🎟️GitHubToken"`.
+
+**So the placeholder is a config key, not an arbitrary sentinel.** The emoji
+name is doing real work: it is simultaneously the string a page carries, the
+string `WFReplaceTextFind` matches, and the key looked up in `config.json`. The
+mechanism generalizes to any credential, but this shortcut does not: the find
+string and the key are both literals, so a second credential needs a second
+shortcut, or a rewrite taking the key as input.
+
+The other six actions are the self-demo idiom below.
+
+## The device can gzip, and it is one action
+
+*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
+
+`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
+value beside the default zip. So compression is available on device, in one
+action, with no tool and no library:
+
+```
+Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
+Base64 Encode  WFBase64LineBreakMode: "None"
+```
+
+That is worth knowing because this repo compresses in Python
+([`tools/show.py`](../tools/show.py)) and had no record that the device could do
+it at all. The two solve different problems and both are right: `show.py`
+compresses so the **link** is short, since a link is transcribed and a long one
+is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
+is short, for a page assembled on device where no link exists to shorten.
+
+The distilled variant is five actions: `makezip` → `base64encode` →
+`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
+Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
+arrived at independently, which is some evidence the shape is forced rather than
+chosen.
+
+One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
+so the page fetches a CDN script before it can render itself. `gz-shell.html`
+uses `DecompressionStream('gzip')`, which is native, needs no network, and
+cannot fail because a CDN is slow or a captive portal is in the way. A
+self-extracting page that depends on the network to extract itself gives up the
+property that made it worth making. Prefer the native stream.
+
+## Every verb demos itself, and it shows up as a self-call
+
+*Measured 2026-08-13 across 579 shortcuts.*
+
+**55 shortcuts call themselves**, and almost all for one reason. The opening
+action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
+and runs the shortcut on it:
+
+```
+If  Shortcut Input  <101>
+  Text        <a sample payload>
+  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
+  Run Shortcut  Show-Html            (or Stop and Output)
+  Stop and Output
+End If
+<the real body>
+```
+
+Run it from the Shortcuts app with nothing selected and it demonstrates itself;
+run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
+`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
+all open this way.
+
+That explains two things the index reports. A self-call is a demo, not
+recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
+under **called by nothing** is often an entry point precisely because it is
+runnable alone.
+
+`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
+Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
+without it.
+
+### Condition codes, settled by branch semantics
+
+*Settled 2026-08-13. An earlier version of this table guessed 2 and 3 from
+their neighbours, had them inverted, and left 100 and 101 open. That mistake
+propagated: it made `sketch.py` read a correct shortcut as buggy, and this
+document reported the phantom bug.*
+
+The ordering codes cannot be read off a single action, because nothing beside
+them names the operator. They can be read off **what the true branch does**,
+across the corpus:
+
+| Code | Meaning | The evidence |
+| ---: | --- | --- |
+| 0 | is less than | `count [0] 1` then alert and exit: nothing was picked |
+| 1 | is less than or equal | `count [1] 0` then output: empty, return early |
+| 2 | is greater than | `count [2] 1` then combine, or repeat each, or choose from a list. Seven shortcuts, and choosing needs more than one |
+| 3 | is greater than or equal | `File Size [3] 1 MB` then skip the descriptor |
+| 4 | is | 326 uses, string beside it |
+| 5 | is not | |
+| 8 | begins with | `[8] "http"` in `Show-Html`'s URL test |
+| 9 | ends with | |
+| 99 | contains | `[99] "🎟️GitHubToken"` in the injector |
+| 999 | does not contain | |
+| 100 | has any value | `[100]` then process the input |
+| 101 | does not have any value | `[101]` then build a sample and self-demo, in 72 shortcuts |
+
+100 and 101 fall out of the self-demo prologue, which is the most repeated
+shape in the library and fires precisely when there is **no** input.
+
+The operand rides one of four keys and reading only the first drops the rest
+silently: `WFConditionalActionString`, `WFNumberValue`, `WFAnotherNumber`, and
+`WFMeasurement`, the last a `{Magnitude, Unit}` pair.
+
+## The device can gzip, and it is one action
+
+*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
+
+`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
+value beside the default zip. So compression is available on device, in one
+action, with no tool and no library:
+
+```
+Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
+Base64 Encode  WFBase64LineBreakMode: "None"
+```
+
+That is worth knowing because this repo compresses in Python
+([`tools/show.py`](../tools/show.py)) and had no record that the device could do
+it at all. The two solve different problems and both are right: `show.py`
+compresses so the **link** is short, since a link is transcribed and a long one
+is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
+is short, for a page assembled on device where no link exists to shorten.
+
+The distilled variant is five actions: `makezip` → `base64encode` →
+`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
+Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
+arrived at independently, which is some evidence the shape is forced rather than
+chosen.
+
+One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
+so the page fetches a CDN script before it can render itself. `gz-shell.html`
+uses `DecompressionStream('gzip')`, which is native, needs no network, and
+cannot fail because a CDN is slow or a captive portal is in the way. A
+self-extracting page that depends on the network to extract itself gives up the
+property that made it worth making. Prefer the native stream.
+
+## Every verb demos itself, and it shows up as a self-call
+
+*Measured 2026-08-13 across 579 shortcuts.*
+
+**55 shortcuts call themselves**, and almost all for one reason. The opening
+action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
+and runs the shortcut on it:
+
+```
+If  Shortcut Input  <101>
+  Text        <a sample payload>
+  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
+  Run Shortcut  Show-Html            (or Stop and Output)
+  Stop and Output
+End If
+<the real body>
+```
+
+Run it from the Shortcuts app with nothing selected and it demonstrates itself;
+run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
+`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
+all open this way.
+
+That explains two things the index reports. A self-call is a demo, not
+recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
+under **called by nothing** is often an entry point precisely because it is
+runnable alone.
+
+`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
+Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
+without it.
+
+### Condition codes seen in the corpus
+
+Three are pinned by the strings beside them. Two are not.
+
+| Code | Meaning | Uses |
+| ---: | --- | ---: |
+| 4 | `is` | 326 |
+| 101 | a value test, no string, gates absent-input branches | 132 |
+| 100 | the same shape as 101 | 130 |
+| 99 | `contains` | 83 |
+| 8 | `begins with` | 68 |
+
+`100` and `101` both take no `WFConditionalActionString` and both appear on
+branches handling missing input, so which is `has any value` and which is its
+negation is not settled by reading alone. Do not guess: copy the pair from a
+working export, or set it in the editor and read it back.
+
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -380,6 +757,23 @@ Delivering actions as base64 plist XML ([`tools/pack.py`](../tools/pack.py))
 carries the **raw U+FFFC glyph**. The `&#65532;` entity exists only because a
 browser render strips the glyph, and this route has no browser in it. Where a
 payload does cross a rendered page, the entity rule still holds.
+
+**The party retyping the link may be the agent, not a person.** *Observed
+2026-08-12, three times in one session.* The rule against shortening or editing
+a link was written for a human with a copy buffer. An agent has none: every
+character of a reply is generated, so a few thousand characters of opaque base64
+is a place where a plausible substitution can be made and not noticed. In all
+three cases the corruption landed in the `report` string at the tail, the actions
+at the head pasted correctly, and the only symptom was a banner reading
+`RHVtcC1TaG9ydGN1dHM=` where it should have read `Dump-Shortcuts`, which is that
+label's own base64.
+
+Two things follow. The payload is **verified before it is sent and unverifiable
+after**, since nothing can read back what was emitted; `--verify` checks the
+generator, not the transcription. And a legible payload is safer than an opaque
+one for this reason alone, which is a point in favor of the `--data` routes:
+corruption in a vCard or a page is visible to the reader, corruption in base64 is
+not. Making the receiver check a length or digest would close it properly.
 
 Three more from the same day. Shortcuts **remints every UUID on paste**,
 rewriting references consistently within one paste but not across pastes, so a

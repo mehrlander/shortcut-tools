@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Show</title>
+<script>
+/* The whole of Show-Html's text handling, moved into the page it is about to
+   open. Three values arrive by substitution before this runs: the page as
+   base64, the clipboard as base64, and the token read out of
+   Shortcuts/Managed/config.json. Each placeholder appears exactly once as the
+   value slot, and each search key is assembled from halves so a text replace
+   cannot rewrite the key along with the value.
+
+   Encoding the page as base64 is what makes the rest safe: the substitutions
+   run against this shell, and the payload is opaque to them, so a page that
+   itself mentions a placeholder is not rewritten out from under itself. The
+   payload's own placeholders are substituted here instead, in JavaScript. */
+var PAGE = '📄PageBase64';
+var CLIP = '📋ClipboardBase64';
+var TOKEN = '🎟️GitHubToken';
+var PAGE_KEY = '📄' + 'PageBase64';
+var CLIP_KEY = '📋' + 'ClipboardBase64';
+var TOKEN_KEY = '🎟️' + 'GitHubToken';
+
+function text(b64) {
+  var raw = atob(b64);
+  return new TextDecoder().decode(Uint8Array.from(raw, function (c) { return c.charCodeAt(0); }));
+}
+
+/* Autocorrect reaches anything that travelled as plain text, and a curly quote
+   inside a script is a parse error rather than a typo. This runs before the
+   substitutions, not after them as the shortcut did, so a value carrying a
+   curly quote is delivered as written. */
+function repair(s) {
+  return s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+          .replace(/^```\w*\n/, '').replace(/```\s*$/, '');
+}
+
+/* Synchronous on purpose. It blocks the load, so the page is complete before
+   anything downstream can read it back, which is the rule the rest of this
+   repo follows for the same reason. */
+function fetchSync(url) {
+  var x = new XMLHttpRequest();
+  x.open('GET', url, false);
+  x.send();
+  if (x.status && x.status !== 200) throw new Error('HTTP ' + x.status + ' from ' + url);
+  return x.responseText;
+}
+
+function start() {
+  if (PAGE === PAGE_KEY) throw new Error('no page was substituted');
+  var src = repair(text(PAGE));
+  if (/^https?:\/\/\S+$/.test(src.trim())) src = repair(fetchSync(src.trim()));
+  if (TOKEN !== TOKEN_KEY) src = src.split(TOKEN_KEY).join(TOKEN);
+  if (CLIP !== CLIP_KEY) src = src.split(CLIP_KEY).join(CLIP);
+  /* document.write, not innerHTML: a script assigned through innerHTML never
+     runs, and every page on this route is a script. */
+  document.open(); document.write(src); document.close();
+}
+
+try { start(); } catch (err) { document.body.textContent = 'Show: ' + err.message; }
+</script>

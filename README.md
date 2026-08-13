@@ -40,10 +40,11 @@ Those 38 parameter-bearing entries are exactly the 38 that carry a `WFControlFlo
 
 ## Documentation
 
-Apple documents neither the file format nor the runtime, so two files under `docs/` carry what is known. They split by question:
+Apple documents neither the file format nor the runtime, so three files under `docs/` carry what is known. They split by question:
 
 - [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
 - [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
+- [`docs/idioms.md`](docs/idioms.md): how a real library is **written**. Read from a 577-shortcut corpus: the self-demo prologue that is really a test harness, the naming convention as a runtime type, one type system everything that dispatches consults, and JavaScript through a `data:` URL as the escape hatch. It also records the four claims that did not survive being checked, and why raw frequency over a mixed corpus is not evidence about one author.
 
 ## Chains and payloads
 
@@ -132,6 +133,38 @@ antialiased edge if a larger presentation ever needs it.
 Unlike a page, a `.vcf` cannot use the compression above, since that inflates in
 a browser and this payload has to land in Shortcuts. Picking the right encoder
 turned out to matter more than compression would have.
+
+## Reading a library back
+
+The tools above send shortcuts to a device. These four read a device's library
+back, which is the other half and the one that makes pruning safe.
+
+```bash
+python3 tools/index-dump.py dumps/*.zip --json index.json   # what exists, what calls what
+python3 tools/survey.py index.json -o library.html          # tiered, browsable, with facets
+python3 tools/sketch.py dumps/*.zip --name Show-Loop        # 54 KB of XML as 1.8 KB of pseudocode
+python3 tools/restore.py dumps/*.zip Show-Loop              # a paste link that puts it back
+python3 tools/harvest.py dumps/*.zip --index index.json -o core/   # editable chain files
+```
+
+A dump comes from [`workflows/dump-folder-zip.json`](workflows/dump-folder-zip.json),
+four actions that export one folder as a zip of unsigned plists. The folder is
+the size control: a library is usually small, but a single shortcut holding
+megabytes of pasted text is not.
+
+Three things an export cannot restore, and they are why a delete is a decision
+rather than a formality: **the name**, which lives only in the zip entry since
+the plist has no field for it; **anything outside the plist**, meaning Home
+Screen icons, widgets, share sheet and Siri configuration, and automations; and
+**whatever was never dumped**. `restore.py` prints the name for the first and
+its docstring names the rest.
+
+`survey.py` tiers a library into core, called, uncalled, sediment and imported.
+Read the tiers as a recommended prune order, and take counts from the three
+facets it also emits (`provenance`, `lifecycle`, `connectivity`), since the
+tiers are a cascade over those and collapse pairs. The core is a floor: it is
+the closure of named hubs, so it grows with every entry point the call graph
+cannot see.
 
 ## CLI
 

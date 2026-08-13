@@ -1,0 +1,190 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Push shortcuts</title>
+<style>
+  body { font: 15px/1.5 -apple-system, sans-serif; margin: 0; padding: 1rem; }
+  #out { white-space: pre-wrap; font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  button { font: inherit; padding: .6rem 1rem; margin: .5rem 0; }
+  .warn { color: #b00; }
+</style>
+
+<div id="out">reading the clipboard…</div>
+<button id="go" hidden>Push to web-tools-private</button>
+
+<script>
+// Both values arrive by substitution on the way through Show-Html: the token
+// from Snippets/Managed/config.json, and the clipboard base64-encoded. Each
+// placeholder appears exactly once in this file, and each sentinel is built
+// from halves so the substitution cannot rewrite the comparison too.
+var TOKEN = '🎟️GitHubToken';
+var CLIP = '📋ClipboardBase64';
+var TOKEN_SENTINEL = '🎟️' + 'GitHubToken';
+var CLIP_SENTINEL = '📋' + 'ClipboardBase64';
+
+var REPO = 'mehrlander/web-tools-private';
+var BRANCH = 'main';
+
+// The dump is a snapshot of a device, so it lands whole and gets split in the
+// repo, where a bad split costs a commit rather than another trip through the
+// clipboard. Named by day: pushing twice in one day updates that day's file.
+function path(ext) {
+  var d = new Date();
+  var day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+            '-' + String(d.getDate()).padStart(2, '0');
+  return 'shortcuts/dump-' + day + '.' + ext;
+}
+
+function auth(token) {
+  return /^(Bearer|token) /i.test(token) ? token : 'Bearer ' + token;
+}
+
+// Cheap and deliberately noisy. A shortcut library routinely carries API keys
+// inline, and this pushes to a private repo precisely because a scan is a
+// heuristic and not a guarantee.
+var SECRETS = [
+  [/ghp_[A-Za-z0-9]{20,}/, 'a GitHub token'],
+  [/github_pat_[A-Za-z0-9_]{20,}/, 'a GitHub fine-grained token'],
+  [/sk-[A-Za-z0-9]{20,}/, 'an OpenAI-shaped key'],
+  [/xox[baprs]-[A-Za-z0-9-]{10,}/, 'a Slack token'],
+  [/AKIA[0-9A-Z]{16}/, 'an AWS access key id'],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, 'a private key']
+];
+
+function scan(text) {
+  return SECRETS.filter(function (s) { return s[0].test(text); }).map(function (s) { return s[1]; });
+}
+
+function bytes(b64) {
+  var raw = atob(b64);
+  return Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
+}
+
+function decode(b64) {
+  return new TextDecoder().decode(bytes(b64));   // the dump is UTF-8, and atob is not
+}
+
+// A zip arrives when the dump came from Make Archive. Reading it here is what
+// keeps the gate: without it the page could only push bytes it cannot describe,
+// and the credential scan would be scanning compressed noise.
+function isZip(b) { return b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04; }
+
+function entries(b) {
+  var v = new DataView(b.buffer, b.byteOffset, b.byteLength), end = -1;
+  // The end-of-central-directory record is last, after a comment of unknown
+  // length, so it is found by scanning back for its signature.
+  for (var i = b.length - 22; i >= 0 && end < 0; i--) if (v.getUint32(i, true) === 0x06054b50) end = i;
+  if (end < 0) return null;
+  var count = v.getUint16(end + 10, true), at = v.getUint32(end + 16, true), out = [];
+  for (var n = 0; n < count; n++) {
+    if (v.getUint32(at, true) !== 0x02014b50) break;
+    var method = v.getUint16(at + 10, true), size = v.getUint32(at + 20, true);
+    var nameLen = v.getUint16(at + 28, true), extraLen = v.getUint16(at + 30, true);
+    var commentLen = v.getUint16(at + 32, true), local = v.getUint32(at + 42, true);
+    var name = new TextDecoder().decode(b.subarray(at + 46, at + 46 + nameLen));
+    var lnLen = v.getUint16(local + 26, true), leLen = v.getUint16(local + 28, true);
+    var start = local + 30 + lnLen + leLen;
+    out.push({ name: name, method: method, data: b.subarray(start, start + size) });
+    at += 46 + nameLen + extraLen + commentLen;
+  }
+  return out;
+}
+
+function inflate(entry) {
+  if (entry.method === 0) return Promise.resolve(new TextDecoder().decode(entry.data));
+  return new Response(new Blob([entry.data]).stream()
+    .pipeThrough(new DecompressionStream('deflate-raw'))).text();
+}
+
+function show(msg) { document.getElementById('out').textContent = msg; }
+
+// Synchronous, for the same reason every page on this route is: it may be read
+// back through a coercion that captures at a moment nobody has documented.
+function put(token, body, ext) {
+  var x = new XMLHttpRequest();
+  x.open('PUT', 'https://api.github.com/repos/' + REPO + '/contents/' + path(ext), false);
+  x.setRequestHeader('Authorization', auth(token));
+  x.setRequestHeader('Content-Type', 'application/json');
+  x.send(JSON.stringify(body));
+  return { status: x.status, text: x.responseText };
+}
+
+function existingSha(token, ext) {
+  var x = new XMLHttpRequest();
+  x.open('GET', 'https://api.github.com/repos/' + REPO + '/contents/' + path(ext) + '?ref=' + BRANCH, false);
+  x.setRequestHeader('Authorization', auth(token));
+  x.send();
+  if (x.status !== 200) return null;          // absent is the normal case
+  return JSON.parse(x.responseText).sha;      // present means today's file is being replaced
+}
+
+function push(size, ext) {
+  var body = { message: 'Dump shortcuts from device', branch: BRANCH, content: CLIP };
+  var sha = existingSha(TOKEN, ext);
+  if (sha) body.sha = sha;
+  var r = put(TOKEN, body, ext);
+  if (r.status !== 200 && r.status !== 201) {
+    show('ERROR HTTP ' + r.status + '\n' + r.text.slice(0, 400));
+    return;
+  }
+  show('Pushed ' + size + ' bytes to ' + REPO + '\n' + path(ext) +
+       (sha ? '\n(replaced today\'s earlier dump)' : ''));
+}
+
+function render(summary, found, size, ext) {
+  if (found.length) {
+    summary.push('\nWARNING: found ' + found.join(', ') + '. Pushing anyway is your call.');
+    document.getElementById('out').className = 'warn';
+  }
+  show(summary.join('\n'));
+  var go = document.getElementById('go');
+  go.hidden = false;
+  go.onclick = function () { go.disabled = true; push(size, ext); };
+}
+
+// One object per line, which is what the text dumps emit.
+function describeLines(dump) {
+  var names = [], bad = 0;
+  dump.split('\n').filter(function (l) { return l.trim(); }).forEach(function (line) {
+    try { names.push(JSON.parse(line).name); } catch (err) { bad++; }
+  });
+  var out = [];
+  if (names.length) {
+    out.push(names.length + ' shortcuts: ' + names.slice(0, 12).join(', ') +
+             (names.length > 12 ? ', …' : ''));
+  }
+  if (bad) out.push(bad + ' line(s) did not parse, which is worth knowing before it lands.');
+  return out;
+}
+
+function start() {
+  if (CLIP === CLIP_SENTINEL) { show('No clipboard was substituted. Run this through Show-Html.'); return; }
+  if (TOKEN === TOKEN_SENTINEL) { show('No token was substituted. Run this through Show-Html.'); return; }
+
+  var raw;
+  try { raw = bytes(CLIP); } catch (err) { show('The clipboard did not decode: ' + err.message); return; }
+
+  if (isZip(raw)) {
+    var list = entries(raw);
+    if (!list) { render([raw.length + ' bytes, a zip whose directory could not be read.'], [], raw.length, 'zip'); return; }
+    var summary = [raw.length.toLocaleString() + ' bytes, zipped, ' + list.length + ' entries.'];
+    summary.push(list.map(function (e) { return e.name; }).slice(0, 12).join(', ') +
+                 (list.length > 12 ? ', …' : ''));
+    // Inflate to scan. The archive is the thing that gets pushed either way; this
+    // only decides whether you are warned first.
+    Promise.all(list.map(inflate)).then(function (texts) {
+      render(summary, scan(texts.join('\n')), raw.length, 'zip');
+    }).catch(function (err) {
+      summary.push('Could not inflate to scan: ' + err.message);
+      render(summary, [], raw.length, 'zip');
+    });
+    return;
+  }
+
+  var dump = new TextDecoder().decode(raw);
+  render([dump.length.toLocaleString() + ' characters on the clipboard.'].concat(describeLines(dump)),
+         scan(dump), dump.length, 'json');
+}
+
+start();
+</script>

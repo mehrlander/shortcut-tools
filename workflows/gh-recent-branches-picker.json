@@ -15,11 +15,6 @@
       "p": {
         "UUID": "5D3A0000-0002-4A00-9000-000000000002",
         "WFWorkflowName": "Inject-🎟️GitHubToken",
-        "WFWorkflow": {
-          "isSelf": false,
-          "workflowIdentifier": "26251395-6EB8-4CEE-A8E9-CE4413918C2F",
-          "workflowName": "Inject-🎟️GitHubToken"
-        },
         "WFInput": {
           "Value": {
             "OutputName": "Text",

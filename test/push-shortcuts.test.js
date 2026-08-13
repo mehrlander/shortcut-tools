@@ -1,0 +1,183 @@
+const test = require("node:test");
+const assert = require("node:assert");
+const fs = require("node:fs");
+const vm = require("node:vm");
+const path = require("node:path");
+
+const PAGE = path.join(__dirname, "..", "pages", "push-shortcuts.html");
+const TOKEN = "🎟️GitHubToken";
+const CLIP = "📋ClipboardBase64";
+
+// The page runs inside a data: URL after Show-Html has rewritten two
+// placeholders in it, so the harness rewrites them the same way and runs the
+// script. Substitution is a plain text replace, exactly as the injector does it.
+function load({ clipboard = null, token = "ghp_test", requests = [], raw = null } = {}) {
+  let script = fs.readFileSync(PAGE, "utf8");
+  script = script.slice(script.indexOf("<script>") + 8, script.lastIndexOf("</script>"));
+  if (raw !== null) script = script.split(CLIP).join(Buffer.from(raw, "binary").toString("base64"));
+  else if (clipboard !== null) script = script.split(CLIP).join(Buffer.from(clipboard).toString("base64"));
+  if (token !== null) script = script.split(TOKEN).join(token);
+
+  const els = {};
+  const el = (id) => (els[id] = els[id] || { textContent: "", className: "", hidden: true, onclick: null });
+  const ctx = {
+    atob: (b) => Buffer.from(b, "base64").toString("binary"),
+    Uint8Array, TextDecoder, XMLHttpRequest: function () {
+      this.open = (method, url) => Object.assign(this, { method, url });
+      this.setRequestHeader = (k, v) => (this.headers = Object.assign(this.headers || {}, { [k]: v }));
+      this.send = (body) => {
+        const r = requests.shift() || { status: 404, text: "{}" };
+        Object.assign(this, { status: r.status, responseText: r.text });
+        ctx.sent.push({ method: this.method, url: this.url, headers: this.headers, body });
+      };
+    },
+    DataView, TextEncoder, Promise, Blob, Response, DecompressionStream, setImmediate,
+    document: { getElementById: el }, JSON, Object, Array, Date, Error, RegExp, els, sent: []
+  };
+  vm.createContext(ctx);
+  vm.runInContext(script, ctx);
+  ctx.out = () => els.out.textContent;
+  return ctx;
+}
+
+test("an unsubstituted clipboard is reported rather than decoded", () => {
+  const ctx = load({ clipboard: null, token: "ghp_test" });
+  assert.match(ctx.out(), /No clipboard was substituted/);
+  assert.strictEqual(ctx.sent.length, 0, "and nothing is sent");
+});
+
+test("an unsubstituted token is reported before anything is read", () => {
+  const ctx = load({ clipboard: '[]', token: null });
+  assert.match(ctx.out(), /No token was substituted/);
+});
+
+test("the clipboard is decoded as UTF-8, not as bytes", () => {
+  // atob returns a binary string, so a multi-byte character survives only if it
+  // is decoded properly afterwards. Shortcut names contain emoji routinely.
+  const ctx = load({ clipboard: JSON.stringify({ name: "Inject-🎟️Token", shortcut: {} }) });
+  assert.match(ctx.out(), /1 shortcuts: Inject-🎟️Token/);
+});
+
+// The dump is one object per line, so the whole thing is not JSON and the names
+// are what a reader wants to see before letting it land.
+test("the summary names the shortcuts, one line each", () => {
+  const rows = ["Alpha", "Beta", "Gamma"]
+    .map(n => JSON.stringify({ name: n, shortcut: { WFWorkflowActions: [] } })).join("\n");
+  const ctx = load({ clipboard: rows });
+  assert.match(ctx.out(), /3 shortcuts: Alpha, Beta, Gamma/);
+});
+
+test("a line that does not parse is counted rather than swallowed", () => {
+  const ctx = load({ clipboard: JSON.stringify({ name: "Fine", shortcut: {} }) + "\nnot json at all" });
+  assert.match(ctx.out(), /1 shortcuts: Fine/);
+  assert.match(ctx.out(), /1 line\(s\) did not parse/);
+  assert.ok(!ctx.els.go.hidden, "and the push is still offered, since the bytes are the point");
+});
+
+// A shortcut library routinely carries keys inline. The scan is a heuristic, so
+// it warns rather than blocks, and the destination is private either way.
+test("a credential in the dump is named before the push", () => {
+  const ctx = load({ clipboard: 'x ghp_' + "a".repeat(30) + ' y' });
+  assert.match(ctx.out(), /WARNING: found a GitHub token/);
+  assert.strictEqual(ctx.els.out.className, "warn");
+});
+
+test("a clean dump raises no warning", () => {
+  const ctx = load({ clipboard: '[{"a":1}]' });
+  assert.ok(!/WARNING/.test(ctx.out()));
+});
+
+test("pushing sends the base64 the injector supplied, not a re-encoding", () => {
+  const payload = JSON.stringify([{ name: "one" }]);
+  const ctx = load({ clipboard: payload, requests: [{ status: 404, text: "{}" }, { status: 201, text: "{}" }] });
+  ctx.els.go.onclick();
+  const [head, write] = ctx.sent;
+  assert.strictEqual(head.method, "GET", "the existing file is looked up first");
+  assert.strictEqual(write.method, "PUT");
+  assert.match(write.url, /repos\/mehrlander\/web-tools-private\/contents\/shortcuts\/dump-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.match(head.url, /dump-\d{4}-\d{2}-\d{2}\.json\?ref=main$/, "the lookup uses the same path");
+  const body = JSON.parse(write.body);
+  assert.strictEqual(body.content, Buffer.from(payload).toString("base64"),
+    "re-encoding here would double-encode what Show-Html already encoded");
+  assert.ok(!("sha" in body), "absent means a new file");
+  assert.match(write.headers.Authorization, /^Bearer ghp_test$/);
+  assert.match(ctx.out(), /Pushed \d+ bytes/);
+});
+
+test("a second push the same day replaces rather than failing", () => {
+  const ctx = load({ clipboard: '[]',
+                     requests: [{ status: 200, text: '{"sha":"abc123"}' }, { status: 200, text: "{}" }] });
+  ctx.els.go.onclick();
+  assert.strictEqual(JSON.parse(ctx.sent[1].body).sha, "abc123",
+    "the contents API refuses an update without the current sha");
+  assert.match(ctx.out(), /replaced today's earlier dump/);
+});
+
+test("a failed push reports the status instead of claiming success", () => {
+  const ctx = load({ clipboard: '[]',
+                     requests: [{ status: 404, text: "{}" }, { status: 403, text: '{"message":"nope"}' }] });
+  ctx.els.go.onclick();
+  assert.match(ctx.out(), /^ERROR HTTP 403/);
+});
+
+test("each placeholder appears exactly once, comments included", () => {
+  const html = fs.readFileSync(PAGE, "utf8");
+  for (const p of [TOKEN, CLIP]) {
+    assert.strictEqual(html.split(p).length - 1, 1, p + " should appear once");
+  }
+  assert.ok(html.includes("'🎟️' + 'GitHubToken'") && html.includes("'📋' + 'ClipboardBase64'"),
+    "both sentinels must be assembled from halves");
+});
+
+// Make Archive puts a zip on the clipboard, so the page has to read one to keep
+// its gate: without the entry list and the scan it could only push bytes it
+// cannot describe.
+function zip(files) {
+  const enc = new TextEncoder();
+  const local = [], central = [];
+  let offset = 0;
+  files.forEach(([name, body]) => {
+    const n = enc.encode(name), d = enc.encode(body);
+    const lh = Buffer.alloc(30);
+    lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(0, 8);      // stored, not deflated
+    lh.writeUInt32LE(d.length, 18); lh.writeUInt32LE(d.length, 22);
+    lh.writeUInt16LE(n.length, 26);
+    local.push(lh, Buffer.from(n), Buffer.from(d));
+    const ch = Buffer.alloc(46);
+    ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(0, 10);
+    ch.writeUInt32LE(d.length, 20); ch.writeUInt32LE(d.length, 24);
+    ch.writeUInt16LE(n.length, 28); ch.writeUInt32LE(offset, 42);
+    central.push(ch, Buffer.from(n));
+    offset += 30 + n.length + d.length;
+  });
+  const cd = Buffer.concat(central), eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(files.length, 8); eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(cd.length, 12); eocd.writeUInt32LE(offset, 16);
+  return Buffer.concat([...local, cd, eocd]).toString("binary");
+}
+
+const settle = () => new Promise(r => setImmediate(r));
+
+test("a zipped dump is described by its entries, not by its bytes", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test",
+                     raw: zip([["Alpha.json", "{}"], ["Beta.json", "{}"]]) });
+  await settle();
+  assert.match(ctx.out(), /zipped, 2 entries/);
+  assert.match(ctx.out(), /Alpha\.json, Beta\.json/);
+});
+
+test("the scan reaches inside the archive", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test",
+                     raw: zip([["Leaky.json", 'key ghp_' + "a".repeat(30)]]) });
+  await settle();
+  assert.match(ctx.out(), /WARNING: found a GitHub token/);
+});
+
+test("a zip is pushed as .zip, so the repo does not claim it is JSON", async () => {
+  const ctx = load({ clipboard: null, token: "ghp_test", raw: zip([["One.json", "{}"]]),
+                     requests: [{ status: 404, text: "{}" }, { status: 201, text: "{}" }] });
+  await settle();
+  ctx.els.go.onclick();
+  assert.match(ctx.sent[1].url, /dump-\d{4}-\d{2}-\d{2}\.zip$/);
+});
