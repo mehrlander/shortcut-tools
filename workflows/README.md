@@ -64,6 +64,13 @@ never mentions the injector. The picker has no such helper, so it calls
 still wrong: the second pass finds nothing to replace, and the action reads as
 load-bearing to anyone who did not know that.
 
+Both were read from real exports on 2026-08-13, having been inferred from
+behavior until then. `Show-Html` runs five stages in an order that matters, the
+placeholder turns out to be a key in `Shortcuts/Managed/config.json` rather than
+an arbitrary sentinel, and one of the four text repairs is a dangling branch
+that never runs. All three in
+[`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
+
 ## Payloads live in `pages/`, not pasted into the chain
 
 Anywhere a parameter takes a string, `{"$file": "pages/thing.html"}` reads that

@@ -492,9 +492,121 @@ chain.** `Get-vCardChoice` feeds `choosefromlist` a coercion to
 displays a field other than the name while still being a contact list, and it
 is the general form of the single-element arrays used throughout this repo.
 
-`Inject-🎟️GitHubToken` is still absent after ten folders, which is the one
-gap that matters: `Show-Html` is the only caller and every token-carrying
-route runs through it.
+## `Show-Html` and the injector, read rather than described
+
+*Read 2026-08-13 from the exports, after fourteen folder dumps closed the gap.
+Everything in this repo about these two was previously inferred from behavior.*
+
+`Show-Html` is 23 actions in five stages, and the order is the part that
+matters, since each stage assumes the previous one ran:
+
+1. **Accept a page or a URL.** `getitemtype` and `getmarkdownfromrichtext`
+   feed a two-condition `If` (`WFCondition: 4` on type `is` `URL`, OR
+   `WFCondition: 8` on the text `begins with` `http`, joined by
+   `WFActionParameterFilterPrefix: 0`). A URL is fetched with `downloadurl`;
+   anything else is used as given. Both branches land in a `content` variable.
+2. **Inject the token** by calling `Inject-🎟️GitHubToken` on `content`.
+3. **Inject the clipboard.** `base64encode` of `{"Type": "Clipboard"}` with
+   `WFBase64LineBreakMode: "None"`, replacing `📋ClipboardBase64`.
+4. **Repair the text.** Four regex `text.replace` actions: `“|”` → `"`,
+   `‘|’` → `'`, and two fence strippers.
+5. **Open it.** `base64encode`, then a `gettext` holding the literal
+   `data:text/html;charset=utf-8;base64, ￼` with the anchor at offset **37**,
+   then `url`, then `openurl`.
+
+Three things follow that were not knowable from outside.
+
+**The repair runs after both substitutions**, so an injected value passes
+through the smart-quote and fence rules. Base64 is safe by alphabet, but a
+token or a page fragment carrying a curly quote would be rewritten.
+
+**There is a literal space after the comma** in the data URL, which is why the
+anchor sits at 37 and not 36. Browsers ignore whitespace in a base64 data URL,
+so it works. `workflows/run-html.json` writes the prefix without the space and
+anchors at 36, which is the tighter form and equally correct.
+
+**One of the four repairs is dead.** Actions 15 and 16 both read action 14's
+output, and action 17 encodes action 16's. Action 15, the one stripping
+`^```\w*\n|```$`, feeds nothing. The surviving fence rule is `` ```\s* ``,
+which is broader, so nothing is visibly broken; the anchored rule simply never
+runs. This is what a dangling branch looks like in the plist, and it is
+invisible in the editor, where both actions read as consecutive steps.
+
+### The injector is a dictionary lookup against a config file
+
+`Inject-🎟️GitHubToken` is ten actions, and the working half is four:
+
+```
+If  Shortcut Input (as string)  contains  "🎟️GitHubToken"      WFCondition: 99
+  Get File   Shortcuts/Managed/config.json                     documentpicker.open
+  Replace    "🎟️GitHubToken"  with  <config.json>["🎟️GitHubToken"]
+End If
+```
+
+The file is reached by `is.workflow.actions.documentpicker.open` with
+`WFGetFilePath: "config.json"` and a `WFFile` location of
+`{"WFFileLocationType": "Shortcuts", "displayName": "Managed"}`, which is the
+app's own iCloud folder rather than a picker prompt. The replacement value is a
+second aggrandizement chain: coerce to `WFDictionaryContentItem`, then
+`DictionaryKey: "🎟️GitHubToken"`.
+
+**So the placeholder is a config key, not an arbitrary sentinel.** The emoji
+name is doing real work: it is simultaneously the string a page carries, the
+string `WFReplaceTextFind` matches, and the key looked up in `config.json`. The
+mechanism generalizes to any credential, but this shortcut does not: the find
+string and the key are both literals, so a second credential needs a second
+shortcut, or a rewrite taking the key as input.
+
+The other six actions are the self-demo idiom below.
+
+## Every verb demos itself, and it shows up as a self-call
+
+*Measured 2026-08-13 across 579 shortcuts.*
+
+**55 shortcuts call themselves**, and almost all for one reason. The opening
+action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
+and runs the shortcut on it:
+
+```
+If  Shortcut Input  <101>
+  Text        <a sample payload>
+  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
+  Run Shortcut  Show-Html            (or Stop and Output)
+  Stop and Output
+End If
+<the real body>
+```
+
+Run it from the Shortcuts app with nothing selected and it demonstrates itself;
+run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
+`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
+all open this way.
+
+That explains two things the index reports. A self-call is a demo, not
+recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
+under **called by nothing** is often an entry point precisely because it is
+runnable alone.
+
+`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
+Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
+without it.
+
+### Condition codes seen in the corpus
+
+Three are pinned by the strings beside them. Two are not.
+
+| Code | Meaning | Uses |
+| ---: | --- | ---: |
+| 4 | `is` | 326 |
+| 101 | a value test, no string, gates absent-input branches | 132 |
+| 100 | the same shape as 101 | 130 |
+| 99 | `contains` | 83 |
+| 8 | `begins with` | 68 |
+
+`100` and `101` both take no `WFConditionalActionString` and both appear on
+branches handling missing input, so which is `has any value` and which is its
+negation is not settled by reading alone. Do not guess: copy the pair from a
+working export, or set it in the editor and read it back.
 
 ## The packed route inverts the glyph rule
 
