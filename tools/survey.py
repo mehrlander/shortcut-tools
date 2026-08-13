@@ -184,6 +184,9 @@ PAGE = """<!doctype html>
   .t { border: 1px solid var(--line); border-radius: 999px; padding: .25rem .7rem; cursor: pointer;
        background: none; color: inherit; font: inherit; font-size: .85rem; white-space: nowrap; }
   .t[aria-pressed="true"] { border-color: currentColor; background: #8882; }
+  .facets { margin-top: .3rem; }
+  .facets .t { font-size: .78rem; opacity: .75; }
+  .facets .t[aria-pressed="true"] { opacity: 1; }
   .t b { font-weight: 600; }
   .t span { color: var(--dim); }
   .why { font-size: .82rem; color: var(--dim); margin: .7rem 0 .4rem; min-height: 2.4em; }
@@ -201,6 +204,7 @@ PAGE = """<!doctype html>
 <h1>Shortcut library</h1>
 <p class="sub">__SUB__</p>
 <div class="tiers">__CARDS__</div>
+<div class="tiers facets">__FACETS__</div>
 <p class="why" id="why"></p>
 <input id="q" placeholder="Filter by name, or by a shortcut it calls">
 <p class="m" id="count"></p>
@@ -208,7 +212,7 @@ PAGE = """<!doctype html>
 
 <script>
 var DATA = __DATA__, MISSING = __MISSING__, WHY = __WHY__;
-var tier = null, list = document.getElementById('list');
+var tier = null, facets = {}, list = document.getElementById('list');
 
 function row(s) {
   var li = document.createElement('li');
@@ -235,6 +239,9 @@ function draw() {
   var q = document.getElementById('q').value.toLowerCase();
   var rows = DATA.filter(function (s) {
     if (tier && s.tier !== tier) return false;
+    // The facets are the facts; the tier is a recommended action over them.
+    // Each axis is independent, so they combine rather than override.
+    for (var axis in facets) if (facets[axis] && s[axis] !== facets[axis]) return false;
     if (!q) return true;
     return s.name.toLowerCase().indexOf(q) >= 0 ||
            s.calls.concat(s.callers).join(' ').toLowerCase().indexOf(q) >= 0;
@@ -247,11 +254,21 @@ function draw() {
   document.getElementById('why').textContent = tier ? WHY[tier] : MISSING;
 }
 
-document.querySelectorAll('.t').forEach(function (b) {
+document.querySelectorAll('.tiers:not(.facets) .t').forEach(function (b) {
   b.onclick = function () {
     tier = tier === b.dataset.t ? null : b.dataset.t;
-    document.querySelectorAll('.t').forEach(function (o) {
+    document.querySelectorAll('.tiers:not(.facets) .t').forEach(function (o) {
       o.setAttribute('aria-pressed', o.dataset.t === tier); });
+    draw();
+  };
+});
+
+document.querySelectorAll('.facets .t').forEach(function (b) {
+  b.onclick = function () {
+    var axis = b.dataset.axis;
+    facets[axis] = facets[axis] === b.dataset.v ? null : b.dataset.v;
+    document.querySelectorAll('.facets .t').forEach(function (o) {
+      o.setAttribute('aria-pressed', facets[o.dataset.axis] === o.dataset.v); });
     draw();
   };
 });
@@ -292,6 +309,12 @@ def main():
     cards = "".join(
         '<button class="t" data-t="%s" aria-pressed="false"><b>%s</b> <span>%d</span></button>'
         % (key, label, counts.get(key, 0)) for key, label, _ in TIERS)
+    facets = "".join(
+        '<button class="t" data-axis="%s" data-v="%s" aria-pressed="false">'
+        '<b>%s</b> <span>%d</span></button>' % (axis, value, value, n)
+        for axis in ("provenance", "lifecycle", "connectivity")
+        for value, n in sorted(collections.Counter(r[axis] for r in rows).items(),
+                               key=lambda kv: -kv[1]))
     sub = "%d shortcuts, %d actions. Hubs: %s." % (
         len(rows), sum(r["actions"] for r in rows), ", ".join(args.hub or HUBS))
     note = "%d names are called and absent from the archive. Tap a tier." % len(missing)
@@ -299,6 +322,7 @@ def main():
     page = PAGE
     for slot, fill in (("__SUB__", sub),
                        ("__CARDS__", cards),
+                       ("__FACETS__", facets),
                        ("__DATA__", json.dumps(rows, ensure_ascii=False, separators=(",", ":"))),
                        ("__MISSING__", json.dumps(note)),
                        ("__WHY__", json.dumps({k: w for k, _, w in TIERS}, ensure_ascii=False))):

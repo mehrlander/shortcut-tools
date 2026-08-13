@@ -32,6 +32,7 @@ const LIB = [
   S("Old-Thing 1"), S("SomethingOld"),
   S("Third Party App"),
   S("Another App", ["Companion Thing"]),                      // imported wanting a companion
+  S("Third Party App 2"),                                     // imported AND a numbered copy
 ];
 
 test("the core is the closure of the hubs, and a self-call is not a dependency", () => {
@@ -77,6 +78,45 @@ test("a rename far apart as a string is still suggested, by its distinctive word
     "--dangling");
   assert.match(stdout, /Get-Jina.*maybe now: Get-LinkSummaryJina/,
     "difflib alone scores these far apart; the shared word is the signal");
+});
+
+// The five tiers are a cascade over three independent facts, so a single bucket
+// hides pairs: an imported shortcut that is also a numbered duplicate reports as
+// sediment, and the Imported count understates the real total. The facets are
+// the facts; the tier is a recommended action over them.
+test("every row carries the three facets the tier collapses", () => {
+  const { page } = survey(LIB);
+  const data = JSON.parse(page.match(/var DATA = (\[.*?\]), MISSING/s)[1]);
+  const row = n => data.find(r => r.name === n);
+
+  assert.deepStrictEqual(
+    { p: row("Another App").provenance, l: row("Another App").lifecycle },
+    { p: "imported", l: "live" });
+  // The pair the single tier cannot express: imported and a numbered copy at
+  // once. It reports as sediment, so the Imported count loses it. 28 real ones.
+  assert.strictEqual(row("Third Party App 2").tier, "sediment");
+  assert.strictEqual(row("Third Party App 2").provenance, "imported");
+  assert.strictEqual(row("Third Party App 2").lifecycle, "residue");
+  assert.strictEqual(row("Old-Thing 1").provenance, "authored",
+    "Old-Thing is Verb-Noun shaped, so a numbered copy of it is still authored");
+  assert.strictEqual(row("Show-Loop").connectivity, "reachable");
+  assert.strictEqual(row("Helper-Verb").connectivity, "called");
+  assert.strictEqual(row("Solo-Verb").connectivity, "uncalled");
+
+  // The count the tier cannot give you.
+  const imported = data.filter(r => r.provenance === "imported").length;
+  const importedTier = data.filter(r => r.tier === "imported").length;
+  assert.ok(imported > importedTier,
+    `the Imported tier (${importedTier}) should understate real imports (${imported})`);
+});
+
+test("the page offers a chip per facet value, not only per tier", () => {
+  const { page } = survey(LIB);
+  for (const v of ["authored", "imported", "live", "residue", "reachable", "called", "uncalled"]) {
+    assert.ok(page.includes(`data-v="${v}"`), v + " should be filterable");
+  }
+  assert.match(page, /for \(var axis in facets\)/,
+    "the axes must combine rather than override each other");
 });
 
 test("the page carries every shortcut and no stray slot", () => {

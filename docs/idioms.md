@@ -98,13 +98,12 @@ dispatched, which is why every imported shortcut sits outside this machinery.
 And a rename silently changes a value's type, from shortcut-to-run to
 plain-parameter, with no error.
 
-## 3. One type system, consulted by everything
+## 3. One type system, consulted by everything that dispatches on type
 
 `Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
-holding." That is a core mechanism rather than a library-wide one, and the
-section heading below overstates it: read "consulted by everything" as
-"consulted by everything that dispatches on type." It gathers
-context, folds it to JSON, and runs a 4,449-character JavaScript function to
+holding." A core mechanism, not a library-wide one: the first draft of this
+heading said "consulted by everything" and 14 of 577 does not support it. It
+gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to
 produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
 `detail.caption`.
 
@@ -121,8 +120,9 @@ if detail.type Action  run Get-ActionVersions
 ```
 
 The handler names are the type names. Adding a type means adding a
-`Get-<Type>Versions` and one branch. This is the second reason the naming
-convention is load-bearing.
+`Get-<Type>Versions` and one branch, which is a real use of the naming
+convention even though, per idiom 2, the convention's consistency is not caused
+by any mechanism.
 
 ## 4. JavaScript is the escape hatch, and there is one door to it
 
