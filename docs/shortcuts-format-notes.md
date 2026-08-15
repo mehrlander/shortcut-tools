@@ -963,9 +963,14 @@ that the slot rejects a string:
   ([navan.dev](https://web.navan.dev/posts/2026-04-06-programatically-creating-and-running-siri-shortcuts.html),
   2026-04-06).
 
-*Unconfirmed, and worth one card to settle:* whether an entity slot given a text
-variable holding a name resolves it anyway. If it does, `Library-Open` collapses
-from three cards to one.
+*Unconfirmed, and deliberately left that way:* whether an entity slot given a
+text variable holding a name resolves it anyway. A probe was built to settle it
+and then withdrawn, because the answer changes nothing that matters. It would
+take `Library-Open` from three cards to one, in a receiver that is installed and
+working, and the cost is a manual run in the app with a typed input. That trade
+fails rule 2 in [CLAUDE.md](../CLAUDE.md): a device ask must buy something in
+steady state, and tidying a working chain is not that. **Do not re-propose it**
+on its own. Fold it into the next probe that has a real reason to exist.
 
 **No public reference documents these three actions.** Checked 2026-08-15:
 [sebj/iOS-Shortcuts-Reference](https://github.com/sebj/iOS-Shortcuts-Reference),
