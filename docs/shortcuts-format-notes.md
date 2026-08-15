@@ -972,10 +972,43 @@ fails rule 2 in [CLAUDE.md](../CLAUDE.md): a device ask must buy something in
 steady state, and tidying a working chain is not that. **Do not re-propose it**
 on its own. Fold it into the next probe that has a real reason to exist.
 
-### There is no complete public list of actions, and four searches say so
+### The best public catalog: shortcuts-playground-plugin's ToolKit dumps
+
+[`viticci/shortcuts-playground-plugin`](https://github.com/viticci/shortcuts-playground-plugin)
+(MIT) ships Apple's own ToolKit metadata as static JSON, extracted from macOS 27
+and the iOS 27 Simulator, so it needs neither a Mac nor the private frameworks:
+
+| File | Holds |
+| --- | ---: |
+| `data/toolkit-v78-tool-ids.json` | **2,731 identifiers** (this repo's dictionary: 774) |
+| `data/toolkit-v78-first-party-parameter-keys.json` | **2,585 tools with their parameter keys and types** |
+| `data/toolkit-v78-first-party-enum-cases.json` | allowed enum values |
+
+**It answers the questions this file needed a device probe for.** `Move Shortcut`
+is `shortcuts` / `folder` / `OpenWhenRun`, `Delete Shortcuts` is `entities`,
+`Open Shortcut` is `target`, each typed
+`com_apple_shortcuts_wfworkflow_reference`, and `Create Folder` is `name` typed
+plain `str`. Every one of those was obtained instead by asking the user to
+configure cards and copy them back. The corpus and the curated dictionary were
+both searched first, correctly, and the search that was never run was the one
+for a *catalog* rather than for an *answer*.
+
+It also names the folder limit precisely: `folder` is typed
+`com_apple_shortcuts_root_navigation_destination`, an entity, which is why it
+needs a picker where `name` on Create Folder does not.
+
+`tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>` is the
+lookup, and it reports which of the two sources knows a name.
+
+**Still not a census**, so the honest-search rule stands: it is one OS version's
+first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
+uninstalled app is outside it.
+
+### The four sources checked before it, none of them enough
 
 Surveyed 2026-08-15, after a session claimed an action did not exist on the
-strength of a dictionary that had never heard of it:
+strength of a dictionary that had never heard of it. This list is kept because
+the conclusion drawn from it, that no useful public catalog exists, was wrong:
 
 | Source | What it actually has |
 | --- | --- |

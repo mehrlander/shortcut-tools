@@ -57,12 +57,49 @@ def used_identifiers(zips):
     return used
 
 
+def lookup(needle, catalog):
+    """Where is this action known? Dictionary, ToolKit catalog, or nowhere.
+
+    The question a session actually asks before designing around an action, and
+    the one that was answered wrongly on 2026-08-15: `CreateFolderAction` was
+    called nonexistent because `actions.json` had not heard of it. The ToolKit
+    catalog has 2,731 identifiers against the dictionary's 774, so it answers
+    for the whole first-party surface plus a lot of third-party apps.
+    """
+    known = known_identifiers()
+    hits = sorted(i for i in known if needle.lower() in i.lower())
+    print("actions.json (%d ids): %s" % (len(known), ", ".join(hits) or "no match"))
+
+    if not catalog:
+        print("\nNo --catalog given, so this checked a CURATED list only. Absence "
+              "here is not absence: pass a toolkit-vNN-tool-ids.json before "
+              "concluding an action does not exist.")
+        return
+    tk = json.loads(Path(catalog).read_text())
+    ids = tk["ids"]
+    ids = set(ids if isinstance(ids, list) else ids.keys())
+    tk_hits = sorted(i for i in ids if needle.lower() in i.lower())
+    print("%s (%d ids): %s" % (tk.get("version", "catalog"), len(ids),
+                               ", ".join(tk_hits) or "no match"))
+    if tk_hits and not hits:
+        print("\n-> Known to the catalog and MISSING from actions.json.")
+    if not tk_hits and not hits:
+        print("\n-> Not found in either. Still not proof of absence: the catalog "
+              "is one OS version's first-party surface plus what it saw.")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("zips", nargs="+")
+    ap.add_argument("zips", nargs="*")
     ap.add_argument("--bundles", action="store_true", help="group the gap by bundle")
     ap.add_argument("--json", dest="json_out", help="write the missing set here")
+    ap.add_argument("--catalog", help="a toolkit-vNN-tool-ids.json to measure against "
+                                      "(shortcuts-playground-plugin, MIT)")
+    ap.add_argument("--exists", help="report where one identifier or name is known")
     args = ap.parse_args()
+
+    if args.exists or (args.catalog and not args.zips):
+        return lookup(args.exists, args.catalog)
 
     zips = [z for pat in args.zips for z in sorted(glob.glob(pat))]
     if not zips:

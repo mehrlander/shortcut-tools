@@ -29,11 +29,16 @@ Rank every delivery route by what it costs the person on the other end:
    the dumps and search the public record before asking the device anything. A
    probe sent for something the corpus already holds is wasted work:
    `OpenWorkflowAction` was in eight shortcuts when it was probed anyway.
-   **But neither source is a census.** `actions.json` is curated and misses 18%
-   of what the corpus alone uses (`tools/coverage.py`); the corpus is one
-   library's habits. `CreateFolderAction` is in neither and exists. So a silent
-   search licenses "I did not find one", never "there is none", and a design
-   built on the second is built on nothing.
+   **Search the ToolKit catalog too, and it is the one that answers.**
+   `shortcuts-playground-plugin` ships Apple's own metadata as JSON: 2,731
+   identifiers and 2,585 parameter tables against this repo's 774.
+   `python3 tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>`.
+   It would have supplied every shape that was instead obtained by asking the
+   user to configure cards. **Search for a catalog, not just for an answer.**
+   None of the three is a census: `actions.json` is curated and misses 18% of
+   what the corpus alone uses, the corpus is one library's habits, and the
+   catalog is one OS version. So a silent search licenses "I did not find one",
+   never "there is none".
 2. **A device ask must name what it buys in steady state.** Not what it
    confirms, what it *changes*. "Three cards become one, in a shortcut that
    already works" buys nothing and is not worth a tap. Curiosity is not a
