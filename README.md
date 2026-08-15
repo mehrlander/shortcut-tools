@@ -315,7 +315,7 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
 | `toActionChain(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |
-| `export(path)` | Write the XML plist. A serialization format, not an install path: an unsigned `.shortcut` will not import. |
+| `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path now. See [Installing](#installing-a-generated-shortcut). |
 
 **Wiring.** `tokenString(parts)` builds a text value with variables embedded in it, taking an alternating list of strings and refs and **deriving the anchor offsets** rather than making you count characters. `variable(ref)` is the other form, where the value *is* an output. A ref is `{ uuid, name }`, or `{ input: true }` for Shortcut Input, plus optional `key` to take one dictionary key and `as` to coerce.
 

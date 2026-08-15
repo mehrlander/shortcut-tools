@@ -53,6 +53,19 @@ Rank every delivery route by what it costs the person on the other end:
    is a permanent cost paid once. It is worth it only when it removes recurring
    in-app work.
 
+**Installing is an import, not a paste** (confirmed 2026-08-15). `Library-Import`
+fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts:
+one tap plus Apple's own import sheet. That beats `Library-Install` on every
+axis, and it is the only route that can deliver **file-level** settings, since
+`WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the workflow
+file and no paste reaches them. Generate a full plist for anything new.
+
+Two costs it carries. The worker is third-party and plain `http://`, acceptable
+only because nothing here holds a secret. And **import never merges by name**:
+importing over an existing shortcut creates a second one, so re-importing during
+development manufactures exactly the duplicate-on-edit sediment the prune
+workflow exists to clear. Delete or rename first.
+
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
 - `Library-Open`, `Library-Stage`, and `Log-Repo` pasted, named, Shortcut Input enabled.
