@@ -911,6 +911,241 @@ unconfirmed, and not wrapping costs nothing.
 The performance cliff above does not apply here. That is the `Run JavaScript on
 Web Page` action's interpreter; this route is a real WebKit render.
 
+## The library-management actions address an App Intents entity, not a name
+
+`openshortcut`, `moveshortcut`, and `deleteshortcuts` are the three actions a
+page needs to operate a library from outside the app, and all three take **App
+Intents entity references** rather than a name string. Measured 2026-08-15: the
+first from real cards in this corpus, the other two from a probe, since **no
+shortcut in 577 uses Move or Delete at all**.
+
+Each card carries an `AppIntentDescriptor` naming the providing app, and each
+entity slot is keyed differently per action, which is the part nothing in
+`actions.json` can tell you:
+
+| Action | Entity key | Second key |
+| --- | --- | --- |
+| `com.apple.shortcuts.OpenWorkflowAction` | `target` | |
+| `com.apple.shortcuts.MoveShortcutToFolderAction` | `shortcuts` | `folder` |
+| `com.apple.shortcuts.DeleteWorkflowAction` | `entities` | |
+
+```xml
+<key>AppIntentDescriptor</key>
+<dict>
+  <key>AppIntentIdentifier</key><string>OpenWorkflowAction</string>
+  <key>BundleIdentifier</key><string>com.apple.shortcuts</string>
+  <key>Name</key><string>Shortcuts</string>
+  <key>TeamIdentifier</key><string>0000000000</string>
+</dict>
+```
+
+**Picked in the editor, an entity is an opaque UUID and the name is only a
+label.** A card configured by hand holds `identifier` (a UUID), an `image` whose
+`uri` is an `intents-remote-image-proxy:` address, and `title`/`subtitle` as
+`{"key": "Animal Game"}` display dicts.
+
+**This is the one place the `WFWorkflowName` finding above does not reach, and
+the difference is the action family rather than the key.** Run Shortcut is a
+legacy `is.workflow.actions.*` action whose target is a plain string key, which
+is why a name alone resolves it and why the page's Run button needs no lookup.
+These three are App Intents actions whose target is an entity slot, and no
+evidence says a name resolves one. Two things support that, neither being proof
+that the slot rejects a string:
+
+- **The corpus works around it.** `Use-Shortcut`, holding a *Name* as text, does
+  `getmyworkflows` then `filter.files` then recurses with the shortcut it found,
+  rather than handing the name to its own Open card. Its Open card is fed
+  `ExtensionInput`, and by then the input is a shortcut, not a name.
+- **Others hit the same wall.** A 2026 write-up on driving Shortcuts
+  programmatically reports that intents needing entity parameters "require
+  opaque IDs from the Shortcuts GUI," with no programmatic way to resolve them,
+  and that `LNConnection.performQuery()` crashes when used to try
+  ([navan.dev](https://web.navan.dev/posts/2026-04-06-programatically-creating-and-running-siri-shortcuts.html),
+  2026-04-06).
+
+*Unconfirmed, and deliberately left that way:* whether an entity slot given a
+text variable holding a name resolves it anyway. A probe was built to settle it
+and then withdrawn, because the answer changes nothing that matters. It would
+take `Library-Open` from three cards to one, in a receiver that is installed and
+working, and the cost is a manual run in the app with a typed input. That trade
+fails rule 2 in [CLAUDE.md](../CLAUDE.md): a device ask must buy something in
+steady state, and tidying a working chain is not that. **Do not re-propose it**
+on its own. Fold it into the next probe that has a real reason to exist.
+
+### The best public catalog: shortcuts-playground-plugin's ToolKit dumps
+
+[`viticci/shortcuts-playground-plugin`](https://github.com/viticci/shortcuts-playground-plugin)
+(MIT) ships Apple's own ToolKit metadata as static JSON, extracted from macOS 27
+and the iOS 27 Simulator, so it needs neither a Mac nor the private frameworks:
+
+| File | Holds |
+| --- | ---: |
+| `data/toolkit-v78-tool-ids.json` | **2,731 identifiers** (this repo's dictionary: 774) |
+| `data/toolkit-v78-first-party-parameter-keys.json` | **2,585 tools with their parameter keys and types** |
+| `data/toolkit-v78-first-party-enum-cases.json` | allowed enum values |
+
+**It gives the parameter KEYS and TYPES, and not the serialization.** `Move
+Shortcut` is `shortcuts` / `folder` / `OpenWhenRun`, `Delete Shortcuts` is
+`entities`, `Open Shortcut` is `target`, each typed
+`com_apple_shortcuts_wfworkflow_reference`, and `Create Folder` is `name` typed
+plain `str`. All of that was instead obtained by asking the user to configure
+cards, and the search never run was for a *catalog* rather than for an *answer*.
+
+**But the probe was not wholly redundant, and the line matters.** A key and a
+type do not say how the value is written into the plist. Nothing in this catalog
+carries the `AppIntentDescriptor` block, the picked-entity dict of
+`identifier` / `image` / `title`, or the `WFTextTokenAttachment` variable form,
+and **none of its 19 golden XML examples contains an `AppIntentDescriptor`
+either**. Those came only from cards copied off the device. So the catalog
+answers *which parameters exist*, this file answers *how they serialize*, and
+neither substitutes for the other.
+
+**Scope, measured rather than assumed:**
+
+| Cut | Count |
+| --- | ---: |
+| Identifiers total | 2,731 |
+| Apple App Intents | 1,692 |
+| Apple legacy `is.workflow.actions` | 365 |
+| **Third-party** (56 bundles: Actions 241, Supercharge 70, Drafts 55, nAutomate 47, BetterTouchTool 45) | **674** |
+| Tools with parameter tables | 2,585, **first-party only** |
+| Of those, available on iOS | **1,072**; 1,338 are macOS-only |
+
+Two consequences. A third-party action is listed by identifier and carries **no
+parameter information at all**, so an app's actions still need a copied card.
+And the bulk is not third-party but Apple's macOS surface, `com.apple.systempreferences`
+alone being 542 entries that no iPhone will ever offer.
+
+It also names the folder limit precisely: `folder` is typed
+`com_apple_shortcuts_root_navigation_destination`, an entity, which is why it
+needs a picker where `name` on Create Folder does not.
+
+`tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>` is the
+lookup, and it reports which of the two sources knows a name.
+
+**Still not a census**, so the honest-search rule stands: it is one OS version's
+first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
+uninstalled app is outside it.
+
+### No action can put actions into a shortcut
+
+*Established 2026-08-15 by searching all 2,585 first-party parameter tables in
+the ToolKit v78 catalog, not by inference.*
+
+`Create Shortcut` takes exactly two parameters, and neither is content:
+
+| Key | Type |
+| --- | --- |
+| `name` | `str` |
+| `OpenWhenRun` | `bool` |
+
+**And nothing else in the catalog takes actions or workflow content either.** A
+sweep for parameters keyed or named for actions, or typed for a workflow rather
+than a workflow *reference*, returns 115 candidates across 71 tools and every
+one is unrelated: Photos favouriting, Messages tapbacks, alert titles, dwell
+settings. The `wfworkflow_reference` type points *at* a shortcut and never
+carries one.
+
+So on device the ceiling is **create empty, then paste**, which is what
+`Library-Install` does: `CreateWorkflowAction` for the name, `Copy-ActionFromUrl`
+for the clipboard, and a human tap for the paste. The paste is not a
+shortcoming of the design, it is the boundary of what Shortcuts exposes.
+
+**The one route past it is a signed import**, and signing cannot happen on
+device (patched in iOS 15 beta 1). It needs a Mac or a remote signing service.
+`Shortcut Source Helper` in this estate's corpus already does the second: gzip
+the plist, POST to `shortcuts.gluebyte.workers.dev`, unzip, write a `.shortcut`,
+open it. Untested here, and the only thing that would turn a generated shortcut
+into a real one-tap install.
+
+### The four sources checked before it, none of them enough
+
+Surveyed 2026-08-15, after a session claimed an action did not exist on the
+strength of a dictionary that had never heard of it. This list is kept because
+the conclusion drawn from it, that no useful public catalog exists, was wrong:
+
+| Source | What it actually has |
+| --- | --- |
+| [sebj/iOS-Shortcuts-Reference](https://github.com/sebj/iOS-Shortcuts-Reference) | The file format only. **No action list at all**, and archived 2022-06-10 |
+| [shortcuts-toolkit](https://github.com/drewburchfield/shortcuts-toolkit) | Legacy examples; says outright it "cannot access all Shortcuts actions (some are private)" |
+| [Cherri](https://github.com/electrikmilk/cherri) | A working compiler, ~46 actions in its standard file, and it **does** model App Intents |
+| [ShortcutsBench](https://github.com/EachSheep/ShortcutsBench) | **1,414 APIs across 88 apps**, far the largest, but shipped via Google Drive and Baidu behind a password with nothing in the repo tree |
+
+None holds `CreateFolderAction`. The source everyone points at,
+`WFActions.plist` inside
+[WorkflowKit.framework](https://theapplewiki.com/wiki/Dev:WorkflowKit.framework),
+needs the framework off a device and covers the **legacy family only**, since an
+App Intents action is declared in its own app's metadata rather than there.
+
+**So the dictionary can be widened and never completed**, which makes the
+honest-search rule permanent rather than a stopgap.
+
+*Correcting an earlier claim in this file:* Cherri was reported as covering the
+legacy family only. That was read off its file-format **page**; its **source**
+carries an `appIntent` struct of exactly `{name, bundleIdentifier,
+appIntentIdentifier}`, independently matching the `AppIntentDescriptor` measured
+above, and defines a couple of dozen App Intents actions including
+`CreateShortcutiCloudLinkAction`. Reading a project's docs is not reading a
+project.
+
+**Bound to a variable, it is an ordinary attachment**, which is what makes these
+reachable from a generated chain at all:
+
+```xml
+<key>target</key>
+<dict>
+  <key>Value</key>
+  <dict>
+    <key>OutputName</key><string>Shortcuts</string>
+    <key>OutputUUID</key><string>…</string>
+    <key>Type</key><string>ActionOutput</string>
+  </dict>
+  <key>WFSerializationType</key><string>WFTextTokenAttachment</string>
+</dict>
+```
+
+So the working idiom is **find, then act**: `getmyworkflows` for every shortcut,
+`filter.files` with an `Operator: 4` predicate on `Property: Name` carrying the
+wanted name as a token-string attachment, then the entity slot bound to that
+filter's output. `Use-Shortcut`, `Run-List`, and `Open-RecentShortcut` all do
+exactly this, and `workflows/library-open.json` is the three-card minimum.
+
+The variable binding is **measured for `target` and `shortcuts`**, the latter
+confirmed 2026-08-15 by a generated `Library-Stage` moving a named shortcut on
+device and reporting it back through the repo log. `entities` on Delete stays
+inferred by analogy and is deliberately unexercised, since nothing here deletes.
+
+`folder` was reported here as the exception with no way around it, on the
+grounds that no action in the dictionary returns the folder list. **That was
+wrong, and the way it was wrong is the point.** The claim was true about the
+dictionary and false about Shortcuts:
+
+```xml
+<key>WFWorkflowActionIdentifier</key>
+<string>com.apple.shortcuts.CreateFolderAction</string>
+...
+<key>name</key>   <!-- a WFTextTokenString, not an entity slot -->
+<dict><key>Value</key><dict>
+  <key>attachmentsByRange</key><dict><key>{0, 1}</key>
+    <dict><key>Type</key><string>ExtensionInput</string></dict></dict>
+  <key>string</key><string>￼</string>
+</dict><key>WFSerializationType</key><string>WFTextTokenString</string></dict>
+```
+
+`CreateFolderAction` exists, and unlike every other action in this family **its
+`name` takes plain text**, so a folder can be made from a string. Whether its
+output is a folder entity the Move card will accept is untested; if it is,
+create-then-move removes the last configuration step from a fresh install.
+
+**Why no search found it.** It is absent from `actions.json`, which knows only
+nine `com.apple.shortcuts.*` entries, and absent from the corpus, which never
+used it. Both sources were checked and both were silent, and silence was
+reported as absence. `tools/coverage.py` measures the first gap (312 identifiers
+in use, 56 unknown to the dictionary, 18%) and cannot close the second. **The
+dictionary is a curated list and the corpus is one library's habits; neither is
+a census of what Shortcuts can do.** A search that finds nothing supports "I did
+not find one", never "there is none".
+
 ## Generating the plist
 
 Python's `plistlib` produces guaranteed well-formed output from a plain dict via

@@ -1,0 +1,54 @@
+{
+  "name": "Capture-Link",
+  "label": "Capture-Link: share sheet in, repo log out (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0701-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{23, 1}": {
+                "Aggrandizements": [
+                  {
+                    "CoercionItemClass": "WFStringContentItem",
+                    "Type": "WFCoercionVariableAggrandizement"
+                  }
+                ],
+                "Type": "ExtensionInput"
+              }
+            },
+            "string": "{\"op\":\"capture\",\"url\":\"￼\"}"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-0702-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-0701-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ],
+  "workflow": {
+    "WFWorkflowTypes": [
+      "ActionExtension"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFURLContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem"
+    ]
+  }
+}

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="winter">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shortcuts · the library</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⚡</text></svg>">
+<link href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/themes.css,npm/daisyui@5,npm/@tailwindcss/typography/dist/typography.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"></script>
+
+<!--
+  library.html — the Shortcuts library as an app view, in three facets:
+
+    Library    every shortcut, grouped on axes the Shortcuts app does not have:
+               tier, provenance, lifecycle, connectivity, what calls what. A row
+               expands to its pseudocode sketch and its call graph.
+    Prune      the staged deletion workflow. Nothing here deletes anything.
+    Reference  the format record, read from this repo's own docs/.
+
+  Renderer lives HERE (public, beside the tools that generate its data); the
+  library itself lives in mehrlander/web-tools-private, because a shortcut
+  routinely carries a credential inline and one of these did. Private data, so
+  the page renders only in a browser holding the viewer's ghToken.
+
+  Data contract (mehrlander/web-tools-private, read/written through the token):
+    shortcuts/library.json      rows + dangling + meta, from tools/survey.py --json
+    shortcuts/sketches/<Name>.txt  one shortcut as pseudocode, fetched on demand
+    shortcuts/prune.json        the decision ledger this page writes
+
+  THE PAGE DERIVES NOTHING. Tier, provenance, lifecycle, connectivity, and the
+  graded nominations are all computed by tools/survey.py and read from
+  library.json. That keeps one owner for the tiering: change a rule there and it
+  shows up as a changed file, rather than as two surfaces quietly disagreeing.
+
+  ?data=<ref> pins which ref of web-tools-private is read (defaults to main).
+  ?use=<ref> pins this page's own lib chain, the repo's standard preview form.
+-->
+<script type="module">
+  const ref = new URLSearchParams(location.search).get('use');
+  if (ref) {
+    window.__ghBlobBoot = { repo: 'mehrlander/web-tools', ref };
+    const r = await fetch(`https://raw.githubusercontent.com/mehrlander/web-tools/${ref}/lib/gh-api.js`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`?use=${ref}: could not fetch gh-api.js (HTTP ${r.status})`);
+    const u = URL.createObjectURL(new Blob([await r.text()], { type: 'text/javascript' }));
+    try { await import(u); } finally { URL.revokeObjectURL(u); }
+  } else {
+    await import('https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/gh-api.js');
+  }
+  await gh.load('gh-auth.js');    // token prompt on 401 for the private read
+  await gh.load('gh-store.js');   // GH.prototype.save — the ledger's write path
+
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('library', () => ({
+      // ── data contract ────────────────────────────────────────────────────
+      REPO: 'mehrlander/web-tools-private',
+      DATA_REF: new URLSearchParams(location.search).get('data') || 'main',
+      DOCS_REPO: 'mehrlander/shortcut-tools',
+      LEDGER: 'shortcuts/prune.json',
+
+      // The two device receivers, each a plain shortcut taking text. A JSON
+      // dispatcher switching on an `op` was the first design and is worse: a
+      // branch is a control-flow block to build and debug on a phone, where two
+      // small shortcuts are each three or six cards that either work or do not.
+      // Neither can delete. That is the design, not an omission.
+      OPEN_WITH: 'Library-Open',    // one name  -> that shortcut, open in the editor
+      STAGE_WITH: 'Library-Stage',  // newline-separated names -> moved to a folder
+
+      // ── state ────────────────────────────────────────────────────────────
+      gh: null,
+      meta: null,
+      rows: [],
+      dangling: [],
+      ledger: null,             // { folder, entries: [...] }; null until loaded
+      loading: true,
+      error: '',
+      facet: 'library',         // library | prune | reference
+
+      // ── library filters ──────────────────────────────────────────────────
+      q: '',
+      tiers: new Set(),         // empty = all
+      axes: {},                 // axis -> value, one value per axis or absent
+      openRow: null,            // name of the expanded row
+      sketches: {},             // name -> text | 'loading' | Error message
+      limit: 60,                // rows rendered; grows on demand
+
+      // ── prune state ──────────────────────────────────────────────────────
+      grade: 'high',            // which confidence the queue is showing
+      picked: new Set(),        // names selected for staging
+      saving: false,
+      saveError: '',
+      lastLink: '',             // the device link the last stage produced
+
+      // ── reference state ──────────────────────────────────────────────────
+      DOCS: [
+        { path: 'docs/idioms.md', title: 'Idioms', note: 'How a real library is written, read from this corpus.' },
+        { path: 'docs/dataflow.md', title: 'Dataflow', note: 'How values move at runtime.' },
+        { path: 'docs/shortcuts-format-notes.md', title: 'Format notes', note: 'How a shortcut is serialized.' },
+      ],
+      doc: null,                // the open doc path
+      docHtml: '',
+      docLoading: false,
+
+      async init() {
+        try {
+          const g = this.gh = new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DATA_REF });
+          const lib = JSON.parse((await g.get('shortcuts/library.json')).text);
+          this.meta = lib.meta;
+          this.rows = lib.rows;
+          this.dangling = lib.dangling || [];
+          // The ledger is optional: a library that has never been pruned has no
+          // file, and an absent one is an empty one rather than an error.
+          try {
+            this.ledger = JSON.parse((await g.get(this.LEDGER)).text);
+          } catch { this.ledger = { folder: 'Stage', entries: [] }; }
+        } catch (e) {
+          this.error = String(e.message || e);
+        }
+        this.loading = false;
+      },
+
+      // ── derived: the library list ────────────────────────────────────────
+      get byName() {
+        return this._byName ??= Object.fromEntries(this.rows.map(r => [r.name, r]));
+      },
+      get filtered() {
+        const q = this.q.trim().toLowerCase();
+        return this.rows.filter(r => {
+          if (this.tiers.size && !this.tiers.has(r.tier)) return false;
+          for (const [axis, v] of Object.entries(this.axes)) if (r[axis] !== v) return false;
+          if (!q) return true;
+          // Search the name and what it calls, since "what uses Show-Html" is
+          // the question the app cannot answer at all.
+          return r.name.toLowerCase().includes(q)
+            || r.calls.some(c => c.toLowerCase().includes(q))
+            || r.kinds.some(k => k.toLowerCase().includes(q));
+        });
+      },
+      get shown() { return this.filtered.slice(0, this.limit); },
+
+      toggleTier(t) {
+        this.tiers.has(t) ? this.tiers.delete(t) : this.tiers.add(t);
+        this.tiers = new Set(this.tiers);
+        this.limit = 60;
+      },
+      toggleAxis(axis, v) {
+        this.axes[axis] === v ? delete this.axes[axis] : this.axes[axis] = v;
+        this.axes = { ...this.axes };
+        this.limit = 60;
+      },
+      clearFilters() { this.tiers = new Set(); this.axes = {}; this.q = ''; this.limit = 60; },
+      get filtering() { return this.tiers.size > 0 || Object.keys(this.axes).length > 0 || !!this.q.trim(); },
+
+      // ── row detail ───────────────────────────────────────────────────────
+      async toggleRow(name) {
+        if (this.openRow === name) { this.openRow = null; return; }
+        this.openRow = name;
+        if (this.sketches[name]) return;
+        this.sketches[name] = 'loading';
+        try {
+          const p = 'shortcuts/sketches/' + name + '.txt';
+          this.sketches[name] = (await this.gh.get(p)).text;
+        } catch (e) {
+          // 576 sketches against 577 rows: one shortcut has none, and a missing
+          // sketch is a gap in the archive rather than a failure of the page.
+          this.sketches[name] = 'No sketch in the archive for this one.';
+        }
+      },
+      openNamed(name) {              // follow a call-graph link
+        if (!this.byName[name]) return;
+        this.q = name; this.tiers = new Set(); this.axes = {}; this.limit = 60;
+        this.facet = 'library';
+        this.toggleRow(name);
+      },
+
+      // ── device links ─────────────────────────────────────────────────────
+      // Every one of these is `shortcuts://run-shortcut`, the only scheme this
+      // library has ever proven. Anything richer (open an editor, move to a
+      // folder, delete) is an ACTION, not a scheme, so it runs inside the
+      // dispatcher rather than being addressable from here.
+      runLink(name) {
+        return 'shortcuts://run-shortcut?name=' + encodeURIComponent(name);
+      },
+      deviceLink(receiver, text) {
+        return 'shortcuts://run-shortcut?name=' + encodeURIComponent(receiver)
+          + '&input=text&text=' + encodeURIComponent(text);
+      },
+      openLink(name) { return this.deviceLink(this.OPEN_WITH, name); },
+      // Newline-separated, which is what Library-Stage splits on. Its idiom is
+      // Run-Steps': split on new lines, repeat each, act.
+      stageLink(names) { return this.deviceLink(this.STAGE_WITH, [].concat(names).join('\n')); },
+      ghLink(name) {
+        return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/sketches/`
+          + encodeURIComponent(name + '.txt');
+      },
+
+      // ── the ledger ───────────────────────────────────────────────────────
+      // It records DECISIONS, not device state. Nothing here can see the phone.
+      // The next dump is the ground truth, and `confirmed` below is the
+      // reconciliation: an entry whose name has left the archive is gone.
+      entry(name) { return (this.ledger?.entries || []).find(e => e.name === name) || null; },
+      get staged() { return (this.ledger?.entries || []).filter(e => e.state === 'staged'); },
+      get kept() { return (this.ledger?.entries || []).filter(e => e.state === 'kept'); },
+      get confirmed() {
+        return (this.ledger?.entries || []).filter(e => e.state === 'staged' && !this.byName[e.name]);
+      },
+      get pending() {
+        return this.staged.filter(e => this.byName[e.name]);
+      },
+      // Nominated and not yet decided. The grade filter is the honest part of
+      // the whole workflow: `high` is the only class where the question nearly
+      // answers itself, so it is what the queue opens on.
+      get queue() {
+        return this.rows.filter(r => r.nominate
+          && r.nominate.confidence === this.grade
+          && !this.entry(r.name));
+      },
+      gradeCount(g) {
+        return this.rows.filter(r => r.nominate && r.nominate.confidence === g && !this.entry(r.name)).length;
+      },
+      pick(name) {
+        this.picked.has(name) ? this.picked.delete(name) : this.picked.add(name);
+        this.picked = new Set(this.picked);
+      },
+      pickAll() {
+        const all = this.queue.map(r => r.name);
+        this.picked = new Set(this.picked.size === all.length ? [] : all);
+      },
+
+      today() { return new Date().toISOString().slice(0, 10); },
+      daysSince(d) {
+        return Math.floor((Date.now() - new Date(d + 'T00:00:00Z').getTime()) / 86400000);
+      },
+
+      async writeLedger(message) {
+        this.saving = true; this.saveError = '';
+        try {
+          await this.gh.save(this.LEDGER, this.ledger, message);
+        } catch (e) {
+          this.saveError = String(e.message || e);
+        }
+        this.saving = false;
+      },
+
+      // Step 2 of four: move the picked shortcuts into the holding folder and
+      // record that we did. The move is what makes this reversible, and it is
+      // why the button says Stage rather than Delete.
+      async stagePicked() {
+        const names = [...this.picked];
+        if (!names.length) return;
+        const day = this.today();
+        for (const n of names) {
+          const r = this.byName[n];
+          this.ledger.entries.push({
+            name: n, state: 'staged', staged: day,
+            confidence: r?.nominate?.confidence || 'manual',
+            reason: r?.nominate?.reason || 'staged by hand',
+            from: r?.from || '',
+          });
+        }
+        await this.writeLedger(`shortcuts: stage ${names.length} for delete`);
+        this.lastLink = this.stageLink(names);
+        this.picked = new Set();
+      },
+      // The other decision, and the reason it is recorded rather than just not
+      // acted on: without it the page re-nominates the same shortcut forever.
+      async keep(name, reason) {
+        this.ledger.entries.push({ name, state: 'kept', decided: this.today(), reason: reason || '' });
+        await this.writeLedger(`shortcuts: keep ${name}`);
+        this.picked.delete(name); this.picked = new Set(this.picked);
+      },
+      async unstage(name) {
+        this.ledger.entries = this.ledger.entries.filter(e => !(e.name === name && e.state === 'staged'));
+        await this.writeLedger(`shortcuts: unstage ${name}`);
+      },
+      async undecide(name) {
+        this.ledger.entries = this.ledger.entries.filter(e => e.name !== name);
+        await this.writeLedger(`shortcuts: reopen ${name}`);
+      },
+
+      // ── reference ────────────────────────────────────────────────────────
+      async openDoc(path) {
+        if (this.doc === path) { this.doc = null; return; }
+        this.doc = path; this.docHtml = ''; this.docLoading = true;
+        try {
+          if (!window.marked) {
+            await new Promise((res, rej) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+              s.onload = res; s.onerror = rej; document.head.appendChild(s);
+            });
+          }
+          const d = new window.GH({ token: window.TOKEN || '', repo: this.DOCS_REPO, ref: 'main' });
+          this.docHtml = window.marked.parse((await d.get(path)).text);
+        } catch (e) {
+          this.docHtml = '<p class="text-error">Could not load ' + path + '.</p>';
+        }
+        this.docLoading = false;
+      },
+    }));
+  });
+
+  await gh.load('alpine-bundle.js');   // starts Alpine
+</script>
+<style>[x-cloak]{display:none!important}</style>
+</head>
+
+<body class="min-h-screen bg-base-100 text-base-content antialiased">
+<div x-data="library" x-cloak class="max-w-3xl mx-auto p-4 pb-24">
+
+  <!-- masthead -->
+  <div class="flex items-baseline gap-3 flex-wrap">
+    <h1 class="text-xl font-semibold flex items-center gap-2">
+      <i class="ph ph-lightning text-primary"></i> Shortcuts
+    </h1>
+    <span class="text-sm opacity-60" x-show="meta"
+          x-text="meta ? `${meta.shortcuts} shortcuts · ${meta.actions.toLocaleString()} actions` : ''"></span>
+  </div>
+  <p class="text-sm opacity-60 mt-1">
+    The library organized on axes the Shortcuts app does not have. Nothing on this page deletes anything.
+  </p>
+
+  <div role="tablist" class="tabs tabs-box mt-4">
+    <button role="tab" class="tab" :class="facet==='library' && 'tab-active'" @click="facet='library'">
+      <i class="ph ph-list-bullets mr-1"></i> Library
+    </button>
+    <button role="tab" class="tab" :class="facet==='prune' && 'tab-active'" @click="facet='prune'">
+      <i class="ph ph-broom mr-1"></i> Prune
+      <span class="badge badge-sm badge-warning ml-1" x-show="pending.length" x-text="pending.length"></span>
+    </button>
+    <button role="tab" class="tab" :class="facet==='reference' && 'tab-active'" @click="facet='reference'">
+      <i class="ph ph-book-open mr-1"></i> Reference
+    </button>
+  </div>
+
+  <template x-if="loading">
+    <div class="mt-6 flex items-center gap-2 opacity-60"><span class="loading loading-spinner loading-sm"></span> Reading the archive…</div>
+  </template>
+  <template x-if="error">
+    <div class="alert alert-error mt-6"><i class="ph ph-warning"></i><span x-text="error"></span></div>
+  </template>
+
+  <!-- ══ LIBRARY ══════════════════════════════════════════════════════════ -->
+  <div x-show="facet==='library' && !loading && !error" class="mt-4">
+
+    <div class="flex flex-wrap gap-1.5">
+      <template x-for="[key, n] in Object.entries(meta?.tiers || {})" :key="key">
+        <button class="btn btn-xs" :class="tiers.has(key) ? 'btn-primary' : 'btn-ghost border border-base-300'"
+                @click="toggleTier(key)" :title="meta.tier_why[key]">
+          <span x-text="meta.tier_label[key]"></span>
+          <span class="opacity-60" x-text="n"></span>
+        </button>
+      </template>
+    </div>
+    <div class="flex flex-wrap gap-1.5 mt-1.5">
+      <template x-for="axis in ['provenance','lifecycle','connectivity']" :key="axis">
+        <template x-for="[v, n] in Object.entries(meta?.facets?.[axis] || {})" :key="axis+v">
+          <button class="btn btn-xs btn-ghost border border-base-300 opacity-80"
+                  :class="axes[axis]===v && 'btn-secondary opacity-100'"
+                  @click="toggleAxis(axis, v)" :title="axis">
+            <span x-text="v"></span><span class="opacity-60" x-text="n"></span>
+          </button>
+        </template>
+      </template>
+    </div>
+
+    <div class="text-xs opacity-60 mt-2" x-show="tiers.size">
+      <template x-for="t in [...tiers]" :key="t"><span class="block" x-text="meta.tier_why[t]"></span></template>
+    </div>
+
+    <label class="input input-bordered input-sm flex items-center gap-2 mt-3">
+      <i class="ph ph-magnifying-glass opacity-50"></i>
+      <input class="grow" placeholder="Filter by name, by what it calls, or by an action kind" x-model="q" @input="limit=60">
+      <button x-show="filtering" @click="clearFilters()" class="btn btn-ghost btn-xs"><i class="ph ph-x"></i></button>
+    </label>
+
+    <div class="text-xs opacity-60 mt-2 flex justify-between">
+      <span x-text="`${filtered.length} shown`"></span>
+      <span x-text="meta ? `${meta.missing} names are called and absent from the archive` : ''"></span>
+    </div>
+
+    <ul class="mt-2 divide-y divide-base-300">
+      <template x-for="r in shown" :key="r.name">
+        <li class="py-2">
+          <button class="w-full text-left" @click="toggleRow(r.name)">
+            <div class="flex items-start gap-2">
+              <i class="ph mt-0.5 opacity-40" :class="openRow===r.name ? 'ph-caret-down' : 'ph-caret-right'"></i>
+              <div class="grow min-w-0">
+                <div class="font-medium truncate" x-text="r.name"></div>
+                <div class="text-xs opacity-60 flex flex-wrap gap-x-2">
+                  <span x-text="`${r.actions} actions`"></span>
+                  <span x-text="meta.tier_label[r.tier]"></span>
+                  <span x-show="r.callers.length" x-text="`${r.callers.length} callers`"></span>
+                  <span x-show="r.input">takes input</span>
+                  <span x-show="r.menu">menu</span>
+                  <!-- Only the two graded classes earn a badge here. `low` is
+                       192 rows, nearly every import, so showing it in the
+                       browse list marks the library rather than a subset. It
+                       stays a queue-only concept, where the grade is stated. -->
+                  <span x-show="r.nominate && r.nominate.confidence !== 'low'" class="text-warning"
+                        x-text="r.nominate ? r.nominate.confidence + '-confidence candidate' : ''"></span>
+                  <span x-show="entry(r.name)" class="text-info"
+                        x-text="entry(r.name) ? entry(r.name).state : ''"></span>
+                </div>
+              </div>
+            </div>
+          </button>
+
+          <div x-show="openRow===r.name" class="mt-2 ml-6 space-y-3">
+            <div class="flex flex-wrap gap-1.5">
+              <a class="btn btn-xs btn-primary" :href="runLink(r.name)"><i class="ph ph-play"></i> Run</a>
+              <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
+                 title="Opens it in the Shortcuts editor, through the dispatcher"><i class="ph ph-pencil-simple"></i> Open</a>
+              <a class="btn btn-xs btn-ghost border border-base-300" :href="ghLink(r.name)" target="_blank">
+                <i class="ph ph-github-logo"></i> Sketch on GitHub</a>
+              <button class="btn btn-xs btn-ghost border border-base-300" x-show="!entry(r.name)"
+                      @click="picked=new Set([r.name]); facet='prune'; grade=r.nominate?r.nominate.confidence:'high'">
+                <i class="ph ph-broom"></i> Stage…</button>
+            </div>
+
+            <div class="text-xs space-y-1.5" x-show="r.calls.length || r.callers.length">
+              <div class="flex flex-wrap items-center gap-1" x-show="r.calls.length">
+                <span class="opacity-50 mr-0.5">calls</span>
+                <template x-for="c in r.calls" :key="'c'+c">
+                  <button class="badge badge-sm badge-ghost hover:badge-primary"
+                          :class="!byName[c] && 'opacity-40 line-through'"
+                          :title="byName[c] ? '' : 'Called, and absent from the archive'"
+                          @click="openNamed(c)" x-text="c"></button>
+                </template>
+              </div>
+              <div class="flex flex-wrap items-center gap-1" x-show="r.callers.length">
+                <span class="opacity-50 mr-0.5">called by</span>
+                <template x-for="c in r.callers" :key="'b'+c">
+                  <button class="badge badge-sm badge-ghost hover:badge-primary" @click="openNamed(c)" x-text="c"></button>
+                </template>
+              </div>
+            </div>
+
+            <pre class="text-[11px] leading-snug bg-base-200 rounded p-2 overflow-x-auto max-h-96"
+                 x-text="sketches[r.name]==='loading' ? 'loading…' : (sketches[r.name] || '')"></pre>
+          </div>
+        </li>
+      </template>
+    </ul>
+
+    <button class="btn btn-sm btn-ghost w-full mt-3" x-show="filtered.length > limit" @click="limit += 120">
+      Show more (<span x-text="filtered.length - limit"></span> left)
+    </button>
+  </div>
+
+  <!-- ══ PRUNE ════════════════════════════════════════════════════════════ -->
+  <div x-show="facet==='prune' && !loading && !error" class="mt-4 space-y-5">
+
+    <div class="alert alert-info text-sm">
+      <i class="ph ph-info"></i>
+      <div>
+        <b>Four steps, and deletion is only the last one.</b>
+        The page nominates, you stage into a holding folder, the folder sits there
+        as long as you like, and you delete on the device with the shortcut open
+        in front of you. A stage is a move, so every step before the last is reversible.
+      </div>
+    </div>
+
+    <!-- staged: what is waiting on the device -->
+    <section x-show="pending.length">
+      <h2 class="font-semibold flex items-center gap-2">
+        <i class="ph ph-tray"></i> In the holding folder
+        <span class="badge badge-sm" x-text="pending.length"></span>
+      </h2>
+      <p class="text-xs opacity-60 mt-1">
+        Moved to <span class="font-mono" x-text="ledger?.folder"></span> and still in the archive, so still on the device.
+        Open one, look at it, and delete it there if the answer is yes.
+      </p>
+      <ul class="mt-2 divide-y divide-base-300">
+        <template x-for="e in pending" :key="'p'+e.name">
+          <li class="py-2 flex items-start gap-2 flex-wrap">
+            <div class="grow min-w-0">
+              <div class="font-medium truncate" x-text="e.name"></div>
+              <div class="text-xs opacity-60">
+                <span x-text="e.reason"></span> ·
+                <span x-text="`staged ${daysSince(e.staged)} days ago`"></span>
+              </div>
+            </div>
+            <div class="flex gap-1.5">
+              <a class="btn btn-xs btn-primary" :href="openLink(e.name)"><i class="ph ph-pencil-simple"></i> Open</a>
+              <button class="btn btn-xs btn-ghost border border-base-300" @click="unstage(e.name)">Put back</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </section>
+
+    <!-- confirmed gone: the reconciliation against the newest dump -->
+    <section x-show="confirmed.length">
+      <h2 class="font-semibold flex items-center gap-2"><i class="ph ph-check-circle text-success"></i> Gone</h2>
+      <p class="text-xs opacity-60 mt-1">
+        Staged here and absent from the newest dump, so the device no longer has them.
+        Every one is still recoverable from <span class="font-mono">dumps/</span> with <span class="font-mono">restore.py</span>.
+      </p>
+      <div class="flex flex-wrap gap-1 mt-2">
+        <template x-for="e in confirmed" :key="'g'+e.name">
+          <span class="badge badge-ghost badge-sm" x-text="e.name"></span>
+        </template>
+      </div>
+    </section>
+
+    <!-- the queue -->
+    <section>
+      <h2 class="font-semibold flex items-center gap-2"><i class="ph ph-question"></i> Candidates</h2>
+      <p class="text-xs opacity-60 mt-1">
+        A nomination is a question to answer on the device, never an instruction.
+        The Uncalled tier is deliberately not nominated at any grade: a shortcut run
+        from the Home Screen, a widget, the share sheet, or Siri is called by nothing here.
+      </p>
+
+      <div class="flex flex-wrap gap-1.5 mt-2">
+        <template x-for="g in ['high','medium','low']" :key="g">
+          <button class="btn btn-xs" :class="grade===g ? 'btn-primary' : 'btn-ghost border border-base-300'"
+                  @click="grade=g; picked=new Set()">
+            <span x-text="g"></span><span class="opacity-60" x-text="gradeCount(g)"></span>
+          </button>
+        </template>
+      </div>
+
+      <p class="text-xs opacity-70 mt-2">
+        <span x-show="grade==='high'">The name is a duplicate Shortcuts minted on an edit, and the original is still here. This is the class where the question nearly answers itself.</span>
+        <span x-show="grade==='medium'">Duplicate-on-edit residue whose original is gone, so this copy may now be the only version.</span>
+        <span x-show="grade==='low'">An import nothing here calls. Installed and never wired in is not the same as never used: imports are usually run by hand, which this archive cannot see.</span>
+      </p>
+
+      <div class="flex items-center gap-2 mt-3" x-show="queue.length">
+        <button class="btn btn-xs btn-ghost border border-base-300" @click="pickAll()">
+          <i class="ph ph-check-square"></i> <span x-text="picked.size===queue.length ? 'None' : 'All'"></span>
+        </button>
+        <button class="btn btn-xs btn-warning" :disabled="!picked.size || saving" @click="stagePicked()">
+          <span x-show="saving" class="loading loading-spinner loading-xs"></span>
+          Stage <span x-text="picked.size"></span> into the folder
+        </button>
+      </div>
+
+      <div class="alert alert-success mt-3 text-sm" x-show="lastLink">
+        <i class="ph ph-arrow-square-out"></i>
+        <div>
+          <b>Recorded.</b> Now do the move on the device:
+          <a class="link font-medium" :href="lastLink">tap to move them into <span x-text="ledger?.folder"></span></a>.
+        </div>
+      </div>
+      <div class="alert alert-error mt-3 text-sm" x-show="saveError">
+        <i class="ph ph-warning"></i><span x-text="saveError"></span>
+      </div>
+
+      <ul class="mt-2 divide-y divide-base-300">
+        <template x-for="r in queue" :key="'q'+r.name">
+          <li class="py-2 flex items-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm mt-0.5"
+                   :checked="picked.has(r.name)" @change="pick(r.name)">
+            <div class="grow min-w-0">
+              <div class="font-medium truncate" x-text="r.name"></div>
+              <div class="text-xs opacity-60" x-text="`${r.nominate.reason} · ${r.actions} actions`"></div>
+            </div>
+            <div class="flex gap-1.5 shrink-0">
+              <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
+                 title="Open it in the editor and look"><i class="ph ph-pencil-simple"></i></a>
+              <button class="btn btn-xs btn-ghost border border-base-300" @click="keep(r.name, 'reviewed')"
+                      title="Keep it, and stop nominating it">Keep</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+      <p class="text-sm opacity-60 mt-3" x-show="!queue.length">Nothing left at this grade.</p>
+    </section>
+
+    <section x-show="kept.length">
+      <h2 class="font-semibold flex items-center gap-2"><i class="ph ph-anchor"></i> Decided to keep</h2>
+      <div class="flex flex-wrap gap-1 mt-2">
+        <template x-for="e in kept" :key="'k'+e.name">
+          <button class="badge badge-ghost badge-sm" @click="undecide(e.name)"
+                  title="Reopen the question" x-text="e.name"></button>
+        </template>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══ REFERENCE ════════════════════════════════════════════════════════ -->
+  <div x-show="facet==='reference'" class="mt-4">
+    <p class="text-sm opacity-70">
+      What we know about Apple's format and runtime, read live from
+      <a class="link" :href="`https://github.com/${DOCS_REPO}`" target="_blank">shortcut-tools</a>.
+      It sits here rather than in show-repo's Map, because the Map documents how this estate
+      works and these document how someone else's system does.
+    </p>
+    <ul class="mt-3 divide-y divide-base-300">
+      <template x-for="d in DOCS" :key="d.path">
+        <li class="py-2">
+          <button class="w-full text-left flex items-start gap-2" @click="openDoc(d.path)">
+            <i class="ph mt-0.5 opacity-40" :class="doc===d.path ? 'ph-caret-down' : 'ph-caret-right'"></i>
+            <div>
+              <div class="font-medium" x-text="d.title"></div>
+              <div class="text-xs opacity-60" x-text="d.note"></div>
+            </div>
+          </button>
+          <div x-show="doc===d.path" class="mt-2">
+            <span x-show="docLoading" class="loading loading-spinner loading-sm"></span>
+            <div class="prose prose-sm max-w-none" x-html="docHtml"></div>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
