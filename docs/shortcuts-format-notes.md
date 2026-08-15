@@ -1005,10 +1005,14 @@ wanted name as a token-string attachment, then the entity slot bound to that
 filter's output. `Use-Shortcut`, `Run-List`, and `Open-RecentShortcut` all do
 exactly this, and `workflows/library-open.json` is the three-card minimum.
 
-Two limits worth stating. The variable binding is **measured for `target` and
-inferred by analogy for `shortcuts` and `entities`**, since the corpus has no
-card to read for those. And `folder` has no find-by-name equivalent here, so a
-generated Move card leaves it unset for one tap in the editor.
+The variable binding is **measured for `target` and `shortcuts`**, the latter
+confirmed 2026-08-15 by a generated `Library-Stage` moving a named shortcut on
+device and reporting it back through the repo log. `entities` on Delete stays
+inferred by analogy and is deliberately unexercised, since nothing here deletes.
+
+`folder` is the exception with no way around it: there is no find-by-name
+equivalent, because **no action in the 810-entry dictionary returns the folder
+list**, so a generated Move card leaves it unset for one tap in the editor.
 
 ## Generating the plist
 

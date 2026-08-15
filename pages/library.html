@@ -111,7 +111,7 @@
           // file, and an absent one is an empty one rather than an error.
           try {
             this.ledger = JSON.parse((await g.get(this.LEDGER)).text);
-          } catch { this.ledger = { folder: '🗑 Pending Delete', entries: [] }; }
+          } catch { this.ledger = { folder: 'Stage', entries: [] }; }
         } catch (e) {
           this.error = String(e.message || e);
         }
