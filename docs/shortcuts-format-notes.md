@@ -1027,6 +1027,37 @@ lookup, and it reports which of the two sources knows a name.
 first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
 uninstalled app is outside it.
 
+### No action can put actions into a shortcut
+
+*Established 2026-08-15 by searching all 2,585 first-party parameter tables in
+the ToolKit v78 catalog, not by inference.*
+
+`Create Shortcut` takes exactly two parameters, and neither is content:
+
+| Key | Type |
+| --- | --- |
+| `name` | `str` |
+| `OpenWhenRun` | `bool` |
+
+**And nothing else in the catalog takes actions or workflow content either.** A
+sweep for parameters keyed or named for actions, or typed for a workflow rather
+than a workflow *reference*, returns 115 candidates across 71 tools and every
+one is unrelated: Photos favouriting, Messages tapbacks, alert titles, dwell
+settings. The `wfworkflow_reference` type points *at* a shortcut and never
+carries one.
+
+So on device the ceiling is **create empty, then paste**, which is what
+`Library-Install` does: `CreateWorkflowAction` for the name, `Copy-ActionFromUrl`
+for the clipboard, and a human tap for the paste. The paste is not a
+shortcoming of the design, it is the boundary of what Shortcuts exposes.
+
+**The one route past it is a signed import**, and signing cannot happen on
+device (patched in iOS 15 beta 1). It needs a Mac or a remote signing service.
+`Shortcut Source Helper` in this estate's corpus already does the second: gzip
+the plist, POST to `shortcuts.gluebyte.workers.dev`, unzip, write a `.shortcut`,
+open it. Untested here, and the only thing that would turn a generated shortcut
+into a real one-tap install.
+
 ### The four sources checked before it, none of them enough
 
 Surveyed 2026-08-15, after a session claimed an action did not exist on the
