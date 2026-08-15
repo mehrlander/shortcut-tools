@@ -223,21 +223,36 @@ re-nominated forever. The ledger records decisions and cannot see the phone: the
 next dump is the ground truth, and a staged name absent from it is what confirms
 the deletion happened.
 
-### The device link, and the one shape it does not know
+### The two device receivers
 
 Every instruction the page sends is `shortcuts://run-shortcut`, the only scheme
-this library has ever proven, aimed at one receiver (`Manage-Library`) that
-switches on a JSON `op`. Opening an editor, moving to a folder, and deleting are
-**actions**, not schemes, so they run inside that receiver rather than being
-addressable from a page.
+this library has ever proven. Opening an editor and moving to a folder are
+**actions**, not schemes, so each runs inside a small receiver the link names:
 
-The three identifiers are known and in the dictionary (`openshortcut`,
-`moveshortcut`, `deleteshortcuts`). Their **parameters** are not: `actions.json`
-carries `WFWorkflowActionParameters` for only the 38 control-flow entries, so
-for anything else a copied card is the sole source of the shape.
-[`workflows/manage-library-probe.json`](workflows/manage-library-probe.json)
-packs the three bare cards for exactly that round trip; configure them on the
-device, copy them back, and `tools/unpack.py` reads the shapes.
+| Receiver | Input | Cards | Source |
+| --- | --- | ---: | --- |
+| `Library-Open` | one name | 3 | [`workflows/library-open.json`](workflows/library-open.json) |
+| `Library-Stage` | names, newline-separated | 6 | [`workflows/library-stage.json`](workflows/library-stage.json) |
+
+**Neither can delete, and that is the design.** A receiver that could would make
+the page one tap from the thing the whole workflow exists to slow down.
+
+Both are **find, then act**: `getmyworkflows`, then `filter.files` on `Name`,
+then the entity slot bound to that filter's output, since these actions address
+an App Intents entity rather than a name. `Library-Stage` wraps that in
+`Run-Steps`' split-and-repeat so a bulk stage is one tap. The shapes and their
+two measured-versus-inferred limits are in
+[the format notes](docs/shortcuts-format-notes.md#the-library-management-actions-address-an-app-intents-entity-not-a-name).
+
+One tap of setup: `Library-Stage`'s Move card ships with its **folder unset**,
+because a folder is picked by opaque identifier and the holding folder does not
+exist until you make it. Create it, tap the card, choose it once.
+
+[`workflows/manage-library-probe.json`](workflows/manage-library-probe.json) is
+the spent probe that produced the Move and Delete shapes, kept as the record of
+how they were learned. Nothing in the 577-shortcut corpus uses either action, so
+a copied card really was the only source; `Open` was already in the corpus three
+times over and needed no probe at all.
 
 ## CLI
 

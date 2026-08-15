@@ -911,6 +911,68 @@ unconfirmed, and not wrapping costs nothing.
 The performance cliff above does not apply here. That is the `Run JavaScript on
 Web Page` action's interpreter; this route is a real WebKit render.
 
+## The library-management actions address an App Intents entity, not a name
+
+`openshortcut`, `moveshortcut`, and `deleteshortcuts` are the three actions a
+page needs to operate a library from outside the app, and all three take **App
+Intents entity references** rather than a name string. Measured 2026-08-15: the
+first from real cards in this corpus, the other two from a probe, since **no
+shortcut in 577 uses Move or Delete at all**.
+
+Each card carries an `AppIntentDescriptor` naming the providing app, and each
+entity slot is keyed differently per action, which is the part nothing in
+`actions.json` can tell you:
+
+| Action | Entity key | Second key |
+| --- | --- | --- |
+| `com.apple.shortcuts.OpenWorkflowAction` | `target` | |
+| `com.apple.shortcuts.MoveShortcutToFolderAction` | `shortcuts` | `folder` |
+| `com.apple.shortcuts.DeleteWorkflowAction` | `entities` | |
+
+```xml
+<key>AppIntentDescriptor</key>
+<dict>
+  <key>AppIntentIdentifier</key><string>OpenWorkflowAction</string>
+  <key>BundleIdentifier</key><string>com.apple.shortcuts</string>
+  <key>Name</key><string>Shortcuts</string>
+  <key>TeamIdentifier</key><string>0000000000</string>
+</dict>
+```
+
+**Picked in the editor, an entity is an opaque UUID and the name is only a
+label.** A card configured by hand holds `identifier` (a UUID), an `image` whose
+`uri` is an `intents-remote-image-proxy:` address, and `title`/`subtitle` as
+`{"key": "Animal Game"}` display dicts. Nothing resolves by that title, so a
+chain written elsewhere **cannot name its target** the way `runworkflow` can
+through `WFWorkflowName`.
+
+**Bound to a variable, it is an ordinary attachment**, which is what makes these
+reachable from a generated chain at all:
+
+```xml
+<key>target</key>
+<dict>
+  <key>Value</key>
+  <dict>
+    <key>OutputName</key><string>Shortcuts</string>
+    <key>OutputUUID</key><string>…</string>
+    <key>Type</key><string>ActionOutput</string>
+  </dict>
+  <key>WFSerializationType</key><string>WFTextTokenAttachment</string>
+</dict>
+```
+
+So the working idiom is **find, then act**: `getmyworkflows` for every shortcut,
+`filter.files` with an `Operator: 4` predicate on `Property: Name` carrying the
+wanted name as a token-string attachment, then the entity slot bound to that
+filter's output. `Use-Shortcut`, `Run-List`, and `Open-RecentShortcut` all do
+exactly this, and `workflows/library-open.json` is the three-card minimum.
+
+Two limits worth stating. The variable binding is **measured for `target` and
+inferred by analogy for `shortcuts` and `entities`**, since the corpus has no
+card to read for those. And `folder` has no find-by-name equivalent here, so a
+generated Move card leaves it unset for one tap in the editor.
+
 ## Generating the plist
 
 Python's `plistlib` produces guaranteed well-formed output from a plain dict via

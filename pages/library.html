@@ -57,11 +57,13 @@
       DOCS_REPO: 'mehrlander/shortcut-tools',
       LEDGER: 'shortcuts/prune.json',
 
-      // The device dispatcher. One shortcut receives every instruction this
-      // page sends, as JSON on its input, and switches on `op`. One receiver
-      // rather than four keeps the setup to a single paste and means a new
-      // operation is a branch there, not another install here.
-      DISPATCH: 'Manage-Library',
+      // The two device receivers, each a plain shortcut taking text. A JSON
+      // dispatcher switching on an `op` was the first design and is worse: a
+      // branch is a control-flow block to build and debug on a phone, where two
+      // small shortcuts are each three or six cards that either work or do not.
+      // Neither can delete. That is the design, not an omission.
+      OPEN_WITH: 'Library-Open',    // one name  -> that shortcut, open in the editor
+      STAGE_WITH: 'Library-Stage',  // newline-separated names -> moved to a folder
 
       // ── state ────────────────────────────────────────────────────────────
       gh: null,
@@ -178,11 +180,14 @@
       runLink(name) {
         return 'shortcuts://run-shortcut?name=' + encodeURIComponent(name);
       },
-      dispatchLink(op, names) {
-        const payload = JSON.stringify({ op, names: [].concat(names) });
-        return 'shortcuts://run-shortcut?name=' + encodeURIComponent(this.DISPATCH)
-          + '&input=text&text=' + encodeURIComponent(payload);
+      deviceLink(receiver, text) {
+        return 'shortcuts://run-shortcut?name=' + encodeURIComponent(receiver)
+          + '&input=text&text=' + encodeURIComponent(text);
       },
+      openLink(name) { return this.deviceLink(this.OPEN_WITH, name); },
+      // Newline-separated, which is what Library-Stage splits on. Its idiom is
+      // Run-Steps': split on new lines, repeat each, act.
+      stageLink(names) { return this.deviceLink(this.STAGE_WITH, [].concat(names).join('\n')); },
       ghLink(name) {
         return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/sketches/`
           + encodeURIComponent(name + '.txt');
@@ -253,7 +258,7 @@
           });
         }
         await this.writeLedger(`shortcuts: stage ${names.length} for delete`);
-        this.lastLink = this.dispatchLink('move', names);
+        this.lastLink = this.stageLink(names);
         this.picked = new Set();
       },
       // The other decision, and the reason it is recorded rather than just not
@@ -403,7 +408,7 @@
           <div x-show="openRow===r.name" class="mt-2 ml-6 space-y-3">
             <div class="flex flex-wrap gap-1.5">
               <a class="btn btn-xs btn-primary" :href="runLink(r.name)"><i class="ph ph-play"></i> Run</a>
-              <a class="btn btn-xs btn-ghost border border-base-300" :href="dispatchLink('open', r.name)"
+              <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
                  title="Opens it in the Shortcuts editor, through the dispatcher"><i class="ph ph-pencil-simple"></i> Open</a>
               <a class="btn btn-xs btn-ghost border border-base-300" :href="ghLink(r.name)" target="_blank">
                 <i class="ph ph-github-logo"></i> Sketch on GitHub</a>
@@ -476,7 +481,7 @@
               </div>
             </div>
             <div class="flex gap-1.5">
-              <a class="btn btn-xs btn-primary" :href="dispatchLink('open', e.name)"><i class="ph ph-pencil-simple"></i> Open</a>
+              <a class="btn btn-xs btn-primary" :href="openLink(e.name)"><i class="ph ph-pencil-simple"></i> Open</a>
               <button class="btn btn-xs btn-ghost border border-base-300" @click="unstage(e.name)">Put back</button>
             </div>
           </li>
@@ -553,7 +558,7 @@
               <div class="text-xs opacity-60" x-text="`${r.nominate.reason} · ${r.actions} actions`"></div>
             </div>
             <div class="flex gap-1.5 shrink-0">
-              <a class="btn btn-xs btn-ghost border border-base-300" :href="dispatchLink('open', r.name)"
+              <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
                  title="Open it in the editor and look"><i class="ph ph-pencil-simple"></i></a>
               <button class="btn btn-xs btn-ghost border border-base-300" @click="keep(r.name, 'reviewed')"
                       title="Keep it, and stop nominating it">Keep</button>

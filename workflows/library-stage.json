@@ -1,0 +1,110 @@
+{
+  "label": "Library-Stage: move each named shortcut to a folder (6 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "B0BE0000-0211-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.repeat.each",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-02FF-4A00-9000-0000000000FF",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-0211-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "B0BE0000-0213-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "B0BE0000-0214-4A00-9000-000000000001",
+        "WFContentItemInputParameter": {
+          "Value": {
+            "OutputName": "My Shortcuts",
+            "OutputUUID": "B0BE0000-0213-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 4,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": {
+                    "Value": {
+                      "attachmentsByRange": {
+                        "{0, 1}": {
+                          "Type": "Variable",
+                          "VariableName": "Repeat Item"
+                        }
+                      },
+                      "string": "￼"
+                    },
+                    "WFSerializationType": "WFTextTokenString"
+                  },
+                  "Unit": 4
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.MoveShortcutToFolderAction",
+      "p": {
+        "UUID": "B0BE0000-0215-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "MoveShortcutToFolderAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "shortcuts": {
+          "Value": {
+            "OutputName": "Shortcuts",
+            "OutputUUID": "B0BE0000-0214-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.repeat.each",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-02FF-4A00-9000-0000000000FF",
+        "WFControlFlowMode": 2,
+        "UUID": "B0BE0000-0216-4A00-9000-000000000001"
+      }
+    }
+  ]
+}
