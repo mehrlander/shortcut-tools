@@ -984,14 +984,37 @@ and the iOS 27 Simulator, so it needs neither a Mac nor the private frameworks:
 | `data/toolkit-v78-first-party-parameter-keys.json` | **2,585 tools with their parameter keys and types** |
 | `data/toolkit-v78-first-party-enum-cases.json` | allowed enum values |
 
-**It answers the questions this file needed a device probe for.** `Move Shortcut`
-is `shortcuts` / `folder` / `OpenWhenRun`, `Delete Shortcuts` is `entities`,
-`Open Shortcut` is `target`, each typed
+**It gives the parameter KEYS and TYPES, and not the serialization.** `Move
+Shortcut` is `shortcuts` / `folder` / `OpenWhenRun`, `Delete Shortcuts` is
+`entities`, `Open Shortcut` is `target`, each typed
 `com_apple_shortcuts_wfworkflow_reference`, and `Create Folder` is `name` typed
-plain `str`. Every one of those was obtained instead by asking the user to
-configure cards and copy them back. The corpus and the curated dictionary were
-both searched first, correctly, and the search that was never run was the one
-for a *catalog* rather than for an *answer*.
+plain `str`. All of that was instead obtained by asking the user to configure
+cards, and the search never run was for a *catalog* rather than for an *answer*.
+
+**But the probe was not wholly redundant, and the line matters.** A key and a
+type do not say how the value is written into the plist. Nothing in this catalog
+carries the `AppIntentDescriptor` block, the picked-entity dict of
+`identifier` / `image` / `title`, or the `WFTextTokenAttachment` variable form,
+and **none of its 19 golden XML examples contains an `AppIntentDescriptor`
+either**. Those came only from cards copied off the device. So the catalog
+answers *which parameters exist*, this file answers *how they serialize*, and
+neither substitutes for the other.
+
+**Scope, measured rather than assumed:**
+
+| Cut | Count |
+| --- | ---: |
+| Identifiers total | 2,731 |
+| Apple App Intents | 1,692 |
+| Apple legacy `is.workflow.actions` | 365 |
+| **Third-party** (56 bundles: Actions 241, Supercharge 70, Drafts 55, nAutomate 47, BetterTouchTool 45) | **674** |
+| Tools with parameter tables | 2,585, **first-party only** |
+| Of those, available on iOS | **1,072**; 1,338 are macOS-only |
+
+Two consequences. A third-party action is listed by identifier and carries **no
+parameter information at all**, so an app's actions still need a copied card.
+And the bulk is not third-party but Apple's macOS surface, `com.apple.systempreferences`
+alone being 542 entries that no iPhone will ever offer.
 
 It also names the folder limit precisely: `folder` is typed
 `com_apple_shortcuts_root_navigation_destination`, an entity, which is why it
