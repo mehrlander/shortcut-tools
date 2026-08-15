@@ -1,4 +1,5 @@
 {
+  "name": "Capture-Link",
   "label": "Capture-Link: share sheet in, repo log out (2 actions)",
   "actions": [
     {
@@ -39,5 +40,15 @@
         }
       }
     }
-  ]
+  ],
+  "workflow": {
+    "WFWorkflowTypes": [
+      "ActionExtension"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFURLContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem"
+    ]
+  }
 }

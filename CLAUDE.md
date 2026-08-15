@@ -101,9 +101,19 @@ work that took years to accumulate. Reasoning in
 
 ## Generated artifacts
 
-`packed/` mirrors `workflows/`, and `python3 tools/pack.py --publish` refreshes
-it. The suite fails when it is behind, which is deliberate: a stale payload
-serves a link that works and delivers the wrong thing.
+Two mirrors of `workflows/`, refreshed by `python3 tools/pack.py --publish` and
+`python3 tools/plist.py --publish`. The suite fails when either is behind, which
+is deliberate: a stale artifact serves a link that works and delivers the wrong
+thing.
+
+| Mirror | Holds | For |
+| --- | --- | --- |
+| `packed/` | every chain, as a clipboard payload | pasting actions |
+| `plists/` | the chains declaring `"name"`, as whole workflows | installing a shortcut |
+
+A chain opts into `plists/` by declaring a name, because most of them are probes
+and demos rather than receivers. Deriving the name from the label instead put 27
+chains into 24 files, three overwriting each other in silence.
 
 ## A diagnostic returns itself
 

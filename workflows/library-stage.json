@@ -1,4 +1,5 @@
 {
+  "name": "Library-Stage",
   "label": "Library-Stage: move each named shortcut to a folder, and log it (8 actions)",
   "actions": [
     {

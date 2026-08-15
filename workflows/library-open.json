@@ -1,4 +1,5 @@
 {
+  "name": "Library-Open",
   "label": "Library-Open: open the named shortcut in the editor (3 actions)",
   "actions": [
     {
