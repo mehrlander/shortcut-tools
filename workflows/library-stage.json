@@ -1,10 +1,10 @@
 {
-  "label": "Library-Stage: move each named shortcut to a folder (6 actions)",
+  "label": "Library-Stage: move each named shortcut to a folder, and log it (8 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.text.split",
       "p": {
-        "UUID": "B0BE0000-0211-4A00-9000-000000000001",
+        "UUID": "B0BE0000-0501-4A00-9000-000000000001",
         "WFTextSeparator": "New Lines",
         "text": {
           "Value": {
@@ -17,12 +17,12 @@
     {
       "id": "is.workflow.actions.repeat.each",
       "p": {
-        "GroupingIdentifier": "B0BE0000-02FF-4A00-9000-0000000000FF",
+        "GroupingIdentifier": "B0BE0000-05FF-4A00-9000-0000000000FF",
         "WFControlFlowMode": 0,
         "WFInput": {
           "Value": {
             "OutputName": "Split Text",
-            "OutputUUID": "B0BE0000-0211-4A00-9000-000000000001",
+            "OutputUUID": "B0BE0000-0501-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -32,17 +32,17 @@
     {
       "id": "is.workflow.actions.getmyworkflows",
       "p": {
-        "UUID": "B0BE0000-0213-4A00-9000-000000000001"
+        "UUID": "B0BE0000-0503-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.filter.files",
       "p": {
-        "UUID": "B0BE0000-0214-4A00-9000-000000000001",
+        "UUID": "B0BE0000-0504-4A00-9000-000000000001",
         "WFContentItemInputParameter": {
           "Value": {
             "OutputName": "My Shortcuts",
-            "OutputUUID": "B0BE0000-0213-4A00-9000-000000000001",
+            "OutputUUID": "B0BE0000-0503-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -81,7 +81,7 @@
     {
       "id": "com.apple.shortcuts.MoveShortcutToFolderAction",
       "p": {
-        "UUID": "B0BE0000-0215-4A00-9000-000000000001",
+        "UUID": "B0BE0000-0505-4A00-9000-000000000001",
         "AppIntentDescriptor": {
           "AppIntentIdentifier": "MoveShortcutToFolderAction",
           "BundleIdentifier": "com.apple.shortcuts",
@@ -91,7 +91,7 @@
         "shortcuts": {
           "Value": {
             "OutputName": "Shortcuts",
-            "OutputUUID": "B0BE0000-0214-4A00-9000-000000000001",
+            "OutputUUID": "B0BE0000-0504-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -101,9 +101,43 @@
     {
       "id": "is.workflow.actions.repeat.each",
       "p": {
-        "GroupingIdentifier": "B0BE0000-02FF-4A00-9000-0000000000FF",
+        "GroupingIdentifier": "B0BE0000-05FF-4A00-9000-0000000000FF",
         "WFControlFlowMode": 2,
-        "UUID": "B0BE0000-0216-4A00-9000-000000000001"
+        "UUID": "B0BE0000-0506-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0507-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{23, 1}": {
+                "OutputName": "Split Text",
+                "OutputUUID": "B0BE0000-0501-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "{\"op\":\"stage\",\"names\":\"￼\"}"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-0508-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-0507-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     }
   ]
