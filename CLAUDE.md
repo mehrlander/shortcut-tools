@@ -62,9 +62,21 @@ file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
 only because nothing here holds a secret. And **import never merges by name**:
-importing over an existing shortcut creates a second one, so re-importing during
-development manufactures exactly the duplicate-on-edit sediment the prune
-workflow exists to clear. Delete or rename first.
+importing over an existing shortcut creates a second one.
+
+**The index goes to the newcomer, which makes this a correctness problem rather
+than an untidiness problem.** The existing shortcut keeps the clean name and the
+version just imported becomes `Name 1`, so every
+`shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
+it, keeps resolving to the **old** copy. An import that appears to have upgraded
+something has silently done the opposite. So clearing the name first is
+mandatory, not stylistic.
+
+**Delete before importing, for anything generated from this repo.** The
+four-step prune exists for shortcuts whose only copy is the device; a receiver
+whose plist is committed here is reproducible from `git`, so deleting it costs a
+re-import and nothing else. Reserve staging for authored work, where it is
+earned.
 
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
