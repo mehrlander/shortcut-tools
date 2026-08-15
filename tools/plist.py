@@ -95,13 +95,20 @@ def chains():
 
 def publish(check=False):
     OUT.mkdir(exist_ok=True)
-    stale, seen = [], {}
+    # Render and validate the whole set BEFORE writing any of it. Writing as it
+    # went meant a name collision aborted halfway and left the file it had
+    # already written, so a failed publish was worse than no publish.
+    rendered, seen = [], {}
     for c in chains():
         name, data = render(c)
         if name in seen:
             raise SystemExit("two chains both name themselves %r: %s and %s"
                              % (name, seen[name], c.name))
         seen[name] = c.name
+        rendered.append((name, data))
+
+    stale = []
+    for name, data in rendered:
         target = OUT / (name + ".plist")
         if check:
             if not target.exists() or target.read_bytes() != data:
