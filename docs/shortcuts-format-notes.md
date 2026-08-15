@@ -972,16 +972,34 @@ fails rule 2 in [CLAUDE.md](../CLAUDE.md): a device ask must buy something in
 steady state, and tidying a working chain is not that. **Do not re-propose it**
 on its own. Fold it into the next probe that has a real reason to exist.
 
-**No public reference documents these three actions.** Checked 2026-08-15:
-[sebj/iOS-Shortcuts-Reference](https://github.com/sebj/iOS-Shortcuts-Reference),
-[Cherri's file-format page](https://cherrilang.org/compiler/file-format.html),
-and [shortcuts-toolkit](https://github.com/drewburchfield/shortcuts-toolkit) all
-cover the legacy `is.workflow.actions.*` family only, and none mentions
-`AppIntentDescriptor` or entity parameters at all. The public reverse
-engineering stopped at the boundary where Apple moved actions to App Intents,
-which is why a copied card remains the only source for anything in this family
-and why `WFActions.plist` inside WorkflowKit, the usual answer for a legacy
-action's parameters, does not hold these.
+### There is no complete public list of actions, and four searches say so
+
+Surveyed 2026-08-15, after a session claimed an action did not exist on the
+strength of a dictionary that had never heard of it:
+
+| Source | What it actually has |
+| --- | --- |
+| [sebj/iOS-Shortcuts-Reference](https://github.com/sebj/iOS-Shortcuts-Reference) | The file format only. **No action list at all**, and archived 2022-06-10 |
+| [shortcuts-toolkit](https://github.com/drewburchfield/shortcuts-toolkit) | Legacy examples; says outright it "cannot access all Shortcuts actions (some are private)" |
+| [Cherri](https://github.com/electrikmilk/cherri) | A working compiler, ~46 actions in its standard file, and it **does** model App Intents |
+| [ShortcutsBench](https://github.com/EachSheep/ShortcutsBench) | **1,414 APIs across 88 apps**, far the largest, but shipped via Google Drive and Baidu behind a password with nothing in the repo tree |
+
+None holds `CreateFolderAction`. The source everyone points at,
+`WFActions.plist` inside
+[WorkflowKit.framework](https://theapplewiki.com/wiki/Dev:WorkflowKit.framework),
+needs the framework off a device and covers the **legacy family only**, since an
+App Intents action is declared in its own app's metadata rather than there.
+
+**So the dictionary can be widened and never completed**, which makes the
+honest-search rule permanent rather than a stopgap.
+
+*Correcting an earlier claim in this file:* Cherri was reported as covering the
+legacy family only. That was read off its file-format **page**; its **source**
+carries an `appIntent` struct of exactly `{name, bundleIdentifier,
+appIntentIdentifier}`, independently matching the `AppIntentDescriptor` measured
+above, and defines a couple of dozen App Intents actions including
+`CreateShortcutiCloudLinkAction`. Reading a project's docs is not reading a
+project.
 
 **Bound to a variable, it is an ordinary attachment**, which is what makes these
 reachable from a generated chain at all:
