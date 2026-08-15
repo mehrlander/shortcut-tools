@@ -1010,9 +1010,36 @@ confirmed 2026-08-15 by a generated `Library-Stage` moving a named shortcut on
 device and reporting it back through the repo log. `entities` on Delete stays
 inferred by analogy and is deliberately unexercised, since nothing here deletes.
 
-`folder` is the exception with no way around it: there is no find-by-name
-equivalent, because **no action in the 810-entry dictionary returns the folder
-list**, so a generated Move card leaves it unset for one tap in the editor.
+`folder` was reported here as the exception with no way around it, on the
+grounds that no action in the dictionary returns the folder list. **That was
+wrong, and the way it was wrong is the point.** The claim was true about the
+dictionary and false about Shortcuts:
+
+```xml
+<key>WFWorkflowActionIdentifier</key>
+<string>com.apple.shortcuts.CreateFolderAction</string>
+...
+<key>name</key>   <!-- a WFTextTokenString, not an entity slot -->
+<dict><key>Value</key><dict>
+  <key>attachmentsByRange</key><dict><key>{0, 1}</key>
+    <dict><key>Type</key><string>ExtensionInput</string></dict></dict>
+  <key>string</key><string>￼</string>
+</dict><key>WFSerializationType</key><string>WFTextTokenString</string></dict>
+```
+
+`CreateFolderAction` exists, and unlike every other action in this family **its
+`name` takes plain text**, so a folder can be made from a string. Whether its
+output is a folder entity the Move card will accept is untested; if it is,
+create-then-move removes the last configuration step from a fresh install.
+
+**Why no search found it.** It is absent from `actions.json`, which knows only
+nine `com.apple.shortcuts.*` entries, and absent from the corpus, which never
+used it. Both sources were checked and both were silent, and silence was
+reported as absence. `tools/coverage.py` measures the first gap (312 identifiers
+in use, 56 unknown to the dictionary, 18%) and cannot close the second. **The
+dictionary is a curated list and the corpus is one library's habits; neither is
+a census of what Shortcuts can do.** A search that finds nothing supports "I did
+not find one", never "there is none".
 
 ## Generating the plist
 

@@ -25,10 +25,15 @@ Rank every delivery route by what it costs the person on the other end:
 
 **Rules that follow, and they are not advisory:**
 
-1. **Exhaust the free routes first.** Parse the dumps and search the public
-   record before asking the device anything. A probe sent for something the
-   corpus already holds is wasted work: `OpenWorkflowAction` was in eight
-   shortcuts when it was probed anyway.
+1. **Exhaust the free routes first, then say what the search covered.** Parse
+   the dumps and search the public record before asking the device anything. A
+   probe sent for something the corpus already holds is wasted work:
+   `OpenWorkflowAction` was in eight shortcuts when it was probed anyway.
+   **But neither source is a census.** `actions.json` is curated and misses 18%
+   of what the corpus alone uses (`tools/coverage.py`); the corpus is one
+   library's habits. `CreateFolderAction` is in neither and exists. So a silent
+   search licenses "I did not find one", never "there is none", and a design
+   built on the second is built on nothing.
 2. **A device ask must name what it buys in steady state.** Not what it
    confirms, what it *changes*. "Three cards become one, in a shortcut that
    already works" buys nothing and is not worth a tap. Curiosity is not a
@@ -46,11 +51,11 @@ Rank every delivery route by what it costs the person on the other end:
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
 - `Library-Open`, `Library-Stage`, and `Log-Repo` pasted, named, Shortcut Input enabled.
-- `Library-Stage`'s Move card: **one tap** to pick the holding folder. This is
-  the only in-app step that could not be removed. A Shortcuts folder is an App
-  Intents entity addressed by an opaque identifier, and no action anywhere in
-  the 810-entry dictionary returns the folder list, so nothing can resolve one
-  by name the way `getmyworkflows` plus a filter resolves a shortcut.
+- `Library-Stage`'s Move card: **one tap** to pick the holding folder (`Stage`).
+  Reported here as unavoidable, which was wrong: `CreateFolderAction` exists and
+  takes a plain text name, so create-then-move may remove it. Left as it is
+  because the tap is already paid and rebuilding buys nothing in steady state
+  (rule 2), and noted so a fresh install can do better.
 
 Everything else the library view does is one tap from a web page, and it stays
 that way.
