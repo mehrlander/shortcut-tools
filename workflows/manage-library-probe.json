@@ -1,0 +1,24 @@
+{
+  "label": "Probe: the three shape-unknown library actions (4 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "UUID": "B0BE0000-0100-4A00-9000-000000000001",
+        "WFCommentActionText": "PROBE, not a working shortcut.\n\nactions.json carries a bare identifier for all three cards below: it holds WFWorkflowActionParameters for only the 38 control-flow entries, so nothing here knows what fields these take. Copying a card back is the only way to read a shape exactly, since a copied action is a binary plist whose bytes survive the trip.\n\nWhat to do:\n  1. Paste these four cards into a new shortcut.\n  2. Configure each of the three: point Open at any shortcut, point Move at any folder, point Delete at any shortcut. The values do not matter, only the fields.\n  3. Select the three cards, copy, and send the result back.\n  4. tools/unpack.py reads the shapes, and Manage-Library gets built from them.\n\nDo NOT run this shortcut. The Delete card is configured and live."
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.OpenWorkflowAction",
+      "p": { "UUID": "B0BE0000-0100-4A00-9000-000000000002" }
+    },
+    {
+      "id": "com.apple.shortcuts.MoveShortcutToFolderAction",
+      "p": { "UUID": "B0BE0000-0100-4A00-9000-000000000003" }
+    },
+    {
+      "id": "com.apple.shortcuts.DeleteWorkflowAction",
+      "p": { "UUID": "B0BE0000-0100-4A00-9000-000000000004" }
+    }
+  ]
+}

@@ -5,5 +5,16 @@
   "order": 40,
   "quickLink": true,
   "note": "Apple Shortcuts action reference dataset and tooling.",
-  "scope": "An Apple Shortcuts reference: an action dictionary mapping human-readable names to WFWorkflowActionIdentifier values across the built-in and third-party bundles, packaged with a small CLI to search it. A self-contained dataset and tool, useful on its own."
+  "scope": "An Apple Shortcuts reference: an action dictionary mapping human-readable names to WFWorkflowActionIdentifier values across the built-in and third-party bundles, packaged with a small CLI to search it. A self-contained dataset and tool, useful on its own.",
+  "pages": [
+    {
+      "path": "pages/library.html",
+      "title": "Shortcuts",
+      "note": "The device's Shortcuts library, browsable on axes the app does not have, with a staged prune workflow.",
+      "appView": true,
+      "viewLabel": "Shortcuts",
+      "icon": "ph-lightning",
+      "order": 30
+    }
+  ]
 }

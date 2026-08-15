@@ -107,8 +107,62 @@ def tier(index, hubs):
                     "depth": depth.get(n), "menu": s.get("menu", False),
                     "input": s.get("takes_input", False), "from": s.get("from", ""),
                     "kinds": [k for k, _ in s.get("kinds", [])][:3]})
+    names = set(by)
+    for r in out:
+        r["nominate"] = nominate(r, names)
     missing = sorted({t for t in callers if t not in by})
     return out, missing
+
+
+def base_name(name):
+    """The name a duplicate was made from, if the suffix is stripped."""
+    n = re.sub(r" \d+$", "", name)
+    n = re.sub(r"(Old|Test|Copy|before|Chunked)$", "", n).rstrip()
+    return n
+
+
+def nominate(row, names):
+    """Why this shortcut is a deletion candidate, graded, or None.
+
+    **A nomination is a question to answer on the device, never an instruction
+    to act on here**, which is why it carries a confidence rather than a flag.
+    Three grades, and the gap between them is the whole point:
+
+    - **high**: the name is a duplicate Shortcuts itself minted on an edit, and
+      the shortcut it was duplicated from is still in the archive. The original
+      is the answer to "what did I lose", so this is the one class where the
+      question nearly answers itself.
+    - **medium**: duplicate-on-edit residue whose original is gone. The copy may
+      now be the only version, so the suffix is evidence about the name and not
+      about the content.
+    - **low**: an import nothing here calls. It was installed and never wired
+      in, which is not the same as never used: an import is usually run by hand
+      from the app, and this archive cannot see that.
+
+    The Uncalled tier is deliberately **not** nominated at any grade. It is the
+    largest tier, and "called by nothing" is exactly what a shortcut launched
+    from the Home Screen, a widget, the share sheet, or Siri looks like here.
+
+    A core shortcut is never nominated however its name is spelled: two of the
+    42 are numbered duplicates and are load-bearing anyway.
+    """
+    if row["tier"] == "core":
+        return None
+    name = row["name"]
+    if row["lifecycle"] == "residue":
+        base = base_name(name)
+        if base != name and base in names:
+            return {"confidence": "high",
+                    "reason": "duplicate of %s, which is still here" % base,
+                    "original": base}
+        return {"confidence": "medium",
+                "reason": "duplicate-on-edit residue, but no original by that name",
+                "original": None}
+    if row["provenance"] == "imported" and row["connectivity"] == "uncalled":
+        return {"confidence": "low",
+                "reason": "imported, nothing here calls it",
+                "original": None}
+    return None
 
 
 def suggest(name, names):
@@ -281,16 +335,54 @@ draw();
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("index")
-    ap.add_argument("-o", "--out", required=True)
+    ap.add_argument("-o", "--out", help="write the standalone survey page here")
+    ap.add_argument("--json", dest="json_out",
+                    help="write the tiered rows as data here (library.json), for a "
+                         "renderer that should not re-derive the tiering")
     ap.add_argument("--hub", action="append", default=None,
                     help="a hub to reach from; repeatable (default: %s)" % ", ".join(HUBS))
     ap.add_argument("--dangling", action="store_true",
                     help="report calls to names the archive does not hold, and stop")
     args = ap.parse_args()
+    if not (args.out or args.json_out or args.dangling):
+        ap.error("nothing to write: pass -o, --json, or --dangling")
 
     index = json.load(open(args.index))
-    rows, missing = tier(index, args.hub or HUBS)
+    hubs = args.hub or HUBS
+    rows, missing = tier(index, hubs)
     counts = collections.Counter(r["tier"] for r in rows)
+
+    if args.json_out:
+        # The structured stage behind pages/library.html. The page renders these
+        # rows and derives none of them, so the tiering has one owner and a
+        # changed rule shows up as a changed file rather than as two surfaces
+        # drifting. `dangling` rides along because it is the same read.
+        payload = {
+            "meta": {
+                "shortcuts": len(rows),
+                "actions": sum(r["actions"] for r in rows),
+                "hubs": hubs,
+                "tiers": {key: counts.get(key, 0) for key, _, _ in TIERS},
+                "tier_why": {key: why for key, _, why in TIERS},
+                "tier_label": {key: label for key, label, _ in TIERS},
+                "facets": {axis: dict(collections.Counter(r[axis] for r in rows))
+                           for axis in ("provenance", "lifecycle", "connectivity")},
+                "nominated": dict(collections.Counter(
+                    r["nominate"]["confidence"] for r in rows if r["nominate"])),
+                "missing": len(missing),
+            },
+            "rows": rows,
+            "dangling": dangling(index, rows),
+        }
+        Path(args.json_out).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=1) + "\n")
+        print("wrote %s (%d rows, nominated: %s)"
+              % (args.json_out, len(rows),
+                 ", ".join("%s %d" % (k, v)
+                           for k, v in sorted(payload["meta"]["nominated"].items()))),
+              file=sys.stderr)
+        if not args.out:
+            return
 
     if args.dangling:
         rep = dangling(index, rows)
@@ -316,7 +408,7 @@ def main():
         for value, n in sorted(collections.Counter(r[axis] for r in rows).items(),
                                key=lambda kv: -kv[1]))
     sub = "%d shortcuts, %d actions. Hubs: %s." % (
-        len(rows), sum(r["actions"] for r in rows), ", ".join(args.hub or HUBS))
+        len(rows), sum(r["actions"] for r in rows), ", ".join(hubs))
     note = "%d names are called and absent from the archive. Tap a tier." % len(missing)
 
     page = PAGE

@@ -166,6 +166,79 @@ tiers are a cascade over those and collapse pairs. The core is a floor: it is
 the closure of named hubs, so it grows with every entry point the call graph
 cannot see.
 
+## The library as an app view
+
+[`pages/library.html`](pages/library.html) is the browsable form of all of the
+above, and an **app view**: any repo promotes a page to an estate-level entry in
+show-repo by flagging a `pages` catalog entry `appView: true` in its own
+`.web-tools.json`, which is the whole integration. The renderer lives here,
+public, beside the tools that generate what it reads; the library it reads lives
+in a private repository, through the viewer's token.
+
+Three facets. **Library** browses every shortcut on axes the Shortcuts app does
+not have: tier, provenance, lifecycle, connectivity, and the call graph both
+ways, so "what calls `Show-Html`" is a search rather than an afternoon. A row
+expands to its pseudocode sketch, and a call the archive does not hold is struck
+through where it is named. **Prune** is below. **Reference** renders this repo's
+own `docs/` in place, because the format record is about Apple's runtime rather
+than about this estate, and belongs beside the library it explains.
+
+The page **derives nothing**. Tier, facets, and the graded nominations all come
+from `survey.py --json`, which writes a `library.json` beside the index:
+
+```bash
+python3 tools/survey.py index.json --json library.json   # data for the page
+python3 tools/survey.py index.json -o library.html       # the standalone page
+```
+
+One owner for the tiering, so changing a rule shows up as a changed file rather
+than as two surfaces quietly disagreeing.
+
+### Deletion is the fourth step, never the first
+
+Nothing on the page deletes anything, and the sequence is built so that every
+step before the last is reversible:
+
+1. **Nominate**, here, mechanically and **graded**. `high` is a name Shortcuts
+   itself minted on an edit whose original is still in the archive, so the
+   question nearly answers itself. `medium` is that residue with the original
+   gone, meaning the copy may now be the only version. `low` is an import
+   nothing calls, which is not the same as never used. The Uncalled tier is
+   never nominated at any grade: it is the largest tier, and "called by nothing"
+   is exactly what a Home Screen, widget, share sheet, or Siri entry point looks
+   like from here.
+2. **Stage**, on the device, by moving the picked shortcuts into a holding
+   folder. A move, so it undoes.
+3. **Wait.** The folder sits there as long as you like. The page shows how many
+   days each has been in it.
+4. **Delete**, on the device, with the shortcut open in front of you. The page
+   opens it for you and stops there.
+
+A nomination is a question to answer on the device, never an instruction to act
+on here, which is why it carries a confidence rather than a flag.
+
+The page writes a `prune.json` ledger beside the archive recording each
+decision, including **keep**, which exists so a reviewed shortcut stops being
+re-nominated forever. The ledger records decisions and cannot see the phone: the
+next dump is the ground truth, and a staged name absent from it is what confirms
+the deletion happened.
+
+### The device link, and the one shape it does not know
+
+Every instruction the page sends is `shortcuts://run-shortcut`, the only scheme
+this library has ever proven, aimed at one receiver (`Manage-Library`) that
+switches on a JSON `op`. Opening an editor, moving to a folder, and deleting are
+**actions**, not schemes, so they run inside that receiver rather than being
+addressable from a page.
+
+The three identifiers are known and in the dictionary (`openshortcut`,
+`moveshortcut`, `deleteshortcuts`). Their **parameters** are not: `actions.json`
+carries `WFWorkflowActionParameters` for only the 38 control-flow entries, so
+for anything else a copied card is the sole source of the shape.
+[`workflows/manage-library-probe.json`](workflows/manage-library-probe.json)
+packs the three bare cards for exactly that round trip; configure them on the
+device, copy them back, and `tools/unpack.py` reads the shapes.
+
 ## CLI
 
 Installed as `shortcut-tools`, or run with `npx shortcut-tools`.
