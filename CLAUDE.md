@@ -70,6 +70,21 @@ work that took years to accumulate. Reasoning in
 it. The suite fails when it is behind, which is deliberate: a stale payload
 serves a link that works and delivers the wrong thing.
 
+## A diagnostic returns itself
+
+**Never end a probe by asking what happened.** That makes the user read a
+screen, decide what matters, and describe it, which is three jobs handed over
+with the answer already on the device.
+
+End it with `run Log-Probe` instead. That card puts the payload on the clipboard
+and commits it to `shortcuts/probes/` in web-tools-private, so the whole
+interaction is: tap the link, and the result is either already in the repo or
+one paste away. The clipboard write runs **first and unconditionally**, so a
+failed commit degrades to the cheap path rather than losing the result.
+
+This is why the repo carries a logger at all. It is not telemetry, it is the
+return channel that makes a probe cost one tap.
+
 ## Handing over a link
 
 **Emit both forms, never type either**, which
