@@ -1,5 +1,5 @@
 {
-  "label": "Log-Probe: commit the input to the repo, clipboard as fallback (8 actions)",
+  "label": "Log-Repo: commit the input to the repo log, clipboard as fallback (8 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.setclipboard",
@@ -85,13 +85,13 @@
         "WFURL": {
           "Value": {
             "attachmentsByRange": {
-              "{84, 1}": {
+              "{81, 1}": {
                 "OutputName": "Formatted Date",
                 "OutputUUID": "B0BE0000-0403-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             },
-            "string": "https://api.github.com/repos/mehrlander/web-tools-private/contents/shortcuts/probes/￼.json"
+            "string": "https://api.github.com/repos/mehrlander/web-tools-private/contents/shortcuts/log/￼.json"
           },
           "WFSerializationType": "WFTextTokenString"
         },
@@ -154,13 +154,13 @@
                 "WFValue": {
                   "Value": {
                     "attachmentsByRange": {
-                      "{7, 1}": {
+                      "{5, 1}": {
                         "OutputName": "Formatted Date",
                         "OutputUUID": "B0BE0000-0403-4A00-9000-000000000001",
                         "Type": "ActionOutput"
                       }
                     },
-                    "string": "probe: ￼"
+                    "string": "log: ￼"
                   },
                   "WFSerializationType": "WFTextTokenString"
                 }

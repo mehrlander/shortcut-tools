@@ -45,7 +45,7 @@ Rank every delivery route by what it costs the person on the other end:
 
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
-- `Library-Open` and `Library-Stage` pasted, named, Shortcut Input enabled.
+- `Library-Open`, `Library-Stage`, and `Log-Repo` pasted, named, Shortcut Input enabled.
 - `Library-Stage`'s Move card: **one tap** to pick the holding folder. This is
   the only in-app step that could not be removed. A Shortcuts folder is an App
   Intents entity addressed by an opaque identifier, and no action anywhere in
@@ -76,8 +76,8 @@ serves a link that works and delivers the wrong thing.
 screen, decide what matters, and describe it, which is three jobs handed over
 with the answer already on the device.
 
-End it with `run Log-Probe` instead. That card puts the payload on the clipboard
-and commits it to `shortcuts/probes/` in web-tools-private, so the whole
+End it with `run Log-Repo` instead. That card puts the payload on the clipboard
+and commits it to `shortcuts/log/` in web-tools-private, so the whole
 interaction is: tap the link, and the result is either already in the repo or
 one paste away. The clipboard write runs **first and unconditionally**, so a
 failed commit degrades to the cheap path rather than losing the result.
