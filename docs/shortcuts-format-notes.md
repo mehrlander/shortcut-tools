@@ -942,9 +942,41 @@ entity slot is keyed differently per action, which is the part nothing in
 **Picked in the editor, an entity is an opaque UUID and the name is only a
 label.** A card configured by hand holds `identifier` (a UUID), an `image` whose
 `uri` is an `intents-remote-image-proxy:` address, and `title`/`subtitle` as
-`{"key": "Animal Game"}` display dicts. Nothing resolves by that title, so a
-chain written elsewhere **cannot name its target** the way `runworkflow` can
-through `WFWorkflowName`.
+`{"key": "Animal Game"}` display dicts.
+
+**This is the one place the `WFWorkflowName` finding above does not reach, and
+the difference is the action family rather than the key.** Run Shortcut is a
+legacy `is.workflow.actions.*` action whose target is a plain string key, which
+is why a name alone resolves it and why the page's Run button needs no lookup.
+These three are App Intents actions whose target is an entity slot, and no
+evidence says a name resolves one. Two things support that, neither being proof
+that the slot rejects a string:
+
+- **The corpus works around it.** `Use-Shortcut`, holding a *Name* as text, does
+  `getmyworkflows` then `filter.files` then recurses with the shortcut it found,
+  rather than handing the name to its own Open card. Its Open card is fed
+  `ExtensionInput`, and by then the input is a shortcut, not a name.
+- **Others hit the same wall.** A 2026 write-up on driving Shortcuts
+  programmatically reports that intents needing entity parameters "require
+  opaque IDs from the Shortcuts GUI," with no programmatic way to resolve them,
+  and that `LNConnection.performQuery()` crashes when used to try
+  ([navan.dev](https://web.navan.dev/posts/2026-04-06-programatically-creating-and-running-siri-shortcuts.html),
+  2026-04-06).
+
+*Unconfirmed, and worth one card to settle:* whether an entity slot given a text
+variable holding a name resolves it anyway. If it does, `Library-Open` collapses
+from three cards to one.
+
+**No public reference documents these three actions.** Checked 2026-08-15:
+[sebj/iOS-Shortcuts-Reference](https://github.com/sebj/iOS-Shortcuts-Reference),
+[Cherri's file-format page](https://cherrilang.org/compiler/file-format.html),
+and [shortcuts-toolkit](https://github.com/drewburchfield/shortcuts-toolkit) all
+cover the legacy `is.workflow.actions.*` family only, and none mentions
+`AppIntentDescriptor` or entity parameters at all. The public reverse
+engineering stopped at the boundary where Apple moved actions to App Intents,
+which is why a copied card remains the only source for anything in this family
+and why `WFActions.plist` inside WorkflowKit, the usual answer for a legacy
+action's parameters, does not hold these.
 
 **Bound to a variable, it is an ordinary attachment**, which is what makes these
 reachable from a generated chain at all:
