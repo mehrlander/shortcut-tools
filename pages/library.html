@@ -9,12 +9,14 @@
 <script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"></script>
 
 <!--
-  library.html — the Shortcuts library as an app view, in three facets:
+  library.html — the Shortcuts library as an app view, in four facets:
 
     Library    every shortcut, grouped on axes the Shortcuts app does not have:
                tier, provenance, lifecycle, connectivity, what calls what. A row
                expands to its pseudocode sketch and its call graph.
     Prune      the staged deletion workflow. Nothing here deletes anything.
+    Log        the Log-Repo return channel read back: every probe result the
+               device has committed, newest first.
     Reference  the format record, read from this repo's own docs/.
 
   Renderer lives HERE (public, beside the tools that generate its data); the
@@ -26,6 +28,7 @@
     shortcuts/library.json      rows + dangling + meta, from tools/survey.py --json
     shortcuts/sketches/<Name>.txt  one shortcut as pseudocode, fetched on demand
     shortcuts/prune.json        the decision ledger this page writes
+    shortcuts/log/<stamp>.json  one probe result per file, committed by Log-Repo
 
   THE PAGE DERIVES NOTHING. Tier, provenance, lifecycle, connectivity, and the
   graded nominations are all computed by tools/survey.py and read from
@@ -89,6 +92,13 @@
       saving: false,
       saveError: '',
       lastLink: '',             // the device link the last stage produced
+
+      // ── log state ────────────────────────────────────────────────────────
+      logFiles: null,           // filenames newest-first; null until the facet opens
+      logPayloads: {},          // name -> { op, pretty }
+      logLimit: 20,
+      logLoading: false,
+      logError: '',
 
       // ── reference state ──────────────────────────────────────────────────
       DOCS: [
@@ -277,6 +287,52 @@
         await this.writeLedger(`shortcuts: reopen ${name}`);
       },
 
+      // ── the log ──────────────────────────────────────────────────────────
+      // Read-only over what Log-Repo committed. Loaded when the facet first
+      // opens, not at init: the library is the page's job and the log is a
+      // lens. Filenames are date-stamped, so a lexical sort IS newest-first
+      // once reversed, and the directory listing needs no content reads.
+      async openLogFacet() {
+        this.facet = 'log';
+        if (this.logFiles) return;
+        this.logLoading = true;
+        try {
+          const dir = await this.gh.req(`contents/shortcuts/log?ref=${this.DATA_REF}`);
+          this.logFiles = dir.filter(f => f.type === 'file').map(f => f.name).sort().reverse();
+          await this.fetchLogPayloads();
+        } catch (e) {
+          // An absent directory is an empty log: nothing has been logged on
+          // this ref yet, which the page reports rather than errors on.
+          this.logFiles = [];
+          if (!/404/.test(String(e))) this.logError = String(e.message || e);
+        }
+        this.logLoading = false;
+      },
+      async fetchLogPayloads() {
+        const want = this.logFiles.slice(0, this.logLimit).filter(n => !this.logPayloads[n]);
+        await Promise.all(want.map(async n => {
+          try {
+            const text = (await this.gh.get('shortcuts/log/' + n)).text;
+            let parsed = null;
+            try { parsed = JSON.parse(text); } catch {}
+            this.logPayloads[n] = {
+              op: parsed && typeof parsed === 'object' ? (parsed.op || '') : '',
+              pretty: parsed ? JSON.stringify(parsed, null, 1) : text,
+            };
+          } catch (e) {
+            this.logPayloads[n] = { op: '', pretty: 'Could not read: ' + (e.message || e) };
+          }
+        }));
+      },
+      moreLog() { this.logLimit += 40; return this.fetchLogPayloads(); },
+      logStamp(n) {
+        const m = n.match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})(\d{2})/);
+        return m ? `${m[1]} · ${m[2]}:${m[3]}:${m[4]}` : n;
+      },
+      logGhLink(n) {
+        return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/log/` + encodeURIComponent(n);
+      },
+
       // ── reference ────────────────────────────────────────────────────────
       async openDoc(path) {
         if (this.doc === path) { this.doc = null; return; }
@@ -326,6 +382,9 @@
     <button role="tab" class="tab" :class="facet==='prune' && 'tab-active'" @click="facet='prune'">
       <i class="ph ph-broom mr-1"></i> Prune
       <span class="badge badge-sm badge-warning ml-1" x-show="pending.length" x-text="pending.length"></span>
+    </button>
+    <button role="tab" class="tab" :class="facet==='log' && 'tab-active'" @click="openLogFacet()">
+      <i class="ph ph-tray-arrow-down mr-1"></i> Log
     </button>
     <button role="tab" class="tab" :class="facet==='reference' && 'tab-active'" @click="facet='reference'">
       <i class="ph ph-book-open mr-1"></i> Reference
@@ -578,6 +637,43 @@
         </template>
       </div>
     </section>
+  </div>
+
+  <!-- ══ LOG ══════════════════════════════════════════════════════════════ -->
+  <div x-show="facet==='log' && !loading && !error" class="mt-4">
+    <p class="text-sm opacity-70">
+      The return channel, read back. A probe ends with <span class="font-mono">run Log-Repo</span>,
+      which puts its payload on the clipboard and commits it here, so the result is in the
+      repo before anyone has to describe a screen.
+    </p>
+
+    <div class="mt-3 flex items-center gap-2 opacity-60" x-show="logLoading">
+      <span class="loading loading-spinner loading-sm"></span> Reading the log…
+    </div>
+    <div class="alert alert-error mt-3 text-sm" x-show="logError">
+      <i class="ph ph-warning"></i><span x-text="logError"></span>
+    </div>
+    <p class="text-sm opacity-60 mt-3" x-show="logFiles && !logFiles.length && !logLoading && !logError">
+      Nothing logged yet on this ref.
+    </p>
+
+    <ul class="mt-2 divide-y divide-base-300">
+      <template x-for="n in (logFiles || []).slice(0, logLimit)" :key="n">
+        <li class="py-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-mono text-xs" x-text="logStamp(n)"></span>
+            <span class="badge badge-sm badge-ghost" x-show="logPayloads[n]?.op" x-text="logPayloads[n]?.op || ''"></span>
+            <a class="link text-xs opacity-60 ml-auto" :href="logGhLink(n)" target="_blank">file</a>
+          </div>
+          <pre class="text-[11px] leading-snug bg-base-200 rounded p-2 mt-1 overflow-x-auto max-h-48"
+               x-text="logPayloads[n] ? logPayloads[n].pretty : 'loading…'"></pre>
+        </li>
+      </template>
+    </ul>
+
+    <button class="btn btn-sm btn-ghost w-full mt-3" x-show="logFiles && logFiles.length > logLimit" @click="moreLog()">
+      Show more (<span x-text="(logFiles || []).length - logLimit"></span> left)
+    </button>
   </div>
 
   <!-- ══ REFERENCE ════════════════════════════════════════════════════════ -->
