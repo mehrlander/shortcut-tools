@@ -13,6 +13,17 @@
    "logEntries": 3
   },
   {
+   "id": "corpus-derivative-freshness-lnz3xw",
+   "title": "Detect when the corpus derivatives lag the dumps",
+   "status": "backlog",
+   "opened": "2026-08-16",
+   "size": "S",
+   "file": "corpus-derivative-freshness-lnz3xw.md",
+   "href": "tasks/corpus-derivative-freshness-lnz3xw.md",
+   "lastActivity": "2026-08-16",
+   "logEntries": 1
+  },
+  {
    "id": "document-library-api-and-cli-lqkb9f",
    "title": "Document the library API and CLI in the README",
    "status": "done",

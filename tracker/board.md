@@ -3,7 +3,7 @@
 _Generated from tasks/. Do not hand-edit._
 
 ## On deck
-- (none)
+- 🎫 [Detect when the corpus derivatives lag the dumps](tasks/corpus-derivative-freshness-lnz3xw.md) · S
 
 ## In progress
 - (none)
