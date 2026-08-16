@@ -10,7 +10,10 @@
 			<key>WFWorkflowActionIdentifier</key>
 			<string>is.workflow.actions.comment</string>
 			<key>WFWorkflowActionParameters</key>
-			<dict/>
+			<dict>
+				<key>WFCommentActionText</key>
+				<string>Import this twice. The second copy arrives as "Dupe-Probe 1" and the first keeps the clean name, so every shortcuts://run-shortcut?name=Dupe-Probe link and every runworkflow card naming it keeps resolving to the OLD copy. That is why anything generated from this repo is deleted before it is re-imported (CLAUDE.md, "Installing is an import, not a paste").</string>
+			</dict>
 		</dict>
 	</array>
 	<key>WFWorkflowClientVersion</key>

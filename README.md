@@ -100,6 +100,44 @@ inject is refused rather than quietly loaded unauthenticated.
 `--raw` skips the shell and sends the page as itself, which is what a device
 without `DecompressionStream` needs (Safari gained it in 16.4).
 
+The same trade is now available without a shell at all.
+[`workflows/show-toss.json`](workflows/show-toss.json) opens web-tools'
+`toss-render.html#gz=`, a hosted page whose whole job is to inflate a gzipped
+payload and render it, so the inflater is fetched rather than carried. Reasoning
+and the trust boundary that comes with it are in
+[`workflows/README.md`](workflows/README.md#show-toss-the-same-render-ending-at-web-tools-instead-of-a-data-url).
+
+## Installing a generated shortcut
+
+`pack.py` sends actions to paste and `show.py` sends a page to run.
+[`tools/plist.py`](tools/plist.py) sends **a whole shortcut to install**, which
+is the only route that reaches file-level settings: Show in Share Sheet, the
+accepted input classes, and the no-input behavior live in the workflow file, and
+no clipboard paste touches them.
+
+A chain opts in by declaring a `"name"`. `--publish` writes every named chain to
+`plists/`, and `--install` emits the tappable link:
+
+```bash
+python3 tools/plist.py --publish                                  # every named chain
+python3 tools/plist.py workflows/show-toss.json --install         # main
+python3 tools/plist.py workflows/show-toss.json --install --ref <branch>
+```
+
+Tapping runs `Library-Import`, which fetches the plist, remote-signs it, and
+hands it to Shortcuts, so the cost is one tap plus Apple's own import sheet. Use
+`--ref` to install from a branch before it merges; that is the whole test cycle
+for a new receiver.
+
+**Delete the old copy first.** Import never merges by name: importing over an
+existing shortcut leaves the original holding the clean name and calls the new
+one `Name 1`, so every `run-shortcut?name=Name` link and every `runworkflow`
+card naming it keeps resolving to the version you meant to replace. An upgrade
+that silently did the opposite is the failure this rule exists for, and
+[`workflows/dupe-probe.json`](workflows/dupe-probe.json) is the one-action chain
+that established it. Anything generated from this repo is reproducible from
+`git`, so deleting it costs a re-import and nothing else.
+
 ## Menus with icons
 
 Choose from List shows one plain line per row. Given **contacts** it shows an

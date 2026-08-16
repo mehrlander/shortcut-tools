@@ -57,3 +57,27 @@ test("two chains claiming one name fail loudly rather than overwriting", () => {
     run("--publish");
   }
 });
+
+// The install link is the plist's counterpart to `pack.py --url`: the sender
+// generates it rather than typing it, so a wrong character 404s at the fetch
+// instead of installing something adjacent.
+test("--install emits a Library-Import link naming the chain and its plist", () => {
+  const link = run("workflows/show-toss.json", "--install").trim();
+  assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Library-Import&input=text&text=/);
+  const text = decodeURIComponent(new URL(link).searchParams.get("text"));
+  const [name, url] = text.split("\n");
+  assert.strictEqual(name, "Show-Toss", "line 1 is the name Library-Import imports under");
+  assert.strictEqual(url,
+    "https://raw.githubusercontent.com/mehrlander/shortcut-tools/main/plists/Show-Toss.plist",
+    "line 2 is the plist Library-Import fetches");
+});
+
+test("--install --ref reads from that ref, so a branch can be tested before merge", () => {
+  const link = run("workflows/show-toss.json", "--install", "--ref", "some-branch").trim();
+  const text = decodeURIComponent(new URL(link).searchParams.get("text"));
+  assert.match(text, /shortcut-tools\/some-branch\/plists\/Show-Toss\.plist$/);
+});
+
+test("a chain with no name has no install link, and says so", () => {
+  assert.throws(() => run("workflows/menu.json", "--install"), /declares no name/);
+});

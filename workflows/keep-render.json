@@ -1,0 +1,268 @@
+{
+  "name": "Keep-Render",
+  "label": "Keep-Render: commit the input to the render log, hand back its blob link (9 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFStringContentItem",
+      "WFRichTextContentItem"
+    ],
+    "WFWorkflowNoInputBehavior": {
+      "Name": "WFWorkflowNoInputBehaviorGetClipboard",
+      "Parameters": {}
+    }
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.date",
+      "p": {
+        "UUID": "70570001-0000-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.format.date",
+      "p": {
+        "UUID": "70570002-0000-4A00-9000-000000000002",
+        "WFDate": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Current Date",
+                "OutputUUID": "70570001-0000-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFDateFormatStyle": "Custom",
+        "WFDateFormat": "yyyy-MM-dd-HHmmss"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "70570003-0000-4A00-9000-000000000003",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "70570004-0000-4A00-9000-000000000004",
+        "WFTextActionText": "Bearer 🎟️GitHubToken"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "70570005-0000-4A00-9000-000000000005",
+        "WFWorkflowName": "Inject-🎟️GitHubToken",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "70570004-0000-4A00-9000-000000000004",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.downloadurl",
+      "p": {
+        "UUID": "70570006-0000-4A00-9000-000000000006",
+        "ShowHeaders": true,
+        "WFHTTPMethod": "PUT",
+        "WFHTTPBodyType": "JSON",
+        "WFURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{75, 1}": {
+                "OutputName": "Formatted Date",
+                "OutputUUID": "70570002-0000-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://api.github.com/repos/mehrlander/web-tools-private/contents/renders/￼.html"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFHTTPHeaders": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "string": "Authorization"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "Shortcut Result",
+                        "OutputUUID": "70570005-0000-4A00-9000-000000000005",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "string": "Accept"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "application/vnd.github+json"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        },
+        "WFJSONValues": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "string": "message"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{8, 1}": {
+                        "OutputName": "Formatted Date",
+                        "OutputUUID": "70570002-0000-4A00-9000-000000000002",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "render: ￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "string": "content"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "Base64 Encoded",
+                        "OutputUUID": "70570003-0000-4A00-9000-000000000003",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "string": "branch"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "main"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "70570007-0000-4A00-9000-000000000007",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{66, 1}": {
+                "OutputName": "Formatted Date",
+                "OutputUUID": "70570002-0000-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://github.com/mehrlander/web-tools-private/blob/main/renders/￼.html"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "70570008-0000-4A00-9000-000000000008",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "70570007-0000-4A00-9000-000000000007",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "70570009-0000-4A00-9000-000000000009",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{6, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "70570007-0000-4A00-9000-000000000007",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "Kept. ￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

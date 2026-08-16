@@ -1,0 +1,85 @@
+{
+  "name": "Toss-Html",
+  "label": "Toss-Html: render Shortcut Input through the toss renderer (4 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFStringContentItem",
+      "WFRichTextContentItem"
+    ],
+    "WFWorkflowNoInputBehavior": {
+      "Name": "WFWorkflowNoInputBehaviorGetClipboard",
+      "Parameters": {}
+    }
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "70560001-0000-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "70560002-0000-4A00-9000-000000000002",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{67, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "70560001-0000-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://mehrlander.github.io/web-tools/pages/toss-render.html#html=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "70560003-0000-4A00-9000-000000000003",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "70560002-0000-4A00-9000-000000000002",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "70560004-0000-4A00-9000-000000000004",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "URL",
+                "OutputUUID": "70560002-0000-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

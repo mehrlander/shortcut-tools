@@ -51,6 +51,10 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 | `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
+| `show-toss` | `Show-Html` with its last stage swapped: gzip the page and open it in web-tools' toss renderer instead of a `data:` URL. The double back tap's render path, moved into the estate. |
+| `toss-html` | The four-action version, `run-html`'s analogue for the hosted route: base64 the input, open `toss-render.html#html=`. No credential, no repairs. |
+| `keep-render` | Commits the page it is handed to `web-tools-private/renders/` and puts its blob link on the clipboard. The record a `data:` URL could never leave. |
+| `dupe-probe` | One empty comment, imported twice, to see which copy keeps the name. The probe behind the delete-before-importing rule. |
 | `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
 | `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
 
@@ -125,6 +129,87 @@ reference does not.
 
 The payload is 14,190 characters, well past where a pasted link stops being
 trustworthy, so take it from [`packed/`](../packed/) by address.
+
+## `show-toss`: the same render, ending at web-tools instead of a `data:` URL
+
+The double back tap is `Back-DoubleTap`, whose file declares
+`WFWorkflowNoInputBehaviorGetClipboard`, so a tap with nothing shared hands the
+shortcut the clipboard. Its last branch tests that input for `<` **and**
+`` ``` ``, and a match goes to `Show-Html`; everything else goes to `Show-Loop`.
+So the flow the user actually runs is: copy a chunk of HTML out of a chat, tap
+the back of the phone twice, and `Show-Html` opens it.
+
+`Show-Html`'s first four stages are the interesting ones and none of them
+change. What changes is stage five, seven characters of intent: instead of
+
+```
+data:text/html;charset=utf-8;base64,<page>
+```
+
+it opens
+
+```
+https://mehrlander.github.io/web-tools/pages/toss-render.html#gz=<page>
+```
+
+**No web-tools change was needed for this.** `toss-render.html` already
+documents three payload routes, `#gz=` (base64 of gzipped HTML), `#html=`
+(base64 of plain HTML), and `#url=`, and its `b64Bytes` accepts the standard or
+the URL-safe alphabet, padded or not. Shortcuts' `base64encode` emits the
+standard alphabet with padding, so the two meet with no conversion step.
+
+Gzip is one action, `makezip` with `WFArchiveFormat: "gz"`, already proven in
+the corpus by `Show-HtmlViaZip`, which used it to squeeze a page into a `data:`
+URL and then decompressed it in the page with `pako`. The hosted renderer does
+that half already, so `show-toss` keeps the compression and drops the shim.
+Four actions carry it: name the text, coerce it, archive it, base64 it.
+
+What the swap buys, in steady state:
+
+- **The render has an address.** A `data:` URL cannot be sent to anyone or
+  reopened later. A toss link is a link.
+- **The page arrives inside the toolbox.** toss-render mounts the FAB, so Copy
+  toss link, the take menu (rendering copy, review brief, stage, offline zip),
+  and the console tabs are on every render without the page knowing anything
+  about them. `?w=390` on the renderer lays the same page out at phone width.
+- **Compression.** The URL is roughly a quarter the length of the old `data:`
+  URL for typical model-written HTML, which is headroom the previous route was
+  spending for nothing.
+
+Two things are deliberately unchanged. The token injection stays, so the 30-odd
+library shortcuts that hand `Show-Html` a page carrying `🎟️GitHubToken` behave
+the same. And the token still rides in the URL, exactly as it did in the `data:`
+URL, so the exposure is the same one the route always had, now in
+`mehrlander.github.io` history rather than a `data:` entry.
+
+One thing is dropped: `Show-Html`'s action 15, the anchored fence rule that
+reads action 14 and feeds nothing. `docs/shortcuts-format-notes.md` found it
+dead in the 2026-08-13 export, and a copy is the moment to stop carrying it.
+
+### Rendering a payload is not the same as addressing a file
+
+toss-render has a second way in, `#gh=owner/repo@ref:path`, which fetches the
+file through the stored token and renders it **same-origin**. That mode is
+gated to an owners allowlist, and `mehrlander` is on it.
+
+So there is a route that looks tidy and is not: commit the pasted HTML to a repo
+you own, then address it. It would give a short permanent link and a log in one
+step. It would also run model-written markup on the origin that holds the
+GitHub token in `localStorage`, which is the exact thing the payload sandbox
+exists to prevent. Committing untrusted HTML into a repo on the allowlist
+launders it past the allowlist.
+
+That is why the two jobs are two chains. `show-toss` renders, as a sandboxed
+payload, with no network round trip. `keep-render` commits, and hands back a
+**blob link** rather than a toss address, so keeping a copy never silently
+upgrades what that copy is allowed to do. Tossing a kept render stays available
+and stays a deliberate act.
+
+`keep-render` is `log-repo` with a different path and one reordering:
+`log-repo` writes the clipboard first so a failed commit still leaves the result
+in reach, while `keep-render` reads the input first and writes the link last, so
+a failed commit leaves the page itself on the clipboard. Either way the cheap
+path survives the expensive one failing.
 
 ## The two mechanisms the device library lacks
 

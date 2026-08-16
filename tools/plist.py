@@ -4,6 +4,7 @@
     python3 tools/plist.py workflows/<chain>.json        # one, to plists/
     python3 tools/plist.py --publish                     # every chain
     python3 tools/plist.py --check                       # fail if plists/ is behind
+    python3 tools/plist.py <chain> --install [--ref B]   # the tappable install link
 
 `pack.py` emits **actions to paste**; this emits **a shortcut to install**. The
 difference is not convenience. `WFWorkflowTypes` and
@@ -22,11 +23,13 @@ imported shortcut look broken for no visible reason. Everything else comes from
 an optional `"workflow"` block in the chain file, which is how `capture-link`
 asks for the share sheet.
 """
-import argparse, json, plistlib, sys
+import argparse, json, plistlib, sys, urllib.parse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
+RAW = "https://raw.githubusercontent.com/mehrlander/shortcut-tools"
+IMPORT_TARGET = "Library-Import"
 
 # Observed on a 2026 export. Not guessed: an envelope that disagrees with the
 # client is the failure that presents as "the import sheet appeared and nothing
@@ -84,6 +87,26 @@ def render(path):
     return shortcut_name(chain, path), plistlib.dumps(build(chain, path), fmt=plistlib.FMT_XML)
 
 
+def install_link(chain_path, ref):
+    """The tappable link that installs a chain's plist.
+
+    `Library-Import` splits its input on new lines and reads item 1 as the
+    shortcut name and item 2 as the plist URL, so the link is those two lines
+    urlencoded. It exists for the same reason `pack.py --url` does: the README
+    described the shape and nothing emitted it, so it was assembled by hand, and
+    a hand-assembled link is one the reader cannot check.
+    """
+    name = json.loads(Path(chain_path).read_text()).get("name")
+    if not name:
+        raise SystemExit("%s declares no name, so it has no plist to install"
+                         % Path(chain_path).name)
+    if not (OUT / (name + ".plist")).is_file():
+        raise SystemExit("no plists/%s.plist, run `python3 tools/plist.py --publish`" % name)
+    body = "%s\n%s/%s/plists/%s.plist" % (name, RAW, ref, name)
+    return "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
+        IMPORT_TARGET, urllib.parse.quote(body, safe=""))
+
+
 def chains():
     """Only the chains that declare a name: the installable receivers."""
     out = []
@@ -122,11 +145,16 @@ def main():
     ap.add_argument("chain", nargs="?")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--install", action="store_true",
+                    help="emit the Library-Import link for this chain's plist")
+    ap.add_argument("--ref", default="main", help="branch or SHA the --install link reads from")
     args = ap.parse_args()
     if args.publish or args.check:
         return publish(args.check)
     if not args.chain:
         raise SystemExit("give a chain, or --publish")
+    if args.install:
+        return print(install_link(args.chain, args.ref))
     name, data = render(args.chain)
     OUT.mkdir(exist_ok=True)
     (OUT / (name + ".plist")).write_bytes(data)
