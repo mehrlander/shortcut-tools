@@ -1,0 +1,424 @@
+{
+  "name": "Show-Toss",
+  "label": "Show-Toss: render the input through web-tools' toss renderer (24 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFStringContentItem",
+      "WFRichTextContentItem",
+      "WFURLContentItem",
+      "WFSafariWebPageContentItem",
+      "WFGenericFileContentItem"
+    ],
+    "WFWorkflowNoInputBehavior": {
+      "Name": "WFWorkflowNoInputBehaviorGetClipboard",
+      "Parameters": {}
+    }
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Show-Toss: Show-Html's five stages, ending at the web-tools toss renderer\ninstead of a data: URL. Stages 1-4 (accept a page or a URL, inject the\ntoken, inject the clipboard, repair the text) are lifted verbatim from the\n2026-08-13 Show-Html export, minus its one dead fence rule. Stage 5 is the\nchange: gzip the page, base64 it, and open\npages/toss-render.html#gz=<payload>."
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemtype",
+      "p": {
+        "UUID": "70550001-0000-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getmarkdownfromrichtext",
+      "p": {
+        "UUID": "70550002-0000-4A00-9000-000000000002",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "70550000-0000-4A00-9000-000000000001",
+        "WFConditions": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 0,
+            "WFActionParameterFilterTemplates": [
+              {
+                "WFCondition": 4,
+                "WFConditionalActionString": "URL",
+                "WFInput": {
+                  "Type": "Variable",
+                  "Variable": {
+                    "Value": {
+                      "OutputName": "Type",
+                      "OutputUUID": "70550001-0000-4A00-9000-000000000001",
+                      "Type": "ActionOutput"
+                    },
+                    "WFSerializationType": "WFTextTokenAttachment"
+                  }
+                }
+              },
+              {
+                "WFCondition": 8,
+                "WFConditionalActionString": "http",
+                "WFInput": {
+                  "Type": "Variable",
+                  "Variable": {
+                    "Value": {
+                      "OutputName": "Markdown from Rich Text",
+                      "OutputUUID": "70550002-0000-4A00-9000-000000000002",
+                      "Type": "ActionOutput"
+                    },
+                    "WFSerializationType": "WFTextTokenAttachment"
+                  }
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        },
+        "WFControlFlowMode": 0
+      }
+    },
+    {
+      "id": "is.workflow.actions.downloadurl",
+      "p": {
+        "UUID": "70550003-0000-4A00-9000-000000000003",
+        "WFURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.previewdocument",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Contents of URL",
+            "OutputUUID": "70550003-0000-4A00-9000-000000000003",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Contents of URL",
+            "OutputUUID": "70550003-0000-4A00-9000-000000000003",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "content"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "70550000-0000-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "content"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "70550000-0000-4A00-9000-000000000001",
+        "UUID": "70550004-0000-4A00-9000-000000000004",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "70550005-0000-4A00-9000-000000000005",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "content"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": "Inject-🎟️GitHubToken"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "70550006-0000-4A00-9000-000000000006",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "Clipboard"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "70550007-0000-4A00-9000-000000000007",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "70550005-0000-4A00-9000-000000000005",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextFind": "📋ClipboardBase64",
+        "WFReplaceTextReplace": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "70550006-0000-4A00-9000-000000000006",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "70550008-0000-4A00-9000-000000000008",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Updated Text",
+                "OutputUUID": "70550007-0000-4A00-9000-000000000007",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextCaseSensitive": false,
+        "WFReplaceTextFind": "“|”",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextReplace": "\""
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "70550009-0000-4A00-9000-000000000009",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Updated Text",
+                "OutputUUID": "70550008-0000-4A00-9000-000000000008",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextCaseSensitive": false,
+        "WFReplaceTextFind": "‘|’",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextReplace": "'"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "70550010-0000-4A00-9000-000000000010",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Updated Text",
+                "OutputUUID": "70550009-0000-4A00-9000-000000000009",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextCaseSensitive": false,
+        "WFReplaceTextFind": "```\\s*",
+        "WFReplaceTextRegularExpression": true
+      }
+    },
+    {
+      "id": "is.workflow.actions.setitemname",
+      "p": {
+        "UUID": "70550011-0000-4A00-9000-000000000011",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Updated Text",
+            "OutputUUID": "70550010-0000-4A00-9000-000000000010",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFName": "render.html"
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "70550012-0000-4A00-9000-000000000012",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Renamed Item",
+            "OutputUUID": "70550011-0000-4A00-9000-000000000011",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.makezip",
+      "p": {
+        "UUID": "70550013-0000-4A00-9000-000000000013",
+        "WFArchiveFormat": "gz",
+        "WFZIPName": "",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "70550012-0000-4A00-9000-000000000012",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "70550014-0000-4A00-9000-000000000014",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Archive",
+            "OutputUUID": "70550013-0000-4A00-9000-000000000013",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "70550015-0000-4A00-9000-000000000015",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{65, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "70550014-0000-4A00-9000-000000000014",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://mehrlander.github.io/web-tools/pages/toss-render.html#gz=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "70550016-0000-4A00-9000-000000000016",
+        "WFURLActionURL": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "70550015-0000-4A00-9000-000000000015",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "70550017-0000-4A00-9000-000000000017",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "70550016-0000-4A00-9000-000000000016",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "70550018-0000-4A00-9000-000000000018",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "URL",
+                "OutputUUID": "70550016-0000-4A00-9000-000000000016",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Dupe-Probe",
+  "label": "Dupe-Probe: one empty comment, imported twice, to see which copy keeps the name (1 action)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Import this twice. The second copy arrives as \"Dupe-Probe 1\" and the first keeps the clean name, so every shortcuts://run-shortcut?name=Dupe-Probe link and every runworkflow card naming it keeps resolving to the OLD copy. That is why anything generated from this repo is deleted before it is re-imported (CLAUDE.md, \"Installing is an import, not a paste\")."
+      }
+    }
+  ]
+}
