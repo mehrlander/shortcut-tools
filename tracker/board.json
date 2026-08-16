@@ -15,13 +15,15 @@
   {
    "id": "corpus-derivative-freshness-lnz3xw",
    "title": "Detect when the corpus derivatives lag the dumps",
-   "status": "backlog",
+   "status": "done",
    "opened": "2026-08-16",
+   "closed": "2026-08-16",
+   "session": "claude/shortcuts-repo-integration-uhvl7u",
    "size": "S",
    "file": "corpus-derivative-freshness-lnz3xw.md",
    "href": "tasks/corpus-derivative-freshness-lnz3xw.md",
    "lastActivity": "2026-08-16",
-   "logEntries": 1
+   "logEntries": 2
   },
   {
    "id": "document-library-api-and-cli-lqkb9f",

@@ -1,7 +1,9 @@
 ---
 id: corpus-derivative-freshness-lnz3xw
 title: Detect when the corpus derivatives lag the dumps
-status: backlog
+status: done
+closed: 2026-08-16
+session: claude/shortcuts-repo-integration-uhvl7u
 opened: 2026-08-16
 size: S
 ---
@@ -26,3 +28,10 @@ and a public-only checkout stays green.
 ## Progress log
 - 2026-08-16: filed from the shortcuts-integration session, which found the
   hand-run pipeline documented only in the private README.
+- 2026-08-16: done on `claude/shortcuts-repo-integration-uhvl7u`: tools/freshness.py
+  gates index.json, library.json, and library.html byte-for-byte against a temp
+  regeneration, with a node test wrapper that skips on a public-only clone.
+  First run caught library.html stale; regenerated on the sibling
+  web-tools-private branch. Sketches stay advisory (accepted gaps); harvest's
+  core/ stays out until its README-recorded arguments move somewhere
+  machine-readable.
