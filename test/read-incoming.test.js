@@ -118,3 +118,21 @@ test("a dump arriving at Dump-Recent's cap is flagged as probably truncated", ()
   assert.doesNotMatch(r2.stdout, /cap/, "under the cap says nothing");
   fs.rmSync(r2.dir, { recursive: true, force: true });
 });
+
+test("a dump containing the dumpers themselves still splits into whole records", () => {
+  // The first real dump was wide enough to include Dump-Recent and Dump-Named,
+  // whose own text templates carry these markers, so the file held nine
+  // "==shortcut==" where seven were records. An unanchored split cut two
+  // records in half and reported them as malformed JSON: the dumper could not
+  // dump itself. Anchoring to a whole line is sound rather than lucky, since
+  // JSON escapes a newline as two characters and an embedded marker is
+  // therefore never alone on a line.
+  const selfJson = asJson(path.join(ROOT, "plists", "Dump-Recent.plist"));
+  assert.ok(selfJson.includes("==shortcut=="), "fixture must carry the marker inline");
+  const r = run(record("Dump-Recent", selfJson, "2026-08-18T20:49:48-07:00") +
+                record("Sync-Manifest", JSON_BODY, "2026-08-18T19:49:39-07:00"));
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /2 shortcut\(s\)/);
+  assert.doesNotMatch(r.stdout, /UNREADABLE/);
+  fs.rmSync(r.dir, { recursive: true, force: true });
+});

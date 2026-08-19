@@ -67,7 +67,8 @@ test("columns of unequal length are refused, never zipped", () => {
     [], true);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /columns disagree/);
-  assert.match(r.stderr, /cannot be aligned by position/);
+  assert.match(r.stderr, /drops empty values/);
+  assert.match(r.stderr, /refusing beats guessing/);
 });
 
 test("a manifest still carrying folder is read, and folder never misaligns it", () => {
@@ -131,6 +132,21 @@ test("a name carrying quotes or backslashes survives the round trip", () => {
 test("a name containing a marker word does not split the record", () => {
   const out = run(manifest([["Get-lastModified-Report", 3, "2026-08-19T00:00:00-07:00"]]), []);
   assert.deepEqual(out.added, ["Get-lastModified-Report"]);
+});
+
+test("a name that IS a column header is refused, not silently mis-zipped", () => {
+  // The dump reader fixed its version of this by anchoring the split to a whole
+  // line, because there the marker was embedded in JSON. A manifest cannot: a
+  // name genuinely does sit alone on a line, so a shortcut called "==name=="
+  // opens a second column and shifts every row after it. The equal-length guard
+  // is what turns that into a refusal rather than a confident wrong answer.
+  const r = run(manifest([
+    ["==name==", 3, "2026-08-19T00:00:00-07:00"],
+    ["Ordinary", 4, "2026-08-19T00:00:00-07:00"],
+  ]), [], true);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /columns disagree/);
+  assert.match(r.stderr, /named\s+exactly like a column header/);
 });
 
 test("the dump link names every changed shortcut and nothing else", () => {

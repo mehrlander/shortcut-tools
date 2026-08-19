@@ -385,14 +385,51 @@ Two smaller findings, both in `manifest-delta.py`:
   Seven of the first delta's sixty-five, including the two chains being
   installed at the time.
 
+### Running a shortcut updates its modification date
+
+**Measured 2026-08-18 by the first `Dump-Recent` run, and it answers a question
+these notes previously called open.** The expectation was that a file
+modification date tracks edits rather than runs. It does not.
+
+| Shortcut | Modified | What was happening |
+| --- | --- | --- |
+| `Library-Import` | 20:48:46 | ran at ~20:48:50, per its own `Log-Repo` entry |
+| `Dump-Recent` | 20:49:48 | imported 20:48:50, dumped 20:49:53 |
+| `Sync-Manifest` | 19:49:39 | imported 19:16:22, ran 19:49 |
+
+Each date sits within seconds of a run and nowhere near the import, and none of
+the three is a shortcut anyone would edit mid-use: `Library-Import` was being
+used to install something else at that exact moment. One case stays unexplained,
+`Dump-Named` at 19:49:21 with no run recorded, so this is strong evidence rather
+than a closed proof.
+
+**What it costs the sync is precision, not correctness.** A shortcut you merely
+ran now reports as changed, so the delta gains false positives: extra exports,
+never missed ones. Since the action count is exact and independent, the two
+signals still bracket the truth from both sides. Worth knowing before reading a
+date-only flag as "I edited this".
+
 **Two limits worth knowing before leaning on it.** The action count catches every
 structural edit exactly, but a parameter edit that leaves the count alone is
-caught only by `lastModified`, which is a file modification date and so should
-track edits rather than runs. That is an expectation and not a measurement; two
-manifests taken either side of a run settle it, at no cost beyond data the sync
-already collects. And `dump-named` inherits the API's appetite for large bodies,
-so `manifest-delta.py` chunks its links by estimated payload rather than by
-count, since one 400-action shortcut is a bigger ask than thirty small ones.
+caught only by `lastModified`, which now means "touched" rather than "edited".
+And `dump-named` inherits the API's appetite for large bodies, so
+`manifest-delta.py` chunks its links by estimated payload rather than by count,
+since one 400-action shortcut is a bigger ask than thirty small ones.
+
+### The dumper could not dump itself
+
+The first real dump was wide enough to include `Dump-Recent` and `Dump-Named`,
+whose own text templates carry the record markers. The file therefore held
+`==shortcut==` nine times where seven were records, an unanchored split cut two
+records in half, and both were reported as malformed JSON. Anchoring every split
+to a whole line fixes it, and is sound rather than lucky: JSON escapes a newline
+as two characters, so a marker embedded in a serialized shortcut is never alone
+on a line.
+
+A manifest cannot be repaired the same way, because there a name genuinely does
+sit alone on a line. A shortcut called exactly `==name==` opens a second column,
+and the equal-length guard turns that into a refusal rather than a confident
+wrong answer. That guard now earns its keep for two reasons rather than one.
 
 ## Reading a dump back
 

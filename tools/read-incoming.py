@@ -70,9 +70,17 @@ def parse_dump(text):
     Dump-Named emits `==shortcut==`/`==json==` and Dump-Recent adds
     `==modified==` between them. Reading both the same way costs one optional
     field and means the two chains never need to agree on a version.
+
+    **Every split is anchored to a whole line, and the first real dump is why.**
+    Both dumpers carry these markers inside their own text templates, so a dump
+    wide enough to include them holds `==shortcut==` nine times where seven are
+    records. An unanchored split cut two records in half and reported them as
+    malformed JSON: the dumper could not dump itself. Anchoring is sound rather
+    than lucky, because JSON escapes a newline as the two characters backslash-n,
+    so a marker embedded in a serialized shortcut is never alone on a line.
     """
     records = []
-    for chunk in text.split("==shortcut==")[1:]:
+    for chunk in re.split(r"^==shortcut==$", text, flags=re.M)[1:]:
         parts = re.split(r"^==(modified|json)==$", chunk, flags=re.M)
         rec = {"name": parts[0].strip(), "modified": "", "json": ""}
         for key, val in zip(parts[1::2], parts[2::2]):

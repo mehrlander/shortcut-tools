@@ -111,10 +111,12 @@ def parse_manifest(text):
     sizes = {k: len(blocks[k]) for k in required}
     if len(set(sizes.values())) != 1:
         raise ManifestError(
-            "columns disagree (%s). Shortcuts drops empty values when joining, "
-            "so a column with a blank in it cannot be aligned by position; this "
-            "manifest cannot be read safely."
-            % ", ".join("%s=%d" % kv for kv in sorted(sizes.items())))
+            "columns disagree (%s), so this manifest cannot be read safely. "
+            "Two things do that: Shortcuts drops empty values when joining, so a "
+            "column with a blank in it comes back short; and a shortcut named "
+            "exactly like a column header sits alone on a line and opens a "
+            "second column. Either way, refusing beats guessing which rows "
+            "shifted." % ", ".join("%s=%d" % kv for kv in sorted(sizes.items())))
 
     n = sizes["name"]
     folder = blocks.get("folder") if len(blocks.get("folder", [])) == n else None
