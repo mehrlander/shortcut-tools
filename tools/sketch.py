@@ -274,6 +274,16 @@ def one_condition(p, produced):
 
 
 def load(paths):
+    """Merge several dumps, **keeping the last copy of a duplicated name.**
+
+    This matched `index-dump.py`'s first-wins rule until 2026-08-18, when both
+    were wrong for the same reason: once dumps span dates, a duplicate is one
+    shortcut at two points in its life. Fixing only the index would have been
+    worse than fixing neither, because the two derivatives would then disagree
+    silently: `index.json` saying Show-Html has 9 actions while its sketch,
+    generated from the older copy, still showed 23. Pass dumps oldest first,
+    which is what the documented `dumps/*.zip` glob already does.
+    """
     out = {}
     for path in paths:
         if path.endswith(".zip"):
@@ -287,9 +297,9 @@ def load(paths):
                         n = n.encode("cp437").decode("utf-8")
                     except (UnicodeEncodeError, UnicodeDecodeError):
                         pass
-                out.setdefault(n.rsplit(".", 1)[0], z.read(info))
+                out[n.rsplit(".", 1)[0]] = z.read(info)
         else:
-            out.setdefault(Path(path).stem, Path(path).read_bytes())
+            out[Path(path).stem] = Path(path).read_bytes()
     return out
 
 
@@ -298,6 +308,7 @@ def main():
     ap.add_argument("path", nargs="+", help=".wflow files, or dump zips with --name/--all")
     ap.add_argument("--name", help="one shortcut out of the dumps")
     ap.add_argument("--all", action="store_true", help="every shortcut, one after another")
+    ap.add_argument("--dir", help="write one <Name>.txt per shortcut here, instead of stdout")
     args = ap.parse_args()
 
     found = load(args.path)
@@ -310,13 +321,33 @@ def main():
     elif not args.all and len(found) > 1:
         raise SystemExit("%d shortcuts; give --name or --all" % len(found))
 
+    # --dir exists because the split from --all's stream into sketches/ was
+    # done by hand and recorded nowhere, which is why tools/freshness.py can
+    # only report sketch coverage as an advisory count instead of gating it.
+    # A step nobody wrote down is a step that drifts.
+    out = Path(args.dir) if args.dir else None
+    if out:
+        out.mkdir(parents=True, exist_ok=True)
+    wrote = failed = 0
     for i, (name, blob) in enumerate(sorted(found.items())):
-        if i:
-            print()
         try:
-            print(sketch(plistlib.loads(blob), name))
+            text = sketch(plistlib.loads(blob), name)
         except Exception as err:
             print("%s  UNREADABLE: %s" % (name, err), file=sys.stderr)
+            failed += 1
+            continue
+        if out:
+            # ":" for "/", the same substitution a device dump makes in an entry
+            # name, so a sketch filename matches the name index.json carries.
+            (out / (name.replace("/", ":") + ".txt")).write_text(text + "\n")
+            wrote += 1
+        else:
+            if i:
+                print()
+            print(text)
+    if out:
+        print("wrote %d sketches to %s%s"
+              % (wrote, out, ", %d unreadable" % failed if failed else ""), file=sys.stderr)
 
 
 if __name__ == "__main__":

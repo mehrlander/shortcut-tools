@@ -46,6 +46,9 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-folder-zip` | The same folder, as a zip. Four actions: `Get Dictionary from Input` keys the shortcuts by name, `Make Archive` compresses. The shortest route and the one to prefer. |
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
+| `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
+| `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
+| `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
@@ -260,6 +263,180 @@ route works before anything large is attempted.
 One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
+
+## Installing one, rather than pasting it
+
+A chain that declares a `name` gets a plist in [`plists/`](../plists/), and
+`Library-Import` installs one from a URL. That link is emitted, not typed:
+
+```bash
+python3 tools/plist.py workflows/<chain>.json --link            # main
+python3 tools/plist.py workflows/<chain>.json --link --ref <branch>
+```
+
+It carries two lines, the name to install under and the plist to fetch, which is
+the shape `Library-Import` splits on. The form was recorded here and in the
+device log and nowhere emitted, so it was reassembled by hand on every install:
+the same failure `--url` already fixed for the paste route, and the same fix.
+
+**Importing never merges by name**, so the new copy becomes `Name 1` and every
+`run-shortcut?name=Name` link keeps resolving to the old one. Delete the existing
+copy first for anything generated from this repo, where the plist is the source
+and a re-import costs nothing.
+
+## Keeping the corpus current without re-dumping it
+
+**One tap, if you just want the recent work off the phone.** `dump-recent`
+filters Get My Shortcuts to those modified in the last N days and commits each
+one with its contents to `shortcuts/incoming/<stamp>.txt`. N rides in the link
+(`…?name=Dump-Recent&input=text&text=7`) and falls back to 7 when the shortcut is
+run bare from the Shortcuts app, so nothing is ever typed at run time. Fractions
+work, since the window is arithmetic rather than a calendar unit: `0.5` is twelve
+hours.
+
+**Days are multiplied to minutes rather than declared as days, deliberately.**
+The date filter takes a `Unit` enum, and minutes (`64`) is the only value that
+appears anywhere in the corpus, in `Open-RecentShortcut`, whose own label
+annotates its value with an `m`. `64` is also `NSCalendarUnitMinute` in
+Foundation's bit-flag enum, which would make days `16` by the same reading. That
+is a sound inference and still an inference, so the chain multiplies by 1440 with
+a Math action and passes minutes. One extra action buys a parameter that does not
+depend on being right about an enum nobody here has run.
+
+**A window is not self-limiting the way a count is**, so the filter carries a
+hard cap of 150. Widen the window far enough and an uncapped PUT is the whole
+library. The chain has no channel to report what it dropped, so
+`read-incoming.py` flags a dump that arrives at exactly the cap as probably
+truncated. The cap was 60 until the first real 7-day window returned exactly 60:
+the whole window by luck rather than a truncation, and one more edit that week
+would have lost data silently. The size fear behind the original number was also
+wrong, since that run committed 7.2 MB through the API without complaint.
+[`tools/read-incoming.py`](../tools/read-incoming.py) reads the result and
+`--zip` writes it as a dump the existing pipeline already accepts:
+
+```bash
+python3 tools/read-incoming.py <incoming.txt> --zip recent.zip
+python3 tools/index-dump.py shortcuts/dumps/*.zip recent.zip --json shortcuts/index.json
+```
+
+That is the whole loop for the common case. The two-step below is the precise
+form, worth it when the question is "exactly which ones does the corpus lack"
+rather than "give me the recent work", since `dump-recent` cannot know what the
+corpus already holds and will re-send anything that happens to be near the top.
+
+### The precise form: manifest, then named
+
+
+
+A full dump is fourteen zips and a five-command regeneration, which is the right
+cost once and the wrong cost weekly. `sync-manifest` and `dump-named` are the two
+halves of the cheaper loop, and neither asks the user to decide anything:
+
+1. **`Sync-Manifest`** reads Get My Shortcuts, formats the three properties that
+   are available without serializing anything, and PUTs the result to
+   `shortcuts/manifests/<stamp>.txt` in web-tools-private. 33 KB for 633
+   shortcuts, measured. One tap, no page, no prompt.
+2. **[`tools/manifest-delta.py`](../tools/manifest-delta.py)** compares it against
+   the committed `index.json` and prints what is added, removed, and changed,
+   followed by ready-made `Dump-Named` links with the names already in them.
+3. **`Dump-Named`** exports exactly those and PUTs them to
+   `shortcuts/incoming/<stamp>.txt`.
+
+The manifest is **marker text, not JSON**, and the sharp edge named above is the
+reason. Shortcuts has no escaping primitive, so a JSON row built by interpolating
+a name breaks on a shortcut called `Say "hi"`, and it breaks the whole run rather
+than one row. The marker template is instead the one `Get-ShortcutsInfo` already
+proves works on this device, and the parsing moves to Python, where escaping
+exists. `dump-named` carries its records the same way, which is what lets it
+succeed on a name `dump-selected` would fail on.
+
+Both chains open with an unconditional clipboard write before touching the
+network, copied from `log-repo` rather than reinvented: a failed commit should
+degrade to the cheap path, not lose the export.
+
+### What the first device run changed
+
+Run 2026-08-18, and it corrected the design twice. Both corrections are in the
+shipped code; this records why, since neither is guessable from the chain file.
+
+**The manifest arrives column-major.** A Text action evaluates its template
+once and expands each attachment into a newline-joined column, so the file is
+`==name==` followed by all 633 names, then `==actions==` followed by all 633
+counts, and so on. It is not one record per shortcut. The parser had been
+written to accept two possible join styles, and the real shape was a third, so
+the tolerance bought nothing: the only thing that settled it was running it.
+
+**Shortcuts drops an empty value when joining a list into text**, rather than
+emitting a blank line. The first run returned 633 names and 578 folders, because
+55 shortcuts sit in no folder, and nothing in the file says which 55. A column
+holding any empty value therefore cannot be aligned with its siblings by
+position. `folder` was removed from the template for that reason; the manifest
+now carries only the three fields that cannot be empty, and the parser refuses a
+file whose columns disagree rather than producing a plausible wrong answer.
+
+Two smaller findings, both in `manifest-delta.py`:
+
+- **A dump stores `/` as `:` in an entry name**, so `Unzip/Re-zip` on the device
+  is `Unzip:Re-zip` in `index.json`. Two of the first run's three apparent
+  deletions were this. The repair is narrow rather than a blanket substitution,
+  since `REF: Edit iCloud JSON` is a real name with a real colon.
+- **A corpus record that failed to parse has no action count**, and comparing
+  against it printed `actions None to 29`, which reads as a change of unknown
+  size. It is now named as what it is: the corpus never got a usable copy.
+- **The export list was asking for receivers this repo authored.** A plist in
+  `plists/` is rebuildable from git, which is the same reasoning that makes
+  deleting one before an import free, so the device is no longer asked for it.
+  Seven of the first delta's sixty-five, including the two chains being
+  installed at the time.
+
+### Launching a shortcut updates its modification date; being called does not
+
+**Measured 2026-08-18 across two manifests taken 102 minutes apart, with the
+runs in between known from the log.** An earlier note here said flatly that
+running a shortcut moves its date. That was too broad, and the second manifest
+disproved it.
+
+| Shortcut | 19:49 | 21:31 | What happened between |
+| --- | --- | --- | --- |
+| `Sync-Manifest` | 19:49:20 | **21:31:17** | launched by URL, 21:31 |
+| `Library-Import` | 19:16:54 | **20:56:25** | launched by URL, last at 20:56 |
+| `Dump-Recent` | absent | **21:06:27** | launched by URL, 21:06 |
+| `Inject-🎟️GitHubToken` | 2026-04-20 | 2026-04-20 | called as a sub-shortcut ~6 times |
+| `Log-Repo` | 2026-08-15 | 2026-08-15 | called as a sub-shortcut 3 times |
+
+Every shortcut launched from outside carries a date matching its last launch to
+the second. The two that ran repeatedly **as sub-shortcuts**, invoked by Run
+Shortcut from within the ones above, did not move at all: `Inject-🎟️GitHubToken`
+still reads April.
+
+So the rule is **top-level launch**, not execution. A `shortcuts://run-shortcut`
+URL moves the date; a `runworkflow` card does not.
+
+**What that costs the sync is less than the broader claim would have.** Only a
+shortcut you launched yourself reports as changed, so the false positives are
+confined to things you actually reached for, and a heavily used sub-shortcut
+never generates one. The action count remains exact and independent.
+
+**And it is what makes the Recent facet honest.** Ordering by this date is
+ordering by what you last *launched*, which is the useful reading for a launcher
+list. The limit worth knowing: a core shortcut that only ever runs as somebody
+else's sub-step sinks to the bottom however heavily it is used, because nothing
+here can see that traffic.
+
+### The dumper could not dump itself
+
+The first real dump was wide enough to include `Dump-Recent` and `Dump-Named`,
+whose own text templates carry the record markers. The file therefore held
+`==shortcut==` nine times where seven were records, an unanchored split cut two
+records in half, and both were reported as malformed JSON. Anchoring every split
+to a whole line fixes it, and is sound rather than lucky: JSON escapes a newline
+as two characters, so a marker embedded in a serialized shortcut is never alone
+on a line.
+
+A manifest cannot be repaired the same way, because there a name genuinely does
+sit alone on a line. A shortcut called exactly `==name==` opens a second column,
+and the equal-length guard turns that into a refusal rather than a confident
+wrong answer. That guard now earns its keep for two reasons rather than one.
 
 ## Reading a dump back
 

@@ -11,9 +11,14 @@
 <!--
   library.html — the Shortcuts library as an app view, in four facets:
 
-    Library    every shortcut, grouped on axes the Shortcuts app does not have:
-               tier, provenance, lifecycle, connectivity, what calls what. A row
-               expands to its pseudocode sketch and its call graph.
+    Library    every shortcut, on axes the Shortcuts app does not have: tier,
+               provenance, lifecycle, connectivity, what calls what, and how
+               recently you launched it. A row expands to its pseudocode sketch
+               and its call graph. Sort by Survey / Recent / Name / Size, and a
+               Sync button runs Sync-Manifest on the device so the recency is
+               current. Recency was briefly a second facet, which meant two
+               lists of the same 600-odd shortcuts differing only in order;
+               order is a property of one list.
     Prune      the staged deletion workflow. Nothing here deletes anything.
     Log        the Log-Repo return channel read back: every probe result the
                device has committed, newest first.
@@ -38,6 +43,7 @@
   ?data=<ref> pins which ref of web-tools-private is read (defaults to main).
   ?use=<ref> pins this page's own lib chain, the repo's standard preview form.
 -->
+<style>[x-cloak]{display:none!important}</style>
 <script type="module">
   const ref = new URLSearchParams(location.search).get('use');
   if (ref) {
@@ -57,6 +63,20 @@
       // ── data contract ────────────────────────────────────────────────────
       REPO: 'mehrlander/web-tools-private',
       DATA_REF: new URLSearchParams(location.search).get('data') || 'main',
+      // **The device always writes to main, so its directories are always read
+      // from main.** `?data=` pins which ref the CURATED derivatives come from
+      // (library.json, the sketches, the prune ledger) so a branch can be
+      // reviewed before it merges. The device channel is not curated and has no
+      // branch: Log-Repo, Sync-Manifest, Dump-Recent and Dump-Named all carry a
+      // literal "branch": "main" in their commit, because a shortcut has no way
+      // to know which ref a page happens to be previewing.
+      //
+      // Reading them with DATA_REF instead was a real bug and not a tidiness
+      // one: on 2026-08-18 the Sync button ran, the manifest landed on main, and
+      // Reload looked on the branch and found nothing, so a working button
+      // looked broken. The Log facet had the same fault and had only ever been
+      // opened on refs that happened to carry a copy.
+      DEVICE_REF: 'main',
       DOCS_REPO: 'mehrlander/shortcut-tools',
       LEDGER: 'shortcuts/prune.json',
 
@@ -70,20 +90,52 @@
 
       // ── state ────────────────────────────────────────────────────────────
       gh: null,
+      ghDevice: null,           // the same repo pinned to main; see DEVICE_REF
       meta: null,
       rows: [],
       dangling: [],
       ledger: null,             // { folder, entries: [...] }; null until loaded
       loading: true,
       error: '',
-      facet: 'library',         // library | prune | reference
+      facet: 'library',         // library | prune | log | reference
+
+      // ── the device manifest, merged onto the rows rather than listed apart ─
+      // Recency was briefly its own facet, which meant two lists of the same
+      // 600-odd shortcuts differing only in order: the reader had to know which
+      // one answered their question before they could ask it. Order is a
+      // property of one list, so it is a sort here and the manifest is just
+      // another column. What that buys beyond tidiness: a row can now say it is
+      // on the device and absent from the archive, which no single-source list
+      // could, and the delta stops needing a separate tool to see.
+      // Recent is the default: the question this page is opened with is far
+      // more often "what have I been working on" than "show me the survey",
+      // and the survey's own order is one tap away. Survey remains the identity
+      // order, not the default one.
+      sort: 'recent',           // recent | tier | name | actions
+      // The tier and axis chips are three wrapped rows on a phone, which put
+      // 200px of controls above the first shortcut. They are a real tool and a
+      // rare one, so they fold away: the list starts near the top and the
+      // filters are one tap when wanted. Opened automatically whenever a filter
+      // is actually set, so a narrowed list can never look like the whole one.
+      showFilters: false,
+      manifest: null,           // name -> ISO date, from the newest manifest on main
+      manifestStamp: '',
+      manifestError: '',
 
       // ── library filters ──────────────────────────────────────────────────
       q: '',
       tiers: new Set(),         // empty = all
       axes: {},                 // axis -> value, one value per axis or absent
       openRow: null,            // name of the expanded row
-      sketches: {},             // name -> text | 'loading' | Error message
+      sketches: {},             // name -> text | 'loading' | the absent message
+      // Names whose sketch is not in the archive on this ref. The page already
+      // discovered this when it opened the row and simply did not act on it, so
+      // it went on offering a GitHub link to a file it had just failed to
+      // fetch. Two populations hit it and both are ordinary: a row the device
+      // reports and the archive has never held, and, when reading main, every
+      // shortcut added since the last dump, which on a Recent sort is the top
+      // of the list.
+      sketchMissing: new Set(),
       limit: 60,                // rows rendered; grows on demand
 
       // ── prune state ──────────────────────────────────────────────────────
@@ -113,6 +165,13 @@
       async init() {
         try {
           const g = this.gh = new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DATA_REF });
+          // A second reader pinned to main, for the directories the device
+          // writes. Same repo and token, different ref; see DEVICE_REF above.
+          // It is a separate instance rather than a ref argument on each call
+          // because the distinction is about which KIND of data is being read,
+          // and naming it once is what stops the next reader getting it wrong.
+          this.ghDevice = this.DATA_REF === this.DEVICE_REF ? g
+            : new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DEVICE_REF });
           const lib = JSON.parse((await g.get('shortcuts/library.json')).text);
           this.meta = lib.meta;
           this.rows = lib.rows;
@@ -126,15 +185,25 @@
           this.error = String(e.message || e);
         }
         this.loading = false;
+        // The manifest loads beside the library rather than on demand: it is
+        // 33 KB, it feeds a sort the reader may reach for first, and a list
+        // whose dates appear only after a click is the awkwardness this
+        // consolidation exists to remove. Not awaited, because the library is
+        // the page's job and a missing manifest must not delay it or fail it:
+        // loadManifest records its own error and the sort degrades to name.
+        this.loadManifest();
       },
 
       // ── derived: the library list ────────────────────────────────────────
       get byName() {
         return this._byName ??= Object.fromEntries(this.rows.map(r => [r.name, r]));
       },
+      // Archived rows plus whatever the device has that the archive does not.
+      get allRows() { return this.rows.concat(this.deviceOnly); },
+
       get filtered() {
         const q = this.q.trim().toLowerCase();
-        return this.rows.filter(r => {
+        return this.sorted(this.allRows.filter(r => {
           if (this.tiers.size && !this.tiers.has(r.tier)) return false;
           for (const [axis, v] of Object.entries(this.axes)) if (r[axis] !== v) return false;
           if (!q) return true;
@@ -143,7 +212,47 @@
           return r.name.toLowerCase().includes(q)
             || r.calls.some(c => c.toLowerCase().includes(q))
             || r.kinds.some(k => k.toLowerCase().includes(q));
+        }));
+      },
+
+      // Sort is the control that replaced a second facet. `tier` is the order
+      // library.json already carries, so it is the identity and stays default:
+      // the survey's grouping is an argument about what to look at first, and
+      // re-sorting it alphabetically throws that away.
+      sorted(list) {
+        const by = this.sort;
+        if (by === 'tier') return list;
+        const c = [...list];
+        if (by === 'name') return c.sort((a, b) => a.name.localeCompare(b.name));
+        if (by === 'actions') return c.sort((a, b) => (b.actions || 0) - (a.actions || 0));
+        // recent: undated rows sink rather than sorting as the epoch, since a
+        // shortcut the manifest never mentioned is unknown, not ancient.
+        return c.sort((a, b) => {
+          const x = this.modifiedOf(a.name), y = this.modifiedOf(b.name);
+          if (!x && !y) return a.name.localeCompare(b.name);
+          if (!x) return 1;
+          if (!y) return -1;
+          return y.localeCompare(x);
         });
+      },
+      setSort(v) { this.sort = v; this.limit = 60; },
+
+      // Relative time, because "3h ago" is what a recency sort is asked for and
+      // an ISO stamp is not. An unparseable value returns empty rather than
+      // printing "Invalid Date" over a manifest this page failed to understand.
+      ago(iso) {
+        const t = Date.parse(iso);
+        if (!Number.isFinite(t)) return '';
+        let v = Math.max(0, (Date.now() - t) / 1000), u = 's';
+        for (const [size, unit] of [[60, 'm'], [60, 'h'], [24, 'd'], [7, 'w'], [4.35, 'mo'], [12, 'y']]) {
+          if (v < size) break;
+          v /= size; u = unit;
+        }
+        return Math.round(v) + u;
+      },
+      manifestStampPretty() {
+        const m = (this.manifestStamp || '').match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})/);
+        return m ? `${m[1]} ${m[2]}:${m[3]}` : this.manifestStamp;
       },
       get shown() { return this.filtered.slice(0, this.limit); },
 
@@ -165,14 +274,25 @@
         if (this.openRow === name) { this.openRow = null; return; }
         this.openRow = name;
         if (this.sketches[name]) return;
+        // A row the archive has never held has nothing to fetch, and asking
+        // would only produce the 404 we already know about.
+        if (this.byName[name] === undefined) {
+          this.sketches[name] = 'Not in the archive yet: this one is on the device only.';
+          this.sketchMissing = new Set(this.sketchMissing).add(name);
+          return;
+        }
         this.sketches[name] = 'loading';
         try {
-          const p = 'shortcuts/sketches/' + name + '.txt';
+          // A slash is stored as a colon in the archive, matching how a device
+          // dump spells an entry name, so the sketch is looked up that way too.
+          const p = 'shortcuts/sketches/' + name.replace('/', ':') + '.txt';
           this.sketches[name] = (await this.gh.get(p)).text;
         } catch (e) {
-          // 576 sketches against 577 rows: one shortcut has none, and a missing
-          // sketch is a gap in the archive rather than a failure of the page.
-          this.sketches[name] = 'No sketch in the archive for this one.';
+          // A missing sketch is a gap in the archive rather than a failure of
+          // the page: one plist will not parse, and anything newer than the
+          // last dump has no sketch on main yet.
+          this.sketches[name] = 'No sketch in the archive on this ref.';
+          this.sketchMissing = new Set(this.sketchMissing).add(name);
         }
       },
       openNamed(name) {              // follow a call-graph link
@@ -198,9 +318,16 @@
       // Newline-separated, which is what Library-Stage splits on. Its idiom is
       // Run-Steps': split on new lines, repeat each, act.
       stageLink(names) { return this.deviceLink(this.STAGE_WITH, [].concat(names).join('\n')); },
+      // Dump-Named takes ⟦name⟧-delimited names, the same envelope
+      // tools/manifest-delta.py emits, so one row and a whole delta use one
+      // receiver and one grammar.
+      dumpLink(name) {
+        return 'shortcuts://run-shortcut?name=Dump-Named&input=text&text='
+          + encodeURIComponent('⟦' + name + '⟧');
+      },
       ghLink(name) {
         return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/sketches/`
-          + encodeURIComponent(name + '.txt');
+          + encodeURIComponent(name.replace('/', ':') + '.txt');
       },
 
       // ── the ledger ───────────────────────────────────────────────────────
@@ -297,7 +424,7 @@
         if (this.logFiles) return;
         this.logLoading = true;
         try {
-          const dir = await this.gh.req(`contents/shortcuts/log?ref=${this.DATA_REF}`);
+          const dir = await this.gh.req(`contents/shortcuts/log?ref=${this.DEVICE_REF}`);
           this.logFiles = dir.filter(f => f.type === 'file').map(f => f.name).sort().reverse();
           await this.fetchLogPayloads();
         } catch (e) {
@@ -312,7 +439,7 @@
         const want = this.logFiles.slice(0, this.logLimit).filter(n => !this.logPayloads[n]);
         await Promise.all(want.map(async n => {
           try {
-            const text = (await this.gh.get('shortcuts/log/' + n)).text;
+            const text = (await this.ghDevice.get('shortcuts/log/' + n)).text;
             let parsed = null;
             try { parsed = JSON.parse(text); } catch {}
             this.logPayloads[n] = {
@@ -330,9 +457,103 @@
         return m ? `${m[1]} · ${m[2]}:${m[3]}:${m[4]}` : n;
       },
       logGhLink(n) {
-        return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/log/` + encodeURIComponent(n);
+        return `https://github.com/${this.REPO}/blob/${this.DEVICE_REF}/shortcuts/log/` + encodeURIComponent(n);
       },
 
+      // ── the manifest, as a column on the one list ────────────────────────
+      //
+      // **Ordering by modification date is ordering by what you last LAUNCHED,
+      // and that is measured rather than assumed.** Two manifests 102 minutes
+      // apart, with the runs in between known from the log: every shortcut
+      // launched from a run-shortcut URL carries a date matching its last
+      // launch to the second, while Inject-🎟️GitHubToken and Log-Repo, which ran
+      // repeatedly as sub-shortcuts in the same window, did not move at all.
+      // Inject still reads April.
+      //
+      // So this is a launcher list, which is the useful reading. The limit
+      // worth knowing: a shortcut that only ever runs as somebody else's
+      // sub-step sinks to the bottom however heavily it is used, because
+      // nothing on the device reports that traffic.
+      //
+      // The feed is the newest file in shortcuts/manifests/, written by
+      // Sync-Manifest. Filenames are date-stamped, so a lexical sort is
+      // newest-first once reversed and no content read is needed to choose.
+      async loadManifest() {
+        this.manifestError = '';
+        try {
+          const dir = await this.gh.req(`contents/shortcuts/manifests?ref=${this.DEVICE_REF}`);
+          const files = dir.filter(f => f.type === 'file' && f.name.endsWith('.txt'))
+                           .map(f => f.name).sort();
+          if (!files.length) throw new Error('no manifest yet: tap Sync to take one');
+          const newest = files[files.length - 1];
+          const rows = this.parseManifest((await this.ghDevice.get('shortcuts/manifests/' + newest)).text);
+          const m = {};
+          for (const r of rows) m[r.name] = r;
+          this.manifest = m;
+          this.manifestStamp = newest;
+        } catch (e) {
+          this.manifest = null;
+          this.manifestError = String(e.message || e);
+        }
+      },
+
+      // Rows the device reports and the archive does not hold. They are listed
+      // rather than counted, because "you have this and I do not" is the
+      // question a sync exists to answer and a number cannot be acted on.
+      // A slash becomes a colon to match how index.json spells a dumped name.
+      get deviceOnly() {
+        if (!this.manifest) return [];
+        return Object.values(this.manifest)
+          .filter(r => !this.byName[r.name] && !this.byName[r.name.replace('/', ':')])
+          .map(r => ({ name: r.name, actions: r.actions, modified: r.modified,
+                       tier: 'unarchived', calls: [], callers: [], kinds: [],
+                       provenance: '', lifecycle: '', connectivity: '',
+                       input: false, menu: false, nominate: null, unarchived: true }));
+      },
+      modifiedOf(name) {
+        if (!this.manifest) return '';
+        const hit = this.manifest[name] || this.manifest[name.replace(':', '/')];
+        return hit ? hit.modified : '';
+      },
+
+      // The manifest is column-major: one `==marker==` per field, then every
+      // value for that field. A Text action evaluates its template once and
+      // expands each attachment into its own newline-joined column, so this is
+      // NOT one record per shortcut however much it looks like it should be.
+      //
+      // Two rules that are load-bearing rather than defensive. The split is
+      // anchored to a whole line, because a shortcut's name can contain a
+      // marker. And the columns are checked for equal length, because Shortcuts
+      // drops an empty value when joining a list into text: the first manifest
+      // came back with 633 names and 578 folders, nothing saying which 55 sat
+      // in no folder, and zipping that by position would invent edits to
+      // shortcuts nobody touched. Refusing beats guessing.
+      parseManifest(text) {
+        const cols = {};
+        const parts = text.split(/^==(name|folder|actions|lastModified)==$/m);
+        for (let i = 1; i < parts.length; i += 2) {
+          cols[parts[i]] = parts[i + 1].split('\n').filter(l => l.trim() !== '');
+        }
+        const need = ['name', 'actions', 'lastModified'];
+        const missing = need.filter(k => !cols[k]);
+        if (missing.length) throw new Error('not a manifest: no ' + missing.join(', ') + ' column');
+        const sizes = need.map(k => cols[k].length);
+        if (new Set(sizes).size !== 1) {
+          throw new Error('columns disagree (' + need.map((k, i) => k + '=' + sizes[i]).join(', ') +
+                          '), so this manifest cannot be read safely');
+        }
+        return cols.name.map((n, i) => ({
+          name: n.trim(),
+          actions: parseInt(cols.actions[i], 10) || 0,
+          modified: cols.lastModified[i].trim(),
+        })).sort((a, b) => b.modified.localeCompare(a.modified));
+      },
+
+      // A tapped row runs or opens the shortcut on the device. Same mechanism
+      // as the Sync button and the same reason for target=_blank: the app
+      // mounts this page in a frame whose sandbox grants allow-popups but not
+      // allow-top-navigation, so assigning location is refused outright while a
+      // popup is permitted. Measured 2026-08-19 against those exact flags.
       // ── reference ────────────────────────────────────────────────────────
       async openDoc(path) {
         if (this.doc === path) { this.doc = null; return; }
@@ -372,7 +593,7 @@
           x-text="meta ? `${meta.shortcuts} shortcuts · ${meta.actions.toLocaleString()} actions` : ''"></span>
   </div>
   <p class="text-sm opacity-60 mt-1">
-    The library organized on axes the Shortcuts app does not have. Nothing on this page deletes anything.
+    Newest first, on axes the Shortcuts app does not have. Nothing here deletes anything.
   </p>
 
   <div role="tablist" class="tabs tabs-box mt-4">
@@ -401,7 +622,7 @@
   <!-- ══ LIBRARY ══════════════════════════════════════════════════════════ -->
   <div x-show="facet==='library' && !loading && !error" class="mt-4">
 
-    <div class="flex flex-wrap gap-1.5">
+    <div x-show="showFilters || filtering" x-cloak class="flex flex-wrap gap-1.5">
       <template x-for="[key, n] in Object.entries(meta?.tiers || {})" :key="key">
         <button class="btn btn-xs" :class="tiers.has(key) ? 'btn-primary' : 'btn-ghost border border-base-300'"
                 @click="toggleTier(key)" :title="meta.tier_why[key]">
@@ -410,7 +631,7 @@
         </button>
       </template>
     </div>
-    <div class="flex flex-wrap gap-1.5 mt-1.5">
+    <div x-show="showFilters || filtering" x-cloak class="flex flex-wrap gap-1.5 mt-1.5">
       <template x-for="axis in ['provenance','lifecycle','connectivity']" :key="axis">
         <template x-for="[v, n] in Object.entries(meta?.facets?.[axis] || {})" :key="axis+v">
           <button class="btn btn-xs btn-ghost border border-base-300 opacity-80"
@@ -432,34 +653,83 @@
       <button x-show="filtering" @click="clearFilters()" class="btn btn-ghost btn-xs"><i class="ph ph-x"></i></button>
     </label>
 
-    <div class="text-xs opacity-60 mt-2 flex justify-between">
-      <span x-text="`${filtered.length} shown`"></span>
-      <span x-text="meta ? `${meta.missing} names are called and absent from the archive` : ''"></span>
+    <!-- Order is a control on the one list, not a second list. The Sync button
+         sits with it because it is what makes the recency order true: it runs
+         Sync-Manifest on the device, which commits a fresh manifest to main.
+         A literal href, and target=_blank, because the app frames this page
+         under a sandbox granting allow-popups and not allow-top-navigation. -->
+    <div class="flex flex-wrap items-center gap-2 mt-2">
+      <div class="join">
+        <template x-for="[k, label] in [['recent','Recent'],['tier','Survey'],['name','Name'],['actions','Size']]" :key="k">
+          <button class="btn btn-xs join-item"
+                  :class="sort===k ? 'btn-primary' : 'btn-ghost border border-base-300'"
+                  @click="setSort(k)" x-text="label"></button>
+        </template>
+      </div>
+      <a href="shortcuts://run-shortcut?name=Sync-Manifest" target="_blank" rel="noopener"
+         class="btn btn-xs btn-ghost border border-base-300" title="Run Sync-Manifest on the device">
+        <i class="ph ph-arrows-clockwise"></i> Sync
+      </a>
+      <button class="btn btn-xs btn-ghost border border-base-300" @click="loadManifest()"
+              title="Re-read the newest manifest"><i class="ph ph-arrow-clockwise"></i></button>
+      <button class="btn btn-xs" @click="showFilters = !showFilters"
+              :class="(showFilters || filtering) ? 'btn-secondary' : 'btn-ghost border border-base-300'">
+        <i class="ph ph-funnel"></i>
+        <span x-show="tiers.size || Object.keys(axes).length"
+              x-text="tiers.size + Object.keys(axes).length"></span>
+      </button>
+      <span class="text-xs opacity-50" x-show="manifestStamp"
+            x-text="'device ' + manifestStampPretty()"></span>
+      <span class="text-xs text-warning" x-show="manifestError" x-text="manifestError"></span>
     </div>
 
-    <ul class="mt-2 divide-y divide-base-300">
+    <div class="text-xs opacity-50 mt-2 flex flex-wrap items-baseline gap-x-2">
+      <span x-text="`${filtered.length} shown`"></span>
+      <span x-show="deviceOnly.length" class="text-warning"
+            x-text="`${deviceOnly.length} on device, not archived`"></span>
+      <span class="opacity-70" x-text="meta ? `${meta.missing} called and absent` : ''"></span>
+    </div>
+
+    <!-- Row shape borrowed from home's links board: an icon in an absolute
+         gutter, the title in normal inline flow so a long name wraps and hangs
+         rather than truncating, and the qualifiers as small inline "doors"
+         after it. Dense on purpose. `divide-y divide-base-300` is NOT used,
+         here or anywhere else on this page: daisyUI's semantic colours are not
+         among the divide-* utilities, so it compiles to nothing and Tailwind v4
+         paints the hairline in the text colour. → docs/SNAGS.md,
+         daisy-divide-paints-black. -->
+    <ul class="mt-2">
       <template x-for="r in shown" :key="r.name">
-        <li class="py-2">
+        <li class="py-1.5 border-t border-base-200 first:border-t-0">
           <button class="w-full text-left" @click="toggleRow(r.name)">
-            <div class="flex items-start gap-2">
-              <i class="ph mt-0.5 opacity-40" :class="openRow===r.name ? 'ph-caret-down' : 'ph-caret-right'"></i>
-              <div class="grow min-w-0">
-                <div class="font-medium truncate" x-text="r.name"></div>
-                <div class="text-xs opacity-60 flex flex-wrap gap-x-2">
-                  <span x-text="`${r.actions} actions`"></span>
-                  <span x-text="meta.tier_label[r.tier]"></span>
-                  <span x-show="r.callers.length" x-text="`${r.callers.length} callers`"></span>
-                  <span x-show="r.input">takes input</span>
-                  <span x-show="r.menu">menu</span>
+            <div class="relative pl-5">
+              <i class="ph absolute left-0 top-[3px] text-xs opacity-30"
+                 :class="openRow===r.name ? 'ph-caret-down' : 'ph-caret-right'"></i>
+              <div class="text-[13.5px] leading-[1.45]">
+                <span class="font-medium" :class="r.unarchived && 'text-warning'" x-text="r.name"></span>
+                <!-- Recency rides beside the name rather than in the meta line:
+                     when it is the sort key it is the thing being scanned, and
+                     a value you sorted by should not need a second glance to
+                     find. Absent when the manifest never mentioned the row. -->
+                <span class="text-[11px] opacity-45 ml-1.5" x-show="modifiedOf(r.name)"
+                      x-text="ago(modifiedOf(r.name))"></span>
+              </div>
+              <div class="text-[11.5px] opacity-55 flex flex-wrap gap-x-2 leading-[1.4]">
+                <span x-text="`${r.actions} actions`"></span>
+                <span x-show="r.unarchived" class="text-warning">on device, not archived</span>
+                <span x-show="!r.unarchived && r.tier !== 'prune'"
+                      x-text="meta.tier_label[r.tier]"></span>
+                <span x-show="r.callers.length" x-text="`${r.callers.length} callers`"></span>
+                <span x-show="r.input">takes input</span>
+                <span x-show="r.menu">menu</span>
                   <!-- Only the two graded classes earn a badge here. `low` is
                        192 rows, nearly every import, so showing it in the
                        browse list marks the library rather than a subset. It
                        stays a queue-only concept, where the grade is stated. -->
                   <span x-show="r.nominate && r.nominate.confidence !== 'low'" class="text-warning"
                         x-text="r.nominate ? r.nominate.confidence + '-confidence candidate' : ''"></span>
-                  <span x-show="entry(r.name)" class="text-info"
-                        x-text="entry(r.name) ? entry(r.name).state : ''"></span>
-                </div>
+                <span x-show="entry(r.name)" class="text-info"
+                      x-text="entry(r.name) ? entry(r.name).state : ''"></span>
               </div>
             </div>
           </button>
@@ -469,8 +739,15 @@
               <a class="btn btn-xs btn-primary" :href="runLink(r.name)"><i class="ph ph-play"></i> Run</a>
               <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
                  title="Opens it in the Shortcuts editor, through the dispatcher"><i class="ph ph-pencil-simple"></i> Open</a>
-              <a class="btn btn-xs btn-ghost border border-base-300" :href="ghLink(r.name)" target="_blank">
+              <a class="btn btn-xs btn-ghost border border-base-300" x-show="!sketchMissing.has(r.name)"
+                 :href="ghLink(r.name)" target="_blank">
                 <i class="ph ph-github-logo"></i> Sketch on GitHub</a>
+              <!-- The archive does not have this one, so the useful offer is to
+                   go and get it rather than a link to a file that is not there. -->
+              <a class="btn btn-xs btn-warning btn-outline" x-show="r.unarchived"
+                 :href="dumpLink(r.name)" target="_blank" rel="noopener"
+                 title="Run Dump-Named on the device for just this shortcut">
+                <i class="ph ph-download-simple"></i> Fetch into the archive</a>
               <button class="btn btn-xs btn-ghost border border-base-300" x-show="!entry(r.name)"
                       @click="picked=new Set([r.name]); facet='prune'; grade=r.nominate?r.nominate.confidence:'high'">
                 <i class="ph ph-broom"></i> Stage…</button>
@@ -529,9 +806,9 @@
         Moved to <span class="font-mono" x-text="ledger?.folder"></span> and still in the archive, so still on the device.
         Open one, look at it, and delete it there if the answer is yes.
       </p>
-      <ul class="mt-2 divide-y divide-base-300">
+      <ul class="mt-2">
         <template x-for="e in pending" :key="'p'+e.name">
-          <li class="py-2 flex items-start gap-2 flex-wrap">
+          <li class="py-2 flex items-start gap-2 flex-wrap border-t border-base-200 first:border-t-0">
             <div class="grow min-w-0">
               <div class="font-medium truncate" x-text="e.name"></div>
               <div class="text-xs opacity-60">
@@ -607,9 +884,9 @@
         <i class="ph ph-warning"></i><span x-text="saveError"></span>
       </div>
 
-      <ul class="mt-2 divide-y divide-base-300">
+      <ul class="mt-2">
         <template x-for="r in queue" :key="'q'+r.name">
-          <li class="py-2 flex items-start gap-2">
+          <li class="py-2 flex items-start gap-2 border-t border-base-200 first:border-t-0">
             <input type="checkbox" class="checkbox checkbox-sm mt-0.5"
                    :checked="picked.has(r.name)" @change="pick(r.name)">
             <div class="grow min-w-0">
@@ -657,9 +934,9 @@
       Nothing logged yet on this ref.
     </p>
 
-    <ul class="mt-2 divide-y divide-base-300">
+    <ul class="mt-2">
       <template x-for="n in (logFiles || []).slice(0, logLimit)" :key="n">
-        <li class="py-2">
+        <li class="py-2 border-t border-base-200 first:border-t-0">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="font-mono text-xs" x-text="logStamp(n)"></span>
             <span class="badge badge-sm badge-ghost" x-show="logPayloads[n]?.op" x-text="logPayloads[n]?.op || ''"></span>
@@ -684,9 +961,9 @@
       It sits here rather than in show-repo's Map, because the Map documents how this estate
       works and these document how someone else's system does.
     </p>
-    <ul class="mt-3 divide-y divide-base-300">
+    <ul class="mt-3">
       <template x-for="d in DOCS" :key="d.path">
-        <li class="py-2">
+        <li class="py-2 border-t border-base-200 first:border-t-0">
           <button class="w-full text-left flex items-start gap-2" @click="openDoc(d.path)">
             <i class="ph mt-0.5 opacity-40" :class="doc===d.path ? 'ph-caret-down' : 'ph-caret-right'"></i>
             <div>

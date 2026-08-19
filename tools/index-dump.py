@@ -64,27 +64,35 @@ def describe(name, doc):
 
 def load(paths):
     """Several dumps merge into one index, because a folder-scoped dump names
-    dependencies outside itself and the graph only closes across folders. A name
-    seen twice is kept once; the same shortcut in two folders is the same verb."""
-    out, seen = [], set()
+    dependencies outside itself and the graph only closes across folders.
+
+    **A name seen twice keeps the LAST copy, so pass dumps oldest first.** When
+    every dump was one day's folder-scoped export the choice did not matter:
+    the same shortcut in two folders is the same verb, and in fact no name in
+    the 2026-08-13 set appears twice. It matters the moment dumps span dates,
+    because then a duplicate is the same shortcut at two points in its life and
+    the newer one is the answer. Keeping the first would make the documented
+    `dumps/*.zip` glob, which sorts by date, silently prefer the stale copy of
+    everything a catch-up dump contains: a sync that quietly syncs backwards.
+    """
+    out, order = {}, []
     for path in paths:
         z = zipfile.ZipFile(path)
         for info in z.infolist():
             if info.is_dir():
                 continue
             name = name_of(info).rsplit(".", 1)[0]
-            if name in seen:
-                continue
-            seen.add(name)
+            if name not in out:
+                order.append(name)
             try:
                 doc = plistlib.loads(z.read(info))
             except Exception as err:
-                out.append({"name": name, "error": str(err)})
+                out[name] = {"name": name, "error": str(err)}
                 continue
             entry = describe(name, doc)
             entry["from"] = Path(path).name
-            out.append(entry)
-    return out
+            out[name] = entry
+    return [out[n] for n in order]
 
 
 def report(index):
