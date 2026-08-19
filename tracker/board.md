@@ -3,7 +3,7 @@
 _Generated from tasks/. Do not hand-edit._
 
 ## On deck
-- (none)
+- 🎫 [Bring the ShortcutsInfo table into the repo, with a lastModified column](tasks/track-shortcutsinfo-table-w4m8kq.md) · M
 
 ## In progress
 - (none)
