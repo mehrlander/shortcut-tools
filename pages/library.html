@@ -128,14 +128,6 @@
       axes: {},                 // axis -> value, one value per axis or absent
       openRow: null,            // name of the expanded row
       sketches: {},             // name -> text | 'loading' | the absent message
-      // Names whose sketch is not in the archive on this ref. The page already
-      // discovered this when it opened the row and simply did not act on it, so
-      // it went on offering a GitHub link to a file it had just failed to
-      // fetch. Two populations hit it and both are ordinary: a row the device
-      // reports and the archive has never held, and, when reading main, every
-      // shortcut added since the last dump, which on a Recent sort is the top
-      // of the list.
-      sketchMissing: new Set(),
       limit: 60,                // rows rendered; grows on demand
 
       // ── prune state ──────────────────────────────────────────────────────
@@ -278,7 +270,6 @@
         // would only produce the 404 we already know about.
         if (this.byName[name] === undefined) {
           this.sketches[name] = 'Not in the archive yet: this one is on the device only.';
-          this.sketchMissing = new Set(this.sketchMissing).add(name);
           return;
         }
         this.sketches[name] = 'loading';
@@ -292,7 +283,6 @@
           // the page: one plist will not parse, and anything newer than the
           // last dump has no sketch on main yet.
           this.sketches[name] = 'No sketch in the archive on this ref.';
-          this.sketchMissing = new Set(this.sketchMissing).add(name);
         }
       },
       openNamed(name) {              // follow a call-graph link
@@ -325,10 +315,14 @@
         return 'shortcuts://run-shortcut?name=Dump-Named&input=text&text='
           + encodeURIComponent('⟦' + name + '⟧');
       },
-      ghLink(name) {
-        return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/sketches/`
-          + encodeURIComponent(name.replace('/', ':') + '.txt');
-      },
+      // No `Sketch on GitHub` link, deliberately, and the reason generalizes to
+      // every private-repo link this estate hands to a phone: **GitHub answers
+      // 404 for a private repo's blob when the request is not signed in**, and
+      // an in-app browser carries no github.com session. So the link 404'd from
+      // the app while the file was demonstrably present on main, which reads as
+      // a broken page rather than as a sign-in boundary. It bought nothing
+      // either: the sketch is rendered in this same expanded row, from the API,
+      // through the token the page already holds.
 
       // ── the ledger ───────────────────────────────────────────────────────
       // It records DECISIONS, not device state. Nothing here can see the phone.
@@ -739,9 +733,6 @@
               <a class="btn btn-xs btn-primary" :href="runLink(r.name)"><i class="ph ph-play"></i> Run</a>
               <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
                  title="Opens it in the Shortcuts editor, through the dispatcher"><i class="ph ph-pencil-simple"></i> Open</a>
-              <a class="btn btn-xs btn-ghost border border-base-300" x-show="!sketchMissing.has(r.name)"
-                 :href="ghLink(r.name)" target="_blank">
-                <i class="ph ph-github-logo"></i> Sketch on GitHub</a>
               <!-- The archive does not have this one, so the useful offer is to
                    go and get it rather than a link to a file that is not there. -->
               <a class="btn btn-xs btn-warning btn-outline" x-show="r.unarchived"
