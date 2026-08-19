@@ -103,16 +103,16 @@ test("a file that is not a dump is refused rather than read as empty", () => {
 });
 
 test("a dump arriving at Dump-Recent's cap is flagged as probably truncated", () => {
-  // A window can name the whole library, so the chain stops at 60. It has no
+  // A window can name the whole library, so the chain stops at 150. It has no
   // channel to say it dropped anything, which leaves the count as the only tell.
-  const many = Array.from({ length: 60 }, (_, i) =>
+  const many = Array.from({ length: 150 }, (_, i) =>
     record("S" + i, JSON_BODY, "2026-08-18T19:49:20-07:00")).join("");
   const r = run(many);
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /exactly Dump-Recent's cap/);
   fs.rmSync(r.dir, { recursive: true, force: true });
 
-  const fewer = Array.from({ length: 59 }, (_, i) =>
+  const fewer = Array.from({ length: 149 }, (_, i) =>
     record("S" + i, JSON_BODY, "2026-08-18T19:49:20-07:00")).join("");
   const r2 = run(fewer);
   assert.doesNotMatch(r2.stdout, /cap/, "under the cap says nothing");

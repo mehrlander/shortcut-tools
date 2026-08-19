@@ -50,11 +50,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # Dump-Recent's own safety cap. A time window is not self-limiting: widen it far
-# enough and the PUT is the whole library, so the chain takes the newest 60 and
-# stops. A dump arriving at exactly that many is the shape of a truncation, and
+# enough and the PUT is the whole library, so the chain takes the newest N and
+# stops. Raised from 60 to 150 on 2026-08-18: the first 7-day window returned
+# exactly 60, which was the whole window by luck rather than a truncation, and
+# one more edit that week would have lost data with only this warning to say so.
+# The size fear behind the original number was also wrong: that run committed
+# 7.2 MB through the API without complaint. A dump arriving at exactly that many is the shape of a truncation, and
 # saying so is the only way the reader can tell: the chain has no channel to
 # report what it dropped.
-DUMP_RECENT_CAP = 60
+DUMP_RECENT_CAP = 150
 
 
 def find_private(arg):

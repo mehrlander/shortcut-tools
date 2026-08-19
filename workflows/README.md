@@ -304,9 +304,13 @@ a Math action and passes minutes. One extra action buys a parameter that does no
 depend on being right about an enum nobody here has run.
 
 **A window is not self-limiting the way a count is**, so the filter carries a
-hard cap of 60. Widen the window far enough and an uncapped PUT is the whole
+hard cap of 150. Widen the window far enough and an uncapped PUT is the whole
 library. The chain has no channel to report what it dropped, so
-`read-incoming.py` flags a dump that arrives at exactly 60 as probably truncated.
+`read-incoming.py` flags a dump that arrives at exactly the cap as probably
+truncated. The cap was 60 until the first real 7-day window returned exactly 60:
+the whole window by luck rather than a truncation, and one more edit that week
+would have lost data silently. The size fear behind the original number was also
+wrong, since that run committed 7.2 MB through the API without complaint.
 [`tools/read-incoming.py`](../tools/read-incoming.py) reads the result and
 `--zip` writes it as a dump the existing pipeline already accepts:
 

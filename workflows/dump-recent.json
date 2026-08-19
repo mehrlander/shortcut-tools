@@ -149,7 +149,7 @@
         "WFContentItemSortProperty": "Last Modified Date",
         "WFContentItemSortOrder": "Latest First",
         "WFContentItemLimitEnabled": true,
-        "WFContentItemLimitNumber": 60.0
+        "WFContentItemLimitNumber": 150.0
       }
     },
     {

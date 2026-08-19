@@ -246,7 +246,7 @@
 				<key>WFContentItemLimitEnabled</key>
 				<true/>
 				<key>WFContentItemLimitNumber</key>
-				<real>60.0</real>
+				<real>150.0</real>
 				<key>WFContentItemSortOrder</key>
 				<string>Latest First</string>
 				<key>WFContentItemSortProperty</key>

@@ -141,3 +141,28 @@ test("long text is reported by length, since the sketch is a shape not a copy", 
   assert.match(out, /\(300 chars\)/);
   assert.ok(out.length < 200, "the sketch should not carry the payload");
 });
+
+test("a duplicated name sketches from the last dump passed", () => {
+  // The same precedence index-dump.py uses, and it has to be the same one:
+  // fixing only the index would leave the two derivatives disagreeing in
+  // silence, index.json saying 9 actions while the sketch still showed 23.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sk-"));
+  const mk = (file, n) => {
+    const out = path.join(dir, file);
+    execFileSync("python3", ["-c", `
+import plistlib, zipfile, sys
+d = plistlib.load(open(sys.argv[1], 'rb'))
+d['WFWorkflowActions'] = d['WFWorkflowActions'][:int(sys.argv[3])]
+with zipfile.ZipFile(sys.argv[2], 'w') as z:
+    z.writestr('Probe.wflow', plistlib.dumps(d, fmt=plistlib.FMT_XML))
+`, path.join(ROOT, "plists", "Sync-Manifest.plist"), out, String(n)]);
+    return out;
+  };
+  const older = mk("2026-08-13-01.zip", 11);
+  const newer = mk("2026-08-18-recent.zip", 3);
+  const out = execFileSync("python3",
+    [path.join(ROOT, "tools", "sketch.py"), older, newer, "--name", "Probe"],
+    { cwd: ROOT, encoding: "utf8" });
+  assert.match(out, /Probe\s+\(3 actions\)/, "the newer dump wins");
+  fs.rmSync(dir, { recursive: true, force: true });
+});
