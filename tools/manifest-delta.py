@@ -208,6 +208,18 @@ def delta(rows, index, cutoff):
     return sorted(added), sorted(removed), sorted(changed)
 
 
+def repo_owned():
+    """Names this repo can already reproduce, so the device is never asked.
+
+    A receiver whose plist is committed here is rebuildable from git, which is
+    the same reasoning CLAUDE.md uses to make deleting one before an import
+    free. Asking the device to export it back would spend a tap to fetch a copy
+    of something the repo authored, and the first real delta wanted eight of
+    them, including the two chains that were being installed at the time.
+    """
+    return {p.stem for p in (ROOT / "plists").glob("*.plist")}
+
+
 def links(names, sizes):
     """Dump-Named links, chunked so no single tap asks for too much.
 
@@ -270,7 +282,9 @@ def main():
     cutoff = args.since or corpus_cutoff(index)
     added, removed, changed = delta(rows, index, cutoff)
     sizes = {r["name"]: r["actions"] for r in rows}
-    want = added + [n for n, _ in changed]
+    owned = repo_owned()
+    want = [n for n in added + [n for n, _ in changed] if n not in owned]
+    skipped = sorted(set(added + [n for n, _ in changed]) & owned)
     urls = links(want, sizes)
 
     if args.json:
@@ -278,7 +292,7 @@ def main():
                           "device": len(rows), "corpus": len(index),
                           "added": added, "removed": removed,
                           "changed": [{"name": n, "why": w} for n, w in changed],
-                          "links": urls}, indent=2))
+                          "repo_owned": skipped, "links": urls}, indent=2))
         return 0
 
     print("%s: %d on device, %d in corpus (cutoff %s)"
@@ -295,6 +309,9 @@ def main():
     if not (added or removed or changed):
         print("\nthe corpus is current with the device")
         return 0
+    if skipped:
+        print("\n%d already reproducible from plists/, not requested: %s"
+              % (len(skipped), ", ".join(skipped)))
     if want:
         est = sum((sizes.get(n) or 20) for n in want) * BYTES_PER_ACTION
         print("\n%d to export, roughly %d KB, %d link(s):" % (len(want), est // 1024, len(urls)))

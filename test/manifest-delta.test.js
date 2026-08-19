@@ -156,3 +156,19 @@ test("a file that is not a manifest is refused rather than read as empty", () =>
   assert.equal(r.status, 1);
   assert.match(r.stderr, /no name, actions, lastModified column/);
 });
+
+test("a shortcut this repo can rebuild is never requested from the device", () => {
+  // plists/ holds receivers generated here, so asking the device to export one
+  // spends a tap fetching a copy of something the repo authored. The first real
+  // delta wanted seven, including the two chains being installed at the time.
+  const owned = fs.readdirSync(path.join(ROOT, "plists"))
+    .filter((f) => f.endsWith(".plist")).map((f) => path.basename(f, ".plist"));
+  assert.ok(owned.includes("Sync-Manifest"), "fixture assumes this receiver exists");
+  const out = run(manifest([
+    ["Sync-Manifest", 11, "2026-08-19T00:00:00-07:00"],
+    ["Something-Else", 4, "2026-08-19T00:00:00-07:00"],
+  ]), []);
+  assert.ok(out.added.includes("Sync-Manifest"), "it is still reported as new to the corpus");
+  assert.deepEqual(out.repo_owned, ["Sync-Manifest"]);
+  assert.equal(decodeURIComponent(out.links[0].split("&text=")[1]), "⟦Something-Else⟧");
+});

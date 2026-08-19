@@ -340,6 +340,11 @@ Two smaller findings, both in `manifest-delta.py`:
 - **A corpus record that failed to parse has no action count**, and comparing
   against it printed `actions None to 29`, which reads as a change of unknown
   size. It is now named as what it is: the corpus never got a usable copy.
+- **The export list was asking for receivers this repo authored.** A plist in
+  `plists/` is rebuildable from git, which is the same reasoning that makes
+  deleting one before an import free, so the device is no longer asked for it.
+  Seven of the first delta's sixty-five, including the two chains being
+  installed at the time.
 
 **Two limits worth knowing before leaning on it.** The action count catches every
 structural edit exactly, but a parameter edit that leaves the count alone is
