@@ -1,18 +1,18 @@
 {
   "name": "Dump-Recent",
-  "label": "Dump-Recent: the N most recently modified shortcuts, contents and all, committed to the repo in one tap (22 actions)",
+  "label": "Dump-Recent: every shortcut modified in the last N days, contents and all, committed to the repo in one tap (25 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.number",
       "p": {
         "UUID": "D8EC0000-0001-4A00-9000-000000000001",
-        "WFNumberActionNumber": "25"
+        "WFNumberActionNumber": "7"
       }
     },
     {
       "id": "is.workflow.actions.setvariable",
       "p": {
-        "WFVariableName": "N",
+        "WFVariableName": "Days",
         "WFInput": {
           "Value": {
             "OutputName": "Number",
@@ -43,7 +43,7 @@
     {
       "id": "is.workflow.actions.setvariable",
       "p": {
-        "WFVariableName": "N",
+        "WFVariableName": "Days",
         "WFInput": {
           "Value": {
             "Type": "ExtensionInput"
@@ -58,6 +58,49 @@
         "GroupingIdentifier": "D8EC0000-0090-4A00-9000-000000000001",
         "UUID": "D8EC0000-0002-4A00-9000-000000000001",
         "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvariable",
+      "p": {
+        "UUID": "D8EC0000-0020-4A00-9000-000000000001",
+        "WFVariable": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Days"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.math",
+      "p": {
+        "UUID": "D8EC0000-0021-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Days",
+            "OutputUUID": "D8EC0000-0020-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFMathOperation": "×",
+        "WFMathOperand": "1440"
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFVariableName": "Span",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Calculation Result",
+            "OutputUUID": "D8EC0000-0021-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     },
     {
@@ -79,16 +122,34 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 1001,
+                "Property": "Last Modified Date",
+                "Removable": true,
+                "Values": {
+                  "Number": {
+                    "Value": {
+                      "Type": "Variable",
+                      "VariableName": "Span"
+                    },
+                    "WFSerializationType": "WFTextTokenAttachment"
+                  },
+                  "Unit": 64
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        },
         "WFContentItemSortProperty": "Last Modified Date",
         "WFContentItemSortOrder": "Latest First",
         "WFContentItemLimitEnabled": true,
-        "WFContentItemLimitNumber": {
-          "Value": {
-            "Type": "Variable",
-            "VariableName": "N"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
+        "WFContentItemLimitNumber": 60.0
       }
     },
     {

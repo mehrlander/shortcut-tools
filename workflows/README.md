@@ -47,7 +47,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
-| `dump-recent` | The N most recently modified shortcuts, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
+| `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
@@ -286,11 +286,27 @@ and a re-import costs nothing.
 
 ## Keeping the corpus current without re-dumping it
 
-**One tap, if you just want the recent work off the phone.** `dump-recent` sorts
-Get My Shortcuts by Last Modified Date, keeps the newest N, and commits each one
-with its contents to `shortcuts/incoming/<stamp>.txt`. N rides in the link
-(`…?name=Dump-Recent&input=text&text=30`) and falls back to 25 when the shortcut
-is run bare from the Shortcuts app, so nothing is ever typed at run time.
+**One tap, if you just want the recent work off the phone.** `dump-recent`
+filters Get My Shortcuts to those modified in the last N days and commits each
+one with its contents to `shortcuts/incoming/<stamp>.txt`. N rides in the link
+(`…?name=Dump-Recent&input=text&text=7`) and falls back to 7 when the shortcut is
+run bare from the Shortcuts app, so nothing is ever typed at run time. Fractions
+work, since the window is arithmetic rather than a calendar unit: `0.5` is twelve
+hours.
+
+**Days are multiplied to minutes rather than declared as days, deliberately.**
+The date filter takes a `Unit` enum, and minutes (`64`) is the only value that
+appears anywhere in the corpus, in `Open-RecentShortcut`, whose own label
+annotates its value with an `m`. `64` is also `NSCalendarUnitMinute` in
+Foundation's bit-flag enum, which would make days `16` by the same reading. That
+is a sound inference and still an inference, so the chain multiplies by 1440 with
+a Math action and passes minutes. One extra action buys a parameter that does not
+depend on being right about an enum nobody here has run.
+
+**A window is not self-limiting the way a count is**, so the filter carries a
+hard cap of 60. Widen the window far enough and an uncapped PUT is the whole
+library. The chain has no channel to report what it dropped, so
+`read-incoming.py` flags a dump that arrives at exactly 60 as probably truncated.
 [`tools/read-incoming.py`](../tools/read-incoming.py) reads the result and
 `--zip` writes it as a dump the existing pipeline already accepts:
 

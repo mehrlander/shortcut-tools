@@ -21,6 +21,10 @@ a Repeat, so the template runs once per shortcut and the fields stay together.
 That also means the empty-value collapse that cost the manifest its `folder`
 column cannot happen here: nothing is being zipped by position.
 
+`Dump-Recent` caps itself at 60 records because a time window, unlike a count,
+can name the whole library; a dump that arrives at exactly the cap is flagged
+here, since the chain itself has no way to report what it left behind.
+
 `--zip` writes one `.wflow` per shortcut in exactly the shape
 `workflows/dump-folder-zip.json` produces, which is what makes this worth
 having. The output goes straight into the existing pipeline:
@@ -44,6 +48,13 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Dump-Recent's own safety cap. A time window is not self-limiting: widen it far
+# enough and the PUT is the whole library, so the chain takes the newest 60 and
+# stops. A dump arriving at exactly that many is the shape of a truncation, and
+# saying so is the only way the reader can tell: the chain has no channel to
+# report what it dropped.
+DUMP_RECENT_CAP = 60
 
 
 def find_private(arg):
@@ -127,6 +138,9 @@ def main():
     for rec, why in bad:
         print("  %-38s UNREADABLE: %s" % (rec["name"], why))
 
+    if len(records) == DUMP_RECENT_CAP:
+        print("\n%d records, exactly Dump-Recent's cap: the window probably held more "
+              "than this. Narrow it, or take a full dump." % DUMP_RECENT_CAP)
     if args.zip_out:
         if bad:
             print("\nrefusing to write a zip with %d unreadable record(s); fix or "
