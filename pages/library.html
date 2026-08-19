@@ -127,7 +127,15 @@
       tiers: new Set(),         // empty = all
       axes: {},                 // axis -> value, one value per axis or absent
       openRow: null,            // name of the expanded row
-      sketches: {},             // name -> text | 'loading' | Error message
+      sketches: {},             // name -> text | 'loading' | the absent message
+      // Names whose sketch is not in the archive on this ref. The page already
+      // discovered this when it opened the row and simply did not act on it, so
+      // it went on offering a GitHub link to a file it had just failed to
+      // fetch. Two populations hit it and both are ordinary: a row the device
+      // reports and the archive has never held, and, when reading main, every
+      // shortcut added since the last dump, which on a Recent sort is the top
+      // of the list.
+      sketchMissing: new Set(),
       limit: 60,                // rows rendered; grows on demand
 
       // ── prune state ──────────────────────────────────────────────────────
@@ -266,14 +274,25 @@
         if (this.openRow === name) { this.openRow = null; return; }
         this.openRow = name;
         if (this.sketches[name]) return;
+        // A row the archive has never held has nothing to fetch, and asking
+        // would only produce the 404 we already know about.
+        if (this.byName[name] === undefined) {
+          this.sketches[name] = 'Not in the archive yet: this one is on the device only.';
+          this.sketchMissing = new Set(this.sketchMissing).add(name);
+          return;
+        }
         this.sketches[name] = 'loading';
         try {
-          const p = 'shortcuts/sketches/' + name + '.txt';
+          // A slash is stored as a colon in the archive, matching how a device
+          // dump spells an entry name, so the sketch is looked up that way too.
+          const p = 'shortcuts/sketches/' + name.replace('/', ':') + '.txt';
           this.sketches[name] = (await this.gh.get(p)).text;
         } catch (e) {
-          // 576 sketches against 577 rows: one shortcut has none, and a missing
-          // sketch is a gap in the archive rather than a failure of the page.
-          this.sketches[name] = 'No sketch in the archive for this one.';
+          // A missing sketch is a gap in the archive rather than a failure of
+          // the page: one plist will not parse, and anything newer than the
+          // last dump has no sketch on main yet.
+          this.sketches[name] = 'No sketch in the archive on this ref.';
+          this.sketchMissing = new Set(this.sketchMissing).add(name);
         }
       },
       openNamed(name) {              // follow a call-graph link
@@ -299,9 +318,16 @@
       // Newline-separated, which is what Library-Stage splits on. Its idiom is
       // Run-Steps': split on new lines, repeat each, act.
       stageLink(names) { return this.deviceLink(this.STAGE_WITH, [].concat(names).join('\n')); },
+      // Dump-Named takes ⟦name⟧-delimited names, the same envelope
+      // tools/manifest-delta.py emits, so one row and a whole delta use one
+      // receiver and one grammar.
+      dumpLink(name) {
+        return 'shortcuts://run-shortcut?name=Dump-Named&input=text&text='
+          + encodeURIComponent('⟦' + name + '⟧');
+      },
       ghLink(name) {
         return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/sketches/`
-          + encodeURIComponent(name + '.txt');
+          + encodeURIComponent(name.replace('/', ':') + '.txt');
       },
 
       // ── the ledger ───────────────────────────────────────────────────────
@@ -713,8 +739,15 @@
               <a class="btn btn-xs btn-primary" :href="runLink(r.name)"><i class="ph ph-play"></i> Run</a>
               <a class="btn btn-xs btn-ghost border border-base-300" :href="openLink(r.name)"
                  title="Opens it in the Shortcuts editor, through the dispatcher"><i class="ph ph-pencil-simple"></i> Open</a>
-              <a class="btn btn-xs btn-ghost border border-base-300" :href="ghLink(r.name)" target="_blank">
+              <a class="btn btn-xs btn-ghost border border-base-300" x-show="!sketchMissing.has(r.name)"
+                 :href="ghLink(r.name)" target="_blank">
                 <i class="ph ph-github-logo"></i> Sketch on GitHub</a>
+              <!-- The archive does not have this one, so the useful offer is to
+                   go and get it rather than a link to a file that is not there. -->
+              <a class="btn btn-xs btn-warning btn-outline" x-show="r.unarchived"
+                 :href="dumpLink(r.name)" target="_blank" rel="noopener"
+                 title="Run Dump-Named on the device for just this shortcut">
+                <i class="ph ph-download-simple"></i> Fetch into the archive</a>
               <button class="btn btn-xs btn-ghost border border-base-300" x-show="!entry(r.name)"
                       @click="picked=new Set([r.name]); facet='prune'; grade=r.nominate?r.nominate.confidence:'high'">
                 <i class="ph ph-broom"></i> Stage…</button>
