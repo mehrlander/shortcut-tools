@@ -263,6 +263,26 @@ One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
 
+## Installing one, rather than pasting it
+
+A chain that declares a `name` gets a plist in [`plists/`](../plists/), and
+`Library-Import` installs one from a URL. That link is emitted, not typed:
+
+```bash
+python3 tools/plist.py workflows/<chain>.json --link            # main
+python3 tools/plist.py workflows/<chain>.json --link --ref <branch>
+```
+
+It carries two lines, the name to install under and the plist to fetch, which is
+the shape `Library-Import` splits on. The form was recorded here and in the
+device log and nowhere emitted, so it was reassembled by hand on every install:
+the same failure `--url` already fixed for the paste route, and the same fix.
+
+**Importing never merges by name**, so the new copy becomes `Name 1` and every
+`run-shortcut?name=Name` link keeps resolving to the old one. Delete the existing
+copy first for anything generated from this repo, where the plist is the source
+and a re-import costs nothing.
+
 ## Keeping the corpus current without re-dumping it
 
 A full dump is fourteen zips and a five-command regeneration, which is the right

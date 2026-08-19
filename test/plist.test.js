@@ -61,3 +61,20 @@ test("two chains claiming one name fail loudly rather than overwriting", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("--link emits the install link rather than leaving it to be typed", () => {
+  // Same failure --url fixed for the paste route: the form was documented and
+  // nothing emitted it, so it was retyped on every install.
+  const out = run("workflows/sync-manifest.json", "--link", "--ref", "some/branch").trim();
+  assert.match(out, /^shortcuts:\/\/run-shortcut\?name=Library-Import&input=text&text=/);
+  const payload = decodeURIComponent(out.split("&text=")[1]);
+  const [name, url] = payload.split("\n");
+  assert.equal(name, "Sync-Manifest", "Library-Import reads the name from line one");
+  assert.equal(url, "https://raw.githubusercontent.com/mehrlander/shortcut-tools/" +
+                    "some/branch/plists/Sync-Manifest.plist");
+});
+
+test("--link refuses a chain that declares no name", () => {
+  // A chain without a name has no plist, so the link would 404 on tap.
+  assert.throws(() => run("workflows/menu.json", "--link"), /declares no name/);
+});
