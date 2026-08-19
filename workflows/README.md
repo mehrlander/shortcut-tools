@@ -389,36 +389,39 @@ Two smaller findings, both in `manifest-delta.py`:
   Seven of the first delta's sixty-five, including the two chains being
   installed at the time.
 
-### Running a shortcut updates its modification date
+### Launching a shortcut updates its modification date; being called does not
 
-**Measured 2026-08-18 by the first `Dump-Recent` run, and it answers a question
-these notes previously called open.** The expectation was that a file
-modification date tracks edits rather than runs. It does not.
+**Measured 2026-08-18 across two manifests taken 102 minutes apart, with the
+runs in between known from the log.** An earlier note here said flatly that
+running a shortcut moves its date. That was too broad, and the second manifest
+disproved it.
 
-| Shortcut | Modified | What was happening |
-| --- | --- | --- |
-| `Library-Import` | 20:48:46 | ran at ~20:48:50, per its own `Log-Repo` entry |
-| `Dump-Recent` | 20:49:48 | imported 20:48:50, dumped 20:49:53 |
-| `Sync-Manifest` | 19:49:39 | imported 19:16:22, ran 19:49 |
+| Shortcut | 19:49 | 21:31 | What happened between |
+| --- | --- | --- | --- |
+| `Sync-Manifest` | 19:49:20 | **21:31:17** | launched by URL, 21:31 |
+| `Library-Import` | 19:16:54 | **20:56:25** | launched by URL, last at 20:56 |
+| `Dump-Recent` | absent | **21:06:27** | launched by URL, 21:06 |
+| `Inject-🎟️GitHubToken` | 2026-04-20 | 2026-04-20 | called as a sub-shortcut ~6 times |
+| `Log-Repo` | 2026-08-15 | 2026-08-15 | called as a sub-shortcut 3 times |
 
-Each date sits within seconds of a run and nowhere near the import, and none of
-the three is a shortcut anyone would edit mid-use: `Library-Import` was being
-used to install something else at that exact moment. One case stays unexplained,
-`Dump-Named` at 19:49:21 with no run recorded, so this is strong evidence rather
-than a closed proof.
+Every shortcut launched from outside carries a date matching its last launch to
+the second. The two that ran repeatedly **as sub-shortcuts**, invoked by Run
+Shortcut from within the ones above, did not move at all: `Inject-🎟️GitHubToken`
+still reads April.
 
-**What it costs the sync is precision, not correctness.** A shortcut you merely
-ran now reports as changed, so the delta gains false positives: extra exports,
-never missed ones. Since the action count is exact and independent, the two
-signals still bracket the truth from both sides. Worth knowing before reading a
-date-only flag as "I edited this".
+So the rule is **top-level launch**, not execution. A `shortcuts://run-shortcut`
+URL moves the date; a `runworkflow` card does not.
 
-**Two limits worth knowing before leaning on it.** The action count catches every
-structural edit exactly, but a parameter edit that leaves the count alone is
-caught only by `lastModified`, which now means "touched" rather than "edited".
-And `dump-named` inherits the API's appetite for large bodies, so
-`manifest-delta.py` chunks its links by estimated payload rather than by count,
-since one 400-action shortcut is a bigger ask than thirty small ones.
+**What that costs the sync is less than the broader claim would have.** Only a
+shortcut you launched yourself reports as changed, so the false positives are
+confined to things you actually reached for, and a heavily used sub-shortcut
+never generates one. The action count remains exact and independent.
+
+**And it is what makes the Recent facet honest.** Ordering by this date is
+ordering by what you last *launched*, which is the useful reading for a launcher
+list. The limit worth knowing: a core shortcut that only ever runs as somebody
+else's sub-step sinks to the bottom however heavily it is used, because nothing
+here can see that traffic.
 
 ### The dumper could not dump itself
 

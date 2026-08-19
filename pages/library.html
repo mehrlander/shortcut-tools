@@ -60,6 +60,20 @@
       // ── data contract ────────────────────────────────────────────────────
       REPO: 'mehrlander/web-tools-private',
       DATA_REF: new URLSearchParams(location.search).get('data') || 'main',
+      // **The device always writes to main, so its directories are always read
+      // from main.** `?data=` pins which ref the CURATED derivatives come from
+      // (library.json, the sketches, the prune ledger) so a branch can be
+      // reviewed before it merges. The device channel is not curated and has no
+      // branch: Log-Repo, Sync-Manifest, Dump-Recent and Dump-Named all carry a
+      // literal "branch": "main" in their commit, because a shortcut has no way
+      // to know which ref a page happens to be previewing.
+      //
+      // Reading them with DATA_REF instead was a real bug and not a tidiness
+      // one: on 2026-08-18 the Sync button ran, the manifest landed on main, and
+      // Reload looked on the branch and found nothing, so a working button
+      // looked broken. The Log facet had the same fault and had only ever been
+      // opened on refs that happened to carry a copy.
+      DEVICE_REF: 'main',
       DOCS_REPO: 'mehrlander/shortcut-tools',
       LEDGER: 'shortcuts/prune.json',
 
@@ -73,6 +87,7 @@
 
       // ── state ────────────────────────────────────────────────────────────
       gh: null,
+      ghDevice: null,           // the same repo pinned to main; see DEVICE_REF
       meta: null,
       rows: [],
       dangling: [],
@@ -126,6 +141,13 @@
       async init() {
         try {
           const g = this.gh = new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DATA_REF });
+          // A second reader pinned to main, for the directories the device
+          // writes. Same repo and token, different ref; see DEVICE_REF above.
+          // It is a separate instance rather than a ref argument on each call
+          // because the distinction is about which KIND of data is being read,
+          // and naming it once is what stops the next reader getting it wrong.
+          this.ghDevice = this.DATA_REF === this.DEVICE_REF ? g
+            : new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DEVICE_REF });
           const lib = JSON.parse((await g.get('shortcuts/library.json')).text);
           this.meta = lib.meta;
           this.rows = lib.rows;
@@ -310,7 +332,7 @@
         if (this.logFiles) return;
         this.logLoading = true;
         try {
-          const dir = await this.gh.req(`contents/shortcuts/log?ref=${this.DATA_REF}`);
+          const dir = await this.gh.req(`contents/shortcuts/log?ref=${this.DEVICE_REF}`);
           this.logFiles = dir.filter(f => f.type === 'file').map(f => f.name).sort().reverse();
           await this.fetchLogPayloads();
         } catch (e) {
@@ -325,7 +347,7 @@
         const want = this.logFiles.slice(0, this.logLimit).filter(n => !this.logPayloads[n]);
         await Promise.all(want.map(async n => {
           try {
-            const text = (await this.gh.get('shortcuts/log/' + n)).text;
+            const text = (await this.ghDevice.get('shortcuts/log/' + n)).text;
             let parsed = null;
             try { parsed = JSON.parse(text); } catch {}
             this.logPayloads[n] = {
@@ -343,18 +365,23 @@
         return m ? `${m[1]} · ${m[2]}:${m[3]}:${m[4]}` : n;
       },
       logGhLink(n) {
-        return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/log/` + encodeURIComponent(n);
+        return `https://github.com/${this.REPO}/blob/${this.DEVICE_REF}/shortcuts/log/` + encodeURIComponent(n);
       },
 
       // ── recent: the library in order of use ──────────────────────────────
       //
-      // **Ordering by modification date is ordering by use, and that is a
-      // measured fact rather than an approximation.** Running a shortcut moves
-      // its Last Modified Date: confirmed 2026-08-18 by three shortcuts whose
-      // stamps land within seconds of a run and nowhere near their import,
-      // Library-Import among them, which nobody edits while using it to install
-      // something else. That property makes the date a blunt instrument for
-      // detecting edits and an exact one for this.
+      // **Ordering by modification date is ordering by what you last LAUNCHED,
+      // and that is measured rather than assumed.** Two manifests 102 minutes
+      // apart, with the runs in between known from the log: every shortcut
+      // launched from a run-shortcut URL carries a date matching its last
+      // launch to the second, while Inject-🎟️GitHubToken and Log-Repo, which ran
+      // repeatedly as sub-shortcuts in the same window, did not move at all.
+      // Inject still reads April.
+      //
+      // So this is a launcher list, which is the useful reading. The limit
+      // worth knowing: a shortcut that only ever runs as somebody else's
+      // sub-step sinks to the bottom however heavily it is used, because
+      // nothing on the device reports that traffic.
       //
       // The feed is the newest file in shortcuts/manifests/, written by
       // Sync-Manifest. Filenames are date-stamped, so a lexical sort is
@@ -364,12 +391,12 @@
         if (this.recentRows && !force) return;
         this.recentLoading = true; this.recentError = '';
         try {
-          const dir = await this.gh.req(`contents/shortcuts/manifests?ref=${this.DATA_REF}`);
+          const dir = await this.gh.req(`contents/shortcuts/manifests?ref=${this.DEVICE_REF}`);
           const files = dir.filter(f => f.type === 'file' && f.name.endsWith('.txt'))
                            .map(f => f.name).sort();
           if (!files.length) throw new Error('no manifest yet: tap Sync to take one');
           const newest = files[files.length - 1];
-          const text = (await this.gh.get('shortcuts/manifests/' + newest)).text;
+          const text = (await this.ghDevice.get('shortcuts/manifests/' + newest)).text;
           this.recentRows = this.parseManifest(text);
           this.recentStamp = newest;
         } catch (e) {
