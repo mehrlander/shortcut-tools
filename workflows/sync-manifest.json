@@ -21,18 +21,7 @@
                 "OutputUUID": "5C110000-0001-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               },
-              "{22, 1}": {
-                "OutputName": "My Shortcuts",
-                "OutputUUID": "5C110000-0001-4A00-9000-000000000001",
-                "Type": "ActionOutput",
-                "Aggrandizements": [
-                  {
-                    "PropertyName": "Folder",
-                    "Type": "WFPropertyVariableAggrandizement"
-                  }
-                ]
-              },
-              "{36, 1}": {
+              "{23, 1}": {
                 "OutputName": "My Shortcuts",
                 "OutputUUID": "5C110000-0001-4A00-9000-000000000001",
                 "Type": "ActionOutput",
@@ -43,7 +32,7 @@
                   }
                 ]
               },
-              "{55, 1}": {
+              "{42, 1}": {
                 "OutputName": "My Shortcuts",
                 "OutputUUID": "5C110000-0001-4A00-9000-000000000001",
                 "Type": "ActionOutput",
@@ -61,7 +50,7 @@
                 ]
               }
             },
-            "string": "==name==\n￼\n==folder==\n￼\n==actions==\n￼\n==lastModified==\n￼"
+            "string": "==name==\n￼\n==actions==\n￼\n==lastModified==\n￼"
           },
           "WFSerializationType": "WFTextTokenString"
         }

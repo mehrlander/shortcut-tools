@@ -46,7 +46,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-folder-zip` | The same folder, as a zip. Four actions: `Get Dictionary from Input` keys the shortcuts by name, `Make Archive` compresses. The shortest route and the one to prefer. |
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
-| `sync-manifest` | The shape of the whole library (name, folder, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
+| `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The reply to a manifest: the sender decides the list, so the tap carries no decision. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
@@ -289,10 +289,10 @@ A full dump is fourteen zips and a five-command regeneration, which is the right
 cost once and the wrong cost weekly. `sync-manifest` and `dump-named` are the two
 halves of the cheaper loop, and neither asks the user to decide anything:
 
-1. **`Sync-Manifest`** reads Get My Shortcuts, formats the four properties that
+1. **`Sync-Manifest`** reads Get My Shortcuts, formats the three properties that
    are available without serializing anything, and PUTs the result to
-   `shortcuts/manifests/<stamp>.txt` in web-tools-private. Around 54 KB for 577
-   shortcuts. One tap, no page, no prompt.
+   `shortcuts/manifests/<stamp>.txt` in web-tools-private. 33 KB for 633
+   shortcuts, measured. One tap, no page, no prompt.
 2. **[`tools/manifest-delta.py`](../tools/manifest-delta.py)** compares it against
    the committed `index.json` and prints what is added, removed, and changed,
    followed by ready-made `Dump-Named` links with the names already in them.
@@ -310,6 +310,36 @@ succeed on a name `dump-selected` would fail on.
 Both chains open with an unconditional clipboard write before touching the
 network, copied from `log-repo` rather than reinvented: a failed commit should
 degrade to the cheap path, not lose the export.
+
+### What the first device run changed
+
+Run 2026-08-18, and it corrected the design twice. Both corrections are in the
+shipped code; this records why, since neither is guessable from the chain file.
+
+**The manifest arrives column-major.** A Text action evaluates its template
+once and expands each attachment into a newline-joined column, so the file is
+`==name==` followed by all 633 names, then `==actions==` followed by all 633
+counts, and so on. It is not one record per shortcut. The parser had been
+written to accept two possible join styles, and the real shape was a third, so
+the tolerance bought nothing: the only thing that settled it was running it.
+
+**Shortcuts drops an empty value when joining a list into text**, rather than
+emitting a blank line. The first run returned 633 names and 578 folders, because
+55 shortcuts sit in no folder, and nothing in the file says which 55. A column
+holding any empty value therefore cannot be aligned with its siblings by
+position. `folder` was removed from the template for that reason; the manifest
+now carries only the three fields that cannot be empty, and the parser refuses a
+file whose columns disagree rather than producing a plausible wrong answer.
+
+Two smaller findings, both in `manifest-delta.py`:
+
+- **A dump stores `/` as `:` in an entry name**, so `Unzip/Re-zip` on the device
+  is `Unzip:Re-zip` in `index.json`. Two of the first run's three apparent
+  deletions were this. The repair is narrow rather than a blanket substitution,
+  since `REF: Edit iCloud JSON` is a real name with a real colon.
+- **A corpus record that failed to parse has no action count**, and comparing
+  against it printed `actions None to 29`, which reads as a change of unknown
+  size. It is now named as what it is: the corpus never got a usable copy.
 
 **Two limits worth knowing before leaning on it.** The action count catches every
 structural edit exactly, but a parameter edit that leaves the count alone is

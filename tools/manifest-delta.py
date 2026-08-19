@@ -5,8 +5,8 @@
     python3 tools/manifest-delta.py <manifest.txt> --json    # machine output
     python3 tools/manifest-delta.py --latest                 # newest committed
 
-`Sync-Manifest` commits the shape of the library (name, folder, action count,
-last modified) to `shortcuts/manifests/<stamp>.txt` in web-tools-private. This
+`Sync-Manifest` commits the shape of the library (name, action count, last
+modified) to `shortcuts/manifests/<stamp>.txt` in web-tools-private. This
 reads one and compares it against the committed corpus, so catching up means
 exporting the handful that moved rather than re-dumping 577 shortcuts.
 
@@ -15,6 +15,9 @@ exact template `Get-ShortcutsInfo` already proves works on the device, and a
 shortcut named `Say "hi"` would break a JSON row built by string interpolation
 in Shortcuts, where there is no escaping primitive. Parsing moves here, where
 there is one.
+
+**And it arrives column-major.** See `parse_manifest` for what the first real
+run established, and why the manifest carries three fields rather than four.
 
 Three signals, and only the first two are exact:
 
@@ -59,27 +62,73 @@ def find_private(arg):
     return None
 
 
-def parse_manifest(text):
-    """Marker text to records. Tolerant of how the device joined the rows.
+class ManifestError(Exception):
+    """The file parsed, but its columns cannot be trusted to line up."""
 
-    A Text action fed a list may emit one string per item or one concatenated
-    string, and which one is not worth depending on: splitting on the leading
-    marker reads both the same way. Rows are returned in device order.
+
+def parse_manifest(text):
+    """Column-major marker text to records.
+
+    **Measured on the first device run, 2026-08-18, and it settled two open
+    questions at once.**
+
+    The Text action evaluates its template ONCE and expands each attachment
+    into a newline-joined column, so the file is one `==marker==` followed by
+    every value for that field, then the next marker. It is not one record per
+    shortcut, which is what the design assumed and what a row-major reading
+    would need. Both readings this parser was originally written to accept were
+    wrong in the same direction, so the tolerance bought nothing: the real shape
+    was a third one.
+
+    Worse, and this is the part no amount of care here would have caught:
+    **Shortcuts drops an empty value when it joins a list into text**, rather
+    than emitting a blank line. The first run returned 633 names and 578
+    folders, because 55 shortcuts sit in no folder, and nothing in the file says
+    which 55. A column holding any empty value therefore cannot be aligned with
+    its siblings by position, and a silent mis-zip would report edits to
+    shortcuts nobody touched.
+
+    So the manifest carries the three fields that cannot be empty (a shortcut
+    always has a name, an action count is always a number, a modification date
+    always exists) and `folder` was removed from the template. A manifest
+    written before that change still parses: `folder` is read when it happens to
+    align and dropped when it does not, since nothing downstream uses it.
+
+    The equal-length check on the three required columns is not defensive
+    boilerplate. It is the only thing standing between a future empty value and
+    a delta report that looks plausible and is wrong throughout.
     """
+    blocks = {}
+    for key, body in zip(*[re.split(r"^==(name|folder|actions|lastModified)==$",
+                                    text, flags=re.M)[i::2] for i in (1, 2)]):
+        blocks[key] = [ln for ln in body.split("\n") if ln.strip()]
+
+    required = ("name", "actions", "lastModified")
+    missing = [k for k in required if k not in blocks]
+    if missing:
+        raise ManifestError("no %s column; is this a manifest?" % ", ".join(missing))
+
+    sizes = {k: len(blocks[k]) for k in required}
+    if len(set(sizes.values())) != 1:
+        raise ManifestError(
+            "columns disagree (%s). Shortcuts drops empty values when joining, "
+            "so a column with a blank in it cannot be aligned by position; this "
+            "manifest cannot be read safely."
+            % ", ".join("%s=%d" % kv for kv in sorted(sizes.items())))
+
+    n = sizes["name"]
+    folder = blocks.get("folder") if len(blocks.get("folder", [])) == n else None
+
     rows = []
-    for chunk in text.split("==name==")[1:]:
-        rec = {}
-        parts = re.split(r"==(folder|actions|lastModified)==", chunk)
-        rec["name"] = parts[0].strip()
-        for key, val in zip(parts[1::2], parts[2::2]):
-            rec[key] = val.strip()
-        if not rec["name"]:
-            continue
+    for i in range(n):
         try:
-            rec["actions"] = int(rec.get("actions") or 0)
+            actions = int(blocks["actions"][i].strip())
         except ValueError:
-            rec["actions"] = 0
-        rows.append(rec)
+            actions = 0
+        rows.append({"name": blocks["name"][i].strip(),
+                     "folder": folder[i].strip() if folder else "",
+                     "actions": actions,
+                     "lastModified": blocks["lastModified"][i].strip()})
     return rows
 
 
@@ -102,9 +151,44 @@ def newer_than(iso, cutoff):
     return dt.date().isoformat() > cutoff
 
 
+def resolve_names(have, live):
+    """Map a corpus name onto the device name it actually is.
+
+    **A dump stores `/` as `:` in an entry name**, the macOS filename swap, and
+    `index.json` is built from those entry names. So `Unzip/Re-zip` on the
+    device is `Unzip:Re-zip` in the corpus, and a naive comparison reports it as
+    one deletion plus one addition: a phantom pair that would cost a needless
+    export and hide a real change in the noise. Two of the three apparent
+    deletions in the first real run were this.
+
+    The rewrite is deliberately narrow rather than a blanket substitution, since
+    a colon can be a real character in a name: `REF: Edit iCloud JSON` exists and
+    has no slash form. A corpus name is rewritten only when its plain form is
+    absent from the device AND its slash form is present, so the pairing is
+    evidence-driven in both directions.
+    """
+    fixed = {}
+    for name, rec in have.items():
+        alt = name.replace(":", "/")
+        fixed[alt if (name not in live and alt in live) else name] = rec
+    return fixed
+
+
+def unusable(rec):
+    """A corpus record that cannot answer 'has this changed?'.
+
+    index-dump records a plist it could not parse as `error` with no action
+    count. One such record exists (`Get-YamlFromDictionary`, invalid token).
+    Comparing against it would print `actions None to 29`, which reads as a
+    change of unknown size rather than as what it is: the corpus never got a
+    usable copy, so the shortcut wants re-exporting whatever its date says.
+    """
+    return rec.get("error") or rec.get("actions") is None
+
+
 def delta(rows, index, cutoff):
-    have = {r["name"]: r for r in index}
     live = {r["name"]: r for r in rows}
+    have = resolve_names({r["name"]: r for r in index}, live)
     added = [n for n in live if n not in have]
     removed = [n for n in have if n not in live]
     changed = []
@@ -112,8 +196,11 @@ def delta(rows, index, cutoff):
         if name in added:
             continue
         why = []
-        if r["actions"] != (have[name].get("actions") or 0):
-            why.append("actions %s to %s" % (have[name].get("actions"), r["actions"]))
+        if unusable(have[name]):
+            why.append("corpus copy unreadable (%s)"
+                       % ("parse error" if have[name].get("error") else "no action count"))
+        elif r["actions"] != have[name]["actions"]:
+            why.append("actions %s to %s" % (have[name]["actions"], r["actions"]))
         if newer_than(r.get("lastModified"), cutoff):
             why.append("modified " + r["lastModified"][:10])
         if why:
@@ -171,7 +258,11 @@ def main():
         ap.error("give a manifest path or --latest")
 
     index = json.loads((private / "shortcuts" / "index.json").read_text())
-    rows = parse_manifest(path.read_text())
+    try:
+        rows = parse_manifest(path.read_text())
+    except ManifestError as e:
+        print("%s: %s" % (path.name, e), file=sys.stderr)
+        return 1
     if not rows:
         print("%s parsed to zero rows; is it a manifest?" % path, file=sys.stderr)
         return 1

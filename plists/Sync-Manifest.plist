@@ -30,25 +30,7 @@
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{22, 1}</key>
-							<dict>
-								<key>Aggrandizements</key>
-								<array>
-									<dict>
-										<key>PropertyName</key>
-										<string>Folder</string>
-										<key>Type</key>
-										<string>WFPropertyVariableAggrandizement</string>
-									</dict>
-								</array>
-								<key>OutputName</key>
-								<string>My Shortcuts</string>
-								<key>OutputUUID</key>
-								<string>5C110000-0001-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-							<key>{36, 1}</key>
+							<key>{23, 1}</key>
 							<dict>
 								<key>Aggrandizements</key>
 								<array>
@@ -66,7 +48,7 @@
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
-							<key>{55, 1}</key>
+							<key>{42, 1}</key>
 							<dict>
 								<key>Aggrandizements</key>
 								<array>
@@ -106,8 +88,6 @@
 						</dict>
 						<key>string</key>
 						<string>==name==
-￼
-==folder==
 ￼
 ==actions==
 ￼
