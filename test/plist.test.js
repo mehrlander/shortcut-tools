@@ -44,16 +44,20 @@ test("file-level settings only a plist can carry survive the build", () => {
 });
 
 test("two chains claiming one name fail loudly rather than overwriting", () => {
+  // In a temp directory, not workflows/: two chains claiming one name are
+  // exactly what every other test globbing that directory must never see.
   const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "plist-"));
-  const a = path.join(ROOT, "workflows", "__dupe-a.json");
-  const b = path.join(ROOT, "workflows", "__dupe-b.json");
   const chain = { name: "Dupe-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
-  fs.writeFileSync(a, JSON.stringify(chain));
-  fs.writeFileSync(b, JSON.stringify(chain));
+  fs.writeFileSync(path.join(dir, "a.json"), JSON.stringify(chain));
+  fs.writeFileSync(path.join(dir, "b.json"), JSON.stringify(chain));
   try {
-    assert.throws(() => run("--publish"), /both name themselves/);
+    assert.throws(() => run("--publish", "--workflows", dir), /both name themselves/);
+    // And it fails clean. A one-pass publish wrote the first claimant before
+    // noticing the second, leaving a plist no chain regenerates; one such file
+    // sat in plists/ across two pull requests, failing the check above.
+    assert.ok(!fs.existsSync(path.join(ROOT, "plists", "Dupe-Probe.plist")),
+      "a refused publish must not leave a partial write behind");
   } finally {
-    fs.rmSync(a); fs.rmSync(b); fs.rmSync(dir, { recursive: true, force: true });
-    run("--publish");
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 });

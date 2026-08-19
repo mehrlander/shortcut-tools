@@ -46,6 +46,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-folder-zip` | The same folder, as a zip. Four actions: `Get Dictionary from Input` keys the shortcuts by name, `Make Archive` compresses. The shortest route and the one to prefer. |
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
+| `sync-manifest` | The shape of the whole library (name, folder, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
+| `dump-named` | Exports only the shortcuts named in its input and commits them back. The reply to a manifest: the sender decides the list, so the tap carries no decision. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
@@ -260,6 +262,43 @@ route works before anything large is attempted.
 One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
+
+## Keeping the corpus current without re-dumping it
+
+A full dump is fourteen zips and a five-command regeneration, which is the right
+cost once and the wrong cost weekly. `sync-manifest` and `dump-named` are the two
+halves of the cheaper loop, and neither asks the user to decide anything:
+
+1. **`Sync-Manifest`** reads Get My Shortcuts, formats the four properties that
+   are available without serializing anything, and PUTs the result to
+   `shortcuts/manifests/<stamp>.txt` in web-tools-private. Around 54 KB for 577
+   shortcuts. One tap, no page, no prompt.
+2. **[`tools/manifest-delta.py`](../tools/manifest-delta.py)** compares it against
+   the committed `index.json` and prints what is added, removed, and changed,
+   followed by ready-made `Dump-Named` links with the names already in them.
+3. **`Dump-Named`** exports exactly those and PUTs them to
+   `shortcuts/incoming/<stamp>.txt`.
+
+The manifest is **marker text, not JSON**, and the sharp edge named above is the
+reason. Shortcuts has no escaping primitive, so a JSON row built by interpolating
+a name breaks on a shortcut called `Say "hi"`, and it breaks the whole run rather
+than one row. The marker template is instead the one `Get-ShortcutsInfo` already
+proves works on this device, and the parsing moves to Python, where escaping
+exists. `dump-named` carries its records the same way, which is what lets it
+succeed on a name `dump-selected` would fail on.
+
+Both chains open with an unconditional clipboard write before touching the
+network, copied from `log-repo` rather than reinvented: a failed commit should
+degrade to the cheap path, not lose the export.
+
+**Two limits worth knowing before leaning on it.** The action count catches every
+structural edit exactly, but a parameter edit that leaves the count alone is
+caught only by `lastModified`, which is a file modification date and so should
+track edits rather than runs. That is an expectation and not a measurement; two
+manifests taken either side of a run settle it, at no cost beyond data the sync
+already collects. And `dump-named` inherits the API's appetite for large bodies,
+so `manifest-delta.py` chunks its links by estimated payload rather than by
+count, since one 400-action shortcut is a bigger ask than thirty small ones.
 
 ## Reading a dump back
 

@@ -84,25 +84,41 @@ def render(path):
     return shortcut_name(chain, path), plistlib.dumps(build(chain, path), fmt=plistlib.FMT_XML)
 
 
-def chains():
-    """Only the chains that declare a name: the installable receivers."""
+def chains(src=None):
+    """Only the chains that declare a name: the installable receivers.
+
+    `src` exists for the tests. Probing the duplicate-name failure means having
+    two chains that claim one name, and writing those into the real workflows/
+    made them briefly visible to every other test globbing that directory,
+    which is a race that passes until the day it does not.
+    """
     out = []
-    for c in sorted((ROOT / "workflows").glob("*.json")):
+    for c in sorted((src or ROOT / "workflows").glob("*.json")):
         if json.loads(c.read_text()).get("name"):
             out.append(c)
     return out
 
 
-def publish(check=False):
+def publish(check=False, src=None):
+    """Render everything, then write. Never the other way round.
+
+    A one-pass loop wrote each plist as it rendered, so a duplicate name was
+    caught only after the first claimant had already landed on disk: the
+    publish failed, and left behind a file no chain would ever regenerate.
+    One did, and sat in plists/ across two pull requests failing the
+    receivers-only check. Resolving every name before writing any file is the
+    difference between a publish that fails and a publish that fails dirty.
+    """
     OUT.mkdir(exist_ok=True)
-    stale, seen = [], {}
-    for c in chains():
+    stale, seen, pending = [], {}, []
+    for c in chains(src):
         name, data = render(c)
         if name in seen:
             raise SystemExit("two chains both name themselves %r: %s and %s"
                              % (name, seen[name], c.name))
         seen[name] = c.name
-        target = OUT / (name + ".plist")
+        pending.append((OUT / (name + ".plist"), data))
+    for target, data in pending:
         if check:
             if not target.exists() or target.read_bytes() != data:
                 stale.append(target.relative_to(ROOT).as_posix())
@@ -112,9 +128,9 @@ def publish(check=False):
         if stale:
             raise SystemExit("stale, run `python3 tools/plist.py --publish`:\n  "
                              + "\n  ".join(stale))
-        print("plists/ is current (%d)" % len(chains()), file=sys.stderr)
+        print("plists/ is current (%d)" % len(pending), file=sys.stderr)
         return
-    print("wrote %d plists to plists/" % len(chains()), file=sys.stderr)
+    print("wrote %d plists to plists/" % len(pending), file=sys.stderr)
 
 
 def main():
@@ -122,9 +138,10 @@ def main():
     ap.add_argument("chain", nargs="?")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--workflows", help="read chains from here instead of workflows/")
     args = ap.parse_args()
     if args.publish or args.check:
-        return publish(args.check)
+        return publish(args.check, Path(args.workflows) if args.workflows else None)
     if not args.chain:
         raise SystemExit("give a chain, or --publish")
     name, data = render(args.chain)
