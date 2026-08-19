@@ -9,8 +9,11 @@
 <script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"></script>
 
 <!--
-  library.html — the Shortcuts library as an app view, in four facets:
+  library.html — the Shortcuts library as an app view, in five facets:
 
+    Recent     the library in order of use, newest first, fed by the manifest
+               Sync-Manifest commits. A button here runs that shortcut on the
+               device, so the page refreshes itself through the phone.
     Library    every shortcut, grouped on axes the Shortcuts app does not have:
                tier, provenance, lifecycle, connectivity, what calls what. A row
                expands to its pseudocode sketch and its call graph.
@@ -76,7 +79,17 @@
       ledger: null,             // { folder, entries: [...] }; null until loaded
       loading: true,
       error: '',
-      facet: 'library',         // library | prune | reference
+      facet: 'library',         // library | recent | prune | log | reference
+
+      // ── recent state ─────────────────────────────────────────────────────
+      // Fed by Sync-Manifest rather than by library.json: the manifest is the
+      // only thing that carries a modification date, and it is cheap enough
+      // (33 KB for 633 shortcuts) to re-take whenever the order looks stale.
+      recentRows: null,         // [{name, actions, modified}] newest first; null until opened
+      recentStamp: '',          // which manifest these came from
+      recentLoading: false,
+      recentError: '',
+      recentLimit: 40,
 
       // ── library filters ──────────────────────────────────────────────────
       q: '',
@@ -333,6 +346,104 @@
         return `https://github.com/${this.REPO}/blob/${this.DATA_REF}/shortcuts/log/` + encodeURIComponent(n);
       },
 
+      // ── recent: the library in order of use ──────────────────────────────
+      //
+      // **Ordering by modification date is ordering by use, and that is a
+      // measured fact rather than an approximation.** Running a shortcut moves
+      // its Last Modified Date: confirmed 2026-08-18 by three shortcuts whose
+      // stamps land within seconds of a run and nowhere near their import,
+      // Library-Import among them, which nobody edits while using it to install
+      // something else. That property makes the date a blunt instrument for
+      // detecting edits and an exact one for this.
+      //
+      // The feed is the newest file in shortcuts/manifests/, written by
+      // Sync-Manifest. Filenames are date-stamped, so a lexical sort is
+      // newest-first once reversed and no content read is needed to choose.
+      async openRecentFacet(force) {
+        this.facet = 'recent';
+        if (this.recentRows && !force) return;
+        this.recentLoading = true; this.recentError = '';
+        try {
+          const dir = await this.gh.req(`contents/shortcuts/manifests?ref=${this.DATA_REF}`);
+          const files = dir.filter(f => f.type === 'file' && f.name.endsWith('.txt'))
+                           .map(f => f.name).sort();
+          if (!files.length) throw new Error('no manifest yet: tap Sync to take one');
+          const newest = files[files.length - 1];
+          const text = (await this.gh.get('shortcuts/manifests/' + newest)).text;
+          this.recentRows = this.parseManifest(text);
+          this.recentStamp = newest;
+        } catch (e) {
+          this.recentRows = null;
+          this.recentError = String(e.message || e);
+        }
+        this.recentLoading = false;
+      },
+
+      // The manifest is column-major: one `==marker==` per field, then every
+      // value for that field. A Text action evaluates its template once and
+      // expands each attachment into its own newline-joined column, so this is
+      // NOT one record per shortcut however much it looks like it should be.
+      //
+      // Two rules that are load-bearing rather than defensive. The split is
+      // anchored to a whole line, because a shortcut's name can contain a
+      // marker. And the columns are checked for equal length, because Shortcuts
+      // drops an empty value when joining a list into text: the first manifest
+      // came back with 633 names and 578 folders, nothing saying which 55 sat
+      // in no folder, and zipping that by position would invent edits to
+      // shortcuts nobody touched. Refusing beats guessing.
+      parseManifest(text) {
+        const cols = {};
+        const parts = text.split(/^==(name|folder|actions|lastModified)==$/m);
+        for (let i = 1; i < parts.length; i += 2) {
+          cols[parts[i]] = parts[i + 1].split('\n').filter(l => l.trim() !== '');
+        }
+        const need = ['name', 'actions', 'lastModified'];
+        const missing = need.filter(k => !cols[k]);
+        if (missing.length) throw new Error('not a manifest: no ' + missing.join(', ') + ' column');
+        const sizes = need.map(k => cols[k].length);
+        if (new Set(sizes).size !== 1) {
+          throw new Error('columns disagree (' + need.map((k, i) => k + '=' + sizes[i]).join(', ') +
+                          '), so this manifest cannot be read safely');
+        }
+        return cols.name.map((n, i) => ({
+          name: n.trim(),
+          actions: parseInt(cols.actions[i], 10) || 0,
+          modified: cols.lastModified[i].trim(),
+        })).sort((a, b) => b.modified.localeCompare(a.modified));
+      },
+
+      // A tapped row runs or opens the shortcut on the device. Same mechanism
+      // as the Sync button and the same reason for target=_blank: the app
+      // mounts this page in a frame whose sandbox grants allow-popups but not
+      // allow-top-navigation, so assigning location is refused outright while a
+      // popup is permitted. Measured 2026-08-19 against those exact flags.
+      // The two row links are bound because the name varies. The Sync button's
+      // href is a constant and is therefore written literally in the markup, so
+      // it still works if Alpine has not hydrated, which is the moment an
+      // escape hatch is worth most.
+      runLink(name) { return 'shortcuts://run-shortcut?name=' + encodeURIComponent(name); },
+      openLink(name) { return 'shortcuts://open-shortcut?name=' + encodeURIComponent(name); },
+
+      // Relative time, because "3 hours ago" is the question this facet answers
+      // and an ISO stamp is not. Falls back to the raw value rather than
+      // printing "Invalid Date" over a manifest this page failed to understand.
+      ago(iso) {
+        const t = Date.parse(iso);
+        if (!Number.isFinite(t)) return iso;
+        const s = Math.max(0, (Date.now() - t) / 1000);
+        const steps = [[60, 's'], [60, 'm'], [24, 'h'], [7, 'd'], [4.35, 'w'], [12, 'mo']];
+        let v = s, u = 's';
+        for (const [size, unit] of steps) {
+          if (v < size) break;
+          v /= size; u = unit;
+        }
+        return Math.round(v) + u + ' ago';
+      },
+      recentStampPretty() {
+        const m = (this.recentStamp || '').match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})(\d{2})/);
+        return m ? `${m[1]} · ${m[2]}:${m[3]}:${m[4]}` : this.recentStamp;
+      },
+
       // ── reference ────────────────────────────────────────────────────────
       async openDoc(path) {
         if (this.doc === path) { this.doc = null; return; }
@@ -378,6 +489,9 @@
   <div role="tablist" class="tabs tabs-box mt-4">
     <button role="tab" class="tab" :class="facet==='library' && 'tab-active'" @click="facet='library'">
       <i class="ph ph-list-bullets mr-1"></i> Library
+    </button>
+    <button role="tab" class="tab" :class="facet==='recent' && 'tab-active'" @click="openRecentFacet()">
+      <i class="ph ph-clock-counter-clockwise mr-1"></i> Recent
     </button>
     <button role="tab" class="tab" :class="facet==='prune' && 'tab-active'" @click="facet='prune'">
       <i class="ph ph-broom mr-1"></i> Prune
@@ -507,6 +621,82 @@
   </div>
 
   <!-- ══ PRUNE ════════════════════════════════════════════════════════════ -->
+  <!-- Recent: the library in order of use, fed by the newest Sync-Manifest.
+       Every tappable thing here is an <a>, not a click handler that assigns
+       location: the app frames this page under a sandbox granting allow-popups
+       and not allow-top-navigation, so an anchor works and a navigation does
+       not. Measured 2026-08-19 against those flags. -->
+  <div x-show="facet==='recent' && !loading && !error" class="mt-4">
+
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <a href="shortcuts://run-shortcut?name=Sync-Manifest" target="_blank" rel="noopener"
+         class="btn btn-sm btn-primary">
+        <i class="ph ph-arrows-clockwise"></i> Sync from device
+      </a>
+      <button class="btn btn-sm btn-ghost border border-base-300" @click="openRecentFacet(true)"
+              :disabled="recentLoading">
+        <i class="ph ph-arrow-clockwise"></i> Reload
+      </button>
+      <span class="text-xs opacity-60" x-show="recentStamp">
+        manifest <span x-text="recentStampPretty()"></span>
+      </span>
+    </div>
+
+    <p class="text-xs opacity-60 mb-3">
+      Tap <b>Sync from device</b> to run <code>Sync-Manifest</code> on the phone; it commits a
+      fresh manifest, then <b>Reload</b> reads it. Order is by last modification, and
+      <b>running a shortcut moves that date</b>, so this is order of use rather than
+      order of editing.
+    </p>
+
+    <template x-if="recentLoading">
+      <div class="flex items-center gap-2 opacity-60">
+        <span class="loading loading-spinner loading-sm"></span> Reading the manifest…
+      </div>
+    </template>
+    <template x-if="recentError">
+      <div class="alert alert-warning"><i class="ph ph-warning"></i><span x-text="recentError"></span></div>
+    </template>
+
+    <template x-if="recentRows && !recentLoading">
+      <div>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <tbody>
+              <template x-for="r in recentRows.slice(0, recentLimit)" :key="r.name">
+                <tr class="hover">
+                  <td class="w-full">
+                    <a :href="runLink(r.name)" target="_blank" rel="noopener"
+                       class="link link-hover font-medium" x-text="r.name"></a>
+                  </td>
+                  <td class="whitespace-nowrap text-right opacity-60 text-xs" x-text="ago(r.modified)"></td>
+                  <td class="whitespace-nowrap text-right opacity-40 text-xs"
+                      x-text="r.actions + ' act'"></td>
+                  <td class="whitespace-nowrap text-right">
+                    <a :href="openLink(r.name)" target="_blank" rel="noopener"
+                       class="btn btn-ghost btn-xs" title="Open in Shortcuts">
+                      <i class="ph ph-pencil-simple"></i>
+                    </a>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-3 flex items-center gap-3">
+          <button class="btn btn-sm btn-ghost border border-base-300"
+                  x-show="recentRows.length > recentLimit" @click="recentLimit += 40">
+            Show more
+          </button>
+          <span class="text-xs opacity-50">
+            <span x-text="Math.min(recentLimit, recentRows.length)"></span> of
+            <span x-text="recentRows.length"></span>
+          </span>
+        </div>
+      </div>
+    </template>
+  </div>
+
   <div x-show="facet==='prune' && !loading && !error" class="mt-4 space-y-5">
 
     <div class="alert alert-info text-sm">
