@@ -9,14 +9,16 @@
 <script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"></script>
 
 <!--
-  library.html — the Shortcuts library as an app view, in five facets:
+  library.html — the Shortcuts library as an app view, in four facets:
 
-    Recent     the library in order of use, newest first, fed by the manifest
-               Sync-Manifest commits. A button here runs that shortcut on the
-               device, so the page refreshes itself through the phone.
-    Library    every shortcut, grouped on axes the Shortcuts app does not have:
-               tier, provenance, lifecycle, connectivity, what calls what. A row
-               expands to its pseudocode sketch and its call graph.
+    Library    every shortcut, on axes the Shortcuts app does not have: tier,
+               provenance, lifecycle, connectivity, what calls what, and how
+               recently you launched it. A row expands to its pseudocode sketch
+               and its call graph. Sort by Survey / Recent / Name / Size, and a
+               Sync button runs Sync-Manifest on the device so the recency is
+               current. Recency was briefly a second facet, which meant two
+               lists of the same 600-odd shortcuts differing only in order;
+               order is a property of one list.
     Prune      the staged deletion workflow. Nothing here deletes anything.
     Log        the Log-Repo return channel read back: every probe result the
                device has committed, newest first.
@@ -94,17 +96,20 @@
       ledger: null,             // { folder, entries: [...] }; null until loaded
       loading: true,
       error: '',
-      facet: 'library',         // library | recent | prune | log | reference
+      facet: 'library',         // library | prune | log | reference
 
-      // ── recent state ─────────────────────────────────────────────────────
-      // Fed by Sync-Manifest rather than by library.json: the manifest is the
-      // only thing that carries a modification date, and it is cheap enough
-      // (33 KB for 633 shortcuts) to re-take whenever the order looks stale.
-      recentRows: null,         // [{name, actions, modified}] newest first; null until opened
-      recentStamp: '',          // which manifest these came from
-      recentLoading: false,
-      recentError: '',
-      recentLimit: 40,
+      // ── the device manifest, merged onto the rows rather than listed apart ─
+      // Recency was briefly its own facet, which meant two lists of the same
+      // 600-odd shortcuts differing only in order: the reader had to know which
+      // one answered their question before they could ask it. Order is a
+      // property of one list, so it is a sort here and the manifest is just
+      // another column. What that buys beyond tidiness: a row can now say it is
+      // on the device and absent from the archive, which no single-source list
+      // could, and the delta stops needing a separate tool to see.
+      sort: 'tier',             // tier | recent | name | actions
+      manifest: null,           // name -> ISO date, from the newest manifest on main
+      manifestStamp: '',
+      manifestError: '',
 
       // ── library filters ──────────────────────────────────────────────────
       q: '',
@@ -161,15 +166,25 @@
           this.error = String(e.message || e);
         }
         this.loading = false;
+        // The manifest loads beside the library rather than on demand: it is
+        // 33 KB, it feeds a sort the reader may reach for first, and a list
+        // whose dates appear only after a click is the awkwardness this
+        // consolidation exists to remove. Not awaited, because the library is
+        // the page's job and a missing manifest must not delay it or fail it:
+        // loadManifest records its own error and the sort degrades to name.
+        this.loadManifest();
       },
 
       // ── derived: the library list ────────────────────────────────────────
       get byName() {
         return this._byName ??= Object.fromEntries(this.rows.map(r => [r.name, r]));
       },
+      // Archived rows plus whatever the device has that the archive does not.
+      get allRows() { return this.rows.concat(this.deviceOnly); },
+
       get filtered() {
         const q = this.q.trim().toLowerCase();
-        return this.rows.filter(r => {
+        return this.sorted(this.allRows.filter(r => {
           if (this.tiers.size && !this.tiers.has(r.tier)) return false;
           for (const [axis, v] of Object.entries(this.axes)) if (r[axis] !== v) return false;
           if (!q) return true;
@@ -178,7 +193,47 @@
           return r.name.toLowerCase().includes(q)
             || r.calls.some(c => c.toLowerCase().includes(q))
             || r.kinds.some(k => k.toLowerCase().includes(q));
+        }));
+      },
+
+      // Sort is the control that replaced a second facet. `tier` is the order
+      // library.json already carries, so it is the identity and stays default:
+      // the survey's grouping is an argument about what to look at first, and
+      // re-sorting it alphabetically throws that away.
+      sorted(list) {
+        const by = this.sort;
+        if (by === 'tier') return list;
+        const c = [...list];
+        if (by === 'name') return c.sort((a, b) => a.name.localeCompare(b.name));
+        if (by === 'actions') return c.sort((a, b) => (b.actions || 0) - (a.actions || 0));
+        // recent: undated rows sink rather than sorting as the epoch, since a
+        // shortcut the manifest never mentioned is unknown, not ancient.
+        return c.sort((a, b) => {
+          const x = this.modifiedOf(a.name), y = this.modifiedOf(b.name);
+          if (!x && !y) return a.name.localeCompare(b.name);
+          if (!x) return 1;
+          if (!y) return -1;
+          return y.localeCompare(x);
         });
+      },
+      setSort(v) { this.sort = v; this.limit = 60; },
+
+      // Relative time, because "3h ago" is what a recency sort is asked for and
+      // an ISO stamp is not. An unparseable value returns empty rather than
+      // printing "Invalid Date" over a manifest this page failed to understand.
+      ago(iso) {
+        const t = Date.parse(iso);
+        if (!Number.isFinite(t)) return '';
+        let v = Math.max(0, (Date.now() - t) / 1000), u = 's';
+        for (const [size, unit] of [[60, 'm'], [60, 'h'], [24, 'd'], [7, 'w'], [4.35, 'mo'], [12, 'y']]) {
+          if (v < size) break;
+          v /= size; u = unit;
+        }
+        return Math.round(v) + u;
+      },
+      manifestStampPretty() {
+        const m = (this.manifestStamp || '').match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})/);
+        return m ? `${m[1]} ${m[2]}:${m[3]}` : this.manifestStamp;
       },
       get shown() { return this.filtered.slice(0, this.limit); },
 
@@ -368,7 +423,7 @@
         return `https://github.com/${this.REPO}/blob/${this.DEVICE_REF}/shortcuts/log/` + encodeURIComponent(n);
       },
 
-      // ── recent: the library in order of use ──────────────────────────────
+      // ── the manifest, as a column on the one list ────────────────────────
       //
       // **Ordering by modification date is ordering by what you last LAUNCHED,
       // and that is measured rather than assumed.** Two manifests 102 minutes
@@ -386,24 +441,42 @@
       // The feed is the newest file in shortcuts/manifests/, written by
       // Sync-Manifest. Filenames are date-stamped, so a lexical sort is
       // newest-first once reversed and no content read is needed to choose.
-      async openRecentFacet(force) {
-        this.facet = 'recent';
-        if (this.recentRows && !force) return;
-        this.recentLoading = true; this.recentError = '';
+      async loadManifest() {
+        this.manifestError = '';
         try {
           const dir = await this.gh.req(`contents/shortcuts/manifests?ref=${this.DEVICE_REF}`);
           const files = dir.filter(f => f.type === 'file' && f.name.endsWith('.txt'))
                            .map(f => f.name).sort();
           if (!files.length) throw new Error('no manifest yet: tap Sync to take one');
           const newest = files[files.length - 1];
-          const text = (await this.ghDevice.get('shortcuts/manifests/' + newest)).text;
-          this.recentRows = this.parseManifest(text);
-          this.recentStamp = newest;
+          const rows = this.parseManifest((await this.ghDevice.get('shortcuts/manifests/' + newest)).text);
+          const m = {};
+          for (const r of rows) m[r.name] = r;
+          this.manifest = m;
+          this.manifestStamp = newest;
         } catch (e) {
-          this.recentRows = null;
-          this.recentError = String(e.message || e);
+          this.manifest = null;
+          this.manifestError = String(e.message || e);
         }
-        this.recentLoading = false;
+      },
+
+      // Rows the device reports and the archive does not hold. They are listed
+      // rather than counted, because "you have this and I do not" is the
+      // question a sync exists to answer and a number cannot be acted on.
+      // A slash becomes a colon to match how index.json spells a dumped name.
+      get deviceOnly() {
+        if (!this.manifest) return [];
+        return Object.values(this.manifest)
+          .filter(r => !this.byName[r.name] && !this.byName[r.name.replace('/', ':')])
+          .map(r => ({ name: r.name, actions: r.actions, modified: r.modified,
+                       tier: 'unarchived', calls: [], callers: [], kinds: [],
+                       provenance: '', lifecycle: '', connectivity: '',
+                       input: false, menu: false, nominate: null, unarchived: true }));
+      },
+      modifiedOf(name) {
+        if (!this.manifest) return '';
+        const hit = this.manifest[name] || this.manifest[name.replace(':', '/')];
+        return hit ? hit.modified : '';
       },
 
       // The manifest is column-major: one `==marker==` per field, then every
@@ -444,33 +517,6 @@
       // mounts this page in a frame whose sandbox grants allow-popups but not
       // allow-top-navigation, so assigning location is refused outright while a
       // popup is permitted. Measured 2026-08-19 against those exact flags.
-      // The two row links are bound because the name varies. The Sync button's
-      // href is a constant and is therefore written literally in the markup, so
-      // it still works if Alpine has not hydrated, which is the moment an
-      // escape hatch is worth most.
-      runLink(name) { return 'shortcuts://run-shortcut?name=' + encodeURIComponent(name); },
-      openLink(name) { return 'shortcuts://open-shortcut?name=' + encodeURIComponent(name); },
-
-      // Relative time, because "3 hours ago" is the question this facet answers
-      // and an ISO stamp is not. Falls back to the raw value rather than
-      // printing "Invalid Date" over a manifest this page failed to understand.
-      ago(iso) {
-        const t = Date.parse(iso);
-        if (!Number.isFinite(t)) return iso;
-        const s = Math.max(0, (Date.now() - t) / 1000);
-        const steps = [[60, 's'], [60, 'm'], [24, 'h'], [7, 'd'], [4.35, 'w'], [12, 'mo']];
-        let v = s, u = 's';
-        for (const [size, unit] of steps) {
-          if (v < size) break;
-          v /= size; u = unit;
-        }
-        return Math.round(v) + u + ' ago';
-      },
-      recentStampPretty() {
-        const m = (this.recentStamp || '').match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})(\d{2})/);
-        return m ? `${m[1]} · ${m[2]}:${m[3]}:${m[4]}` : this.recentStamp;
-      },
-
       // ── reference ────────────────────────────────────────────────────────
       async openDoc(path) {
         if (this.doc === path) { this.doc = null; return; }
@@ -516,9 +562,6 @@
   <div role="tablist" class="tabs tabs-box mt-4">
     <button role="tab" class="tab" :class="facet==='library' && 'tab-active'" @click="facet='library'">
       <i class="ph ph-list-bullets mr-1"></i> Library
-    </button>
-    <button role="tab" class="tab" :class="facet==='recent' && 'tab-active'" @click="openRecentFacet()">
-      <i class="ph ph-clock-counter-clockwise mr-1"></i> Recent
     </button>
     <button role="tab" class="tab" :class="facet==='prune' && 'tab-active'" @click="facet='prune'">
       <i class="ph ph-broom mr-1"></i> Prune
@@ -573,34 +616,74 @@
       <button x-show="filtering" @click="clearFilters()" class="btn btn-ghost btn-xs"><i class="ph ph-x"></i></button>
     </label>
 
+    <!-- Order is a control on the one list, not a second list. The Sync button
+         sits with it because it is what makes the recency order true: it runs
+         Sync-Manifest on the device, which commits a fresh manifest to main.
+         A literal href, and target=_blank, because the app frames this page
+         under a sandbox granting allow-popups and not allow-top-navigation. -->
+    <div class="flex flex-wrap items-center gap-2 mt-2">
+      <div class="join">
+        <template x-for="[k, label] in [['tier','Survey'],['recent','Recent'],['name','Name'],['actions','Size']]" :key="k">
+          <button class="btn btn-xs join-item"
+                  :class="sort===k ? 'btn-primary' : 'btn-ghost border border-base-300'"
+                  @click="setSort(k)" x-text="label"></button>
+        </template>
+      </div>
+      <a href="shortcuts://run-shortcut?name=Sync-Manifest" target="_blank" rel="noopener"
+         class="btn btn-xs btn-ghost border border-base-300" title="Run Sync-Manifest on the device">
+        <i class="ph ph-arrows-clockwise"></i> Sync
+      </a>
+      <button class="btn btn-xs btn-ghost border border-base-300" @click="loadManifest()"
+              title="Re-read the newest manifest"><i class="ph ph-arrow-clockwise"></i></button>
+      <span class="text-xs opacity-50" x-show="manifestStamp"
+            x-text="'device ' + manifestStampPretty()"></span>
+      <span class="text-xs text-warning" x-show="manifestError" x-text="manifestError"></span>
+    </div>
+
     <div class="text-xs opacity-60 mt-2 flex justify-between">
       <span x-text="`${filtered.length} shown`"></span>
       <span x-text="meta ? `${meta.missing} names are called and absent from the archive` : ''"></span>
     </div>
 
-    <ul class="mt-2 divide-y divide-base-300">
+    <!-- Row shape borrowed from home's links board: an icon in an absolute
+         gutter, the title in normal inline flow so a long name wraps and hangs
+         rather than truncating, and the qualifiers as small inline "doors"
+         after it. Dense on purpose. `divide-y divide-base-300` is NOT used,
+         here or anywhere else on this page: daisyUI's semantic colours are not
+         among the divide-* utilities, so it compiles to nothing and Tailwind v4
+         paints the hairline in the text colour. → docs/SNAGS.md,
+         daisy-divide-paints-black. -->
+    <ul class="mt-2 [&>*+*]:border-t border-base-300">
       <template x-for="r in shown" :key="r.name">
-        <li class="py-2">
+        <li class="py-1.5">
           <button class="w-full text-left" @click="toggleRow(r.name)">
-            <div class="flex items-start gap-2">
-              <i class="ph mt-0.5 opacity-40" :class="openRow===r.name ? 'ph-caret-down' : 'ph-caret-right'"></i>
-              <div class="grow min-w-0">
-                <div class="font-medium truncate" x-text="r.name"></div>
-                <div class="text-xs opacity-60 flex flex-wrap gap-x-2">
-                  <span x-text="`${r.actions} actions`"></span>
-                  <span x-text="meta.tier_label[r.tier]"></span>
-                  <span x-show="r.callers.length" x-text="`${r.callers.length} callers`"></span>
-                  <span x-show="r.input">takes input</span>
-                  <span x-show="r.menu">menu</span>
+            <div class="relative pl-5">
+              <i class="ph absolute left-0 top-[3px] text-xs opacity-30"
+                 :class="openRow===r.name ? 'ph-caret-down' : 'ph-caret-right'"></i>
+              <div class="text-[13.5px] leading-[1.45]">
+                <span class="font-medium" :class="r.unarchived && 'text-warning'" x-text="r.name"></span>
+                <!-- Recency rides beside the name rather than in the meta line:
+                     when it is the sort key it is the thing being scanned, and
+                     a value you sorted by should not need a second glance to
+                     find. Absent when the manifest never mentioned the row. -->
+                <span class="text-[11px] opacity-45 ml-1.5" x-show="modifiedOf(r.name)"
+                      x-text="ago(modifiedOf(r.name))"></span>
+              </div>
+              <div class="text-[11.5px] opacity-55 flex flex-wrap gap-x-2 leading-[1.4]">
+                <span x-text="`${r.actions} actions`"></span>
+                <span x-show="r.unarchived" class="text-warning">on device, not archived</span>
+                <span x-show="!r.unarchived" x-text="meta.tier_label[r.tier]"></span>
+                <span x-show="r.callers.length" x-text="`${r.callers.length} callers`"></span>
+                <span x-show="r.input">takes input</span>
+                <span x-show="r.menu">menu</span>
                   <!-- Only the two graded classes earn a badge here. `low` is
                        192 rows, nearly every import, so showing it in the
                        browse list marks the library rather than a subset. It
                        stays a queue-only concept, where the grade is stated. -->
                   <span x-show="r.nominate && r.nominate.confidence !== 'low'" class="text-warning"
                         x-text="r.nominate ? r.nominate.confidence + '-confidence candidate' : ''"></span>
-                  <span x-show="entry(r.name)" class="text-info"
-                        x-text="entry(r.name) ? entry(r.name).state : ''"></span>
-                </div>
+                <span x-show="entry(r.name)" class="text-info"
+                      x-text="entry(r.name) ? entry(r.name).state : ''"></span>
               </div>
             </div>
           </button>
@@ -648,82 +731,6 @@
   </div>
 
   <!-- ══ PRUNE ════════════════════════════════════════════════════════════ -->
-  <!-- Recent: the library in order of use, fed by the newest Sync-Manifest.
-       Every tappable thing here is an <a>, not a click handler that assigns
-       location: the app frames this page under a sandbox granting allow-popups
-       and not allow-top-navigation, so an anchor works and a navigation does
-       not. Measured 2026-08-19 against those flags. -->
-  <div x-show="facet==='recent' && !loading && !error" class="mt-4">
-
-    <div class="flex flex-wrap items-center gap-2 mb-3">
-      <a href="shortcuts://run-shortcut?name=Sync-Manifest" target="_blank" rel="noopener"
-         class="btn btn-sm btn-primary">
-        <i class="ph ph-arrows-clockwise"></i> Sync from device
-      </a>
-      <button class="btn btn-sm btn-ghost border border-base-300" @click="openRecentFacet(true)"
-              :disabled="recentLoading">
-        <i class="ph ph-arrow-clockwise"></i> Reload
-      </button>
-      <span class="text-xs opacity-60" x-show="recentStamp">
-        manifest <span x-text="recentStampPretty()"></span>
-      </span>
-    </div>
-
-    <p class="text-xs opacity-60 mb-3">
-      Tap <b>Sync from device</b> to run <code>Sync-Manifest</code> on the phone; it commits a
-      fresh manifest, then <b>Reload</b> reads it. Order is by last modification, and
-      <b>running a shortcut moves that date</b>, so this is order of use rather than
-      order of editing.
-    </p>
-
-    <template x-if="recentLoading">
-      <div class="flex items-center gap-2 opacity-60">
-        <span class="loading loading-spinner loading-sm"></span> Reading the manifest…
-      </div>
-    </template>
-    <template x-if="recentError">
-      <div class="alert alert-warning"><i class="ph ph-warning"></i><span x-text="recentError"></span></div>
-    </template>
-
-    <template x-if="recentRows && !recentLoading">
-      <div>
-        <div class="overflow-x-auto">
-          <table class="table table-sm">
-            <tbody>
-              <template x-for="r in recentRows.slice(0, recentLimit)" :key="r.name">
-                <tr class="hover">
-                  <td class="w-full">
-                    <a :href="runLink(r.name)" target="_blank" rel="noopener"
-                       class="link link-hover font-medium" x-text="r.name"></a>
-                  </td>
-                  <td class="whitespace-nowrap text-right opacity-60 text-xs" x-text="ago(r.modified)"></td>
-                  <td class="whitespace-nowrap text-right opacity-40 text-xs"
-                      x-text="r.actions + ' act'"></td>
-                  <td class="whitespace-nowrap text-right">
-                    <a :href="openLink(r.name)" target="_blank" rel="noopener"
-                       class="btn btn-ghost btn-xs" title="Open in Shortcuts">
-                      <i class="ph ph-pencil-simple"></i>
-                    </a>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-        <div class="mt-3 flex items-center gap-3">
-          <button class="btn btn-sm btn-ghost border border-base-300"
-                  x-show="recentRows.length > recentLimit" @click="recentLimit += 40">
-            Show more
-          </button>
-          <span class="text-xs opacity-50">
-            <span x-text="Math.min(recentLimit, recentRows.length)"></span> of
-            <span x-text="recentRows.length"></span>
-          </span>
-        </div>
-      </div>
-    </template>
-  </div>
-
   <div x-show="facet==='prune' && !loading && !error" class="mt-4 space-y-5">
 
     <div class="alert alert-info text-sm">
@@ -746,7 +753,7 @@
         Moved to <span class="font-mono" x-text="ledger?.folder"></span> and still in the archive, so still on the device.
         Open one, look at it, and delete it there if the answer is yes.
       </p>
-      <ul class="mt-2 divide-y divide-base-300">
+      <ul class="mt-2 [&>*+*]:border-t border-base-300">
         <template x-for="e in pending" :key="'p'+e.name">
           <li class="py-2 flex items-start gap-2 flex-wrap">
             <div class="grow min-w-0">
@@ -824,7 +831,7 @@
         <i class="ph ph-warning"></i><span x-text="saveError"></span>
       </div>
 
-      <ul class="mt-2 divide-y divide-base-300">
+      <ul class="mt-2 [&>*+*]:border-t border-base-300">
         <template x-for="r in queue" :key="'q'+r.name">
           <li class="py-2 flex items-start gap-2">
             <input type="checkbox" class="checkbox checkbox-sm mt-0.5"
@@ -874,7 +881,7 @@
       Nothing logged yet on this ref.
     </p>
 
-    <ul class="mt-2 divide-y divide-base-300">
+    <ul class="mt-2 [&>*+*]:border-t border-base-300">
       <template x-for="n in (logFiles || []).slice(0, logLimit)" :key="n">
         <li class="py-2">
           <div class="flex items-center gap-2 flex-wrap">
@@ -901,7 +908,7 @@
       It sits here rather than in show-repo's Map, because the Map documents how this estate
       works and these document how someone else's system does.
     </p>
-    <ul class="mt-3 divide-y divide-base-300">
+    <ul class="mt-3 [&>*+*]:border-t border-base-300">
       <template x-for="d in DOCS" :key="d.path">
         <li class="py-2">
           <button class="w-full text-left flex items-start gap-2" @click="openDoc(d.path)">
