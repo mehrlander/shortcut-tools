@@ -47,7 +47,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
-| `dump-named` | Exports only the shortcuts named in its input and commits them back. The reply to a manifest: the sender decides the list, so the tap carries no decision. |
+| `dump-recent` | The N most recently modified shortcuts, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
+| `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
@@ -284,6 +285,28 @@ copy first for anything generated from this repo, where the plist is the source
 and a re-import costs nothing.
 
 ## Keeping the corpus current without re-dumping it
+
+**One tap, if you just want the recent work off the phone.** `dump-recent` sorts
+Get My Shortcuts by Last Modified Date, keeps the newest N, and commits each one
+with its contents to `shortcuts/incoming/<stamp>.txt`. N rides in the link
+(`…?name=Dump-Recent&input=text&text=30`) and falls back to 25 when the shortcut
+is run bare from the Shortcuts app, so nothing is ever typed at run time.
+[`tools/read-incoming.py`](../tools/read-incoming.py) reads the result and
+`--zip` writes it as a dump the existing pipeline already accepts:
+
+```bash
+python3 tools/read-incoming.py <incoming.txt> --zip recent.zip
+python3 tools/index-dump.py shortcuts/dumps/*.zip recent.zip --json shortcuts/index.json
+```
+
+That is the whole loop for the common case. The two-step below is the precise
+form, worth it when the question is "exactly which ones does the corpus lack"
+rather than "give me the recent work", since `dump-recent` cannot know what the
+corpus already holds and will re-send anything that happens to be near the top.
+
+### The precise form: manifest, then named
+
+
 
 A full dump is fourteen zips and a five-command regeneration, which is the right
 cost once and the wrong cost weekly. `sync-manifest` and `dump-named` are the two
