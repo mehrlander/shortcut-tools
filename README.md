@@ -126,6 +126,14 @@ this repository already stated and had no tool for, which is why every
 diagnostic ended by asking the reader to open the Shortcuts app and hunt for a
 name.
 
+The handover form goes to stderr, so the link itself pipes cleanly while the
+markdown arrives ready to paste: `📲 [label](shortcuts://…)`. Both halves are
+rules from SURFACING.md that fail silently when dropped. The phone mark tells
+the reader something is being asked of the device rather than offered to read,
+and a custom scheme rendered bare or in a code span is dead text, since the chat
+client will not autolink one. Emitted rather than remembered, which is the same
+argument as the link.
+
 Two refusals rather than a link that under-delivers. `--text` with several
 targets is rejected, because `Run-Steps` consumes its input as the step list and
 a payload has no slot left. And a single target with no input emits

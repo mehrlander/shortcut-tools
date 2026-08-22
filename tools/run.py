@@ -25,6 +25,7 @@ is the return channel: the reader taps once and the answer is already here.
 """
 import argparse, sys, urllib.parse
 
+ICON = "📲"  # 📲, the surfacing mark for "run a shortcut"
 CHAIN = "Run-Steps"
 LOGGER = "Log-Repo"
 SCHEME = "shortcuts://run-shortcut?name=%s&input=text&text=%s"
@@ -56,6 +57,20 @@ def build(targets, log=False, text=None):
                          "payload in a chain of its own." % CHAIN)
     return SCHEME % (urllib.parse.quote(CHAIN, safe=""),
                      urllib.parse.quote("\n".join(steps), safe=""))
+
+
+def markdown(link, targets, log=False, label=None):
+    """The handover form, which is the only one that arrives tappable.
+
+    Two rules from SURFACING.md, both of which fail silently when dropped. The
+    chat client will not autolink a custom scheme and renders a code span as
+    dead text, so a bare or fenced link is dead on arrival. And a run link
+    carries the icon, so the reader can see at a glance that something is being
+    asked of the device rather than offered to read. Emitted here rather than
+    remembered, for the same reason the link itself is.
+    """
+    name = label or " then ".join(list(targets) + ([LOGGER] if log else []))
+    return "%s [%s](%s)" % (ICON, name, link)
 
 
 def verify(link):
@@ -94,10 +109,7 @@ def main():
         return verify(args.targets[0])
     link = build(args.targets, args.log, args.text)
     print(link)
-    label = args.label or " then ".join(list(args.targets) + ([LOGGER] if args.log else []))
-    # The chat client will not autolink a custom scheme and renders a code span
-    # as dead text, so the markdown form is the only one that arrives tappable.
-    print("\n[%s](%s)" % (label, link), file=sys.stderr)
+    print("\n%s\n" % markdown(link, args.targets, args.log, args.label), file=sys.stderr)
 
 
 if __name__ == "__main__":

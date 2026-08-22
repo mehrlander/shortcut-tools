@@ -9,6 +9,14 @@ const run = (...args) =>
   execFileSync("python3", [path.join("tools", "run.py"), ...args],
                { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
+// The markdown handover goes to stderr, so capture that stream on its own.
+const handover = (...args) => {
+  const r = require("node:child_process").spawnSync(
+    "python3", [path.join("tools", "run.py"), ...args],
+    { cwd: ROOT, encoding: "utf8" });
+  return r.stderr.trim();
+};
+
 const fails = (...args) => {
   try {
     execFileSync("python3", [path.join("tools", "run.py"), ...args],
@@ -65,4 +73,18 @@ test("verify reads back the exact link that would be sent", () => {
 
 test("naming nothing is an error, not an empty link", () => {
   assert.match(fails(), /name at least one shortcut/);
+});
+
+test("the handover carries the phone mark and an explicit markdown link", () => {
+  const md = handover("Get-FileInfo", "--log");
+  // SURFACING.md: a run link is marked with the phone icon, and a bare or
+  // code-spanned custom scheme renders as dead text in the chat client.
+  assert.ok(md.startsWith("\u{1F4F2} ["), md);
+  assert.match(md, /\]\(shortcuts:\/\/run-shortcut\?/);
+  assert.match(md, /Get-FileInfo then Log-Repo/);
+});
+
+test("--label names the handover without changing the link", () => {
+  const md = handover("Get-FromJs", "--label", "does the coercion still run JS");
+  assert.match(md, /\[does the coercion still run JS\]/);
 });
