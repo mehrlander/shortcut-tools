@@ -1,0 +1,27 @@
+{
+  "name": "Dictate",
+  "label": "Dictate: open the full-page voice capture surface (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "D1C7A7E0-0001-4A00-9000-000000000001",
+        "WFURLActionURL": "https://mehrlander.github.io/web-tools/pages/dictate.html"
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "D1C7A7E0-0002-4A00-9000-000000000002",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "D1C7A7E0-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

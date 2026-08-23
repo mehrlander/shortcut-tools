@@ -56,6 +56,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
 | `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
 | `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
+| `dictate` | Opens web-tools' full-page voice capture surface. Two actions, and the shortest thing in this table on purpose: Back Tap can run a shortcut and cannot open a URL, so this exists to be the target of a back tap (or an Action Button, or a Control Center control) rather than to be run from the app. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
 a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
