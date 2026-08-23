@@ -1,0 +1,186 @@
+{
+ "label": "Ask-Report: walk a list of questions, commit every answer in one trip (10 actions)",
+ "name": "Ask-Report",
+ "actions": [
+  {
+   "id": "is.workflow.actions.text.split",
+   "p": {
+    "UUID": "A5C00001-0000-4A00-9000-000000000001",
+    "WFTextSeparator": "New Lines",
+    "text": {
+     "Value": {
+      "Type": "ExtensionInput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "A5C09000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 0,
+    "WFInput": {
+     "Value": {
+      "OutputName": "Split Text",
+      "OutputUUID": "A5C00001-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.ask",
+   "p": {
+    "UUID": "A5C00002-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Answer",
+    "WFAllowsMultilineText": true,
+    "WFAskActionPrompt": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "Type": "Variable",
+        "VariableName": "Repeat Item"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "A5C00003-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Record",
+    "WFTextActionText": {
+     "Value": {
+      "attachmentsByRange": {
+       "{3, 1}": {
+        "Type": "Variable",
+        "VariableName": "Repeat Item"
+       },
+       "{8, 1}": {
+        "OutputName": "Answer",
+        "OutputUUID": "A5C00002-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "Q: ￼\nA: ￼\n"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.appendvariable",
+   "p": {
+    "WFVariableName": "Transcript",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Record",
+      "OutputUUID": "A5C00003-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "A5C09000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 2
+   }
+  },
+  {
+   "id": "is.workflow.actions.getvariable",
+   "p": {
+    "UUID": "A5C00005-0000-4A00-9000-000000000001",
+    "WFVariable": {
+     "Value": {
+      "Type": "Variable",
+      "VariableName": "Transcript"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.text.combine",
+   "p": {
+    "UUID": "A5C00004-0000-4A00-9000-000000000001",
+    "WFTextSeparator": "New Lines",
+    "text": {
+     "Value": {
+      "OutputName": "Variable",
+      "OutputUUID": "A5C00005-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "WFWorkflowName": "Log-Repo",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Combined Text",
+      "OutputUUID": "A5C00004-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.output",
+   "p": {
+    "WFOutput": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Combined Text",
+        "OutputUUID": "A5C00004-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  }
+ ],
+ "workflow": {
+  "WFWorkflowTypes": [
+   "Watch",
+   "WFWorkflowTypeShowInSearch"
+  ],
+  "WFWorkflowInputContentItemClasses": [
+   "WFAppContentItem",
+   "WFAppStoreAppContentItem",
+   "WFArticleContentItem",
+   "WFContactContentItem",
+   "WFDateContentItem",
+   "WFEmailAddressContentItem",
+   "WFFolderContentItem",
+   "WFGenericFileContentItem",
+   "WFImageContentItem",
+   "WFiTunesProductContentItem",
+   "WFLocationContentItem",
+   "WFDCMapsLinkContentItem",
+   "WFAVAssetContentItem",
+   "WFPDFContentItem",
+   "WFPhoneNumberContentItem",
+   "WFRichTextContentItem",
+   "WFSafariWebPageContentItem",
+   "WFStringContentItem",
+   "WFURLContentItem"
+  ]
+ }
+}
