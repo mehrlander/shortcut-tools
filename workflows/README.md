@@ -56,6 +56,16 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
 | `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
 | `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
+| `log-repo` | The return channel. Writes the input to the clipboard first and unconditionally, then commits it to `shortcuts/log/` in web-tools-private, so a diagnostic ends in a commit rather than in a question. |
+| `capture-link` | The share sheet's end of that channel: whatever was shared, straight into the repo log. Two actions. |
+| `library-open` | Opens a named shortcut in the editor. Three actions, and the cheapest thing the library view does. |
+| `library-install` | Creates the named shortcut and pastes its actions in. Superseded by `library-import` wherever a plist is committed, because no paste reaches file-level settings. |
+| `library-import` | Fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts. The only route that delivers `WFWorkflowTypes` and the input classes, at one tap plus Apple's import sheet. |
+| `library-replace` | Delete by name, then import. The way around import never merging: importing over an existing name lands as `Name 1`, and every `run-shortcut?name=` link keeps resolving to the old copy. |
+| `library-stage` | Moves each named shortcut to a folder and logs it. The second step of the prune, and deliberately not the fourth. |
+| `manage-library-probe` | The three library actions whose parameter shapes were unknown, in one tap: open, move, delete. |
+| `ask-report` | Walks a list of questions, asks each in turn, and commits the whole transcript through `Log-Repo`. A battery of probes comes back as one commit instead of one message each. |
+| `probe-step` | The same job interleaved: each tap asks about the probe the last tap fired, commits that answer, then fires the next probe. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
 a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
@@ -230,6 +240,38 @@ Both open a page through `Run-Html` when they succeed, so the result is legible
 without reading anything. Failure is legible too and arrives earlier: a target
 Shortcuts cannot resolve pastes as an action with an empty picker, visible in
 the editor before the shortcut is ever run.
+
+## Two walkers, and why one asks before it runs
+
+`ask-report` and `probe-step` do the same job and differ only in ordering, which
+is the whole lesson. Both exist because diagnosing across chat was costing one
+message per probe while the probes themselves ran in seconds.
+
+`ask-report` collects: hand it a list of questions, it asks each in turn and
+commits the transcript through `Log-Repo`. It deliberately does not run the
+probes. Shortcuts has no error handling, and a crashing probe is exactly what
+these batteries test, so a walker that ran them would die at the first failure
+and lose the answers already collected. Splitting run from report sidesteps
+that, since the probe links stay separate taps and cannot take the transcript
+down with them.
+
+`probe-step` interleaves instead, and is the better shape for the same reason.
+Each tap asks about the probe the **previous** tap fired, commits that answer
+through `Log-Repo`, and only then runs the next probe. Asking before running is
+what makes it crash-safe: a probe that dies takes down whatever follows it in
+the same run, so putting the ask at the top of the next run means a crashed
+probe still gets reported. A single looping walker cannot have that property.
+Each step commits its own question and answer, so nothing has to survive
+between runs. Three lines in, with `-` standing for an absent question, target,
+or payload.
+
+The value of an in-flow question is that it arrives while the screen is still in
+front of you, so the answer needs no explanation of what it answers. That is
+what `ask-report` misses by collecting after the fact, and it is the reason
+`probe-step` is one step per tap rather than one loop over everything.
+
+Drive either with [`tools/run.py`](../tools/run.py), which emits the tappable
+link rather than asking anyone to type one.
 
 ## Three dumps, and which to use
 
