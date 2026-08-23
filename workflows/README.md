@@ -273,6 +273,22 @@ what `ask-report` misses by collecting after the fact, and it is the reason
 Drive either with [`tools/run.py`](../tools/run.py), which emits the tappable
 link rather than asking anyone to type one.
 
+### `probe-step` ran, 2026-08-23
+
+Two taps, both branches. The first carried `-` as its question and a target, and
+committed its payload without asking anything. The second carried a question and
+`-` for both target and payload, asked, committed the question and the answer
+together, and fired nothing. So the split, the `-` conditionals, the
+run-by-variable target, and the `Log-Repo` return all hold on device.
+
+The second tap also demonstrated the rule it broke. It asked whether the first
+tap's commit had landed, which is a fact `shortcuts/log/` already held, so the
+tap bought nothing and the answer said so. A probe asks what only the device
+knows: what the Ask dialog rendered, whether a banner or a permissions sheet
+appeared, what Apple's UI decided. Anything a file in this estate can answer is
+answered here before the link is sent. Written up in
+[`CLAUDE.md`](../CLAUDE.md#a-diagnostic-returns-itself).
+
 ## Three dumps, and which to use
 
 `dump-folder-zip` is the one to reach for: four actions, names preserved, and
