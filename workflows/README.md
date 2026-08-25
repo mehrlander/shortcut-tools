@@ -66,6 +66,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `manage-library-probe` | The three library actions whose parameter shapes were unknown, in one tap: open, move, delete. |
 | `ask-report` | Walks a list of questions, asks each in turn, and commits the whole transcript through `Log-Repo`. A battery of probes comes back as one commit instead of one message each. |
 | `probe-step` | The same job interleaved: each tap asks about the probe the last tap fired, commits that answer, then fires the next probe. |
+| `dictate` | Opens web-tools' full-page voice capture surface. Two actions, and the shortest thing in this table on purpose: Back Tap can run a shortcut and cannot open a URL, so this exists to be the target of a back tap (or an Action Button, or a Control Center control) rather than to be run from the app. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
 a new shortcut named `Run-Html` and it becomes the target of a `show.py` link,
