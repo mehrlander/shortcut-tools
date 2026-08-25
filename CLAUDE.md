@@ -130,6 +130,25 @@ failed commit degrades to the cheap path rather than losing the result.
 This is why the repo carries a logger at all. It is not telemetry, it is the
 return channel that makes a probe cost one tap.
 
+**And a question is worth a tap only when the repo cannot answer it.** The rule
+above stops a probe ending in "what did you see?"; this one stops the question
+that survives it. Before asking anything, answer it here: read
+`shortcuts/log/`, the corpus dumps, the plists, the ToolKit catalog. Whatever is
+left is the question, and it is always the same kind of thing: what the screen
+did, what the dialog rendered, what Apple's own UI decided. Those exist nowhere
+but the device. Anything derivable from a file in this estate is a `git pull`
+dressed up as a favor, and it costs a tap, a context switch, and the reader's
+willingness to answer the next one.
+
+Measured 2026-08-23, validating `Probe-Step`. The second of two taps asked
+whether the first tap's commit had landed. It had, in `shortcuts/log/`, two
+commits away from the session that asked. The reply was "Come on, this is not
+what you should be asking me. You can see these things yourself," which is the
+correct answer and the reason this paragraph exists. The tap was not wasted
+because the walker failed, it worked; it was wasted because the question was
+already answered before it was sent. This is judgment and stays prose: no check
+can read a question and tell whether the repo holds its answer.
+
 ## Handing over a link
 
 **Emit both forms, never type either**, which
