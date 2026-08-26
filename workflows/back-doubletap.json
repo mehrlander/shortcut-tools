@@ -1,6 +1,6 @@
 {
   "name": "Back-DoubleTap",
-  "label": "Back-DoubleTap: the double back tap dispatcher (60 actions)",
+  "label": "Back-DoubleTap: the double back tap dispatcher (59 actions)",
   "workflow": {
     "WFWorkflowMinimumClientVersionString": "3216",
     "WFWorkflowMinimumClientVersion": 3216,
@@ -235,7 +235,7 @@
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "UUID": "ED53E161-4AF4-4700-B3EE-7E8882247700",
-        "WFWorkflowName": "Repo-Viewer"
+        "WFWorkflowName": "Show-Repo"
       }
     },
     {
@@ -836,28 +836,10 @@
       }
     },
     {
-      "id": "is.workflow.actions.runworkflow",
+      "id": "is.workflow.actions.showwebpage",
       "p": {
         "UUID": "D1C7A7E0-0101-4A00-9000-000000000101",
-        "WFWorkflowName": "Dictate"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "OutputUUID": "D1C7A7E0-0101-4A00-9000-000000000101",
-                "Type": "ActionOutput",
-                "OutputName": "Shortcut Result"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
+        "WFURL": "https://mehrlander.github.io/web-tools/pages/dictate.html"
       }
     },
     {
@@ -932,7 +914,7 @@
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "UUID": "D0FABC5C-542A-4739-9B94-62A9255490A4",
-        "WFWorkflowName": "Show-Html"
+        "WFWorkflowName": "Show-WebView"
       }
     },
     {

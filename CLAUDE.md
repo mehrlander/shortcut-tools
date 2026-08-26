@@ -136,7 +136,23 @@ That is not hypothetical. Stripping the identifiers out of `Back-DoubleTap`
 exposed two names that had been stale for at least a fortnight, still working
 only because the identifier beside them was carrying the call:
 `Use-RecentShortcut`, since renamed to `Open-RecentShortcut`, and `Repo-Viewer`,
-whose current name is still unknown.
+now pointed at `Show-Repo`.
+
+**The corpus settled the second one without a tap, and the way it did is the
+method.** The identifier was no help: `962A04D2-78A9-4AD8-91B9-A51E3F3F6CB1`
+appears in the corpus only inside `Back-DoubleTap` itself, since a `.wflow` does
+not carry its own identifier and only a *caller* records a target's. What
+settled it was elimination. `Repo-Viewer` exists nowhere in 605 names or 15
+dumps, and exactly one repo browser does exist, `Show-Repo`, whose two actions
+build a `gh-fetch` page and hand it to `Show-Html`. The branch calling it fires
+when the current app is GitHub, which is what that page is for. Retargeting is
+not merely the best guess available, it is strictly better than any alternative:
+the old name resolves to nothing, so the branch was dead either way.
+
+The general shape, since this will recur: a stale by-name target is resolved by
+asking what the library *has* that does the job, not by recovering what the name
+used to mean. The device cannot answer the second question either, since a
+rename leaves no record on it.
 
 **So audit the names against the library index whenever a chain gains one, and
 always after stripping identifiers.** `web-tools-private`'s

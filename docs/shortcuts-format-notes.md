@@ -395,6 +395,23 @@ the sheet, which would let a page return its own results. And what the sheet
 costs in exchange: a Safari tab can be bookmarked, shared and returned to,
 while a sheet is gone when it is dismissed.
 
+**A hosted page skips the whole `file://` problem, and costs one action.**
+`showwebpage` takes a plain `https` string in `WFURL` with no wrapper at all,
+which the corpus already showed in `Auto Message` and `Routine search`. The
+sheet then loads that address directly, so the page keeps its own origin and
+with it the localStorage partition the stored GitHub token lives in. So the
+split is not sheet-versus-Safari, it is which of the two sheet inputs a page
+arrives on: HTML text lands at `file://` and loses the token, while a hosted URL
+does not. `Dictate` is one action on that route, and the back tap's
+empty-clipboard branch inlines the same action rather than calling out to it.
+
+**The sheet sibling was already installed, so nothing was built for it.**
+`Show-Html` (data URL, Open URL, a Safari tab) and `Show-WebView` (rich text,
+webarchive, `showwebpage`) are the two receivers, and both have been on the
+device throughout. A caller moves to the sheet by naming the other one. The
+back tap's pasted-HTML branch was switched that way on 2026-08-26; `Show-Html`
+stays as it is, for pages that need Safari's storage partition.
+
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
 confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
