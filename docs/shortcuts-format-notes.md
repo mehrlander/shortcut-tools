@@ -347,11 +347,23 @@ RAN`. That was the doubtful part: rich text is an attributed string, so the
 `getrichtextfromhtml` step looked like it should strip a `<script>`, and it
 does not.
 
-So the sheet is a live browsing context, not a viewer, and the pages here that
-inflate a gzip payload and substitute a token in script are candidates for it
-rather than being ruled out. What is still unmeasured is whether the sheet
-reaches the network, which the `data:text/html` route was separately confirmed
-to do.
+**And it reaches the network. Confirmed the same day** by `Probe-WebViewNet`,
+whose page fetches `api.github.com/zen` and reports what came back. It returned
+`NETWORK OK: Non-blocking is better than blocking.`, which is that endpoint's
+real body, so the request completed rather than merely being attempted.
+
+So the sheet is a full browsing context: script runs, `fetch` resolves. The
+pages here that inflate a gzip payload, substitute a token and call an API are
+candidates for it rather than being ruled out, and the four closing actions of
+`Show-Html` (base64, build the data URL, make it a URL, Open URL) could become
+one `Run Shortcut` on `Show-WebView`.
+
+Two things remain unmeasured and neither should be assumed from the above.
+Whether the sheet grants **permission-gated APIs**, the microphone in
+particular, which is what `Dictate` needs and what would decide whether that
+page can move. And what the sheet costs in exchange: a Safari tab can be
+bookmarked, shared and returned to, while a sheet is gone when it is
+dismissed.
 
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
