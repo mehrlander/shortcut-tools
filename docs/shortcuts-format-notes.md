@@ -358,12 +358,42 @@ candidates for it rather than being ruled out, and the four closing actions of
 `Show-Html` (base64, build the data URL, make it a URL, Open URL) could become
 one `Run Shortcut` on `Show-WebView`.
 
-Two things remain unmeasured and neither should be assumed from the above.
-Whether the sheet grants **permission-gated APIs**, the microphone in
-particular, which is what `Dictate` needs and what would decide whether that
-page can move. And what the sheet costs in exchange: a Safari tab can be
-bookmarked, shared and returned to, while a sheet is gone when it is
-dismissed.
+**What else the sheet offers, measured 2026-08-26** by `Probe-WebViewCaps`:
+
+| | | |
+| --- | --- | --- |
+| `origin` | `file://` | see below, this is the one with consequences |
+| `secure` | Y | a secure context despite the origin, which is why the rest is offered at all |
+| `mic` | Y | `getUserMedia` opens a stream, so `Dictate` can move here |
+| `speech` | Y | `SpeechRecognition` is present |
+| `gz` | Y | `DecompressionStream`, so a `#gz=` payload inflates |
+| `cdn` | Y | a jsDelivr `<script src>` loads, which `fetch` working does not imply |
+| `ls` | Y | localStorage reads and writes, but see below |
+
+**The `file://` origin splits the toss routes.** localStorage works, but at a
+`file://` origin, which is a different storage partition from Safari's. The
+GitHub token that `#gh=` and `#stage=` addresses read is browser-local *and*
+origin-local, so it is not there. A `#gz=` address carries its payload in the
+fragment and needs no token, so it works; a `#gh=` or `#stage=` address will
+fail. This is the same caveat the conventions already state for an in-app
+browser, now measured for the sheet.
+
+Worth noting against expectation: the network check above succeeded from that
+`file://` origin, which is not how a browser usually treats a cross-origin
+`fetch` from one.
+
+**Clipboard writes are untested here, not broken.** Both paths failed in the
+probe, `navigator.clipboard.writeText` with `NotAllowedError` and
+`execCommand("copy")` returning false, because both ran automatically on load
+and iOS gates clipboard writes behind a user gesture. The estate's working
+pages copy from a button tap; see the `ios-clipboard` skill, which also records
+that `navigator.clipboard` is undefined in data-URL contexts and that the
+textarea plus `execCommand` is the path that covers both.
+
+Two things still unmeasured. Whether a `shortcuts://` link fires from inside
+the sheet, which would let a page return its own results. And what the sheet
+costs in exchange: a Safari tab can be bookmarked, shared and returned to,
+while a sheet is gone when it is dismissed.
 
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
