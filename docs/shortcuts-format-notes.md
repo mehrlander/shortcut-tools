@@ -313,6 +313,46 @@ Three constraints follow, and the first is the trap:
    about 1,800 characters, more than the compression saves on a small page, so
    `show.py` strips them at build time.
 
+## Two ways to put HTML on screen, and only one of them keeps you in the shortcut
+
+`Open URL` on a `data:text/html` URL leaves the app: it is a real Safari
+navigation, measured below. `Show Web View`
+(`is.workflow.actions.showwebpage`, a Safari app action) raises a sheet over
+Shortcuts instead, and the run continues behind it. That difference is the
+whole reason to care, since a shortcut that dumps its output into Safari has
+ended its own flow and left a tab behind.
+
+It is not a fringe action: **32 shortcuts in the library use it**, and one of
+them, `Show-WebView`, is already the generic receiver. Three of its seven
+actions are the entire recipe, the other four being a self-demo prologue:
+
+```
+getrichtextfromhtml   (Shortcut Input)
+as file com.apple.webarchive
+showwebpage
+```
+
+`WFURL` is the only parameter and it accepts four different things across the
+library, which is worth knowing before assuming one shape is required: rich
+text from HTML (`Show-WebView`, `Show-Table`, `JSON Viewer`, `Popup Helper`,
+and four more), the downloaded contents of a `data:text/html;base64` URL
+(`Open-DataUrlHelper`, `Pack-ToUrlPage`), a named or typed file
+(`Get-ShortcutSource`, `ShortcutML`), or a plain `https` URL (`Open-LiveCodes`,
+`Emmet`).
+
+**The sheet runs the page's JavaScript. Confirmed on device 2026-08-26** by
+`Probe-WebView`, which hands `Show-WebView` a page whose only line reads
+`STATIC` until its own script rewrites it to `SCRIPT RAN`. It read `SCRIPT
+RAN`. That was the doubtful part: rich text is an attributed string, so the
+`getrichtextfromhtml` step looked like it should strip a `<script>`, and it
+does not.
+
+So the sheet is a live browsing context, not a viewer, and the pages here that
+inflate a gzip payload and substitute a token in script are candidates for it
+rather than being ruled out. What is still unmeasured is whether the sheet
+reaches the network, which the `data:text/html` route was separately confirmed
+to do.
+
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
 confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
