@@ -125,6 +125,37 @@ A chain opts into `plists/` by declaring a name, because most of them are probes
 and demos rather than receivers. Deriving the name from the label instead put 27
 chains into 24 files, three overwriting each other in silence.
 
+## A name is not a reference until something checks it
+
+Resolving a Run Shortcut target by name rather than by `workflowIdentifier` is
+what makes a chain portable, and the suite enforces it. It also trades a
+device-local pointer for a string nothing validates, so a target renamed on the
+phone leaves a card that looks correct and resolves to nothing.
+
+That is not hypothetical. Stripping the identifiers out of `Back-DoubleTap`
+exposed two names that had been stale for at least a fortnight, still working
+only because the identifier beside them was carrying the call:
+`Use-RecentShortcut`, since renamed to `Open-RecentShortcut`, and `Repo-Viewer`,
+whose current name is still unknown.
+
+**So audit the names against the library index whenever a chain gains one, and
+always after stripping identifiers.** `web-tools-private`'s
+`shortcuts/index.json` is one row per shortcut in the last full dump:
+
+```bash
+python3 - <<'EOF'
+import json
+idx = {r["name"] for r in json.load(open("index.json"))}
+for a in json.load(open("<chain>.json"))["actions"]:
+    n = a["p"].get("WFWorkflowName")
+    if isinstance(n, str) and n not in idx: print("missing:", n)
+EOF
+```
+
+Two false positives to expect, both from the index being a snapshot: anything
+installed since the last dump, and any name computed at run time, which is a
+token rather than a string and cannot be checked this way at all.
+
 ## A diagnostic returns itself
 
 **Never end a probe by asking what happened.** That makes the user read a

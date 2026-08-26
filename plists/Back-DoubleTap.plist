@@ -850,8 +850,7 @@
 				<key>UUID</key>
 				<string>D1C7A7E0-0301-4A00-9000-000000000300</string>
 				<key>WFTextActionText</key>
-				<string>Use-RecentShortcut
-Open-Working
+				<string>Open-RecentShortcut
 Show-ShortcutsInfo
 Copy-TemplateActions
 Choose-Manage

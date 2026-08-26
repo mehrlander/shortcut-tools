@@ -581,7 +581,7 @@
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "D1C7A7E0-0301-4A00-9000-000000000300",
-        "WFTextActionText": "Use-RecentShortcut\nOpen-Working\nShow-ShortcutsInfo\nCopy-TemplateActions\nChoose-Manage\nManage-Shelf\nOut"
+        "WFTextActionText": "Open-RecentShortcut\nShow-ShortcutsInfo\nCopy-TemplateActions\nChoose-Manage\nManage-Shelf\nOut"
       }
     },
     {

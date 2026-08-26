@@ -67,7 +67,6 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `ask-report` | Walks a list of questions, asks each in turn, and commits the whole transcript through `Log-Repo`. A battery of probes comes back as one commit instead of one message each. |
 | `probe-step` | The same job interleaved: each tap asks about the probe the last tap fired, commits that answer, then fires the next probe. |
 | `back-doubletap` | The double back tap dispatcher itself, 69 actions, recovered from the 2026-08-22 device dump so it can be revised here and re-installed in one tap. Dispatches on the current app, then on the clipboard's type; an empty clipboard opens `Dictate` and everything else falls to `Show-Loop`. |
-| `open-working` | Opens the Working folder in Shortcuts. One action, and it exists only so the folder can be a row in a list of shortcut names: `OpenNavigationDestinationAction` is not a shortcut and cannot be run by name until it is wrapped in one. |
 | `probe-watch` | Brief, fire, ask, log, in one tap. Three lines in: what to watch for, what to run, what to answer. The alert blocks before the target runs and the question lands immediately after it, so nothing has to be remembered between taps. |
 | `dictate` | Opens web-tools' full-page voice capture surface. Two actions, and the shortest thing in this table on purpose: Back Tap can run a shortcut and cannot open a URL, so this exists to be the target of a back tap (or an Action Button, or a Control Center control) rather than to be run from the app. |
 
