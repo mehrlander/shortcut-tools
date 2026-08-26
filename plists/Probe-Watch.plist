@@ -129,7 +129,7 @@
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{0, 1}</key>
+							<key>{28, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Brief</string>
@@ -140,7 +140,9 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>￼</string>
+						<string>👀 Watch what happens next
+
+￼</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

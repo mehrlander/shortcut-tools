@@ -74,9 +74,9 @@
         "WFAlertActionTitle": "Watch what happens next",
         "WFAlertActionMessage": {
           "Value": {
-            "string": "￼",
+            "string": "👀 Watch what happens next\n\n￼",
             "attachmentsByRange": {
-              "{0, 1}": {
+              "{28, 1}": {
                 "OutputName": "Brief",
                 "OutputUUID": "50E90101-0002-4A00-9000-000000000001",
                 "Type": "ActionOutput"
