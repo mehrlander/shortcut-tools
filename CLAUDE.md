@@ -149,6 +149,38 @@ because the walker failed, it worked; it was wasted because the question was
 already answered before it was sent. This is judgment and stays prose: no check
 can read a question and tell whether the repo holds its answer.
 
+## A probe carries its own instructions
+
+**The reader arrives knowing nothing, and should not have to.** Running a link
+is cheap and the user has said so. What costs is having to remember what the
+tap was for, watch for the right thing without being told what it is, and work
+out afterwards which part mattered. That is the expensive kind of ask, and it
+is the one that hides inside a link that looks like one tap.
+
+So a probe that needs an observation says all three parts on the device, in
+order:
+
+1. **Brief, before anything happens.** What is about to run and what to watch
+   for. `Probe-Watch` puts it in an alert titled "Watch what happens next", so
+   it blocks until it is read.
+2. **The thing itself.**
+3. **The question, immediately after**, naming the specific outcome rather than
+   asking what happened. "Did the dictation page open?" not "what did you see?"
+
+[`workflows/probe-watch.json`](workflows/probe-watch.json) is the receiver, and
+the payload is three lines: brief, target, question. It logs `Ran:`, `Q:` and
+`A:` through `Log-Repo`, so the answer arrives here without a paste.
+
+**This is why `Probe-Step` was not enough.** It asks before it fires, so its
+question is about the *previous* tap: on 2026-08-23 that meant asking about a
+commit from twenty minutes earlier, and the honest reply was that the repo
+already held the answer. Announce, fire, then ask, all in one tap, is what
+removes the remembering.
+
+The rule above still governs what the question may be: ask only what the repo
+cannot answer, which is what the screen did, what the dialog rendered, what
+Apple's own UI decided.
+
 ## Handing over a link
 
 **Emit both forms, never type either**, which

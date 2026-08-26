@@ -1,6 +1,6 @@
 {
   "name": "Back-DoubleTap",
-  "label": "Back-DoubleTap: the double back tap dispatcher (69 actions)",
+  "label": "Back-DoubleTap: the double back tap dispatcher (73 actions)",
   "workflow": {
     "WFWorkflowMinimumClientVersionString": "3216",
     "WFWorkflowMinimumClientVersion": 3216,
@@ -461,6 +461,55 @@
       }
     },
     {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D1C7A7E0-0200-4A00-9000-000000000200",
+        "WFControlFlowMode": 0,
+        "WFCondition": 3,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "Clipboard",
+              "Aggrandizements": [
+                {
+                  "CoercionItemClass": "WFGenericFileContentItem",
+                  "Type": "WFCoercionVariableAggrandizement"
+                },
+                {
+                  "PropertyName": "File Size",
+                  "PropertyUserInfo": "WFFileSizeProperty",
+                  "Type": "WFPropertyVariableAggrandizement"
+                }
+              ]
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        },
+        "WFMeasurement": {
+          "Value": {
+            "Magnitude": "1",
+            "Unit": "MB"
+          },
+          "WFSerializationType": "WFQuantityFieldValue"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "D1C7A7E0-0202-4A00-9000-000000000202",
+        "WFTextActionText": "              - 📋 𝙘𝙡𝙞𝙥𝙗𝙤𝙖𝙧𝙙 𝙞𝙨 𝙡𝙖𝙧𝙜𝙚 -"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D1C7A7E0-0200-4A00-9000-000000000200",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
       "id": "is.workflow.actions.runworkflow",
       "p": {
         "WFInput": {
@@ -472,6 +521,14 @@
         "CustomOutputName": "Text header",
         "UUID": "137DC359-A629-479B-93C8-C3461B965368",
         "WFWorkflowName": "Get-FileCaption"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D1C7A7E0-0200-4A00-9000-000000000200",
+        "WFControlFlowMode": 2,
+        "UUID": "D1C7A7E0-0201-4A00-9000-000000000201"
       }
     },
     {
