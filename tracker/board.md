@@ -3,7 +3,7 @@
 _Generated from tasks/. Do not hand-edit._
 
 ## On deck
-- 🎫 [Consolidate the Back-DoubleTap Shortcuts-app menu into a chooser](tasks/consolidate-backtap-menu-3lex8b.md) · S
+- (none)
 
 ## In progress
 - (none)
@@ -12,6 +12,7 @@ _Generated from tasks/. Do not hand-edit._
 - (none)
 
 ## Done
+- 🎫 [Consolidate the Back-DoubleTap Shortcuts-app menu into a chooser](tasks/consolidate-backtap-menu-3lex8b.md) (`claude/double-back-tap-revision-ner91x`)
 - 🎫 [Make control-flow actions safe to reach through add()](tasks/control-flow-safe-add-k7q00j.md) (`claude/shortcut-tools-tracker-cpc8d7`)
 - 🎫 [Detect when the corpus derivatives lag the dumps](tasks/corpus-derivative-freshness-lnz3xw.md) (`claude/shortcuts-repo-integration-uhvl7u`)
 - 🎫 [Document the library API and CLI in the README](tasks/document-library-api-and-cli-lqkb9f.md) (`claude/shortcut-tools-tracker-cpc8d7`)

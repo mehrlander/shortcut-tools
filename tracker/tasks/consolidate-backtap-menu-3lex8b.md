@@ -1,8 +1,10 @@
 ---
 id: consolidate-backtap-menu-3lex8b
 title: Consolidate the Back-DoubleTap Shortcuts-app menu into a chooser
-status: backlog
+status: done
 opened: 2026-08-26
+closed: 2026-08-26
+session: claude/double-back-tap-revision-ner91x
 size: S
 ---
 # Consolidate the Back-DoubleTap Shortcuts-app menu into a chooser
@@ -48,3 +50,11 @@ result has been installed and used on the device.
 - 2026-08-26: Filed. Analysis first done 2026-08-22 and carried since only in
   merged PR bodies, which is why it is a task now. Deferred out of PR #22 on
   the grounds above.
+- 2026-08-26: Done on `claude/double-back-tap-revision-ner91x`; lands via PR #22.
+  20 actions became 7 and Back-DoubleTap went 73 to 60. Not through `Run-List`
+  as sketched: it decides per item whether a list entry is a shortcut to run or
+  a parameter to carry, so passing the clipboard executes it whenever it looks
+  like a shortcut name (one hyphen, no spaces, under 30 characters). Run
+  Shortcut takes its name from a variable instead. `Open-Working` is the
+  wrapper the Working folder needed. The caption prompt survives, and "Out"
+  now exits through an explicit test rather than by failing to match a regex.
