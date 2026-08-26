@@ -1,6 +1,6 @@
 {
   "name": "Back-DoubleTap",
-  "label": "Back-DoubleTap: the double back tap dispatcher (73 actions)",
+  "label": "Back-DoubleTap: the double back tap dispatcher (60 actions)",
   "workflow": {
     "WFWorkflowMinimumClientVersionString": "3216",
     "WFWorkflowMinimumClientVersion": 3216,
@@ -578,9 +578,32 @@
       }
     },
     {
-      "id": "is.workflow.actions.choosefrommenu",
+      "id": "is.workflow.actions.gettext",
       "p": {
-        "WFMenuPrompt": {
+        "UUID": "D1C7A7E0-0301-4A00-9000-000000000300",
+        "WFTextActionText": "Use-RecentShortcut\nOpen-Working\nShow-ShortcutsInfo\nCopy-TemplateActions\nChoose-Manage\nManage-Shelf\nOut"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "D1C7A7E0-0302-4A00-9000-000000000300",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "D1C7A7E0-0301-4A00-9000-000000000300",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "D1C7A7E0-0303-4A00-9000-000000000300",
+        "WFChooseFromListActionPrompt": {
           "Value": {
             "string": "￼",
             "attachmentsByRange": {
@@ -593,236 +616,85 @@
           },
           "WFSerializationType": "WFTextTokenString"
         },
-        "WFControlFlowMode": 0,
-        "WFMenuItems": [
-          "Use recent",
-          "Working shortcuts",
-          "Shortcuts table",
-          "Copy template",
-          "Manage",
-          "Shelf",
-          "Out"
-        ],
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E"
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "D1C7A7E0-0302-4A00-9000-000000000300",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     },
     {
-      "id": "is.workflow.actions.choosefrommenu",
+      "id": "is.workflow.actions.conditional",
       "p": {
-        "WFMenuItemTitle": "Use recent",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
+        "GroupingIdentifier": "D1C7A7E0-0310-4A00-9000-000000000310",
+        "WFControlFlowMode": 0,
+        "WFCondition": 5,
+        "WFConditionalActionString": "Out",
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Chosen Item",
+              "OutputUUID": "D1C7A7E0-0303-4A00-9000-000000000300",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
       }
     },
     {
       "id": "is.workflow.actions.runworkflow",
       "p": {
-        "WFWorkflowName": "Use-RecentShortcut",
-        "UUID": "ABD582E6-F6CC-4CAA-AA40-C1AB54A9233C"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
+        "UUID": "D1C7A7E0-0304-4A00-9000-000000000300",
+        "WFWorkflowName": {
           "Value": {
             "string": "￼",
             "attachmentsByRange": {
               "{0, 1}": {
-                "OutputUUID": "ABD582E6-F6CC-4CAA-AA40-C1AB54A9233C",
-                "Type": "ActionOutput",
-                "OutputName": "Shortcut Result"
+                "OutputName": "Chosen Item",
+                "OutputUUID": "D1C7A7E0-0303-4A00-9000-000000000300",
+                "Type": "ActionOutput"
               }
             }
           },
           "WFSerializationType": "WFTextTokenString"
         },
-        "UUID": "BEB27443-FE3D-421E-BBDA-29066B6D919A"
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
-        "WFMenuItemTitle": "Working shortcuts",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "com.apple.shortcuts.OpenNavigationDestinationAction",
-      "p": {
-        "target": {
-          "symbol": {
-            "systemName": "exclamationmark.triangle"
+        "WFInput": {
+          "Value": {
+            "Type": "Clipboard"
           },
-          "title": {
-            "key": "Working"
-          },
-          "subtitle": {
-            "key": "Working"
-          },
-          "identifier": "492BC21E-EBA6-4247-BFDF-A2130536D203"
-        },
-        "UUID": "731153BB-31BB-4835-A613-F774557D1DD4",
-        "AppIntentDescriptor": {
-          "TeamIdentifier": "0000000000",
-          "BundleIdentifier": "com.apple.shortcuts",
-          "Name": "Shortcuts",
-          "AppIntentIdentifier": "OpenNavigationDestinationAction"
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     },
     {
       "id": "is.workflow.actions.output",
       "p": {
-        "UUID": "0FB14A03-A506-4899-A67D-94375D6E863F"
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
-        "WFMenuItemTitle": "Shortcuts table",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "WFWorkflowName": "Show-ShortcutsInfo",
-        "UUID": "8CC39B4C-D254-4E36-A802-2FBECCA2E2AE"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
         "WFOutput": {
           "Value": {
             "string": "￼",
             "attachmentsByRange": {
               "{0, 1}": {
-                "OutputUUID": "8CC39B4C-D254-4E36-A802-2FBECCA2E2AE",
-                "Type": "ActionOutput",
-                "OutputName": "Shortcut Result"
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "D1C7A7E0-0304-4A00-9000-000000000300",
+                "Type": "ActionOutput"
               }
             }
           },
           "WFSerializationType": "WFTextTokenString"
-        },
-        "UUID": "25E7837D-B2EE-4814-90E0-8534DE80D596"
+        }
       }
     },
     {
-      "id": "is.workflow.actions.choosefrommenu",
+      "id": "is.workflow.actions.conditional",
       "p": {
-        "WFMenuItemTitle": "Copy template",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "WFWorkflowName": "Copy-TemplateActions",
-        "UUID": "F48B32C4-1F4C-4EE6-B1A8-901A5AA72E8C"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "OutputUUID": "F48B32C4-1F4C-4EE6-B1A8-901A5AA72E8C",
-                "Type": "ActionOutput",
-                "OutputName": "Shortcut Result"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        },
-        "UUID": "AF1F6A3A-2447-4FAF-A2D4-2D92B495BF84"
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
-        "WFMenuItemTitle": "Manage",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "WFInput": {
-          "Value": {
-            "OutputUUID": "24248B0D-FB7F-4F32-962E-536A72777E1A",
-            "Type": "ActionOutput",
-            "OutputName": "If Result"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "UUID": "B566F2C7-2514-4969-8CB5-C886CAE8D264",
-        "WFWorkflowName": "Choose-Manage"
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
-        "WFMenuItemTitle": "Shelf",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "WFInput": {
-          "Value": {
-            "Type": "ExtensionInput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "UUID": "2289FFF1-7E2C-475D-8C4E-81D83C2F2077",
-        "WFWorkflowName": "Manage-Shelf"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "OutputUUID": "2289FFF1-7E2C-475D-8C4E-81D83C2F2077",
-                "Type": "ActionOutput",
-                "OutputName": "Shortcut Result"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        },
-        "UUID": "3A03FC91-BCF5-499D-B589-3463FA72BFB7"
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
-        "WFMenuItemTitle": "Out",
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.choosefrommenu",
-      "p": {
+        "GroupingIdentifier": "D1C7A7E0-0310-4A00-9000-000000000310",
         "WFControlFlowMode": 2,
-        "GroupingIdentifier": "2F764521-A345-4A9D-A6BF-746E5E59C89E",
-        "UUID": "A1510E68-30CF-43E1-B5C9-FA0B6DF6525E"
+        "UUID": "D1C7A7E0-0305-4A00-9000-000000000300"
       }
     },
     {
