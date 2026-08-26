@@ -1,0 +1,56 @@
+{
+  "name": "Probe-QuickLook",
+  "label": "Probe-QuickLook: does Quick Look run a page's script (4 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "0C1CE100-0001-4A00-9000-000000000001",
+        "WFTextActionText": "<html><body style=\"font:28px -apple-system;padding:2em\"><p id=\"o\">STATIC</p><script>document.getElementById(\"o\").textContent=\"SCRIPT RAN\"</script></body></html>"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettypeaction",
+      "p": {
+        "UUID": "0C1CE100-0002-4A00-9000-000000000001",
+        "WFFileType": "public.html",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "0C1CE100-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setitemname",
+      "p": {
+        "UUID": "0C1CE100-0003-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "File of Type",
+            "OutputUUID": "0C1CE100-0002-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFName": "probe.html"
+      }
+    },
+    {
+      "id": "is.workflow.actions.previewdocument",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Renamed Item",
+            "OutputUUID": "0C1CE100-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
