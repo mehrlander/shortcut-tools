@@ -1,6 +1,6 @@
 {
   "name": "Describe-Input",
-  "label": "Describe-Input: Get-FileInfo with nothing to call out to (29 actions)",
+  "label": "Describe-Input: describe the input, in one shortcut and one text card (17 actions)",
   "workflow": {
     "WFWorkflowTypes": [
       "ActionExtension",
@@ -48,62 +48,6 @@
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "WFVariableName": "Item"
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "AB80FB57-E853-4C1F-A73D-7FCCA2134075",
-        "WFCondition": 4,
-        "WFConditionalActionString": "text",
-        "WFControlFlowMode": 0,
-        "WFInput": {
-          "Type": "Variable",
-          "Variable": {
-            "Value": {
-              "OutputName": "Type",
-              "OutputUUID": "5F725834-00A4-4357-A0D0-6BE289D5EAB2",
-              "Type": "ActionOutput"
-            },
-            "WFSerializationType": "WFTextTokenAttachment"
-          }
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.setitemname",
-      "p": {
-        "UUID": "F2BADFBD-E782-499B-B91A-852886F72047",
-        "WFInput": {
-          "Value": {
-            "Type": "Variable",
-            "VariableName": "Item"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFName": "text.txt"
-      }
-    },
-    {
-      "id": "is.workflow.actions.setvariable",
-      "p": {
-        "WFInput": {
-          "Value": {
-            "OutputName": "Renamed Item",
-            "OutputUUID": "F2BADFBD-E782-499B-B91A-852886F72047",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFVariableName": "Item"
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "AB80FB57-E853-4C1F-A73D-7FCCA2134075",
-        "UUID": "A4FAC348-9C40-4964-8A43-866B67D00C1A",
-        "WFControlFlowMode": 2
       }
     },
     {
@@ -431,61 +375,6 @@
       }
     },
     {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "85ECEBA2-1DAC-4DCD-B350-1321F73ADB87",
-        "WFCondition": 4,
-        "WFConditionalActionString": "URL",
-        "WFControlFlowMode": 0,
-        "WFInput": {
-          "Type": "Variable",
-          "Variable": {
-            "Value": {
-              "OutputName": "Type",
-              "OutputUUID": "5F725834-00A4-4357-A0D0-6BE289D5EAB2",
-              "Type": "ActionOutput"
-            },
-            "WFSerializationType": "WFTextTokenAttachment"
-          }
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.setvalueforkey",
-      "p": {
-        "UUID": "EC053DB5-C096-414B-A041-AFB6527D01B6",
-        "WFDictionary": {
-          "Value": {
-            "OutputName": "Dictionary",
-            "OutputUUID": "26E4686E-7878-4A6E-8929-8D32FF3F5792",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFDictionaryKey": "URL",
-        "WFDictionaryValue": {
-          "Value": {
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "Type": "Variable",
-                "VariableName": "Repeat Item"
-              }
-            },
-            "string": "￼"
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "85ECEBA2-1DAC-4DCD-B350-1321F73ADB87",
-        "UUID": "D5796287-689F-4B97-BD29-7F67036FBF59",
-        "WFControlFlowMode": 2
-      }
-    },
-    {
       "id": "is.workflow.actions.repeat.each",
       "p": {
         "GroupingIdentifier": "F827A675-629E-4CFE-AB57-E9BECD66640A",
@@ -496,7 +385,7 @@
     {
       "id": "is.workflow.actions.text.combine",
       "p": {
-        "UUID": "DE5C21BE-0001-4A00-9000-000000000001",
+        "UUID": "DE5C21BE-0001-4A00-9000-000000000002",
         "WFTextSeparator": "Custom",
         "WFTextCustomSeparator": ",",
         "text": {
@@ -512,65 +401,14 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "DE5C21BE-0002-4A00-9000-000000000001",
+        "UUID": "DE5C21BE-0002-4A00-9000-000000000002",
         "WFTextActionText": {
           "Value": {
-            "string": "[￼]",
+            "string": "<pre id=\"out\"></pre><script>document.getElementById(\"out\").textContent=JSON.stringify((((input) => {\n  const cap = 32\n  const clipEnd = s => (s = s ?? \"\", s.length > cap ? s.slice(0, cap - 1) + \"…\" : s)\n  const clipMid = s => {\n    s = s ?? \"\"\n    if (s.length <= cap) return s\n    const head = Math.floor((cap - 1) / 2), tail = (cap - 1) - head\n    return s.slice(0, head) + \"…\" + s.slice(-tail)\n  }\n  const F = [...\"𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯\"]\n  const sans = s => String(s).toLowerCase().replace(/[a-z]/g, c => F[c.charCodeAt(0) - 97] || c)\n  const sup = d => d === \"0\" ? \"⁰\" : \"¹²³⁴⁵⁶⁷⁸⁹\"[d.charCodeAt(0) - 49]\n  const supNum = x => String(x).replace(/\\d/g, d => sup(d))\n  const supTag = x => \"⁽\" + supNum(x) + \"⁾\"\n  const rpad = (s, w) => s + \" \".repeat(Math.max(0, w - s.length))\n\n  const RULES = {\n    \"icloud.com/shortcuts\": \"shortcut\",\n    \"lawfilesext.leg.wa.gov\": \"lawfiles\",\n    \"shortcuts://open-shortcut\": \"open shortcut\",\n    \"shortcuts://run-shortcut\": \"run shortcut\",\n    \"http\": \"URL\"\n  }\n  const classifyUrl = u => {\n    const hay = u.toLowerCase()\n    const match = Object.entries(RULES).find(([k]) => hay.includes(k))\n    return match ? match[1] : \"URL\"\n  }\n  const looksUrl = s => /^(https?:\\/\\/|shortcuts:\\/\\/)\\S+$/i.test(s)\n\n  const decodeB64 = b64 => {\n    try {\n      return new TextDecoder().decode(\n        Uint8Array.from(atob(b64.replace(/\\s+/g, \"\")), c => c.charCodeAt(0))\n      )\n    } catch (e) { return \"\" }\n  }\n\n  const transformOne = o => {\n    const base64 = String(o[\"Base64\"] || \"\")\n    const count = Number(o[\"Count\"] || 0) || 0\n    const isList = count > 1\n\n    const first = base64.split(/\\r?\\n/)[0] || \"\"\n    const preview = first.slice(0, 10) + (first.length > 10 ? \"…\" : \"\")\n\n    const rawType = String(o[\"Type\"] || \"\")\n    let name = String(o[\"Name\"] || \"\")\n    let ext  = String(o[\"File Extension\"] || \"\")\n\n    // A bare text item arrives unnamed. The Shortcuts version renamed it to\n    // text.txt with three cards before building the dictionary; naming it here\n    // costs a line and keeps the same fileName out the other side.\n    if (!name && !ext && rawType.toLowerCase() === \"text\") { name = \"text\"; ext = \"txt\" }\n\n    // Decode once. List items don't carry a single payload, so skip it there.\n    const decoded = isList ? \"\" : decodeB64(base64)\n\n    // A URL is either declared in the URL field, or it's the entire text payload.\n    const fieldUrl = String(o[\"URL\"] || \"\")\n    const textUrl = (!isList && !fieldUrl && looksUrl(decoded.trim())) ? decoded.trim() : \"\"\n    const url = fieldUrl || textUrl\n    const isUrlItem = url.length > 0\n\n    const fileName = isList ? \"LIST\"\n      : isUrlItem ? (name || url)\n      : (ext ? (name ? (name + \".\" + ext) : (\".\" + ext)) : name)\n\n    let type\n    if (isList) {\n      const exts = ext.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean)\n      let tagLabel = \"mixed\"\n      if (exts.length) {\n        const e0 = exts[0]\n        let same = true\n        for (const e of exts) if (e !== e0) { same = false; break }\n        if (same) tagLabel = e0\n      }\n      type = \"List (\" + tagLabel + \")\"\n    } else if (isUrlItem) {\n      type = classifyUrl(url)\n    } else if (ext.toLowerCase() === \"skill\") {\n      type = \"skill\"\n    } else if (first.startsWith(\"YnBsa\")) {\n      type = \"Action\"\n    } else {\n      type = rawType\n    }\n\n    const urlTypes = [\"URL\", \"shortcut\", \"open shortcut\", \"run shortcut\", \"lawfiles\"]\n    const isUrl = urlTypes.includes(type)\n    const icon = isList ? \"📇 \" : (isUrl ? \"🔗 \" : (type === \"skill\" ? \"🧩 \" : \"🧾 \"))\n    const inner = icon + sans(type || \"item\")\n    const W = 68, baseStr = \"- \" + inner + \" -\"\n    const header = \" \".repeat(Math.max(0, Math.floor((W - baseStr.length) / 2) + 2)) + baseStr\n\n    let lines\n    if (isList) {\n      const names = name.split(/\\r?\\n/).map(s => s.trim())\n      const exts  = ext.split(/\\r?\\n/).map(s => s.trim())\n      const n = Math.max(count || 0, names.length, exts.length, 0)\n      lines = []\n      for (let i = 0; i < n; i++) {\n        const nm = names[i] || \"\"\n        const ex = exts[i] || \"\"\n        let fn = ex ? (nm ? (nm + \".\" + ex) : (\".\" + ex)) : nm\n        if (!fn) fn = \"Item \" + (i + 1)\n        lines.push(fn)\n      }\n      if (!lines.length) lines = [\"LIST\"]\n    } else if (isUrlItem) {\n      lines = [name || \"\", url].filter(Boolean)\n      if (!lines.length) lines = [\"URL\"]\n    } else {\n      let textLines = null\n      const looksBinary = !decoded || /[\\x00-\\x08\\x0E-\\x1F]/.test(decoded.slice(0, 200))\n      if (!looksBinary) {\n        textLines = decoded.split(/\\r?\\n/)\n        while (textLines.length && !textLines[textLines.length - 1]) textLines.pop()\n      }\n      lines = (textLines && textLines.length) ? textLines : [fileName || \"Item\"]\n    }\n\n    const n = lines.length || 1\n    const Lw = supTag(n).length\n    const mid = lines.length <= 2 ? \"\" : clipEnd(lines.slice(1, -1).join(\"\\n\").replace(/\\r?\\n/g, \"␤\"))\n    const row = i => rpad(supTag(i), Lw) + \" \" + clipMid(lines[i - 1] || \"\")\n    const body = [row(1), n == 2 ? row(2) : n > 2 ? (\"⋯\" + (mid ? \" \" + mid : \"\")) : null, n > 2 ? row(n) : null].filter(Boolean).join(\"\\n\")\n\n    const detail = { type, fileName, preview, caption: header + \"\\n\" + body }\n    if (isUrlItem) detail.url = url\n\n    return { ...o, detail }\n  }\n\n  const asList = items => {\n    const join = k => items.map(o => String(o[k] || \"\")).join(\"\\n\")\n    const summary = transformOne({ Count: items.length, Name: join(\"Name\"),\n      \"File Extension\": join(\"File Extension\"), Base64: \"\" })\n    return { list: items.map(transformOne), detail: summary.detail }\n  }\n\n  // Fed a bare array, which is what this shortcut builds: one item is that\n  // item, several are a list. The {list:[...]} shape below is what\n  // Combine-JsonList produces, kept so a caller can still hand us one.\n  if (Array.isArray(input)) {\n    return input.length === 1 ? transformOne(input[0]) : asList(input)\n  }\n  if (input && Array.isArray(input.list)) {\n    const items = input.list.map(transformOne)\n    const join = k => input.list.map(o => String(o[k] || \"\")).join(\"\\n\")\n    const summary = transformOne({ Count: items.length, Name: join(\"Name\"),\n      \"File Extension\": join(\"File Extension\"), Base64: \"\" })\n    return { list: items, detail: summary.detail }\n  }\n  return transformOne(input)\n})\n)([￼]),null,2)</script>",
             "attachmentsByRange": {
-              "{1, 1}": {
+              "{6317, 1}": {
                 "OutputName": "Combined Text",
-                "OutputUUID": "DE5C21BE-0001-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.gettext",
-      "p": {
-        "UUID": "DE5C21BE-0003-4A00-9000-000000000001",
-        "CustomOutputName": "Function",
-        "WFTextActionText": "((input) => {\n  const cap = 32\n  const clipEnd = s => (s = s ?? \"\", s.length > cap ? s.slice(0, cap - 1) + \"…\" : s)\n  const clipMid = s => {\n    s = s ?? \"\"\n    if (s.length <= cap) return s\n    const head = Math.floor((cap - 1) / 2), tail = (cap - 1) - head\n    return s.slice(0, head) + \"…\" + s.slice(-tail)\n  }\n  const F = [...\"𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯\"]\n  const sans = s => String(s).toLowerCase().replace(/[a-z]/g, c => F[c.charCodeAt(0) - 97] || c)\n  const sup = d => d === \"0\" ? \"⁰\" : \"¹²³⁴⁵⁶⁷⁸⁹\"[d.charCodeAt(0) - 49]\n  const supNum = x => String(x).replace(/\\d/g, d => sup(d))\n  const supTag = x => \"⁽\" + supNum(x) + \"⁾\"\n  const rpad = (s, w) => s + \" \".repeat(Math.max(0, w - s.length))\n\n  const RULES = {\n    \"icloud.com/shortcuts\": \"shortcut\",\n    \"lawfilesext.leg.wa.gov\": \"lawfiles\",\n    \"shortcuts://open-shortcut\": \"open shortcut\",\n    \"shortcuts://run-shortcut\": \"run shortcut\",\n    \"http\": \"URL\"\n  }\n  const classifyUrl = u => {\n    const hay = u.toLowerCase()\n    const match = Object.entries(RULES).find(([k]) => hay.includes(k))\n    return match ? match[1] : \"URL\"\n  }\n  const looksUrl = s => /^(https?:\\/\\/|shortcuts:\\/\\/)\\S+$/i.test(s)\n\n  const decodeB64 = b64 => {\n    try {\n      return new TextDecoder().decode(\n        Uint8Array.from(atob(b64.replace(/\\s+/g, \"\")), c => c.charCodeAt(0))\n      )\n    } catch (e) { return \"\" }\n  }\n\n  const transformOne = o => {\n    const base64 = String(o[\"Base64\"] || \"\")\n    const count = Number(o[\"Count\"] || 0) || 0\n    const isList = count > 1\n\n    const first = base64.split(/\\r?\\n/)[0] || \"\"\n    const preview = first.slice(0, 10) + (first.length > 10 ? \"…\" : \"\")\n\n    const rawType = String(o[\"Type\"] || \"\")\n    const name = String(o[\"Name\"] || \"\")\n    const ext  = String(o[\"File Extension\"] || \"\")\n\n    // Decode once. List items don't carry a single payload, so skip it there.\n    const decoded = isList ? \"\" : decodeB64(base64)\n\n    // A URL is either declared in the URL field, or it's the entire text payload.\n    const fieldUrl = String(o[\"URL\"] || \"\")\n    const textUrl = (!isList && !fieldUrl && looksUrl(decoded.trim())) ? decoded.trim() : \"\"\n    const url = fieldUrl || textUrl\n    const isUrlItem = url.length > 0\n\n    const fileName = isList ? \"LIST\"\n      : isUrlItem ? (name || url)\n      : (ext ? (name ? (name + \".\" + ext) : (\".\" + ext)) : name)\n\n    let type\n    if (isList) {\n      const exts = ext.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean)\n      let tagLabel = \"mixed\"\n      if (exts.length) {\n        const e0 = exts[0]\n        let same = true\n        for (const e of exts) if (e !== e0) { same = false; break }\n        if (same) tagLabel = e0\n      }\n      type = \"List (\" + tagLabel + \")\"\n    } else if (isUrlItem) {\n      type = classifyUrl(url)\n    } else if (ext.toLowerCase() === \"skill\") {\n      type = \"skill\"\n    } else if (first.startsWith(\"YnBsa\")) {\n      type = \"Action\"\n    } else {\n      type = rawType\n    }\n\n    const urlTypes = [\"URL\", \"shortcut\", \"open shortcut\", \"run shortcut\", \"lawfiles\"]\n    const isUrl = urlTypes.includes(type)\n    const icon = isList ? \"📇 \" : (isUrl ? \"🔗 \" : (type === \"skill\" ? \"🧩 \" : \"🧾 \"))\n    const inner = icon + sans(type || \"item\")\n    const W = 68, baseStr = \"- \" + inner + \" -\"\n    const header = \" \".repeat(Math.max(0, Math.floor((W - baseStr.length) / 2) + 2)) + baseStr\n\n    let lines\n    if (isList) {\n      const names = name.split(/\\r?\\n/).map(s => s.trim())\n      const exts  = ext.split(/\\r?\\n/).map(s => s.trim())\n      const n = Math.max(count || 0, names.length, exts.length, 0)\n      lines = []\n      for (let i = 0; i < n; i++) {\n        const nm = names[i] || \"\"\n        const ex = exts[i] || \"\"\n        let fn = ex ? (nm ? (nm + \".\" + ex) : (\".\" + ex)) : nm\n        if (!fn) fn = \"Item \" + (i + 1)\n        lines.push(fn)\n      }\n      if (!lines.length) lines = [\"LIST\"]\n    } else if (isUrlItem) {\n      lines = [name || \"\", url].filter(Boolean)\n      if (!lines.length) lines = [\"URL\"]\n    } else {\n      let textLines = null\n      const looksBinary = !decoded || /[\\x00-\\x08\\x0E-\\x1F]/.test(decoded.slice(0, 200))\n      if (!looksBinary) {\n        textLines = decoded.split(/\\r?\\n/)\n        while (textLines.length && !textLines[textLines.length - 1]) textLines.pop()\n      }\n      lines = (textLines && textLines.length) ? textLines : [fileName || \"Item\"]\n    }\n\n    const n = lines.length || 1\n    const Lw = supTag(n).length\n    const mid = lines.length <= 2 ? \"\" : clipEnd(lines.slice(1, -1).join(\"\\n\").replace(/\\r?\\n/g, \"␤\"))\n    const row = i => rpad(supTag(i), Lw) + \" \" + clipMid(lines[i - 1] || \"\")\n    const body = [row(1), n == 2 ? row(2) : n > 2 ? (\"⋯\" + (mid ? \" \" + mid : \"\")) : null, n > 2 ? row(n) : null].filter(Boolean).join(\"\\n\")\n\n    const detail = { type, fileName, preview, caption: header + \"\\n\" + body }\n    if (isUrlItem) detail.url = url\n\n    return { ...o, detail }\n  }\n\n  const asList = items => {\n    const join = k => items.map(o => String(o[k] || \"\")).join(\"\\n\")\n    const summary = transformOne({ Count: items.length, Name: join(\"Name\"),\n      \"File Extension\": join(\"File Extension\"), Base64: \"\" })\n    return { list: items.map(transformOne), detail: summary.detail }\n  }\n\n  // Fed a bare array, which is what this shortcut builds: one item is that\n  // item, several are a list. The {list:[...]} shape below is what\n  // Combine-JsonList produces, kept so a caller can still hand us one.\n  if (Array.isArray(input)) {\n    return input.length === 1 ? transformOne(input[0]) : asList(input)\n  }\n  if (input && Array.isArray(input.list)) {\n    const items = input.list.map(transformOne)\n    const join = k => input.list.map(o => String(o[k] || \"\")).join(\"\\n\")\n    const summary = transformOne({ Count: items.length, Name: join(\"Name\"),\n      \"File Extension\": join(\"File Extension\"), Base64: \"\" })\n    return { list: items, detail: summary.detail }\n  }\n  return transformOne(input)\n})\n"
-      }
-    },
-    {
-      "id": "is.workflow.actions.gettext",
-      "p": {
-        "UUID": "DE5C21BE-0004-4A00-9000-000000000001",
-        "WFTextActionText": {
-          "Value": {
-            "string": "(￼)(￼)",
-            "attachmentsByRange": {
-              "{1, 1}": {
-                "OutputName": "Function",
-                "OutputUUID": "DE5C21BE-0003-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              },
-              "{4, 1}": {
-                "OutputName": "Text",
-                "OutputUUID": "DE5C21BE-0002-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.gettext",
-      "p": {
-        "UUID": "DE5C21BE-0005-4A00-9000-000000000001",
-        "WFTextActionText": {
-          "Value": {
-            "string": "<pre id=\"out\"></pre>\n<script>\n  document.getElementById('out').textContent =\n    JSON.stringify(￼, null, 2);\n</script>",
-            "attachmentsByRange": {
-              "{96, 1}": {
-                "OutputName": "Text",
-                "OutputUUID": "DE5C21BE-0004-4A00-9000-000000000001",
+                "OutputUUID": "DE5C21BE-0001-4A00-9000-000000000002",
                 "Type": "ActionOutput"
               }
             }
@@ -582,13 +420,13 @@
     {
       "id": "is.workflow.actions.base64encode",
       "p": {
-        "UUID": "DE5C21BE-0006-4A00-9000-000000000001",
+        "UUID": "DE5C21BE-0003-4A00-9000-000000000002",
         "WFBase64LineBreakMode": "None",
         "WFEncodeMode": "Encode",
         "WFInput": {
           "Value": {
             "OutputName": "Text",
-            "OutputUUID": "DE5C21BE-0005-4A00-9000-000000000001",
+            "OutputUUID": "DE5C21BE-0002-4A00-9000-000000000002",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -598,14 +436,14 @@
     {
       "id": "is.workflow.actions.url",
       "p": {
-        "UUID": "DE5C21BE-0007-4A00-9000-000000000001",
+        "UUID": "DE5C21BE-0004-4A00-9000-000000000002",
         "WFURLActionURL": {
           "Value": {
             "string": "data:text/html;charset=utf-8;base64,￼",
             "attachmentsByRange": {
               "{36, 1}": {
                 "OutputName": "Base64 Encoded",
-                "OutputUUID": "DE5C21BE-0006-4A00-9000-000000000001",
+                "OutputUUID": "DE5C21BE-0003-4A00-9000-000000000002",
                 "Type": "ActionOutput"
               }
             }
@@ -617,11 +455,11 @@
     {
       "id": "is.workflow.actions.detect.text",
       "p": {
-        "UUID": "DE5C21BE-0008-4A00-9000-000000000001",
+        "UUID": "DE5C21BE-0005-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "OutputName": "URL",
-            "OutputUUID": "DE5C21BE-0007-4A00-9000-000000000001",
+            "OutputUUID": "DE5C21BE-0004-4A00-9000-000000000002",
             "Type": "ActionOutput",
             "Aggrandizements": [
               {
@@ -635,50 +473,15 @@
       }
     },
     {
-      "id": "is.workflow.actions.gettypeaction",
+      "id": "is.workflow.actions.detect.dictionary",
       "p": {
-        "UUID": "DE5C21BE-0009-4A00-9000-000000000001",
-        "WFFileType": "public.json",
         "WFInput": {
           "Value": {
             "OutputName": "Text",
-            "OutputUUID": "DE5C21BE-0008-4A00-9000-000000000001",
+            "OutputUUID": "DE5C21BE-0005-4A00-9000-000000000002",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.setitemname",
-      "p": {
-        "UUID": "DE5C21BE-0010-4A00-9000-000000000001",
-        "WFInput": {
-          "Value": {
-            "OutputName": "File of Type",
-            "OutputUUID": "DE5C21BE-0009-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFName": "describe-input.json"
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "OutputName": "Renamed Item",
-                "OutputUUID": "DE5C21BE-0010-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
         }
       }
     }
