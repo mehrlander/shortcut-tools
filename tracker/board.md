@@ -3,7 +3,7 @@
 _Generated from tasks/. Do not hand-edit._
 
 ## On deck
-- (none)
+- 🎫 [Consolidate the Back-DoubleTap Shortcuts-app menu into a chooser](tasks/consolidate-backtap-menu-3lex8b.md) · S
 
 ## In progress
 - (none)
