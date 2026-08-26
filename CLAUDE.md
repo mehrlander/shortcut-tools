@@ -61,22 +61,32 @@ axis, and it is the only route that can deliver **file-level** settings, since
 file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And **import never merges by name**:
-importing over an existing shortcut creates a second one.
+only because nothing here holds a secret. And importing over a name that already
+exists puts a choice on screen: **Apple's own sheet offers to save over the
+existing shortcut**, and taking that offer is all a re-install needs (reported
+2026-08-26). Nothing has to be deleted first.
 
-**The index goes to the newcomer, which makes this a correctness problem rather
-than an untidiness problem.** The existing shortcut keeps the clean name and the
-version just imported becomes `Name 1`, so every
+**Take the offer, because keeping both is a correctness problem rather than an
+untidiness one.** A second copy takes the index: the original keeps the clean
+name and the newcomer becomes `Name 1`, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
-it, keeps resolving to the **old** copy. An import that appears to have upgraded
-something has silently done the opposite. So clearing the name first is
-mandatory, not stylistic.
+it, still resolves to the **old** copy. An import that looks like an upgrade has
+then done the opposite.
 
-**Delete before importing, for anything generated from this repo.** The
+**Wrong 2026-08-15 → the paragraph above:** this read "import never merges by
+name" and called clearing the name first "mandatory, not stylistic." The
+duplicate and its index consequence are real, but they follow from declining the
+sheet's offer, not from importing at all. `Library-Replace` deletes by name
+before importing and is worth having where no one is present to answer the
+sheet; it is not a prerequisite, and a session should not route a normal
+re-install through it. The cost of that error is not a wasted tap: the link
+names a receiver the device may not have, so it fails at the point of use with
+nothing installed.
+
+**Replacing a generated receiver is free**, so spend no care on it. The
 four-step prune exists for shortcuts whose only copy is the device; a receiver
-whose plist is committed here is reproducible from `git`, so deleting it costs a
-re-import and nothing else. Reserve staging for authored work, where it is
-earned.
+whose plist is committed here is reproducible from `git`. Reserve staging for
+authored work, where it is earned.
 
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 

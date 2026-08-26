@@ -29,10 +29,11 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
 RAW = "https://raw.githubusercontent.com/mehrlander/shortcut-tools"
 IMPORT_TARGET = "Library-Import"
-# Re-installing an existing shortcut is not an import. Import never merges by
-# name, so the old copy keeps the clean name and the new one lands as `Name 1`,
-# which every `run-shortcut?name=` link and every `runworkflow` card keeps
-# resolving to. `Library-Replace` deletes first. Same two-line payload.
+# `Library-Replace` deletes by name, then imports. Reach for it only where no
+# one is present to answer Apple's import sheet, which otherwise offers to save
+# over a name that already exists: --link defaults to Library-Import because
+# that is the route a person actually taps, and because a link naming a
+# receiver the device lacks fails at the point of use with nothing installed.
 REPLACE_TARGET = "Library-Replace"
 
 # Observed on a 2026 export. Not guessed: an envelope that disagrees with the
