@@ -1,0 +1,112 @@
+{
+  "name": "Ask-Grok",
+  "label": "Ask-Grok: hand the input to Grok and put the answer on the clipboard (4 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "Watch",
+      "WFWorkflowTypeShowInSearch"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFAppContentItem",
+      "WFAppStoreAppContentItem",
+      "WFArticleContentItem",
+      "WFContactContentItem",
+      "WFDateContentItem",
+      "WFEmailAddressContentItem",
+      "WFFolderContentItem",
+      "WFGenericFileContentItem",
+      "WFImageContentItem",
+      "WFiTunesProductContentItem",
+      "WFLocationContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFAVAssetContentItem",
+      "WFPDFContentItem",
+      "WFPhoneNumberContentItem",
+      "WFRichTextContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem",
+      "WFURLContentItem"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "A5C09000-0001-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": { "Type": "ExtensionInput" }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "ai.x.GrokApp.AskGrok",
+      "p": {
+        "UUID": "A5C09000-0002-4A00-9000-000000000002",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "AskGrok",
+          "BundleIdentifier": "ai.x.GrokApp",
+          "Name": "Grok",
+          "TeamIdentifier": "N66CZ3Y3BX"
+        },
+        "ShowWhenRun": false,
+        "newMessage": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "A5C09000-0001-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "A5C09000-0003-4A00-9000-000000000003",
+        "WFInput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Ask Grok",
+                "OutputUUID": "A5C09000-0002-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "UUID": "A5C09000-0004-4A00-9000-000000000004",
+        "Text": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Ask Grok",
+                "OutputUUID": "A5C09000-0002-4A00-9000-000000000002",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}
