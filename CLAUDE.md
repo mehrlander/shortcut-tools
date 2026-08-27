@@ -125,6 +125,23 @@ A chain opts into `plists/` by declaring a name, because most of them are probes
 and demos rather than receivers. Deriving the name from the label instead put 27
 chains into 24 files, three overwriting each other in silence.
 
+**A mirror is the chain set, which means deleting too.** A chain removed,
+renamed, or giving up its `name` leaves behind an artifact no chain
+regenerates, and that artifact keeps serving a link that works and delivers
+something the repo has retracted: the same failure as a stale one, arriving by
+the other door. `--publish` removes what no chain claims and says how many, so
+withdrawing a chain is one command rather than a command plus a `rm` nobody
+remembers.
+
+The reason this needed fixing on 2026-08-27 is worth more than the fix. Both
+gates existed and they disagreed: the suite asserted one artifact per chain and
+failed on an orphan, while the tools' own `--check` looped over chains only and
+called the same tree current. The one a person runs for a fast answer was the
+one that lied, which is worse than having no check at all, and it is why
+`--check` now reports an orphan in the same breath as a stale file. Where two
+things state one invariant, the cheaper one being weaker is not a gap in
+coverage; it is a wrong answer.
+
 ## A name is not a reference until something checks it
 
 Resolving a Run Shortcut target by name rather than by `workflowIdentifier` is

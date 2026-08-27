@@ -107,7 +107,20 @@ def chains(src=None):
     return out
 
 
-def publish(check=False, src=None):
+def shown(path):
+    """A path as the reader will type it: repo-relative where it is in the repo.
+
+    `relative_to` raises rather than falling back, so an --out directory outside
+    the tree turned a stale-or-orphan report into a traceback. The message is
+    for a person, and an absolute path serves that fine.
+    """
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def publish(check=False, src=None, out=None):
     """Render everything, then write. Never the other way round.
 
     A one-pass loop wrote each plist as it rendered, so a duplicate name was
@@ -116,8 +129,26 @@ def publish(check=False, src=None):
     One did, and sat in plists/ across two pull requests failing the
     receivers-only check. Resolving every name before writing any file is the
     difference between a publish that fails and a publish that fails dirty.
+
+    THE MIRROR IS THE CHAIN SET, WHICH MEANS DELETING TOO. A chain that is
+    removed, renamed, or gives up its `name` leaves a plist behind that no
+    chain regenerates and nothing here used to notice: the loop above only ever
+    asked whether each chain's own file was current. So a withdrawn receiver
+    kept serving an install link that worked and delivered something the repo
+    had already retracted, which is the failure a stale plist is guarded
+    against, arriving by the other door. Publishing now removes what no chain
+    claims and --check reports it, so this agrees with the receivers-only test
+    rather than passing a tree that test fails.
+
+    PRUNE ONLY WHERE THE DESTINATION BELONGS TO THE SOURCE SET. `--workflows`
+    alone aims a foreign set of chains at the real plists/, which is exactly
+    what the duplicate-name probe does; deleting every unclaimed file there
+    would take the whole receiver mirror with it. Passing both, or neither, is
+    a matched pair and safe to prune.
     """
-    OUT.mkdir(exist_ok=True)
+    dest = out or OUT
+    paired = (src is None) == (out is None)
+    dest.mkdir(parents=True, exist_ok=True)
     stale, seen, pending = [], {}, []
     for c in chains(src):
         name, data = render(c)
@@ -125,20 +156,27 @@ def publish(check=False, src=None):
             raise SystemExit("two chains both name themselves %r: %s and %s"
                              % (name, seen[name], c.name))
         seen[name] = c.name
-        pending.append((OUT / (name + ".plist"), data))
+        pending.append((dest / (name + ".plist"), data))
+    orphans = sorted(p for p in dest.glob("*.plist")
+                     if paired and p not in {t for t, _ in pending})
     for target, data in pending:
         if check:
             if not target.exists() or target.read_bytes() != data:
-                stale.append(target.relative_to(ROOT).as_posix())
+                stale.append(shown(target))
         else:
             target.write_bytes(data)
     if check:
-        if stale:
+        bad = stale + ["%s (no chain claims it)" % shown(p) for p in orphans]
+        if bad:
             raise SystemExit("stale, run `python3 tools/plist.py --publish`:\n  "
-                             + "\n  ".join(stale))
+                             + "\n  ".join(bad))
         print("plists/ is current (%d)" % len(pending), file=sys.stderr)
         return
-    print("wrote %d plists to plists/" % len(pending), file=sys.stderr)
+    for p in orphans:
+        p.unlink()
+    print("wrote %d plists to plists/%s" % (
+        len(pending), ", removed %d unclaimed" % len(orphans) if orphans else ""),
+        file=sys.stderr)
 
 
 def link(chain_path, ref, target=IMPORT_TARGET):
@@ -169,6 +207,8 @@ def main():
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--workflows", help="read chains from here instead of workflows/")
+    ap.add_argument("--out", help="write plists here instead of plists/; pair it with "
+                                  "--workflows, since only a matched pair is pruned")
     ap.add_argument("--link", action="store_true", help="emit the Library-Import link")
     ap.add_argument("--ref", default="main", help="the ref --link points at")
     ap.add_argument("--replace", action="store_true",
@@ -181,7 +221,9 @@ def main():
                    REPLACE_TARGET if args.replace else IMPORT_TARGET))
         return
     if args.publish or args.check:
-        return publish(args.check, Path(args.workflows) if args.workflows else None)
+        return publish(args.check,
+                       Path(args.workflows) if args.workflows else None,
+                       Path(args.out) if args.out else None)
     if not args.chain:
         raise SystemExit("give a chain, or --publish")
     name, data = render(args.chain)

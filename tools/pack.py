@@ -112,7 +112,20 @@ def verify(link):
     print("%d actions, %d chars" % (len(body["actions"]), len(link)))
 
 
-def publish(check=False):
+def shown(path):
+    """A path as the reader will type it: repo-relative where it is in the repo.
+
+    `relative_to` raises rather than falling back, so an --out directory outside
+    the tree turned a stale-or-orphan report into a traceback. The message is
+    for a person, and an absolute path serves that fine.
+    """
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def publish(check=False, src=None, out=None):
     """Write every chain's payload under packed/, so a link can address it.
 
     A link that carries its payload has to be transcribed whole, and the one
@@ -121,21 +134,42 @@ def publish(check=False):
     is short enough to get right and fails loudly when it is not. The payload
     is deterministic, so --check holds packed/ to the chains rather than
     trusting anyone to remember.
+
+    AND HOLDS IT BOTH WAYS. The loop asks whether each chain's payload is
+    current and used to ask nothing else, so a deleted or renamed chain left a
+    payload behind that --check called current while the suite's one-payload-
+    per-chain assertion failed on it. Two gates stating one invariant, and the
+    one a person runs for a fast answer was the one that lied. Publishing now
+    removes what no chain claims and --check reports it.
+
+    --workflows and --out mirror plist.py's, and prune under the same rule:
+    only a matched pair, since a foreign chain set aimed at the real packed/
+    would otherwise delete every payload it did not itself produce.
     """
-    out = ROOT / "packed"
-    out.mkdir(exist_ok=True)
-    stale = []
-    for chain in sorted((ROOT / "workflows").glob("*.json")):
+    dest_dir = out or ROOT / "packed"
+    paired = (src is None) == (out is None)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    stale, want = [], set()
+    for chain in sorted((src or ROOT / "workflows").glob("*.json")):
         text = json.dumps(payload(json.load(open(chain))), ensure_ascii=False, separators=(",", ":"))
-        dest = out / chain.name
+        dest = dest_dir / chain.name
+        want.add(dest)
         if check:
             if not dest.is_file() or dest.read_text() != text:
-                stale.append(dest.relative_to(ROOT).as_posix())
+                stale.append(shown(dest))
         else:
             dest.write_text(text)
-    if check and stale:
-        raise SystemExit("stale, run `python3 tools/pack.py --publish`:\n  " + "\n  ".join(stale))
-    print("packed/ is current" if check else "wrote %d payloads to packed/" % len(list(out.glob("*.json"))))
+    orphans = sorted(p for p in dest_dir.glob("*.json") if paired and p not in want)
+    if check:
+        bad = stale + ["%s (no chain claims it)" % shown(p) for p in orphans]
+        if bad:
+            raise SystemExit("stale, run `python3 tools/pack.py --publish`:\n  " + "\n  ".join(bad))
+        print("packed/ is current")
+        return
+    for p in orphans:
+        p.unlink()
+    print("wrote %d payloads to packed/%s" % (
+        len(want), ", removed %d unclaimed" % len(orphans) if orphans else ""))
 
 
 def main():
@@ -145,12 +179,17 @@ def main():
     ap.add_argument("--verify", action="store_true", help="decode a link instead of building one")
     ap.add_argument("--publish", action="store_true", help="write every chain's payload to packed/")
     ap.add_argument("--check", action="store_true", help="fail if packed/ is behind workflows/")
+    ap.add_argument("--workflows", help="read chains from here instead of workflows/")
+    ap.add_argument("--out", help="write payloads here instead of packed/; pair it with "
+                                  "--workflows, since only a matched pair is pruned")
     ap.add_argument("--url", action="store_true",
                     help="emit a link addressing packed/ instead of carrying the payload")
     ap.add_argument("--ref", default="main", help="branch or SHA the --url link reads from")
     args = ap.parse_args()
     if args.publish or args.check:
-        return publish(args.check)
+        return publish(args.check,
+                       Path(args.workflows) if args.workflows else None,
+                       Path(args.out) if args.out else None)
     if not args.chain:
         raise SystemExit("give a chain, or --publish")
     if args.verify:

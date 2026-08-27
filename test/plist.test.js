@@ -62,6 +62,57 @@ test("two chains claiming one name fail loudly rather than overwriting", () => {
   }
 });
 
+// The receivers-only assertion at the top of this file caught an orphan; the
+// tool's own --check did not, and reported the same tree current. A withdrawn
+// receiver therefore kept serving an install link that worked and delivered
+// something the repo had retracted. Both gates now say the same thing.
+//
+// In a temp pair, for the reason the duplicate-name probe above gives: an
+// orphan visible in the real plists/ is precisely what that first assertion
+// would trip over.
+test("a plist no chain claims is reported by --check and removed by --publish", () => {
+  const os = require("node:os");
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), "plist-src-"));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), "plist-out-"));
+  try {
+    fs.writeFileSync(path.join(src, "kept.json"), JSON.stringify(
+      { name: "Kept-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] }));
+    run("--publish", "--workflows", src, "--out", out);
+    fs.writeFileSync(path.join(out, "Withdrawn-Probe.plist"), "not a plist");
+
+    assert.throws(() => run("--check", "--workflows", src, "--out", out),
+      /Withdrawn-Probe\.plist \(no chain claims it\)/,
+      "--check must name the orphan as unclaimed, not as stale");
+
+    run("--publish", "--workflows", src, "--out", out);
+    assert.deepStrictEqual(fs.readdirSync(out).sort(), ["Kept-Probe.plist"]);
+    assert.doesNotThrow(() => run("--check", "--workflows", src, "--out", out));
+  } finally {
+    fs.rmSync(src, { recursive: true, force: true });
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+// The prune can delete, so the case that must hold is the one the duplicate
+// probe already exercises: --workflows alone aims a foreign chain set at the
+// real plists/, where deleting everything unclaimed would take all 21.
+test("--workflows without --out never prunes, since the pair is not matched", () => {
+  const os = require("node:os");
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), "plist-foreign-"));
+  const before = fs.readdirSync(path.join(ROOT, "plists")).sort();
+  try {
+    fs.writeFileSync(path.join(src, "lone.json"), JSON.stringify(
+      { name: "Lone-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] }));
+    run("--publish", "--workflows", src);
+    assert.deepStrictEqual(
+      fs.readdirSync(path.join(ROOT, "plists")).filter(f => f !== "Lone-Probe.plist").sort(),
+      before, "a foreign chain set must not take the real receiver mirror with it");
+  } finally {
+    fs.rmSync(path.join(ROOT, "plists", "Lone-Probe.plist"), { force: true });
+    fs.rmSync(src, { recursive: true, force: true });
+  }
+});
+
 test("--link emits the install link rather than leaving it to be typed", () => {
   // Same failure --url fixed for the paste route: the form was documented and
   // nothing emitted it, so it was retyped on every install.
