@@ -1010,6 +1010,24 @@ unconfirmed, and not wrapping costs nothing.
 The performance cliff above does not apply here. That is the `Run JavaScript on
 Web Page` action's interpreter; this route is a real WebKit render.
 
+## A third-party app intent is not a receiver you can build blind
+
+`ai.x.GrokApp.AskGrok` was written up here as a four-action receiver on
+2026-08-27: Shortcut Input to text, the intent, the reply to the clipboard, the
+reply shown. It installed and it did not work on device. The cause was not
+diagnosed and the chain was withdrawn the same day rather than debugged, so this
+records only where it stopped.
+
+**What is worth carrying forward is the shape of the gap, since it will recur
+with any third-party intent.** The corpus answers Apple's own actions well and
+answers this class hardly at all: `AskGrok` appears in no shortcut of the 605,
+so its parameter names, whether `ShowWhenRun: false` suppresses the app or the
+result, and whether it returns output at all were all guesses dressed as a
+build. Nothing in this repo could have checked them, and the ToolKit catalog
+carries Apple's metadata rather than a third party's. The cheap route, unspent
+here, is one card configured in the app and read back out of a dump: one tap of
+the expensive kind, against a receiver assembled from inference.
+
 ## The library-management actions address an App Intents entity, not a name
 
 `openshortcut`, `moveshortcut`, and `deleteshortcuts` are the three actions a
