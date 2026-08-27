@@ -61,22 +61,32 @@ axis, and it is the only route that can deliver **file-level** settings, since
 file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And **import never merges by name**:
-importing over an existing shortcut creates a second one.
+only because nothing here holds a secret. And importing over a name that already
+exists puts a choice on screen: **Apple's own sheet offers to save over the
+existing shortcut**, and taking that offer is all a re-install needs (reported
+2026-08-26). Nothing has to be deleted first.
 
-**The index goes to the newcomer, which makes this a correctness problem rather
-than an untidiness problem.** The existing shortcut keeps the clean name and the
-version just imported becomes `Name 1`, so every
+**Take the offer, because keeping both is a correctness problem rather than an
+untidiness one.** A second copy takes the index: the original keeps the clean
+name and the newcomer becomes `Name 1`, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
-it, keeps resolving to the **old** copy. An import that appears to have upgraded
-something has silently done the opposite. So clearing the name first is
-mandatory, not stylistic.
+it, still resolves to the **old** copy. An import that looks like an upgrade has
+then done the opposite.
 
-**Delete before importing, for anything generated from this repo.** The
+**Wrong 2026-08-15 → the paragraph above:** this read "import never merges by
+name" and called clearing the name first "mandatory, not stylistic." The
+duplicate and its index consequence are real, but they follow from declining the
+sheet's offer, not from importing at all. `Library-Replace` deletes by name
+before importing and is worth having where no one is present to answer the
+sheet; it is not a prerequisite, and a session should not route a normal
+re-install through it. The cost of that error is not a wasted tap: the link
+names a receiver the device may not have, so it fails at the point of use with
+nothing installed.
+
+**Replacing a generated receiver is free**, so spend no care on it. The
 four-step prune exists for shortcuts whose only copy is the device; a receiver
-whose plist is committed here is reproducible from `git`, so deleting it costs a
-re-import and nothing else. Reserve staging for authored work, where it is
-earned.
+whose plist is committed here is reproducible from `git`. Reserve staging for
+authored work, where it is earned.
 
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
@@ -115,6 +125,53 @@ A chain opts into `plists/` by declaring a name, because most of them are probes
 and demos rather than receivers. Deriving the name from the label instead put 27
 chains into 24 files, three overwriting each other in silence.
 
+## A name is not a reference until something checks it
+
+Resolving a Run Shortcut target by name rather than by `workflowIdentifier` is
+what makes a chain portable, and the suite enforces it. It also trades a
+device-local pointer for a string nothing validates, so a target renamed on the
+phone leaves a card that looks correct and resolves to nothing.
+
+That is not hypothetical. Stripping the identifiers out of `Back-DoubleTap`
+exposed two names that had been stale for at least a fortnight, still working
+only because the identifier beside them was carrying the call:
+`Use-RecentShortcut`, since renamed to `Open-RecentShortcut`, and `Repo-Viewer`,
+now pointed at `Show-Repo`.
+
+**The corpus settled the second one without a tap, and the way it did is the
+method.** The identifier was no help: `962A04D2-78A9-4AD8-91B9-A51E3F3F6CB1`
+appears in the corpus only inside `Back-DoubleTap` itself, since a `.wflow` does
+not carry its own identifier and only a *caller* records a target's. What
+settled it was elimination. `Repo-Viewer` exists nowhere in 605 names or 15
+dumps, and exactly one repo browser does exist, `Show-Repo`, whose two actions
+build a `gh-fetch` page and hand it to `Show-Html`. The branch calling it fires
+when the current app is GitHub, which is what that page is for. Retargeting is
+not merely the best guess available, it is strictly better than any alternative:
+the old name resolves to nothing, so the branch was dead either way.
+
+The general shape, since this will recur: a stale by-name target is resolved by
+asking what the library *has* that does the job, not by recovering what the name
+used to mean. The device cannot answer the second question either, since a
+rename leaves no record on it.
+
+**So audit the names against the library index whenever a chain gains one, and
+always after stripping identifiers.** `web-tools-private`'s
+`shortcuts/index.json` is one row per shortcut in the last full dump:
+
+```bash
+python3 - <<'EOF'
+import json
+idx = {r["name"] for r in json.load(open("index.json"))}
+for a in json.load(open("<chain>.json"))["actions"]:
+    n = a["p"].get("WFWorkflowName")
+    if isinstance(n, str) and n not in idx: print("missing:", n)
+EOF
+```
+
+Two false positives to expect, both from the index being a snapshot: anything
+installed since the last dump, and any name computed at run time, which is a
+token rather than a string and cannot be checked this way at all.
+
 ## A diagnostic returns itself
 
 **Never end a probe by asking what happened.** That makes the user read a
@@ -148,6 +205,38 @@ correct answer and the reason this paragraph exists. The tap was not wasted
 because the walker failed, it worked; it was wasted because the question was
 already answered before it was sent. This is judgment and stays prose: no check
 can read a question and tell whether the repo holds its answer.
+
+## A probe carries its own instructions
+
+**The reader arrives knowing nothing, and should not have to.** Running a link
+is cheap and the user has said so. What costs is having to remember what the
+tap was for, watch for the right thing without being told what it is, and work
+out afterwards which part mattered. That is the expensive kind of ask, and it
+is the one that hides inside a link that looks like one tap.
+
+So a probe that needs an observation says all three parts on the device, in
+order:
+
+1. **Brief, before anything happens.** What is about to run and what to watch
+   for. `Probe-Watch` puts it in an alert titled "Watch what happens next", so
+   it blocks until it is read.
+2. **The thing itself.**
+3. **The question, immediately after**, naming the specific outcome rather than
+   asking what happened. "Did the dictation page open?" not "what did you see?"
+
+[`workflows/probe-watch.json`](workflows/probe-watch.json) is the receiver, and
+the payload is three lines: brief, target, question. It logs `Ran:`, `Q:` and
+`A:` through `Log-Repo`, so the answer arrives here without a paste.
+
+**This is why `Probe-Step` was not enough.** It asks before it fires, so its
+question is about the *previous* tap: on 2026-08-23 that meant asking about a
+commit from twenty minutes earlier, and the honest reply was that the repo
+already held the answer. Announce, fire, then ask, all in one tap, is what
+removes the remembering.
+
+The rule above still governs what the question may be: ask only what the repo
+cannot answer, which is what the screen did, what the dialog rendered, what
+Apple's own UI decided.
 
 ## Handing over a link
 

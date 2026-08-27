@@ -29,6 +29,12 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
 RAW = "https://raw.githubusercontent.com/mehrlander/shortcut-tools"
 IMPORT_TARGET = "Library-Import"
+# `Library-Replace` deletes by name, then imports. Reach for it only where no
+# one is present to answer Apple's import sheet, which otherwise offers to save
+# over a name that already exists: --link defaults to Library-Import because
+# that is the route a person actually taps, and because a link naming a
+# receiver the device lacks fails at the point of use with nothing installed.
+REPLACE_TARGET = "Library-Replace"
 
 # Observed on a 2026 export. Not guessed: an envelope that disagrees with the
 # client is the failure that presents as "the import sheet appeared and nothing
@@ -135,7 +141,7 @@ def publish(check=False, src=None):
     print("wrote %d plists to plists/" % len(pending), file=sys.stderr)
 
 
-def link(chain_path, ref):
+def link(chain_path, ref, target=IMPORT_TARGET):
     """The tappable install link, emitted rather than assembled by hand.
 
     `Library-Import` splits Shortcut Input on newlines and reads two lines: the
@@ -154,7 +160,7 @@ def link(chain_path, ref):
         raise SystemExit("no plists/%s.plist yet; run --publish first" % name)
     payload = "%s\n%s/%s/plists/%s.plist" % (name, RAW, ref, urllib.parse.quote(name))
     return "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
-        IMPORT_TARGET, urllib.parse.quote(payload, safe=""))
+        target, urllib.parse.quote(payload, safe=""))
 
 
 def main():
@@ -165,11 +171,14 @@ def main():
     ap.add_argument("--workflows", help="read chains from here instead of workflows/")
     ap.add_argument("--link", action="store_true", help="emit the Library-Import link")
     ap.add_argument("--ref", default="main", help="the ref --link points at")
+    ap.add_argument("--replace", action="store_true",
+                    help="--link through Library-Replace: delete by name, then import")
     args = ap.parse_args()
     if args.link:
         if not args.chain:
             raise SystemExit("give a chain to link")
-        print(link(args.chain, args.ref))
+        print(link(args.chain, args.ref,
+                   REPLACE_TARGET if args.replace else IMPORT_TARGET))
         return
     if args.publish or args.check:
         return publish(args.check, Path(args.workflows) if args.workflows else None)

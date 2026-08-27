@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>WFQuickActionSurfaces</key>
+	<array/>
+	<key>WFWorkflowActions</key>
+	<array>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>3B0EE400-0001-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<string>&lt;html&gt;&lt;head&gt;&lt;meta name="viewport" content="width=device-width,initial-scale=1"&gt;&lt;/head&gt;
+&lt;body style="font:17px -apple-system;padding:1.2em"&gt;
+&lt;h3 id="s"&gt;running checks...&lt;/h3&gt;
+&lt;pre id="o" style="font:15px ui-monospace;white-space:pre-wrap;background:#f2f2f7;padding:.8em;border-radius:8px"&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;a id="send" href="#" style="display:none;font-size:20px;font-weight:600;padding:.7em 1.2em;background:#007aff;color:#fff;text-decoration:none;border-radius:10px"&gt;Send results&lt;/a&gt;&lt;/p&gt;
+&lt;p id="c" style="color:#666"&gt;&lt;/p&gt;
+&lt;textarea id="buf" inputmode="none" style="position:absolute;opacity:0;top:-1000px"&gt;&lt;/textarea&gt;
+&lt;script&gt;
+const r = {};
+const line = () =&gt; Object.entries(r).map(([k,v]) =&gt; k+"="+v).join(" ");
+const show = () =&gt; { document.getElementById("o").textContent = line(); };
+const t = (k, f) =&gt; { try { r[k] = f(); } catch (e) { r[k] = "ERR:" + e.name; } show(); };
+
+t("origin", () =&gt; location.origin || "null");
+t("secure", () =&gt; window.isSecureContext ? "Y" : "N");
+t("gz", () =&gt; typeof DecompressionStream === "function" ? "Y" : "N");
+t("speech", () =&gt; ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) ? "Y" : "N");
+t("ls", () =&gt; { localStorage.setItem("p","1"); const v = localStorage.getItem("p"); localStorage.removeItem("p"); return v === "1" ? "Y" : "N"; });
+
+const copyLegacy = txt =&gt; {
+  const b = document.getElementById("buf");
+  b.value = txt; b.focus(); b.select();
+  const ok = document.execCommand("copy");
+  b.value = "";
+  return ok ? "Y" : "N";
+};
+
+const done = () =&gt; {
+  r.copyexec = copyLegacy(line());
+  show();
+  const a = document.getElementById("send");
+  a.href = "shortcuts://run-shortcut?name=Log-Repo&amp;input=text&amp;text=" + encodeURIComponent("sheet caps: " + line());
+  a.style.display = "inline-block";
+  document.getElementById("s").textContent = "done";
+  document.getElementById("c").textContent = "Tap Send results to commit them, or read the line above.";
+};
+
+const cdn = new Promise(res =&gt; {
+  const s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js";
+  s.onload = () =&gt; res("Y"); s.onerror = () =&gt; res("N");
+  setTimeout(() =&gt; res("TIMEOUT"), 6000);
+  document.head.appendChild(s);
+});
+
+const mic = navigator.mediaDevices &amp;&amp; navigator.mediaDevices.getUserMedia
+  ? navigator.mediaDevices.getUserMedia({audio:true})
+      .then(st =&gt; { st.getTracks().forEach(x =&gt; x.stop()); return "Y"; })
+      .catch(e =&gt; "N:" + e.name)
+  : Promise.resolve("NOAPI");
+
+const capi = navigator.clipboard
+  ? navigator.clipboard.writeText("x").then(() =&gt; "Y").catch(e =&gt; "N:" + e.name)
+  : Promise.resolve("NOAPI");
+
+Promise.all([cdn, mic, capi]).then(([c, m, k]) =&gt; { r.cdn = c; r.mic = m; r.copyapi = k; done(); });
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>3B0EE400-0002-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>3B0EE400-0001-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Show-WebView</string>
+			</dict>
+		</dict>
+	</array>
+	<key>WFWorkflowClientVersion</key>
+	<string>4711</string>
+	<key>WFWorkflowHasOutputFallback</key>
+	<false/>
+	<key>WFWorkflowHasShortcutInputVariables</key>
+	<false/>
+	<key>WFWorkflowIcon</key>
+	<dict>
+		<key>WFWorkflowIconGlyphNumber</key>
+		<integer>61440</integer>
+		<key>WFWorkflowIconStartColor</key>
+		<integer>-314141441</integer>
+	</dict>
+	<key>WFWorkflowImportQuestions</key>
+	<array/>
+	<key>WFWorkflowInputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowMinimumClientVersion</key>
+	<integer>900</integer>
+	<key>WFWorkflowMinimumClientVersionString</key>
+	<string>900</string>
+	<key>WFWorkflowOutputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowTypes</key>
+	<array/>
+</dict>
+</plist>

@@ -313,6 +313,105 @@ Three constraints follow, and the first is the trap:
    about 1,800 characters, more than the compression saves on a small page, so
    `show.py` strips them at build time.
 
+## Two ways to put HTML on screen, and only one of them keeps you in the shortcut
+
+`Open URL` on a `data:text/html` URL leaves the app: it is a real Safari
+navigation, measured below. `Show Web View`
+(`is.workflow.actions.showwebpage`, a Safari app action) raises a sheet over
+Shortcuts instead, and the run continues behind it. That difference is the
+whole reason to care, since a shortcut that dumps its output into Safari has
+ended its own flow and left a tab behind.
+
+It is not a fringe action: **32 shortcuts in the library use it**, and one of
+them, `Show-WebView`, is already the generic receiver. Three of its seven
+actions are the entire recipe, the other four being a self-demo prologue:
+
+```
+getrichtextfromhtml   (Shortcut Input)
+as file com.apple.webarchive
+showwebpage
+```
+
+`WFURL` is the only parameter and it accepts four different things across the
+library, which is worth knowing before assuming one shape is required: rich
+text from HTML (`Show-WebView`, `Show-Table`, `JSON Viewer`, `Popup Helper`,
+and four more), the downloaded contents of a `data:text/html;base64` URL
+(`Open-DataUrlHelper`, `Pack-ToUrlPage`), a named or typed file
+(`Get-ShortcutSource`, `ShortcutML`), or a plain `https` URL (`Open-LiveCodes`,
+`Emmet`).
+
+**The sheet runs the page's JavaScript. Confirmed on device 2026-08-26** by
+`Probe-WebView`, which hands `Show-WebView` a page whose only line reads
+`STATIC` until its own script rewrites it to `SCRIPT RAN`. It read `SCRIPT
+RAN`. That was the doubtful part: rich text is an attributed string, so the
+`getrichtextfromhtml` step looked like it should strip a `<script>`, and it
+does not.
+
+**And it reaches the network. Confirmed the same day** by `Probe-WebViewNet`,
+whose page fetches `api.github.com/zen` and reports what came back. It returned
+`NETWORK OK: Non-blocking is better than blocking.`, which is that endpoint's
+real body, so the request completed rather than merely being attempted.
+
+So the sheet is a full browsing context: script runs, `fetch` resolves. The
+pages here that inflate a gzip payload, substitute a token and call an API are
+candidates for it rather than being ruled out, and the four closing actions of
+`Show-Html` (base64, build the data URL, make it a URL, Open URL) could become
+one `Run Shortcut` on `Show-WebView`.
+
+**What else the sheet offers, measured 2026-08-26** by `Probe-WebViewCaps`:
+
+| | | |
+| --- | --- | --- |
+| `origin` | `file://` | see below, this is the one with consequences |
+| `secure` | Y | a secure context despite the origin, which is why the rest is offered at all |
+| `mic` | Y | `getUserMedia` opens a stream, so `Dictate` can move here |
+| `speech` | Y | `SpeechRecognition` is present |
+| `gz` | Y | `DecompressionStream`, so a `#gz=` payload inflates |
+| `cdn` | Y | a jsDelivr `<script src>` loads, which `fetch` working does not imply |
+| `ls` | Y | localStorage reads and writes, but see below |
+
+**The `file://` origin splits the toss routes.** localStorage works, but at a
+`file://` origin, which is a different storage partition from Safari's. The
+GitHub token that `#gh=` and `#stage=` addresses read is browser-local *and*
+origin-local, so it is not there. A `#gz=` address carries its payload in the
+fragment and needs no token, so it works; a `#gh=` or `#stage=` address will
+fail. This is the same caveat the conventions already state for an in-app
+browser, now measured for the sheet.
+
+Worth noting against expectation: the network check above succeeded from that
+`file://` origin, which is not how a browser usually treats a cross-origin
+`fetch` from one.
+
+**Clipboard writes are untested here, not broken.** Both paths failed in the
+probe, `navigator.clipboard.writeText` with `NotAllowedError` and
+`execCommand("copy")` returning false, because both ran automatically on load
+and iOS gates clipboard writes behind a user gesture. The estate's working
+pages copy from a button tap; see the `ios-clipboard` skill, which also records
+that `navigator.clipboard` is undefined in data-URL contexts and that the
+textarea plus `execCommand` is the path that covers both.
+
+Two things still unmeasured. Whether a `shortcuts://` link fires from inside
+the sheet, which would let a page return its own results. And what the sheet
+costs in exchange: a Safari tab can be bookmarked, shared and returned to,
+while a sheet is gone when it is dismissed.
+
+**A hosted page skips the whole `file://` problem, and costs one action.**
+`showwebpage` takes a plain `https` string in `WFURL` with no wrapper at all,
+which the corpus already showed in `Auto Message` and `Routine search`. The
+sheet then loads that address directly, so the page keeps its own origin and
+with it the localStorage partition the stored GitHub token lives in. So the
+split is not sheet-versus-Safari, it is which of the two sheet inputs a page
+arrives on: HTML text lands at `file://` and loses the token, while a hosted URL
+does not. `Dictate` is one action on that route, and the back tap's
+empty-clipboard branch inlines the same action rather than calling out to it.
+
+**The sheet sibling was already installed, so nothing was built for it.**
+`Show-Html` (data URL, Open URL, a Safari tab) and `Show-WebView` (rich text,
+webarchive, `showwebpage`) are the two receivers, and both have been on the
+device throughout. A caller moves to the sheet by naming the other one. The
+back tap's pasted-HTML branch was switched that way on 2026-08-26; `Show-Html`
+stays as it is, for pages that need Safari's storage partition.
+
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
 confirmed by dumping the DOM out of headless Chromium. `DecompressionStream` is
@@ -910,6 +1009,24 @@ unconfirmed, and not wrapping costs nothing.
 
 The performance cliff above does not apply here. That is the `Run JavaScript on
 Web Page` action's interpreter; this route is a real WebKit render.
+
+## A third-party app intent is not a receiver you can build blind
+
+`ai.x.GrokApp.AskGrok` was written up here as a four-action receiver on
+2026-08-27: Shortcut Input to text, the intent, the reply to the clipboard, the
+reply shown. It installed and it did not work on device. The cause was not
+diagnosed and the chain was withdrawn the same day rather than debugged, so this
+records only where it stopped.
+
+**What is worth carrying forward is the shape of the gap, since it will recur
+with any third-party intent.** The corpus answers Apple's own actions well and
+answers this class hardly at all: `AskGrok` appears in no shortcut of the 605,
+so its parameter names, whether `ShowWhenRun: false` suppresses the app or the
+result, and whether it returns output at all were all guesses dressed as a
+build. Nothing in this repo could have checked them, and the ToolKit catalog
+carries Apple's metadata rather than a third party's. The cheap route, unspent
+here, is one card configured in the app and read back out of a dump: one tap of
+the expensive kind, against a receiver assembled from inference.
 
 ## The library-management actions address an App Intents entity, not a name
 

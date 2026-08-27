@@ -1,0 +1,158 @@
+{
+  "name": "Probe-ListDetail",
+  "label": "Probe-ListDetail: does a list input still lose detail.caption (9 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "9B0BE111-0001-4A00-9000-000000000001",
+        "WFTextActionText": "alpha"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "9B0BE111-0002-4A00-9000-000000000001",
+        "WFTextActionText": "bravo"
+      }
+    },
+    {
+      "id": "is.workflow.actions.list",
+      "p": {
+        "UUID": "9B0BE111-0003-4A00-9000-000000000001",
+        "WFItems": [
+          {
+            "WFItemType": 0,
+            "WFValue": {
+              "Value": {
+                "string": "￼",
+                "attachmentsByRange": {
+                  "{0, 1}": {
+                    "OutputName": "Text",
+                    "OutputUUID": "9B0BE111-0001-4A00-9000-000000000001",
+                    "Type": "ActionOutput"
+                  }
+                }
+              },
+              "WFSerializationType": "WFTextTokenString"
+            }
+          },
+          {
+            "WFItemType": 0,
+            "WFValue": {
+              "Value": {
+                "string": "￼",
+                "attachmentsByRange": {
+                  "{0, 1}": {
+                    "OutputName": "Text",
+                    "OutputUUID": "9B0BE111-0002-4A00-9000-000000000001",
+                    "Type": "ActionOutput"
+                  }
+                }
+              },
+              "WFSerializationType": "WFTextTokenString"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "9B0BE111-0004-4A00-9000-000000000001",
+        "WFWorkflowName": "Get-FileInfo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "List",
+            "OutputUUID": "9B0BE111-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "9B0BE111-0005-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "1/2 Get-FileInfo on a 2-item list:\n￼",
+            "attachmentsByRange": {
+              "{35, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "9B0BE111-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "9B0BE111-0008-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "9B0BE111-0005-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "9B0BE111-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Get-FileCaption",
+        "WFInput": {
+          "Value": {
+            "OutputName": "List",
+            "OutputUUID": "9B0BE111-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "9B0BE111-0007-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "2/2 Get-FileCaption on the same list:\n￼",
+            "attachmentsByRange": {
+              "{38, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "9B0BE111-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "9B0BE111-0009-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "9B0BE111-0007-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

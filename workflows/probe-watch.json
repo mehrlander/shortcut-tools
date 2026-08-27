@@ -1,0 +1,176 @@
+{
+  "name": "Probe-Watch",
+  "label": "Probe-Watch: brief, fire, ask, log (9 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "50E90101-0001-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "50E90101-0002-4A00-9000-000000000001",
+        "CustomOutputName": "Brief",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "1",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "50E90101-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "50E90101-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Target",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "50E90101-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "50E90101-0004-4A00-9000-000000000001",
+        "CustomOutputName": "Question",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "3",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "50E90101-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "50E90101-0005-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionTitle": "Watch what happens next",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "👀 Watch what happens next\n\n￼",
+            "attachmentsByRange": {
+              "{28, 1}": {
+                "OutputName": "Brief",
+                "OutputUUID": "50E90101-0002-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "50E90101-0006-4A00-9000-000000000001",
+        "WFWorkflowName": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Target",
+                "OutputUUID": "50E90101-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.ask",
+      "p": {
+        "UUID": "50E90101-0007-4A00-9000-000000000001",
+        "CustomOutputName": "Answer",
+        "WFAllowsMultilineText": true,
+        "WFAskActionPrompt": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Question",
+                "OutputUUID": "50E90101-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "50E90101-0008-4A00-9000-000000000001",
+        "CustomOutputName": "Record",
+        "WFTextActionText": {
+          "Value": {
+            "string": "Ran: ￼\nQ: ￼\nA: ￼\n",
+            "attachmentsByRange": {
+              "{5, 1}": {
+                "OutputName": "Target",
+                "OutputUUID": "50E90101-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{10, 1}": {
+                "OutputName": "Question",
+                "OutputUUID": "50E90101-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{15, 1}": {
+                "OutputName": "Answer",
+                "OutputUUID": "50E90101-0007-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "50E90101-0009-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Record",
+            "OutputUUID": "50E90101-0008-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

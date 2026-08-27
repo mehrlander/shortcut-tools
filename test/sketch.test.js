@@ -62,6 +62,32 @@ test("an attachment prints as the line that produced it, not as a glyph", () => 
   assert.ok(!out.includes("AAA"), "and no raw UUID either");
 });
 
+// The range keys are "{offset, length}" strings, so sorting them as text puts
+// "{10, 1}" before "{5, 1}". Placeholders are filled left to right, so one
+// mis-ordered key shifts every attachment after it and the line names the
+// wrong variables while looking perfectly well formed. Found 2026-08-26 by a
+// three-attachment record line that rendered its own fields out of order.
+test("attachments fill by numeric offset, not by the text of the range key", () => {
+  const src = (uuid) =>
+    act("is.workflow.actions.gettext",
+        `<key>UUID</key><string>${uuid}</string>` +
+        `<key>WFTextActionText</key><string>${uuid}</string>`);
+  const at = (off, uuid) =>
+    `<key>{${off}, 1}</key><dict><key>Type</key><string>ActionOutput</string>` +
+    `<key>OutputUUID</key><string>${uuid}</string></dict>`;
+  const out = sketch(wflow(
+    src("AAA") + src("BBB") + src("CCC") +
+    act("is.workflow.actions.gettext",
+        `<key>WFTextActionText</key><dict><key>Value</key><dict>` +
+        // "Ran: ￼\nQ: ￼\nA: ￼" puts the anchors at 5, 10 and 15
+        `<key>string</key><string>Ran: ￼&#10;Q: ￼&#10;A: ￼</string>` +
+        `<key>attachmentsByRange</key><dict>` +
+        at(5, "AAA") + at(10, "BBB") + at(15, "CCC") +
+        `</dict></dict></dict>`)));
+  assert.match(out, /Ran: «0» Q: «1» A: «2»/,
+    "offset 5 is the first slot even though \"{10, 1}\" sorts before \"{5, 1}\"");
+});
+
 test("aggrandizements read as the access they perform", () => {
   const out = sketch(wflow(act("is.workflow.actions.openurl",
     `<key>WFInput</key><dict><key>Value</key><dict>` +
