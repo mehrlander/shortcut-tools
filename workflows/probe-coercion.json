@@ -1,11 +1,11 @@
 {
   "name": "Probe-Coercion",
-  "label": "Probe-Coercion: which of four inputs the rich-text coercion actually renders (23 actions)",
+  "label": "Probe-Coercion: which of five inputs the rich-text coercion actually renders (29 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.comment",
       "p": {
-        "WFCommentActionText": "Four legs, each logging before the next runs, because the failure being chased is one that kills the run. Probe-InlineBench came back as a single empty line and could not say whether the coercion refused a data: URL, ran no script, or timed out on the network. a: static HTML, no script. b: a script that rewrites its own line. c: a real https URL. d: sync and async requests from the page. Read the first empty line: everything above it worked. The two controls are inline rather than $file because a two-line payload is not worth a page, which is also what js-data-url does."
+        "WFCommentActionText": "Four legs, each logging before the next runs, because the failure being chased is one that kills the run. Probe-InlineBench came back as a single empty line and could not say whether the coercion refused a data: URL, ran no script, or timed out on the network. a: static HTML, no script. b: a script that rewrites its own line. c: a real https URL. d: sync and async requests from the page. e: the CDN library page, the original question, ordered last because it is the likeliest to hang and a hang only loses what comes after it. Read the first empty line: everything above it worked. The two controls are inline rather than $file because a two-line payload is not worth a page, which is also what js-data-url does."
       }
     },
     {
@@ -353,6 +353,104 @@
           "Value": {
             "OutputName": "Text",
             "OutputUUID": "C0E040000-0005-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C0E050000-0001-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "$file": "pages/bench-inline.html"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "C0E050000-0002-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "C0E050000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "C0E050000-0003-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{36, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "C0E050000-0002-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "data:text/html;charset=utf-8;base64,￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "C0E050000-0004-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "C0E050000-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput",
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFRichTextContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C0E050000-0005-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{2, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "C0E050000-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "e=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "C0E050000-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "C0E050000-0005-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
