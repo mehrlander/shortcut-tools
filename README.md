@@ -121,7 +121,9 @@ a command. It **checks each name against the library index first**, because a
 link's names are unchecked strings and this repository has already lost a
 fortnight to two of them going stale. Two false positives to expect, both from
 the index being a snapshot: anything installed since the last dump, and any name
-computed at run time.
+computed at run time. `--unchecked` skips the audit for those, and says on stderr
+that it did, because a link nobody verified is otherwise indistinguishable from
+one that was.
 
 Two or more targets, or `--log`, route through `Run-Steps`, which splits its
 input on newlines and runs each name with the previous result as its input. Its

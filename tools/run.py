@@ -20,6 +20,10 @@ on newlines and runs each name in turn with the previous result as input
 (workflows/run-steps.json). Its first pass has no Carry set, so the first
 shortcut runs with no input, which is what a bare diagnostic wants.
 
+--unchecked skips the audit, which a name installed since the last dump needs.
+It says so on stderr rather than passing silently, because the whole value of the
+check is that a link nobody verified is indistinguishable from one that was.
+
 --pick emits a Run-Pick link instead: the names become a menu on the device and
 the chosen one runs on the clipboard. It CHECKS each name against the library
 index first, because a link's names are unchecked strings and this repository has
@@ -145,6 +149,8 @@ def main():
     ap.add_argument("--label", help="caption for the markdown form")
     ap.add_argument("--pick", action="store_true",
                     help="emit a Run-Pick menu link over the named verbs")
+    ap.add_argument("--unchecked", action="store_true",
+                    help="emit a --pick link without auditing the names")
     args = ap.parse_args()
     if args.verify:
         if not args.targets:
@@ -154,8 +160,11 @@ def main():
         if args.text or args.log:
             raise SystemExit("--pick takes its payload from the clipboard, so "
                              "--text and --log have no slot; run those separately")
-        missing = audit(args.targets)
-        if missing is None:
+        missing = None if args.unchecked else audit(args.targets)
+        if args.unchecked:
+            print("names not audited; a stale one will fail at the point of use",
+                  file=sys.stderr)
+        elif missing is None:
             print("no library index to check names against; the link is still emitted",
                   file=sys.stderr)
         elif missing:
@@ -164,7 +173,8 @@ def main():
                 "A link's names are unchecked strings and a stale one fails at the "
                 "point of use. Two false positives, both from the index being a "
                 "snapshot: anything installed since the last dump, and any name "
-                "computed at run time." % ", ".join(missing))
+                "computed at run time. Pass --unchecked to send it anyway."
+                % ", ".join(missing))
         link = pick_link(args.targets)
         print(link)
         print("\n%s\n" % markdown(link, args.targets,

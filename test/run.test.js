@@ -120,3 +120,12 @@ test("--verify reads a pick link back as a menu, not a pipeline", () => {
   assert.match(out, /- Show-Table/);
   assert.doesNotMatch(out, /1\./, "a menu is not numbered steps");
 });
+
+test("--unchecked sends an unaudited name, and says so", () => {
+  // Needed for anything installed since the last dump, which the index cannot
+  // know about. It reports on stderr because a link nobody verified is
+  // otherwise indistinguishable from one that was.
+  const link = run("--pick", "--unchecked", "Describe-Input").trim();
+  assert.match(link, /name=Run-Pick/);
+  assert.match(decodeURIComponent(link.split("&text=")[1]), /Describe-Input/);
+});
