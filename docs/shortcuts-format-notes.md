@@ -1235,6 +1235,34 @@ carries Apple's metadata rather than a third party's. The cheap route, unspent
 here, is one card configured in the app and read back out of a dump: one tap of
 the expensive kind, against a receiver assembled from inference.
 
+## "Unrecognized archive format" is usually the worker, not the file
+
+*Measured on device 2026-08-28.*
+
+`Library-Import` fetches a plist, gzips it, POSTs it to a third-party signing
+worker over plain `http`, and unzips the reply. That last card is where the alert
+comes from: it is `unzip` refusing a response that is not an archive, which means
+the worker returned something else.
+
+**It fires intermittently on files that are perfectly good.** `Pick-Clip` failed
+with it, then installed from the *same SHA-pinned URL* on an immediate retry, with
+the served bytes verified identical to local and every card shape matched against
+a real card in the corpus. `Run-Pick` had installed from the same commit seconds
+before the failure, so the URL, the CDN and the rest of the pipeline were all fine.
+
+So the working rule: **retry once before suspecting the file.** Two failures in a
+row is evidence about the plist; one is not.
+
+Two consequences worth stating. `Library-Install` is the fallback and also the
+discriminator, since it fetches the packed actions and pastes them without
+touching the worker, at the cost of one paste; it reaches everything except
+file-level settings, so it suits any chain not declaring `WFWorkflowTypes` or
+input classes. And the 2026-08-29 commit that fixed `plist.py`'s unresolved
+`$file` attributed `Probe-Coercion`'s import failure to that bug. The bug was
+real and worth fixing, but the fix and a retry happened in the same step, so
+whether it caused *that* failure was never isolated and should not be read as
+settled.
+
 ## The library-management actions address an App Intents entity, not a name
 
 `openshortcut`, `moveshortcut`, and `deleteshortcuts` are the three actions a

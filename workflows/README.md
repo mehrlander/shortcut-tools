@@ -62,7 +62,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `capture-link` | The share sheet's end of that channel: whatever was shared, straight into the repo log. Two actions. |
 | `library-open` | Opens a named shortcut in the editor. Three actions, and the cheapest thing the library view does. |
 | `library-install` | Creates the named shortcut and pastes its actions in. Superseded by `library-import` wherever a plist is committed, because no paste reaches file-level settings. |
-| `library-import` | Fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts. The only route that delivers `WFWorkflowTypes` and the input classes, at one tap plus Apple's import sheet. |
+| `library-import` | Fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts. The only route that delivers `WFWorkflowTypes` and the input classes, at one tap plus Apple's import sheet. Its worker is third-party and intermittently returns a non-archive, which surfaces as "Unrecognized archive format"; retry once before suspecting the plist, and fall back to `library-install`, which skips the worker. |
 | `library-replace` | Delete by name, then import. The way around import never merging: importing over an existing name lands as `Name 1`, and every `run-shortcut?name=` link keeps resolving to the old copy. |
 | `library-stage` | Moves each named shortcut to a folder and logs it. The second step of the prune, and deliberately not the fourth. |
 | `manage-library-probe` | The three library actions whose parameter shapes were unknown, in one tap: open, move, delete. |
