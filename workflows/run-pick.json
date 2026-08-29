@@ -10,7 +10,7 @@
     {
       "id": "is.workflow.actions.comment",
       "p": {
-        "WFCommentActionText": "Run-Choice in four cards. The input is the verb list, one name per line; the payload is the clipboard. No Get-Shortcut: Run Shortcut is a legacy action whose target is a plain string key, so the chosen NAME goes straight into WFWorkflowName. Run-Steps already proves it, carrying a bare token string there with no WFWorkflow dict at all. What is given up against Run-Choice: the self-demo prologue, and an arbitrary payload, since this one always reads the clipboard."
+        "WFCommentActionText": "Run-Choice in four cards. The input is the verb list, one name per line; the payload is the clipboard. No Get-Shortcut: Run Shortcut is a legacy action whose target is a plain string key, so the chosen NAME goes straight into WFWorkflowName. Run-Steps already proves it, carrying a bare token string there with no WFWorkflow dict at all. What is given up against Run-Choice: the self-demo prologue, and an arbitrary payload, since this one always reads the clipboard. The separator is stated rather than left to the default: Run-Choice omits it and its own sample is newline-separated, so the default is almost certainly New Lines, but a wrong guess here degrades quietly into a one-row menu rather than failing."
       }
     },
     {
@@ -28,7 +28,8 @@
             "Type": "ExtensionInput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        }
+        },
+        "WFTextSeparator": "New Lines"
       }
     },
     {
