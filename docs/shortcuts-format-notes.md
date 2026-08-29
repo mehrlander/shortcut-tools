@@ -1051,11 +1051,34 @@ before writing its answer would be the same coprocessor at one tap from
 anywhere. Everything in it has to be **synchronous**, since the coercion captures
 rendered text at a moment nobody has written down and an async resolution is lost
 with no error, which is what a blocking `XMLHttpRequest` and an indirect `eval`
-buy. [`probe-inline-bench`](../workflows/probe-inline-bench.json) is that page
-under one tap, reporting the fetch, the eval, the library's output and the
-elapsed cost on four lines. It cannot be settled here: this sandbox's Chromium
-gives a `data:` document no network at all (see the marker above), so only the
-device can answer, and it has already allowed the request once.
+buy. [`probe-inline-bench`](../workflows/probe-inline-bench.json) is that page under
+one tap, reporting the fetch, the eval, the library's output and the elapsed cost
+on four lines.
+
+**It came back empty, on device 2026-08-28, and that is not one of its four
+answers.** The page's `<pre>` ships with all four lines already filled in, so
+even a script that never ran should have returned text. An empty string means
+nothing upstream of the script produced anything: either the coercion declines a
+`data:` URL, or the blocking request outlives whatever moment it captures at.
+Wiring was ruled out first, since a dangling `OutputUUID` reads the same way, and
+all three chains here resolve.
+
+**The probe was built wrong, and the fault is worth naming.** It was shaped to
+separate four failures and it separated none, because every one of them collapses
+into a page that renders nothing. A probe against a stage that can kill the run
+needs a **control that runs first and logs first**.
+[`probe-coercion`](../workflows/probe-coercion.json) is the replacement: four
+legs, each committing before the next begins, over static HTML, a script that
+rewrites its own line, a real `https` URL, and the sync/async pair. Read the first
+empty line and everything above it worked.
+
+This also reaches a question the file has carried open since 2026-08-10.
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built to settle whether
+the coercion waits for the network and was never run, so the coercion has in fact
+never been exercised on a device at all. What was confirmed on 2026-08-11 was
+`Run-Html`, which opens the URL in Safari, where there is no capture moment and
+nothing to race. The empty result above is the first evidence either way, and it
+is evidence against.
 
 Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
 corpus, already falls back exactly this way. Handed something that is not a
