@@ -1,0 +1,190 @@
+{
+  "name": "Bench",
+  "label": "Bench: run one op over the clipboard through a data: URL, no page and no share sheet (11 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "The op is Shortcut Input, one bare word, so a link bakes it in: shortcuts://run-shortcut?name=Bench&input=text&text=md. The payload is the clipboard, which is how everything else here moves text. Nothing is hosted, no page is open, no share sheet: the page is built, encoded into a data: URL, coerced to rich text and read back, which probe-coercion measured end to end on 2026-08-28."
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "BE0F0000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "BE0F0000-0002-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "BE0F0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "BE0F0000-0003-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "$file": "pages/bench-run.html"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "BE0F0000-0004-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "BE0F0000-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFReplaceTextFind": "__IN__",
+        "WFReplaceTextReplace": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "BE0F0000-0002-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "BE0F0000-0005-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Updated Text",
+            "OutputUUID": "BE0F0000-0004-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFReplaceTextFind": "__OP__",
+        "WFReplaceTextReplace": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "BE0F0000-0006-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Updated Text",
+            "OutputUUID": "BE0F0000-0005-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "BE0F0000-0007-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{36, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "BE0F0000-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "data:text/html;charset=utf-8;base64,￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "BE0F0000-0008-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "BE0F0000-0007-4A00-9000-000000000001",
+            "Type": "ActionOutput",
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFRichTextContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "BE0F0000-0009-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "BE0F0000-0008-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "BE0F0000-0010-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "BE0F0000-0008-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

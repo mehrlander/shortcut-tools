@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bench</title>
+<pre id="o" style="white-space:pre">no result</pre>
+
+<script>
+// The bench, as a page a shortcut builds rather than a page anyone visits.
+//
+// Measured end to end on device 2026-08-28 by probe-coercion: a data: URL
+// coerced to rich text renders, runs its script, waits for both synchronous and
+// asynchronous network work, and can pull 40 KB off jsDelivr, evaluate it and
+// use it, in 738 ms. So this needs no hosted page, no Safari tab and no share
+// sheet, which is what the Run JavaScript on Web Page route could not avoid.
+//
+// TWO PLACEHOLDERS, substituted by the chain before the page is encoded, and
+// each occurs exactly ONCE in this file, which is why neither is spelled out in
+// this comment: written here too, the first would swallow the substitution and
+// the page would report an op it was never given. The op arrives as a bare word.
+// The payload arrives base64, because it is pasted into a string literal where a
+// quote or a newline would end the literal early; the estate already base64s on
+// this boundary, in Log-Repo.
+//
+// SYNCHRONOUS ON PURPOSE, still. The async half is measured to work, but a
+// blocking load keeps the whole page a single straight line with no capture
+// moment to reason about, and costs nothing here. Indirect eval, (0,eval),
+// evaluates in global scope so a UMD bundle's global lands on window.
+//
+// ONE LIBRARY PER OP, fetched only when the op needs it: stats and json cost no
+// round trip at all, and md does not pay for turndown.
+//
+// white-space:pre matters. Safari wraps a plain-text document in pre-wrap (seen
+// in probe-coercion's c leg), and a soft wrap becomes a line the caller counts
+// as separate.
+var OP = "__OP__";
+var IN = "__IN__";
+
+var LIBS = {
+  md:      ["marked",          "npm/marked/marked.min.js"],
+  mdplain: ["marked",          "npm/marked/marked.min.js"],
+  html2md: ["TurndownService", "npm/turndown/dist/turndown.js"],
+  yaml:    ["jsyaml",          "npm/js-yaml/dist/js-yaml.min.js"],
+  csv:     ["Papa",            "npm/papaparse/papaparse.min.js"]
+};
+
+var OPS = {
+  echo:    function (s) { return s; },
+  stats:   function (s) { return JSON.stringify({ chars: s.length,
+             words: (s.match(/\S+/g) || []).length, lines: s.split("\n").length }); },
+  json:    function (s) { return JSON.stringify(JSON.parse(s), null, 2); },
+  md:      function (s) { return marked.parse(s); },
+  mdplain: function (s) { var d = document.createElement("div");
+             d.innerHTML = marked.parse(s); return d.textContent.trim(); },
+  html2md: function (s) { return new TurndownService({ headingStyle: "atx",
+             codeBlockStyle: "fenced" }).turndown(s); },
+  yaml:    function (s) { return JSON.stringify(jsyaml.load(s), null, 2); },
+  csv:     function (s) { return JSON.stringify(Papa.parse(s.trim(),
+             { header: true }).data, null, 2); }
+};
+
+function out(t) { document.getElementById("o").textContent = t; }
+
+try {
+  if (!OPS[OP]) throw new Error("no op " + OP + "; have " + Object.keys(OPS).join(" "));
+  var need = LIBS[OP];
+  if (need && typeof window[need[0]] === "undefined") {
+    var x = new XMLHttpRequest();
+    x.open("GET", "https://cdn.jsdelivr.net/" + need[1], false);
+    x.send();
+    if (x.status !== 200) throw new Error("CDN " + x.status + " for " + need[1]);
+    (0, eval)(x.responseText);
+    if (typeof window[need[0]] === "undefined") throw new Error("no global " + need[0]);
+  }
+  out(OPS[OP](new TextDecoder().decode(
+    Uint8Array.from(atob(IN), function (c) { return c.charCodeAt(0); }))));
+} catch (e) {
+  out("BENCH ERR: " + e.name + ": " + e.message);
+}
+</script>

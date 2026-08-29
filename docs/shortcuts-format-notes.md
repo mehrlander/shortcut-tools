@@ -1080,12 +1080,48 @@ legs, each committing before the next begins, over static HTML, a script that
 rewrites its own line, a real `https` URL, and the sync/async pair. Read the first
 empty line and everything above it worked.
 
-**So the question is still open, and it is older than it looks.**
-[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built to settle whether
-the coercion waits for the network and was never run, so the coercion has never
-been exercised on a device at all. What 2026-08-11 confirmed was `Run-Html`,
-which opens the URL in Safari, where the page simply loads and there is no
-capture moment to race. Nothing measured yet bears on it in either direction.
+### The coercion route, settled on device 2026-08-28
+
+`probe-coercion` ran all five legs. Every one passed, which closes a question
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built for on 2026-08-10
+and never ran, and makes the coercion the cheapest route in this file.
+
+| Leg | Input | Result |
+| --- | --- | --- |
+| `a` | static HTML | `STATIC OK` |
+| `b` | a script that rewrites its own line | `SCRIPT OK` |
+| `c` | `https://api.github.com/zen` | the page source, wrapper and all |
+| `d` | sync and async requests | `sync: 200, 26 bytes` / `async: 26 bytes` |
+| `e` | a page that fetches a library and uses it | 40,214 bytes, `eval: ok`, markdown rendered, 738 ms |
+
+**The coercion waits for asynchronous work, so the standing caution is retired.**
+This file has said since 2026-08-10 to write the request synchronously, because
+an `await` that resolved late would yield an empty result with no error. Leg `d`
+returned both lines. Prefer synchronous anyway where it costs nothing, since it
+keeps the page one straight line, but it is a preference now and not a
+correctness rule.
+
+**Leg `e` is the whole coprocessor, without a live page.** A `data:` URL document
+pulled 40 KB of `marked` off jsDelivr with a blocking `XMLHttpRequest`, evaluated
+it with an indirect `eval`, rendered markdown and handed the result back into the
+shortcut, in 738 ms. No hosted page, no Safari tab, no share sheet, no
+third-party app. That is strictly better than the `Run JavaScript on Web Page`
+route this section opened with, which needs a live Safari page and has no way to
+get one but the share sheet.
+
+[`bench`](../workflows/bench.json) is the receiver: the op is Shortcut Input so a
+link bakes it in, the payload is the clipboard, and
+[`pages/bench-run.html`](../pages/bench-run.html) fetches one library only when
+the op needs it. `test/bench-page.test.js` runs its real script in a `vm` against
+a stubbed document and XHR, the way `show.test.js` runs the shell's.
+
+**Leg `c` carries a trap worth keeping.** Coercing a plain-text `https` URL
+returns Safari's generated document, `<html><head><meta name="color-scheme">…`
+around a `<pre style="word-wrap: break-word; white-space: pre-wrap">`. So the
+coercion yields page **source**, not rendered text, and the wrapper Safari
+supplies is `pre-wrap`: exactly the soft-wrap hazard this file warns about, on a
+document nobody here authored. A page you write should set `white-space: pre`
+itself, which `bench-run.html` does.
 
 Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
 corpus, already falls back exactly this way. Handed something that is not a
@@ -1156,11 +1192,12 @@ than a local file, because the origin differs:
   the deprecated synchronous form here: the behavior it is deprecated for is
   exactly the guarantee this route needs.
 
-*Unconfirmed:* whether an **async** resolution lands before the coercion reads
-the page. If it does not, an `await` yields an empty result with no error, which
-is the worst failure shape available. Until someone runs
-[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
-both paths on separate lines from one tap, write the request synchronously.
+*Settled 2026-08-28, and the answer is yes.* `probe-coercion`'s `d` leg reported
+`sync: 200, 26 bytes` and `async: 26 bytes`, so the coercion waits for an
+asynchronous resolution as well as a blocking one. Prefer the synchronous form
+where it costs nothing, since it keeps a page one straight line with no capture
+moment to reason about, but it is no longer a correctness requirement. See
+[The coercion route](#the-coercion-route-settled-on-device-2026-08-28).
 
 The same page was run on device 2026-08-11 through `Run-Html`, and reported both
 paths resolved. **That is not an answer to the question above**, and the reason
