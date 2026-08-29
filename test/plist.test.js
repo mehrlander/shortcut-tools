@@ -149,3 +149,30 @@ test("no plist ships an unresolved $file directive", () => {
     "these carry a literal {$file: path} where the file's text belongs; " +
     "regenerate with: python3 tools/plist.py --publish");
 });
+
+test("#BUILD# resolves in both mirrors, and anchor offsets survive it", () => {
+  // The recurring waste was not knowing whether the copy that RAN is the copy
+  // just pushed: an install logs the ref it came from, a run had no way to say,
+  // so a stale copy and a fresh failure looked identical. The token is the same
+  // width as the id it becomes, so every U+FFFC offset beside it stays valid.
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const card = chain.actions.find(a => {
+    const t = a.p && a.p.WFTextActionText;
+    return t && t.Value && String(t.Value.string).startsWith('{"op":"run"');
+  });
+  assert.ok(card, "run-pick must report its run");
+  assert.match(card.p.WFTextActionText.Value.string, /"build":"#BUILD#"/);
+
+  const xml = fs.readFileSync(path.join(ROOT, "plists", "Run-Pick.plist"), "utf8");
+  assert.doesNotMatch(xml, /#BUILD#/, "the plist mirror must substitute it");
+  // The packed mirror base64s each action, so decode before looking.
+  const packed = JSON.parse(fs.readFileSync(path.join(ROOT, "packed", "run-pick.json"), "utf8"));
+  const decoded = packed.actions.map(a => Buffer.from(a, "base64").toString("utf8")).join("");
+  assert.doesNotMatch(decoded, /#BUILD#/, "the packed mirror must substitute it too; " +
+    "a directive one mirror resolves and the other does not is the $file defect again");
+
+  const stamped = /"build":"([0-9a-f]{7})"/.exec(xml);
+  assert.ok(stamped, "the plist carries a 7-char build id");
+  assert.ok(decoded.includes(stamped[1]),
+    `both mirrors must carry the SAME id; plist has ${stamped[1]}`);
+});

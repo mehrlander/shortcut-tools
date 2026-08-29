@@ -26,7 +26,7 @@ import argparse, json, plistlib, sys, urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from pack import resolve   # one resolver, shared: see build()
+from pack import resolve, build_id   # one resolver, shared: see build()
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
@@ -92,9 +92,11 @@ def build(chain, path):
     was read as evidence about the rich-text coercion for a day. Two mirrors of
     one chain set have to resolve it the same way or the cheaper one lies.
     """
+    stamp = build_id(chain)
     wf = dict(ENVELOPE)
     wf["WFWorkflowActions"] = [
-        {"WFWorkflowActionIdentifier": a["id"], "WFWorkflowActionParameters": resolve(a["p"])}
+        {"WFWorkflowActionIdentifier": a["id"],
+         "WFWorkflowActionParameters": resolve(a["p"], stamp)}
         for a in chain["actions"]]
     wf["WFWorkflowHasShortcutInputVariables"] = uses_shortcut_input(chain["actions"])
     wf.update(chain.get("workflow", {}))

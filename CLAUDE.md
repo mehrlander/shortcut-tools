@@ -189,6 +189,35 @@ Two false positives to expect, both from the index being a snapshot: anything
 installed since the last dump, and any name computed at run time, which is a
 token rather than a string and cannot be checked this way at all.
 
+## Every handover reports itself, with its build id
+
+**Confirming an install was never the problem; confirming a RUN was.**
+`Library-Import` ends by calling `Log-Repo`, so every install lands in
+`shortcuts/log/` with the ref it came from. Nothing else logs unless a chain says
+so, which means a session can always see what installed and usually cannot see
+what ran. That asymmetry cost this session hours: a link was handed over, nothing
+came back, and there was no way to tell a stale copy from a fresh one that
+failed, so the next move was rework rather than a fix.
+
+Three things follow, and none is optional for anything handed over:
+
+1. **Read the log, do not reconstruct it.** `python3 tools/log.py` prints the
+   entries newest first, with the build each install came from. It reads
+   `origin/main` and fetches first, because the working tree is a checkout from
+   whenever the session last pulled; reading the tree showed entries three days
+   stale while the device had committed minutes earlier.
+2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
+   is JSON with `op`, `name` and `build`, so the reader can render it as a row
+   rather than a wall of text.
+3. **The chain stamps its own build.** `#BUILD#` anywhere in a string is replaced
+   with a short content hash of the chain, by **both** mirrors. The token is
+   exactly as wide as the id, so U+FFFC anchor offsets beside it survive. Held by
+   `test/plist.test.js`; a directive one mirror resolves and the other does not
+   is the `$file` defect over again.
+
+**And report it back.** A reply that hands over a link ends by showing the actual
+log rows, so both sides can see what ran rather than inferring it from silence.
+
 ## A diagnostic returns itself
 
 **Never end a probe by asking what happened.** That makes the user read a
