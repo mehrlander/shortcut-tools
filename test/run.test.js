@@ -88,3 +88,35 @@ test("--label names the handover without changing the link", () => {
   const md = handover("Get-FromJs", "--label", "does the coercion still run JS");
   assert.match(md, /\[does the coercion still run JS\]/);
 });
+
+test("--pick emits a Run-Pick menu link over the named verbs", () => {
+  const link = run("--pick", "Get-FileInfo", "Show-Table").trim();
+  assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Run-Pick&input=text&text=/);
+  const menu = decodeURIComponent(link.split("&text=")[1]).split("\n");
+  assert.deepStrictEqual(menu, ["Get-FileInfo", "Show-Table"],
+    "the names are the menu, one per line, which is what Run-Pick splits on");
+});
+
+test("--pick refuses a name the library index does not hold", () => {
+  // A link's names are unchecked strings. Repo-Viewer is the real case: it sat
+  // stale in Back-DoubleTap for a fortnight, working only because an identifier
+  // beside it was carrying the call.
+  assert.throws(() => run("--pick", "Get-FileInfo", "Repo-Viewer"),
+                /not in the library index: Repo-Viewer/);
+});
+
+test("--pick has no slot for --text or --log", () => {
+  // Its payload is the clipboard, so neither has anywhere to go; failing loudly
+  // beats emitting a link that silently drops half of what was asked for.
+  assert.throws(() => run("--pick", "Get-FileInfo", "--text", "hi"), /no slot/);
+  assert.throws(() => run("--pick", "Get-FileInfo", "--log"), /no slot/);
+});
+
+test("--verify reads a pick link back as a menu, not a pipeline", () => {
+  const link = run("--pick", "Get-FileInfo", "Show-Table").trim();
+  const out = run("--verify", link);
+  assert.match(out, /receiver: Run-Pick/);
+  assert.match(out, /- Get-FileInfo/);
+  assert.match(out, /- Show-Table/);
+  assert.doesNotMatch(out, /1\./, "a menu is not numbered steps");
+});
