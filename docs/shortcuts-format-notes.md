@@ -1014,7 +1014,11 @@ completion(bench.call("md", "<base64>"))
 ```
 
 web-tools' `pages/bench.html` is that page and
-[`bench-call`](../workflows/bench-call.json) is the chain that drives it. Input
+[`bench-call`](../workflows/bench-call.json) is the chain that drives it. It has
+to be reached at its own hosted address, and the 🥏 toss is not a substitute
+for one: `toss-render.html` mounts a page in an **iframe** on a `blob:` URL, so
+the script this action sends runs in the top document, where `bench` does not
+exist and the frame is cross-origin anyway. Input
 crosses as base64 because the payload is interpolated into a string literal,
 where a quote or a newline in the text would end it early; the estate already
 base64s on this boundary, in `Log-Repo`.
