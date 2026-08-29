@@ -188,11 +188,36 @@ test("run-pick puts the clipboard back after logging", () => {
   const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
   const ids = chain.actions.map(a => a.id);
   const clip = ids.indexOf("is.workflow.actions.getclipboard");
-  const logged = ids.lastIndexOf("is.workflow.actions.runworkflow");
+  // The Log-Repo call specifically, not the last Run Shortcut: the chain ends by
+  // calling Show-Log, so lastIndexOf finds the wrong one.
+  const logged = chain.actions.findIndex(a => (a.p || {}).WFWorkflowName === "Log-Repo");
   const restore = ids.lastIndexOf("is.workflow.actions.setclipboard");
   assert.ok(clip >= 0 && logged > clip, "it reads the clipboard, then logs");
   assert.ok(restore > logged, "and puts the clipboard back after logging, not before");
   const back = chain.actions[restore].p.WFInput.Value;
   assert.strictEqual(back.OutputUUID, chain.actions[clip].p.UUID,
     "restoring the value Get Clipboard captured, not something else");
+});
+
+test("run-pick ends by opening the log, not by clipping it into Show Result", () => {
+  // Show Result renders a long payload as a few lines that do not scroll, so the
+  // useful half of a run was legible to the session reading git and not to the
+  // person who ran it. Show-Log is the same log, on the device, scrollable.
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const last = chain.actions[chain.actions.length - 1];
+  assert.strictEqual(last.id, "is.workflow.actions.runworkflow");
+  assert.strictEqual(last.p.WFWorkflowName, "Show-Log");
+  assert.ok(!chain.actions.some(a => a.id === "is.workflow.actions.showresult"),
+    "Show Result is what this replaces");
+});
+
+test("show-log takes a hosted URL, never HTML text", () => {
+  // Show Web View accepts either, and the difference decides whether it works:
+  // HTML text lands at a file:// origin, a different storage partition, where
+  // localStorage.ghToken is not, and the page needs it to read a private repo.
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "show-log.json"), "utf8"));
+  const web = chain.actions.find(a => a.id === "is.workflow.actions.showwebpage");
+  assert.ok(web, "it shows a web page");
+  assert.strictEqual(typeof web.p.WFURL, "string", "a plain https string, not a rich-text payload");
+  assert.match(web.p.WFURL, /^https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcut-log\.html$/);
 });
