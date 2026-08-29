@@ -85,7 +85,9 @@ test("a plist no chain claims is reported by --check and removed by --publish", 
       "--check must name the orphan as unclaimed, not as stale");
 
     run("--publish", "--workflows", src, "--out", out);
-    assert.deepStrictEqual(fs.readdirSync(out).sort(), ["Kept-Probe.plist"]);
+    // builds.json rides along: a paired publish writes the whole-set manifest
+    // beside the plists, and the prune globs *.plist so it survives.
+    assert.deepStrictEqual(fs.readdirSync(out).sort(), ["Kept-Probe.plist", "builds.json"]);
     assert.doesNotThrow(() => run("--check", "--workflows", src, "--out", out));
   } finally {
     fs.rmSync(src, { recursive: true, force: true });
@@ -220,4 +222,47 @@ test("show-log takes a hosted URL, never HTML text", () => {
   assert.ok(web, "it shows a web page");
   assert.strictEqual(typeof web.p.WFURL, "string", "a plain https string, not a rich-text payload");
   assert.match(web.p.WFURL, /^https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcut-log\.html$/);
+});
+
+// WHAT THE MANIFEST IS FOR. A chain stamps its own build id and a run logs it,
+// which says which copy ran and not whether that copy is current. Answering
+// the second took a checkout and a hand-run hash; plists/builds.json publishes
+// name -> id so a reader with no checkout compares the two directly.
+test("builds.json names every installable chain with its build id", () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"));
+  const named = fs.readdirSync(path.join(ROOT, "workflows"))
+    .filter(f => f.endsWith(".json"))
+    .map(f => JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", f), "utf8")).name)
+    .filter(Boolean).sort();
+  assert.deepStrictEqual(Object.keys(manifest).sort(), named,
+    "the manifest is the installable set, exactly");
+  for (const [name, id] of Object.entries(manifest))
+    assert.match(id, /^[0-9a-f]{7}$/, `${name} must carry a short content hash`);
+  // The id a chain stamps into itself and the id published for it are one
+  // value. Two derivations of one number is the $file defect over again.
+  const stamped = require("node:child_process")
+    .execSync("python3 -c \"import sys,json;sys.path.insert(0,'tools');"
+            + "from pack import build_id;"
+            + "print(build_id(json.load(open('workflows/run-pick.json'))))\"",
+              { cwd: ROOT, encoding: "utf8" }).trim();
+  assert.equal(manifest["Run-Pick"], stamped);
+});
+
+// The doctrine this file already states, now held: an unpaired --workflows
+// aims a foreign chain set at the real plists/. The prune is gated on that,
+// and the manifest is whole-set too, so it must be gated the same way. It was
+// not, and a two-row probe set briefly replaced the real manifest.
+test("an unpaired publish leaves the real builds.json alone", () => {
+  const before = fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8");
+  const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "plist-unpaired-"));
+  try {
+    fs.writeFileSync(path.join(dir, "solo.json"), JSON.stringify(
+      { name: "Solo-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] }));
+    run("--publish", "--workflows", dir);
+    assert.equal(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"), before,
+      "a foreign chain set must not rewrite the real manifest");
+  } finally {
+    fs.rmSync(path.join(ROOT, "plists", "Solo-Probe.plist"), { force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

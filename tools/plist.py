@@ -161,18 +161,34 @@ def publish(check=False, src=None, out=None):
     what the duplicate-name probe does; deleting every unclaimed file there
     would take the whole receiver mirror with it. Passing both, or neither, is
     a matched pair and safe to prune.
+
+    AND A MANIFEST, BECAUSE A BUILD ID ANSWERS NOTHING ALONE. A chain stamps
+    its own id and a run logs it, which says WHICH copy ran and not whether
+    that copy is the current one. Answering the second took a checkout and a
+    hand-run hash on 2026-08-29, which is the rework the stamp exists to
+    prevent. `builds.json` publishes name -> id for the installable set, so a
+    reader with no checkout compares the two directly. It is a `.json` beside
+    a `*.plist` glob, so the prune above does not see it; --check holds it to
+    the chains like everything else here.
     """
     dest = out or OUT
     paired = (src is None) == (out is None)
     dest.mkdir(parents=True, exist_ok=True)
-    stale, seen, pending = [], {}, []
+    stale, seen, pending, builds = [], {}, [], {}
     for c in chains(src):
         name, data = render(c)
         if name in seen:
             raise SystemExit("two chains both name themselves %r: %s and %s"
                              % (name, seen[name], c.name))
         seen[name] = c.name
+        builds[name] = build_id(json.loads(c.read_text()))
         pending.append((dest / (name + ".plist"), data))
+    # Whole-set, so it answers to the same pairing rule as the prune below: an
+    # unpaired --workflows aims a foreign chain set at the real plists/, and
+    # writing this from that set would replace the real manifest with the
+    # probe's two rows. The suite caught exactly that.
+    manifest = dest / "builds.json" if paired else None
+    want = json.dumps(builds, indent=1, sort_keys=True) + "\n"
     orphans = sorted(p for p in dest.glob("*.plist")
                      if paired and p not in {t for t, _ in pending})
     for target, data in pending:
@@ -182,12 +198,16 @@ def publish(check=False, src=None, out=None):
         else:
             target.write_bytes(data)
     if check:
+        if manifest and (not manifest.exists() or manifest.read_text() != want):
+            stale.append(shown(manifest))
         bad = stale + ["%s (no chain claims it)" % shown(p) for p in orphans]
         if bad:
             raise SystemExit("stale, run `python3 tools/plist.py --publish`:\n  "
                              + "\n  ".join(bad))
         print("plists/ is current (%d)" % len(pending), file=sys.stderr)
         return
+    if manifest:
+        manifest.write_text(want)
     for p in orphans:
         p.unlink()
     print("wrote %d plists to plists/%s" % (
