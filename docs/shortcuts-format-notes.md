@@ -990,11 +990,26 @@ therefore decided at run time.
 corpus passes a Safari page: of 32 cards across 9 shortcuts, 28 take
 `ExtensionInput` from the share sheet, one a `Variable` named `Safari Web Page`,
 one an `ActionOutput` in `WebTools`, and two carry no input at all.
-Whether it also takes a **tab entity**, which `com.apple.mobilesafari.TabEntity`
-(Find Tabs) returns and nothing in 577 shortcuts uses, is unmeasured, and is what
-[`probe-tab-js`](../workflows/probe-tab-js.json) settles. It decides the entry
-cost: the share sheet needs the user already on the page, and Find Tabs would
-reach one that is merely open.
+**It does not take a tab entity, measured on device 2026-08-28** by
+[`probe-tab-js`](../workflows/probe-tab-js.json). Shortcuts refuses with a type
+error rather than a silence: *"Run JavaScript on Web Page failed because
+Shortcuts couldn't convert from Tab to Safari Web Page."* So the slot wants a
+`WFSafariWebPageContentItem` and there is no converter from the App Intents
+entity, which closes the cheap entry and leaves the share sheet as the only way
+to hand this action a live page.
+
+**`Find Tabs` itself works, and that half is worth keeping.**
+`com.apple.mobilesafari.TabEntity` is used by nothing in 577 shortcuts, and the
+same run counted 190 open tabs and logged them, so the entity query and its
+`Count` are both good. Its card shape is the one Safari's own `BookmarkEntity`
+carries, `AppIntentIdentifier` naming the entity and an empty
+`WFContentItemFilter` meaning no filter. What is missing is a consumer: nothing
+measured here turns a Tab into anything another action will take.
+
+The probe returned itself exactly as built. Its two `Log-Repo` calls are ordered
+so the first lands before the risky card, and three runs each left `tabs=190` in
+`shortcuts/log/` while the JavaScript card failed behind them. A probe that
+fails halfway should still be readable from the repo, and this one was.
 
 The entity-slot question from [the library-management
 section](#the-library-management-actions-address-an-app-intents-entity-not-a-name)
@@ -1027,6 +1042,26 @@ The gain is not markdown rendering. It is that a shortcut acquires every library
 on the CDN, with the network, with state that survives between calls, and with
 nothing to install. `TransformTextWithJavaScriptIntent` serves 23 cards in this
 corpus today, and it is a paid third-party app doing strictly less.
+
+**The share sheet is the cost, and there may be a route with none.** With the tab
+entity refused, `bench-call` needs the user already on the bench page. The
+`data:` URL route above needs no page at all: `js-data-url` runs a script that
+way and hands the value back in five actions, so a page that fetches its library
+before writing its answer would be the same coprocessor at one tap from
+anywhere. Everything in it has to be **synchronous**, since the coercion captures
+rendered text at a moment nobody has written down and an async resolution is lost
+with no error, which is what a blocking `XMLHttpRequest` and an indirect `eval`
+buy. [`probe-inline-bench`](../workflows/probe-inline-bench.json) is that page
+under one tap, reporting the fetch, the eval, the library's output and the
+elapsed cost on four lines. It cannot be settled here: this sandbox's Chromium
+gives a `data:` document no network at all (see the marker above), so only the
+device can answer, and it has already allowed the request once.
+
+Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
+corpus, already falls back exactly this way. Handed something that is not a
+Safari page, it assembles the script into a `data:text/html` URL, coerces it to
+rich text, and URL-decodes the result out of the body. The pattern being reached
+for here is one an imported shortcut settled on first.
 
 ## Some actions are load-bearing without appearing in the data flow
 
@@ -1075,6 +1110,17 @@ than a local file, because the origin differs:
   `Access-Control-Allow-Origin: *`, which the GitHub API does. The opaque origin
   does not block it. Sending credentials as an `Authorization` header is fine;
   `credentials: 'include'` would not be.
+
+  **Stale 2026-08-29 (Chromium half only) → the device result below:** this no
+  longer reproduces in the sandbox's Chromium, where a `data:` URL document gets
+  no network at all. Against a local server sending
+  `Access-Control-Allow-Origin: *`, synchronous XHR, asynchronous XHR and `fetch`
+  all failed from a `data:` origin, while the same page on an `http` origin got
+  all three. So it is the opaque origin rather than CORS or the endpoint, and it
+  is not specific to the synchronous form. Whether Chromium changed or the
+  original measurement differed in setup is not established. **The device half is
+  untouched:** WebKit ran both requests on 2026-08-11 and returned real bytes, so
+  the split is browser-to-browser and the device is the authority for this route.
 - **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
   DOM before anything downstream can read the page. This is the reason to prefer
   the deprecated synchronous form here: the behavior it is deprecated for is
