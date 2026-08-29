@@ -1,0 +1,157 @@
+{
+  "name": "Bench-Call",
+  "label": "Bench-Call: run one bench op against the clipboard, in the shared page (9 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "ActionExtension"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFSafariWebPageContentItem"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Share a bench tab into this from Safari. The page is the input, the clipboard is the payload, and the script sent is one line, which is what keeps it under the Run JavaScript parse cliff. Base64 because the payload is interpolated into a string literal."
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "BE0C0000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "BE0C0000-0002-4A00-9000-000000000001",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "BE0C0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.list",
+      "p": {
+        "UUID": "BE0C0000-0003-4A00-9000-000000000001",
+        "WFItems": [
+          "md",
+          "mdplain",
+          "html2md",
+          "yaml",
+          "csv",
+          "json",
+          "stats",
+          "push",
+          "drain",
+          "caps",
+          "echo"
+        ]
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "BE0C0000-0004-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "List",
+            "OutputUUID": "BE0C0000-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "BE0C0000-0005-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{23, 1}": {
+                "OutputName": "Chosen Item",
+                "OutputUUID": "BE0C0000-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{27, 1}": {
+                "OutputName": "Base64 Encoded",
+                "OutputUUID": "BE0C0000-0002-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "completion(bench.call(\"￼\",\"￼\"))"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runjavascriptonwebpage",
+      "p": {
+        "UUID": "BE0C0000-0006-4A00-9000-000000000001",
+        "CustomOutputName": "BenchResult",
+        "WFJavaScript": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "BE0C0000-0005-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "BE0C0000-0007-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "BenchResult",
+            "OutputUUID": "BE0C0000-0006-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "BE0C0000-0008-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "BenchResult",
+                "OutputUUID": "BE0C0000-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

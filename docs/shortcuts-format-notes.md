@@ -931,8 +931,98 @@ expression, prefer repeating a cheap accessor over binding it to a variable, and
 avoid object-to-array conversions. Code written this way looks worse than normal
 JavaScript, on purpose.
 
+**The mechanism argues for a route this file has been reading as a prohibition.**
+The cost is in the SOURCE, not in the work: a script that parses in one line
+stays cheap however much that line goes on to do. So the discipline above is the
+second-best answer to the cliff, and the best one is to stop sending source at
+all, keeping the heavy code somewhere that has already parsed it and sending a
+call. A page that has pulled its libraries off a CDN is that somewhere, and this
+action is how a shortcut talks to one. See
+[The browser is a coprocessor](#the-browser-is-a-coprocessor-not-only-a-destination),
+which is the same action read the other way round.
+
 Sources: [Apple Shortcuts JavaScript performance fast-path discovery](https://claude.ai/chat/1742ec65-706f-4515-babc-d12c37cd9468)
 (2025-09-14) and the same-day Gemini session `gemini-session/134`.
+
+## The browser is a coprocessor, not only a destination
+
+*Read out of the corpus 2026-08-29. Every card quoted below is on this device.*
+
+Every render route this estate has built sends a page **out**. `Show-Html`
+navigates Safari to a `data:` URL, `Show-WebView` raises a sheet, `show.py` gzips
+a page into a link. In all three the shortcut's flow ends where the page begins,
+which is why the return channel needed `Log-Repo` and why a diagnostic used to
+end in a question.
+
+`Run JavaScript on Web Page` runs the other way. It executes inside a running
+shortcut and hands its value back through `completion()`, so a page is something
+a shortcut **calls**. The last full dump has 26 such cards across 4 shortcuts, 20
+of them in `Get-Nice` alone, which is authored, live, and called by nothing;
+across all 15 dumps, 9 shortcuts have used it.
+
+Three properties, each from a real card rather than inferred:
+
+**`completion()` returns structure, not only text.** `Get-Nice` ends a card with
+`completion(window.siriData)`, where `siriData` is an array of objects, and the
+value arrives as a list the next action can index.
+
+**The page is a heap between calls.** Three separate cards in one run:
+
+| Card | Script |
+| --- | --- |
+| A | `const tally = {}; …; window.siriData = [tally]; completion("Data stored")` |
+| B | `window.siriData[1] = {...window.siriData[0]}; …; completion("Data stored")` |
+| C | `completion( window.siriData )` |
+
+B reads what A left behind, and nothing carries the value between them except the
+page. `Get-Nice` also puts nine of these calls inside one `Repeat` block, walking
+the DOM and offering each level's children as a menu, so repeated calls against
+one page are the working pattern rather than a curiosity.
+
+**The script itself can be computed.** `WFJavaScript` accepts a
+`WFTextTokenString`, so a variable interpolates into the source. `Utilities Menu`
+embeds one at offset 164 of a longer script; `AI Run JavaScript On Page` goes
+further and makes the **whole** parameter one attachment, `{"{0, 1}": {"Type":
+"Variable", "VariableName": "FinalCode"}}` over a bare `￼`. What runs is
+therefore decided at run time.
+
+**What the input slot accepts** is the part still narrow. Every card in the
+corpus passes a Safari page: of 32 cards across 9 shortcuts, 28 take
+`ExtensionInput` from the share sheet, one a `Variable` named `Safari Web Page`,
+one an `ActionOutput` in `WebTools`, and two carry no input at all.
+Whether it also takes a **tab entity**, which `com.apple.mobilesafari.TabEntity`
+(Find Tabs) returns and nothing in 577 shortcuts uses, is unmeasured, and is what
+[`probe-tab-js`](../workflows/probe-tab-js.json) settles. It decides the entry
+cost: the share sheet needs the user already on the page, and Find Tabs would
+reach one that is merely open.
+
+The entity-slot question from [the library-management
+section](#the-library-management-actions-address-an-app-intents-entity-not-a-name)
+was left to "fold into the next probe that has a real reason to exist." This is
+that probe, and it still does not carry it, for a reason rather than an
+oversight: answering that one means opening a shortcut in the editor, which ends
+the run and leaves the reader to report what happened. It would turn a probe that
+returns itself into one that asks.
+
+### What it is for
+
+Load the libraries into a page once, from the CDN, and every call after that is
+one line, so the parse cliff never applies:
+
+```js
+completion(bench.call("md", "<base64>"))
+```
+
+web-tools' `pages/bench.html` is that page and
+[`bench-call`](../workflows/bench-call.json) is the chain that drives it. Input
+crosses as base64 because the payload is interpolated into a string literal,
+where a quote or a newline in the text would end it early; the estate already
+base64s on this boundary, in `Log-Repo`.
+
+The gain is not markdown rendering. It is that a shortcut acquires every library
+on the CDN, with the network, with state that survives between calls, and with
+nothing to install. `TransformTextWithJavaScriptIntent` serves 23 cards in this
+corpus today, and it is a paid third-party app doing strictly less.
 
 ## Some actions are load-bearing without appearing in the data flow
 
