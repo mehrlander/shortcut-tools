@@ -25,6 +25,9 @@ asks for the share sheet.
 import argparse, json, plistlib, sys, urllib.parse
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pack import resolve   # one resolver, shared: see build()
+
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
 RAW = "https://raw.githubusercontent.com/mehrlander/shortcut-tools"
@@ -78,9 +81,20 @@ def uses_shortcut_input(actions):
 
 
 def build(chain, path):
+    """The chain as a workflow plist, with every {"$file": path} already read in.
+
+    The resolver is imported from `pack` rather than reimplemented. It was
+    missing here entirely until 2026-08-29, and the failure it caused is the
+    argument for sharing it: `pack.py` resolved the directive and this did not,
+    so a chain carrying a page packed correctly and installed as a shortcut whose
+    Text action held the literal dictionary {"$file": "pages/..."}. Nothing
+    errored. Probe-InlineBench imported, ran, and returned an empty string, which
+    was read as evidence about the rich-text coercion for a day. Two mirrors of
+    one chain set have to resolve it the same way or the cheaper one lies.
+    """
     wf = dict(ENVELOPE)
     wf["WFWorkflowActions"] = [
-        {"WFWorkflowActionIdentifier": a["id"], "WFWorkflowActionParameters": a["p"]}
+        {"WFWorkflowActionIdentifier": a["id"], "WFWorkflowActionParameters": resolve(a["p"])}
         for a in chain["actions"]]
     wf["WFWorkflowHasShortcutInputVariables"] = uses_shortcut_input(chain["actions"])
     wf.update(chain.get("workflow", {}))

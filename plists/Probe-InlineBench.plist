@@ -23,10 +23,70 @@
 				<key>UUID</key>
 				<string>B1E10000-0001-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<dict>
-					<key>$file</key>
-					<string>pages/bench-inline.html</string>
-				</dict>
+				<string>&lt;!doctype html&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;title&gt;Inline bench probe&lt;/title&gt;
+&lt;pre id="out" style="white-space:pre"&gt;xhr: not reached
+eval: not reached
+md: not reached
+ms: 0&lt;/pre&gt;
+
+&lt;script&gt;
+// Can a data: URL page pull a real library off the CDN and use it, inside the
+// rich-text coercion's capture moment?
+//
+// This is the route left standing after Probe-TabJs. Run JavaScript on Web Page
+// wants a Safari Web Page and refuses a Tab entity outright, so a shortcut can
+// only reach a live page through the share sheet. The data: URL route needs no
+// page at all: js-data-url already runs a script this way and hands the value
+// back, so the only open question is whether a LIBRARY can be loaded first.
+//
+// EVERYTHING HERE IS SYNCHRONOUS, and that is the whole design. The coercion
+// captures rendered text at a moment nobody has written down, so an async
+// resolution may simply be lost with no error. A blocking XMLHttpRequest is
+// deprecated for exactly the behaviour this needs. Indirect eval, (0,eval),
+// evaluates in global scope, so the UMD bundle's global lands on window where
+// the next line can see it.
+//
+// Four lines, so one tap separates the failures that look alike:
+//   xhr: 200, &lt;n&gt; bytes   the CDN answered inside the capture moment
+//   eval: ok              the bundle defined its global
+//   md: &lt;html&gt;            the library actually ran
+//   ms: &lt;n&gt;               what the whole route costs
+//
+// Lines must not wrap: detect.text reads rendered text and a soft wrap becomes
+// a line the reader counts separately, so the output is truncated hard.
+var LIB = 'https://cdn.jsdelivr.net/combine/npm/marked/marked.min.js';
+var SRC = '# Title\n\nSome *emphasis* and a [link](https://example.com).';
+
+var xhr = 'xhr: not reached', ev = 'eval: not reached', md = 'md: not reached';
+var t0 = Date.now();
+
+function draw() {
+  document.getElementById('out').textContent =
+    xhr + '\n' + ev + '\n' + md + '\n' + 'ms: ' + (Date.now() - t0);
+}
+
+try {
+  var x = new XMLHttpRequest();
+  x.open('GET', LIB, false);
+  x.send();
+  xhr = 'xhr: ' + x.status + ', ' + x.responseText.length + ' bytes';
+  try {
+    (0, eval)(x.responseText);
+    ev = 'eval: ' + (typeof marked === 'undefined' ? 'NO GLOBAL' : 'ok');
+    if (typeof marked !== 'undefined') {
+      md = 'md: ' + marked.parse(SRC).replace(/\s+/g, ' ').slice(0, 70);
+    }
+  } catch (e2) {
+    ev = 'eval: ERROR ' + e2.name + ' ' + e2.message.slice(0, 40);
+  }
+} catch (e1) {
+  xhr = 'xhr: ERROR ' + e1.name + ' ' + e1.message.slice(0, 40);
+}
+draw();
+&lt;/script&gt;
+</string>
 			</dict>
 		</dict>
 		<dict>

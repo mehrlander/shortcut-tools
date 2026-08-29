@@ -129,3 +129,23 @@ test("--link refuses a chain that declares no name", () => {
   // A chain without a name has no plist, so the link would 404 on tap.
   assert.throws(() => run("workflows/menu.json", "--link"), /declares no name/);
 });
+
+test("no plist ships an unresolved $file directive", () => {
+  // The bug this replaces cost a day of wrong conclusions. pack.py resolved
+  // {"$file": path} and plist.py did not, so a chain carrying a page packed
+  // correctly and installed as a shortcut whose Text action held the literal
+  // dictionary. Nothing errored anywhere: the shortcut imported, ran, and
+  // returned an empty string, which was read as evidence about the rich-text
+  // coercion rather than as a missing page.
+  //
+  // Checked on the parsed plist, not the text, because a chain may legitimately
+  // mention "$file" in a comment and Probe-Coercion does.
+  const bad = [];
+  for (const f of fs.readdirSync(path.join(ROOT, "plists")).filter(n => n.endsWith(".plist"))) {
+    const xml = fs.readFileSync(path.join(ROOT, "plists", f), "utf8");
+    if (/<key>\$file<\/key>/.test(xml)) bad.push(f);
+  }
+  assert.deepStrictEqual(bad, [],
+    "these carry a literal {$file: path} where the file's text belongs; " +
+    "regenerate with: python3 tools/plist.py --publish");
+});

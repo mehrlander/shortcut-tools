@@ -1055,30 +1055,37 @@ buy. [`probe-inline-bench`](../workflows/probe-inline-bench.json) is that page u
 one tap, reporting the fetch, the eval, the library's output and the elapsed cost
 on four lines.
 
-**It came back empty, on device 2026-08-28, and that is not one of its four
-answers.** The page's `<pre>` ships with all four lines already filled in, so
-even a script that never ran should have returned text. An empty string means
-nothing upstream of the script produced anything: either the coercion declines a
-`data:` URL, or the blocking request outlives whatever moment it captures at.
-Wiring was ruled out first, since a dangling `OutputUUID` reads the same way, and
-all three chains here resolve.
+**It came back empty on device 2026-08-28, and that said nothing about the
+coercion.** The shortcut had no page in it. `plist.py` did not resolve
+`{"$file": path}`, so the Text action carried the literal dictionary and the
+`data:` URL was built from a base64 of that. `pack.py` had resolved the directive
+since it was introduced; the plist mirror never did, and nothing errored at any
+point. The shortcut generated, imported, ran, and returned an empty string.
 
-**The probe was built wrong, and the fault is worth naming.** It was shaped to
-separate four failures and it separated none, because every one of them collapses
-into a page that renders nothing. A probe against a stage that can kill the run
-needs a **control that runs first and logs first**.
+**Two mirrors of one chain set have to resolve a directive the same way, or the
+cheaper one lies.** This repo already learned that on 2026-08-27, when the suite
+and `--check` disagreed about orphans, and wrote down that where two things state
+one invariant the weaker one is a wrong answer rather than a gap. The same shape
+returned in a different place two days later. `plist.py` now imports `resolve`
+from `pack` rather than carrying a second copy, and `test/plist.test.js` fails on
+any plist shipping a `$file` key.
+
+**The probe was also built wrong, independently of that.** It was shaped to
+separate four failures and separated none, because every one of them collapses
+into a page that renders nothing, which is why a missing page could pass for a
+runtime answer at all. A probe against a stage that can kill the run needs a
+**control that runs first and logs first**.
 [`probe-coercion`](../workflows/probe-coercion.json) is the replacement: four
 legs, each committing before the next begins, over static HTML, a script that
 rewrites its own line, a real `https` URL, and the sync/async pair. Read the first
 empty line and everything above it worked.
 
-This also reaches a question the file has carried open since 2026-08-10.
+**So the question is still open, and it is older than it looks.**
 [`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built to settle whether
-the coercion waits for the network and was never run, so the coercion has in fact
-never been exercised on a device at all. What was confirmed on 2026-08-11 was
-`Run-Html`, which opens the URL in Safari, where there is no capture moment and
-nothing to race. The empty result above is the first evidence either way, and it
-is evidence against.
+the coercion waits for the network and was never run, so the coercion has never
+been exercised on a device at all. What 2026-08-11 confirmed was `Run-Html`,
+which opens the URL in Safari, where the page simply loads and there is no
+capture moment to race. Nothing measured yet bears on it in either direction.
 
 Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
 corpus, already falls back exactly this way. Handed something that is not a
