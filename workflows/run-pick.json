@@ -1,6 +1,6 @@
 {
   "name": "Run-Pick",
-  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, show and log what came back (13 actions)",
+  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, show and log what came back (14 actions)",
   "workflow": {
     "WFWorkflowTypes": [
       "WFWorkflowTypeShowInSearch"
@@ -10,7 +10,7 @@
     {
       "id": "is.workflow.actions.comment",
       "p": {
-        "WFCommentActionText": "Verb list in, one name per line; the clipboard is the payload; the chosen verb runs on it and the result is shown. No list crosses a shortcut boundary: the two-shortcut version passed [payload, verbs] through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so the menu offered the payload as a choice (device, 2026-08-29). The prompt is set because unset iOS supplies its own \"Which one?\", which says nothing. Run it with nothing and the prologue supplies a default menu and re-enters, which is the idiom 72 shortcuts in this library carry. It reports every run through Log-Repo, stamped with its own build id, because a stale copy and a fresh copy that failed are indistinguishable otherwise and this session lost hours to that. The build id is a content hash of the chain, substituted by BOTH mirrors."
+        "WFCommentActionText": "Verb list in, one name per line; the clipboard is the payload; the chosen verb runs on it and the result is shown. No list crosses a shortcut boundary: the two-shortcut version passed [payload, verbs] through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so the menu offered the payload as a choice (device, 2026-08-29). The prompt is set because unset iOS supplies its own \"Which one?\", which says nothing. Run it with nothing and the prologue supplies a default menu and re-enters, which is the idiom 72 shortcuts in this library carry. It reports every run through Log-Repo, stamped with its own build id, because a stale copy and a fresh copy that failed are indistinguishable otherwise and this session lost hours to that. The build id is a content hash of the chain, substituted by BOTH mirrors. Two things the first logged run exposed. The payload is a HEADER LINE then the raw result, not JSON with the result interpolated in: the result carries quotes and broke the outer object on the first try. And Log-Repo writes its payload to the clipboard first and unconditionally, so without the Copy card at the end the next run reads the log line instead of your text, which is a tool poisoning its own input."
       }
     },
     {
@@ -147,18 +147,18 @@
         "WFTextActionText": {
           "Value": {
             "attachmentsByRange": {
-              "{57, 1}": {
+              "{38, 1}": {
                 "OutputName": "Chosen Item",
                 "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               },
-              "{67, 1}": {
+              "{40, 1}": {
                 "OutputName": "Shortcut Result",
                 "OutputUUID": "91CE0000-0004-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             },
-            "string": "{\"op\":\"run\",\"name\":\"Run-Pick\",\"build\":\"#BUILD#\",\"chose\":\"￼\",\"got\":\"￼\"}"
+            "string": "run name=Run-Pick build=#BUILD# chose=￼\n￼"
           },
           "WFSerializationType": "WFTextTokenString"
         }
@@ -173,6 +173,20 @@
           "Value": {
             "OutputName": "Text",
             "OutputUUID": "91CE0000-0006-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "91CE0000-0012-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "91CE0000-0001-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"

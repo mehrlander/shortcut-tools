@@ -82,9 +82,35 @@ def build_of(url):
     return ref[:7] if re.fullmatch(r"[0-9a-f]{40}", ref) else ref
 
 
+HEADER = re.compile(r"^(\w+)((?:\s+\w+=\S*)*)\s*$")
+
+
+def header(text):
+    """Parse a `verb key=value key=value` first line, with the rest the payload.
+
+    The first structured payload was JSON with the result interpolated into it,
+    and the result carried quotes, so the object never parsed. A header line
+    survives any payload because the payload is not inside it.
+    """
+    first, _, rest = text.partition("\n")
+    m = HEADER.match(first)
+    if not m or "=" not in first:
+        return None
+    fields = dict(kv.split("=", 1) for kv in m.group(2).split())
+    return m.group(1), fields, rest.strip()
+
+
 def render(stem, body):
     when = stamp(stem)
     when = when.strftime("%m-%d %H:%M:%S") if when else stem
+    if isinstance(body, str):
+        parsed = header(body)
+        if parsed:
+            op, fields, rest = parsed
+            name = fields.pop("name", "")
+            tail = " ".join("%s=%s" % (k, v) for k, v in fields.items())
+            got = (" got=" + rest.replace("\n", " ⏎ ")[:70]) if rest else ""
+            return "%s  %-8s %-22s %s%s" % (when, op, name, tail, got)
     if isinstance(body, dict):
         op = body.get("op", "?")
         name = body.get("name", "")

@@ -158,10 +158,14 @@ test("#BUILD# resolves in both mirrors, and anchor offsets survive it", () => {
   const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
   const card = chain.actions.find(a => {
     const t = a.p && a.p.WFTextActionText;
-    return t && t.Value && String(t.Value.string).startsWith('{"op":"run"');
+    return t && t.Value && String(t.Value.string).startsWith("run name=");
   });
   assert.ok(card, "run-pick must report its run");
-  assert.match(card.p.WFTextActionText.Value.string, /"build":"#BUILD#"/);
+  assert.match(card.p.WFTextActionText.Value.string, /build=#BUILD#/);
+  // A header line, then the raw result. The first cut was JSON with the result
+  // interpolated into it and the result carried quotes, so the object never
+  // parsed and the reader showed it as untyped text.
+  assert.match(card.p.WFTextActionText.Value.string, /^run name=\S+ build=#BUILD# chose=/);
 
   const xml = fs.readFileSync(path.join(ROOT, "plists", "Run-Pick.plist"), "utf8");
   assert.doesNotMatch(xml, /#BUILD#/, "the plist mirror must substitute it");
@@ -171,8 +175,24 @@ test("#BUILD# resolves in both mirrors, and anchor offsets survive it", () => {
   assert.doesNotMatch(decoded, /#BUILD#/, "the packed mirror must substitute it too; " +
     "a directive one mirror resolves and the other does not is the $file defect again");
 
-  const stamped = /"build":"([0-9a-f]{7})"/.exec(xml);
+  const stamped = /build=([0-9a-f]{7})/.exec(xml);
   assert.ok(stamped, "the plist carries a 7-char build id");
   assert.ok(decoded.includes(stamped[1]),
     `both mirrors must carry the SAME id; plist has ${stamped[1]}`);
+});
+
+test("run-pick puts the clipboard back after logging", () => {
+  // Log-Repo writes its payload to the clipboard first and unconditionally, so
+  // without this the next run reads the log line instead of the user's text: a
+  // tool poisoning its own input. Caught by the first run that actually logged.
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const ids = chain.actions.map(a => a.id);
+  const clip = ids.indexOf("is.workflow.actions.getclipboard");
+  const logged = ids.lastIndexOf("is.workflow.actions.runworkflow");
+  const restore = ids.lastIndexOf("is.workflow.actions.setclipboard");
+  assert.ok(clip >= 0 && logged > clip, "it reads the clipboard, then logs");
+  assert.ok(restore > logged, "and puts the clipboard back after logging, not before");
+  const back = chain.actions[restore].p.WFInput.Value;
+  assert.strictEqual(back.OutputUUID, chain.actions[clip].p.UUID,
+    "restoring the value Get Clipboard captured, not something else");
 });
