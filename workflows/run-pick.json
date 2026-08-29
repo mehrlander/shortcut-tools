@@ -1,6 +1,6 @@
 {
   "name": "Run-Pick",
-  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, show what came back (6 actions)",
+  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, show what came back (11 actions)",
   "workflow": {
     "WFWorkflowTypes": [
       "WFWorkflowTypeShowInSearch"
@@ -10,7 +10,73 @@
     {
       "id": "is.workflow.actions.comment",
       "p": {
-        "WFCommentActionText": "One shortcut, no list crossing a shortcut boundary. The two-shortcut version handed Run-Pick a [payload, verbs] list through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so splitting it produced the clipboard line plus the four names and the menu offered the payload as a choice. Measured on device 2026-08-29. The verb list is the input, the payload is the clipboard, and the prompt is set: unset, iOS shows its own 'Which one?' which says nothing."
+        "WFCommentActionText": "Verb list in, one name per line; the clipboard is the payload; the chosen verb runs on it and the result is shown. No list crosses a shortcut boundary: the two-shortcut version passed [payload, verbs] through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so the menu offered the payload as a choice (device, 2026-08-29). The prompt is set because unset iOS supplies its own \"Which one?\", which says nothing. Run it with nothing and the prologue supplies a default menu and re-enters, which is the idiom 72 shortcuts in this library carry."
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "91CE0000-BEEF-4A00-9000-000000000001",
+        "WFCondition": 101,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "91CE0000-0008-4A00-9000-000000000001",
+        "WFTextActionText": "Get-FileInfo\nShow-Table\nLog-Repo"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0009-4A00-9000-000000000001",
+        "WFWorkflowName": "Run-Pick",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "91CE0000-0008-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "91CE0000-0010-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "91CE0000-0009-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "UUID": "91CE0000-0011-4A00-9000-000000000001",
+        "GroupingIdentifier": "91CE0000-BEEF-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
       }
     },
     {

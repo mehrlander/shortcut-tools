@@ -12,7 +12,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>WFCommentActionText</key>
-				<string>Verb list in, one name per line; the clipboard is the payload; the chosen verb runs on it and the result is shown. No list crosses a shortcut boundary: the two-shortcut version passed [payload, verbs] through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so the menu offered the payload as a choice (device, 2026-08-29). The prompt is set because unset iOS supplies its own "Which one?", which says nothing. Run it with nothing and the prologue supplies a default menu and re-enters, which is the idiom 72 shortcuts in this library carry.</string>
+				<string>Does a list survive Run Shortcut? Run-Pick's two-shortcut version passed [payload, verbs] across and the far side saw one newline-joined string, so the menu offered the payload as a choice. Whether that is true of every hand-off or only that one was never established, and it gates ever passing two arguments between shortcuts again. This settles it by crossing the boundary into ITSELF: bare, it builds a two-item list and re-enters; on the second pass it counts what arrived and logs it. count=2 first=AAA means lists survive. count=1 means they do not.</string>
 			</dict>
 		</dict>
 		<dict>
@@ -21,7 +21,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>91CE0000-BEEF-4A00-9000-000000000001</string>
+				<string>11570000-BEEF-4A00-9000-000000000001</string>
 				<key>WFCondition</key>
 				<integer>101</integer>
 				<key>WFControlFlowMode</key>
@@ -49,11 +49,84 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>91CE0000-0008-4A00-9000-000000000001</string>
+				<string>11570000-0001-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>Get-FileInfo
-Show-Table
-Log-Repo</string>
+				<string>AAA</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>11570000-0002-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<string>BBB</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.list</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>11570000-0003-4A00-9000-000000000001</string>
+				<key>WFItems</key>
+				<array>
+					<dict>
+						<key>WFItemType</key>
+						<integer>0</integer>
+						<key>WFValue</key>
+						<dict>
+							<key>Value</key>
+							<dict>
+								<key>attachmentsByRange</key>
+								<dict>
+									<key>{0, 1}</key>
+									<dict>
+										<key>OutputName</key>
+										<string>Text</string>
+										<key>OutputUUID</key>
+										<string>11570000-0001-4A00-9000-000000000001</string>
+										<key>Type</key>
+										<string>ActionOutput</string>
+									</dict>
+								</dict>
+								<key>string</key>
+								<string>￼</string>
+							</dict>
+							<key>WFSerializationType</key>
+							<string>WFTextTokenString</string>
+						</dict>
+					</dict>
+					<dict>
+						<key>WFItemType</key>
+						<integer>0</integer>
+						<key>WFValue</key>
+						<dict>
+							<key>Value</key>
+							<dict>
+								<key>attachmentsByRange</key>
+								<dict>
+									<key>{0, 1}</key>
+									<dict>
+										<key>OutputName</key>
+										<string>Text</string>
+										<key>OutputUUID</key>
+										<string>11570000-0002-4A00-9000-000000000001</string>
+										<key>Type</key>
+										<string>ActionOutput</string>
+									</dict>
+								</dict>
+								<key>string</key>
+								<string>￼</string>
+							</dict>
+							<key>WFSerializationType</key>
+							<string>WFTextTokenString</string>
+						</dict>
+					</dict>
+				</array>
 			</dict>
 		</dict>
 		<dict>
@@ -62,15 +135,15 @@ Log-Repo</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>91CE0000-0009-4A00-9000-000000000001</string>
+				<string>11570000-0004-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Text</string>
+						<string>List</string>
 						<key>OutputUUID</key>
-						<string>91CE0000-0008-4A00-9000-000000000001</string>
+						<string>11570000-0003-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -78,7 +151,7 @@ Log-Repo</string>
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFWorkflowName</key>
-				<string>Run-Pick</string>
+				<string>Probe-ListHandoff</string>
 			</dict>
 		</dict>
 		<dict>
@@ -87,7 +160,7 @@ Log-Repo</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>91CE0000-0010-4A00-9000-000000000001</string>
+				<string>11570000-0009-4A00-9000-000000000001</string>
 				<key>WFOutput</key>
 				<dict>
 					<key>Value</key>
@@ -99,7 +172,7 @@ Log-Repo</string>
 								<key>OutputName</key>
 								<string>Shortcut Result</string>
 								<key>OutputUUID</key>
-								<string>91CE0000-0009-4A00-9000-000000000001</string>
+								<string>11570000-0004-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -118,32 +191,19 @@ Log-Repo</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>91CE0000-BEEF-4A00-9000-000000000001</string>
+				<string>11570000-BEEF-4A00-9000-000000000001</string>
 				<key>UUID</key>
-				<string>91CE0000-0011-4A00-9000-000000000001</string>
+				<string>11570000-0010-4A00-9000-000000000001</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.getclipboard</string>
+			<string>is.workflow.actions.count</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
-				<key>UUID</key>
-				<string>91CE0000-0001-4A00-9000-000000000001</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text.split</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>91CE0000-0002-4A00-9000-000000000001</string>
-				<key>WFTextSeparator</key>
-				<string>New Lines</string>
-				<key>text</key>
+				<key>Input</key>
 				<dict>
 					<key>Value</key>
 					<dict>
@@ -153,30 +213,74 @@ Log-Repo</string>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
 				</dict>
+				<key>UUID</key>
+				<string>11570000-0005-4A00-9000-000000000001</string>
+				<key>WFCountType</key>
+				<string>Items</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.choosefromlist</string>
+			<string>is.workflow.actions.getitemfromlist</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>First</string>
 				<key>UUID</key>
-				<string>91CE0000-0003-4A00-9000-000000000001</string>
-				<key>WFChooseFromListActionPrompt</key>
-				<string>Run which one on the clipboard?</string>
+				<string>11570000-0006-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
-						<key>OutputName</key>
-						<string>Split Text</string>
-						<key>OutputUUID</key>
-						<string>91CE0000-0002-4A00-9000-000000000001</string>
 						<key>Type</key>
-						<string>ActionOutput</string>
+						<string>ExtensionInput</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFItemIndex</key>
+				<string>1</string>
+				<key>WFItemSpecifier</key>
+				<string>Item At Index</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>11570000-0007-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{14, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Count</string>
+								<key>OutputUUID</key>
+								<string>11570000-0005-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{22, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>First</string>
+								<key>OutputUUID</key>
+								<string>11570000-0006-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>handoff count=￼ first=￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
 				</dict>
 			</dict>
 		</dict>
@@ -186,15 +290,15 @@ Log-Repo</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>91CE0000-0004-4A00-9000-000000000001</string>
+				<string>11570000-0008-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Clipboard</string>
+						<string>Text</string>
 						<key>OutputUUID</key>
-						<string>91CE0000-0001-4A00-9000-000000000001</string>
+						<string>11570000-0007-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -202,68 +306,7 @@ Log-Repo</string>
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFWorkflowName</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict>
-							<key>{0, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Chosen Item</string>
-								<key>OutputUUID</key>
-								<string>91CE0000-0003-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-						</dict>
-						<key>string</key>
-						<string>￼</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.showresult</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>Text</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict>
-							<key>{0, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Chosen Item</string>
-								<key>OutputUUID</key>
-								<string>91CE0000-0003-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-							<key>{4, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Shortcut Result</string>
-								<key>OutputUUID</key>
-								<string>91CE0000-0004-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-						</dict>
-						<key>string</key>
-						<string>￼ →
-￼</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-				<key>UUID</key>
-				<string>91CE0000-0005-4A00-9000-000000000001</string>
+				<string>Log-Repo</string>
 			</dict>
 		</dict>
 	</array>
@@ -291,8 +334,6 @@ Log-Repo</string>
 	<key>WFWorkflowOutputContentItemClasses</key>
 	<array/>
 	<key>WFWorkflowTypes</key>
-	<array>
-		<string>WFWorkflowTypeShowInSearch</string>
-	</array>
+	<array/>
 </dict>
 </plist>
