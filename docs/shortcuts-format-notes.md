@@ -1029,8 +1029,9 @@ completion(bench.call("md", "<base64>"))
 ```
 
 web-tools' `pages/bench.html` is that page and
-[`bench-call`](../workflows/bench-call.json) is the chain that drives it. It has
-to be reached at its own hosted address, and the 🥏 toss is not a substitute
+no chain drives it any more; `bench-call` was withdrawn with the rest of the
+bench chains on 2026-08-29, for the reason under **Withdrawn** below. It would
+have to be reached at its own hosted address, and the 🥏 toss is not a substitute
 for one: `toss-render.html` mounts a page in an **iframe** on a `blob:` URL, so
 the script this action sends runs in the top document, where `bench` does not
 exist and the frame is cross-origin anyway. Input
@@ -1044,16 +1045,16 @@ nothing to install. `TransformTextWithJavaScriptIntent` serves 23 cards in this
 corpus today, and it is a paid third-party app doing strictly less.
 
 **The share sheet is the cost, and there may be a route with none.** With the tab
-entity refused, `bench-call` needs the user already on the bench page. The
+entity refused, that route needs the user already on the bench page. The
 `data:` URL route above needs no page at all: `js-data-url` runs a script that
 way and hands the value back in five actions, so a page that fetches its library
 before writing its answer would be the same coprocessor at one tap from
 anywhere. Everything in it has to be **synchronous**, since the coercion captures
 rendered text at a moment nobody has written down and an async resolution is lost
 with no error, which is what a blocking `XMLHttpRequest` and an indirect `eval`
-buy. [`probe-inline-bench`](../workflows/probe-inline-bench.json) is that page under
-one tap, reporting the fetch, the eval, the library's output and the elapsed cost
-on four lines.
+buy. `probe-inline-bench` was that page under one tap, reporting the fetch, the eval,
+the library's output and the elapsed cost on four lines. It is withdrawn; its
+question is `probe-coercion`'s `e` leg now.
 
 **It came back empty on device 2026-08-28, and that said nothing about the
 coercion.** The shortcut had no page in it. `plist.py` did not resolve
@@ -1109,11 +1110,19 @@ third-party app. That is strictly better than the `Run JavaScript on Web Page`
 route this section opened with, which needs a live Safari page and has no way to
 get one but the share sheet.
 
-[`bench`](../workflows/bench.json) is the receiver: the op is Shortcut Input so a
-link bakes it in, the payload is the clipboard, and
-[`pages/bench-run.html`](../pages/bench-run.html) fetches one library only when
-the op needs it. `test/bench-page.test.js` runs its real script in a `vm` against
-a stubbed document and XHR, the way `show.test.js` runs the shell's.
+[`pages/bench-run.html`](../pages/bench-run.html) is the page, fetching one
+library only when the op needs it, and `test/bench-page.test.js` runs its real
+script in a `vm` against a stubbed document and XHR, the way `show.test.js` runs
+the shell's.
+
+**Withdrawn 2026-08-29: the `Bench` receiver, `Bench-Call` and `Probe-Bench`.**
+The route is measured and the page is tested; the chains around them were not
+worth keeping. `Bench` returned an empty string on device and never worked, and
+all three rebuilt, worse, machinery this library already had: `Get-FileContext`
+types and coerces an input before encoding it, `Get-FileInfo` produces the
+descriptor everything dispatches on, and `Run-Choice` picks a verb and applies
+it. A page that works with no chain is a better record than three chains that
+duplicate the library and one of which is broken.
 
 **Leg `c` carries a trap worth keeping.** Coercing a plain-text `https` URL
 returns Safari's generated document, `<html><head><meta name="color-scheme">…`
@@ -1234,6 +1243,36 @@ build. Nothing in this repo could have checked them, and the ToolKit catalog
 carries Apple's metadata rather than a third party's. The cheap route, unspent
 here, is one card configured in the app and read back out of a dump: one tap of
 the expensive kind, against a receiver assembled from inference.
+
+## A list handed to Run Shortcut can arrive text-coerced
+
+*Measured on device 2026-08-29.*
+
+`Run-Pick` was split in two so its payload and verb list could both be
+parameters: a caller built a two-item list, `[payload, verbs]`, and passed it
+through `Run Shortcut`. On the other side, `Get Item 1 from Input` and `Get Item
+2 from Input` were supposed to take them apart.
+
+**They did not.** The menu came up with five rows instead of four, the first
+being `Clipboard Aug 29, 2026 at 8.55 AM`. The list had arrived as one
+newline-joined string, so the item grabs returned the whole blob and splitting it
+produced the payload's own line plus the four names. The payload became a menu
+choice.
+
+This is the coercion trap this file already records for base64, at a different
+boundary: a value crossing into another shortcut can be flattened to text, joined
+by newlines, with nothing raising an error. `Run-Choice` does not hit it because
+`Show-Loop` builds the list and consumes it inside one shortcut.
+
+**So a shortcut boundary is not a safe place to carry structure.** Where two
+arguments are needed, either keep the construction and the consumption in one
+shortcut, or make the second argument bounded enough to ride a delimiter, or pass
+one argument and let the other come from somewhere the callee reads itself.
+`Run-Pick` now takes the last route: the verb list is the input and the payload is
+the clipboard, which is one shortcut and no boundary at all.
+
+*Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
+hand-offs preserve a list and which flatten it. Only that this one flattened.
 
 ## "Unrecognized archive format" is usually the worker, not the file
 
