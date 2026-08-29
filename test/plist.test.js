@@ -266,3 +266,43 @@ test("an unpaired publish leaves the real builds.json alone", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// THE NOTICE IS THE THING EVERY CHAIN SHOWS. Log-Repo ended in a Show Result of
+// the GitHub API's whole PUT response, which Shortcuts clips to a few lines and
+// will not scroll, so the one screen a run always produces said nothing a person
+// could read. It now names the entry it wrote and the name the server confirmed,
+// which is short enough to fit and specific enough to check against Show-Log.
+test("Log-Repo's notice reads the entry, not the API response", () => {
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
+  const uuid = (id) => chain.actions.find(a => a.id.endsWith(id)).p.UUID;
+  const put = uuid("downloadurl");
+  const notice = chain.actions.find(a => a.id.endsWith("showresult"));
+
+  const refs = Object.values(notice.p.Text.Value.attachmentsByRange).map(a => a.OutputUUID);
+  assert.ok(!refs.includes(put),
+    "the raw PUT response is what made this notice unreadable");
+  assert.equal(refs.length, 2, "what was written, and what the server confirmed");
+  assert.ok(refs.includes(uuid("format.date")), "the stem is known before the PUT");
+
+  // Absence has to be legible: on a failed PUT there is no content.name, so the
+  // confirmation renders empty beside a stem that is always present. A notice
+  // that claimed success either way would be worse than the wall of JSON.
+  assert.match(notice.p.Text.Value.string, /^Logged ￼\nConfirmed: ￼$/);
+
+  // Every anchor offset must land on its own U+FFFC, or the attachments bind to
+  // the wrong characters and the notice silently renders the wrong values.
+  for (const [range, a] of Object.entries(notice.p.Text.Value.attachmentsByRange)) {
+    const i = Number(range.match(/^\{(\d+), 1\}$/)[1]);
+    assert.equal(notice.p.Text.Value.string[i], "￼",
+      `${a.OutputName} anchors at ${i}, which is not a placeholder`);
+  }
+});
+
+// The viewer cannot live inside Log-Repo: probe-coercion calls it five times, so
+// a web view there would be five sheets. It stays one card in Show-Log, which a
+// chain calls once at the end when it wants the rich view.
+test("Log-Repo shows a sheet nowhere, whatever it is called from", () => {
+  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
+  assert.ok(!chain.actions.some(a => a.id.endsWith("showwebpage")),
+    "a logger called N times must not open N sheets");
+});
