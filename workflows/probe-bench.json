@@ -1,0 +1,89 @@
+{
+  "name": "Probe-Bench",
+  "label": "Probe-Bench: Bench end to end on a baked-in payload, returning itself (7 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Bench end to end, carrying its own input. Bench reads the clipboard, so this sets it first rather than asking for something to be copied, and logs the result rather than leaving it on the clipboard to be pasted back. Run-Steps could not do this: it splits its input into shortcut NAMES, so there is no slot left for a payload."
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "BE110001-0000-4A00-9000-000000000001",
+        "WFTextActionText": "# Bench works\n\nRendered by *marked*, fetched from jsDelivr, inside a `data:` URL.\n\n- one\n- two"
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "BE110002-0000-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "BE110001-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "BE110003-0000-4A00-9000-000000000001",
+        "WFTextActionText": "md"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "BE110004-0000-4A00-9000-000000000001",
+        "WFWorkflowName": "Bench",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "BE110003-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "BE110005-0000-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{6, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "BE110004-0000-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "bench=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "BE110006-0000-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "BE110005-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
