@@ -1,6 +1,6 @@
 {
   "name": "Run-Pick",
-  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard (5 actions)",
+  "label": "Run-Pick: pick a verb from item 2, run it on item 1 (6 actions)",
   "workflow": {
     "WFWorkflowTypes": [
       "WFWorkflowTypeShowInSearch"
@@ -10,36 +10,62 @@
     {
       "id": "is.workflow.actions.comment",
       "p": {
-        "WFCommentActionText": "Run-Choice in four cards. The input is the verb list, one name per line; the payload is the clipboard. No Get-Shortcut: Run Shortcut is a legacy action whose target is a plain string key, so the chosen NAME goes straight into WFWorkflowName. Run-Steps already proves it, carrying a bare token string there with no WFWorkflow dict at all. What is given up against Run-Choice: the self-demo prologue, and an arbitrary payload, since this one always reads the clipboard. The separator is stated rather than left to the default: Run-Choice omits it and its own sample is newline-separated, so the default is almost certainly New Lines, but a wrong guess here degrades quietly into a one-row menu rather than failing."
+        "WFCommentActionText": "Run-Choice's contract, without Get-Shortcut. Input is a two-item list: item 1 the payload, item 2 the verb names one per line. Both arrive as parameters, so this composes: Run-Steps can pipe into it and its result pipes onward. The first cut read the clipboard for the payload to save two cards, which cost exactly that and made it unable to sit in a pipeline. Get-Shortcut is dropped because Run Shortcut is a legacy action whose target is a plain string key; Run-Steps already carries a bare token string in WFWorkflowName with no WFWorkflow dict."
       }
     },
     {
-      "id": "is.workflow.actions.getclipboard",
+      "id": "is.workflow.actions.getitemfromlist",
       "p": {
-        "UUID": "91CE0000-0001-4A00-9000-000000000001"
+        "UUID": "91CE0000-0001-4A00-9000-000000000001",
+        "CustomOutputName": "Payload",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "1",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "91CE0000-0002-4A00-9000-000000000001",
+        "CustomOutputName": "Verbs",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     },
     {
       "id": "is.workflow.actions.text.split",
       "p": {
-        "UUID": "91CE0000-0002-4A00-9000-000000000001",
+        "UUID": "91CE0000-0003-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
         "text": {
           "Value": {
-            "Type": "ExtensionInput"
+            "OutputName": "Verbs",
+            "OutputUUID": "91CE0000-0002-4A00-9000-000000000001",
+            "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFTextSeparator": "New Lines"
+        }
       }
     },
     {
       "id": "is.workflow.actions.choosefromlist",
       "p": {
-        "UUID": "91CE0000-0003-4A00-9000-000000000001",
+        "UUID": "91CE0000-0004-4A00-9000-000000000001",
         "WFInput": {
           "Value": {
             "OutputName": "Split Text",
-            "OutputUUID": "91CE0000-0002-4A00-9000-000000000001",
+            "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -49,13 +75,13 @@
     {
       "id": "is.workflow.actions.runworkflow",
       "p": {
-        "UUID": "91CE0000-0004-4A00-9000-000000000001",
+        "UUID": "91CE0000-0005-4A00-9000-000000000001",
         "WFWorkflowName": {
           "Value": {
             "attachmentsByRange": {
               "{0, 1}": {
                 "OutputName": "Chosen Item",
-                "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
+                "OutputUUID": "91CE0000-0004-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             },
@@ -65,7 +91,7 @@
         },
         "WFInput": {
           "Value": {
-            "OutputName": "Clipboard",
+            "OutputName": "Payload",
             "OutputUUID": "91CE0000-0001-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
