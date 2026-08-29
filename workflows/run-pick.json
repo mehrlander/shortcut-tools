@@ -1,0 +1,76 @@
+{
+  "name": "Run-Pick",
+  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard (5 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Run-Choice in four cards. The input is the verb list, one name per line; the payload is the clipboard. No Get-Shortcut: Run Shortcut is a legacy action whose target is a plain string key, so the chosen NAME goes straight into WFWorkflowName. Run-Steps already proves it, carrying a bare token string there with no WFWorkflow dict at all. What is given up against Run-Choice: the self-demo prologue, and an arbitrary payload, since this one always reads the clipboard."
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "91CE0000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "91CE0000-0002-4A00-9000-000000000001",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "91CE0000-0003-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "91CE0000-0002-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0004-4A00-9000-000000000001",
+        "WFWorkflowName": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Chosen Item",
+                "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "91CE0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
