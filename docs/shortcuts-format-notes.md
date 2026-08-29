@@ -399,7 +399,20 @@ while a sheet is gone when it is dismissed.
 `showwebpage` takes a plain `https` string in `WFURL` with no wrapper at all,
 which the corpus already showed in `Auto Message` and `Routine search`. The
 sheet then loads that address directly, so the page keeps its own origin and
-with it the localStorage partition the stored GitHub token lives in. So the
+with it the localStorage partition the stored GitHub token lives in.
+
+**Wrong 2026-08-29 → the sentence above:** keeping the origin is right; keeping
+the *token* is not, and the two were conflated. A storage partition is keyed by
+origin **within a data store**, and the data store is per-app: the sheet is a
+`WKWebView` inside Shortcuts, with its own store, so a token saved in Safari is
+not there however correct the origin is. Reported from the device on 2026-08-29,
+when a hosted page opened in the sheet and asked for a token.
+
+So the hosted route fixes what `file://` broke, which is the origin, and does
+not deliver Safari's token. What it should buy instead is a token entered **once
+per app**, and whether the sheet's store survives dismissal is the open
+measurement: enter a token, dismiss, run the receiver again. If it persists, the
+cost is one entry per app rather than one per run. So the
 split is not sheet-versus-Safari, it is which of the two sheet inputs a page
 arrives on: HTML text lands at `file://` and loses the token, while a hosted URL
 does not. `Dictate` is one action on that route, and the back tap's
