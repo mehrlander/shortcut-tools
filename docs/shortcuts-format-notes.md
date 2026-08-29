@@ -931,8 +931,212 @@ expression, prefer repeating a cheap accessor over binding it to a variable, and
 avoid object-to-array conversions. Code written this way looks worse than normal
 JavaScript, on purpose.
 
+**The mechanism argues for a route this file has been reading as a prohibition.**
+The cost is in the SOURCE, not in the work: a script that parses in one line
+stays cheap however much that line goes on to do. So the discipline above is the
+second-best answer to the cliff, and the best one is to stop sending source at
+all, keeping the heavy code somewhere that has already parsed it and sending a
+call. A page that has pulled its libraries off a CDN is that somewhere, and this
+action is how a shortcut talks to one. See
+[The browser is a coprocessor](#the-browser-is-a-coprocessor-not-only-a-destination),
+which is the same action read the other way round.
+
 Sources: [Apple Shortcuts JavaScript performance fast-path discovery](https://claude.ai/chat/1742ec65-706f-4515-babc-d12c37cd9468)
 (2025-09-14) and the same-day Gemini session `gemini-session/134`.
+
+## The browser is a coprocessor, not only a destination
+
+*Read out of the corpus 2026-08-29. Every card quoted below is on this device.*
+
+Every render route this estate has built sends a page **out**. `Show-Html`
+navigates Safari to a `data:` URL, `Show-WebView` raises a sheet, `show.py` gzips
+a page into a link. In all three the shortcut's flow ends where the page begins,
+which is why the return channel needed `Log-Repo` and why a diagnostic used to
+end in a question.
+
+`Run JavaScript on Web Page` runs the other way. It executes inside a running
+shortcut and hands its value back through `completion()`, so a page is something
+a shortcut **calls**. The last full dump has 26 such cards across 4 shortcuts, 20
+of them in `Get-Nice` alone, which is authored, live, and called by nothing;
+across all 15 dumps, 9 shortcuts have used it.
+
+Three properties, each from a real card rather than inferred:
+
+**`completion()` returns structure, not only text.** `Get-Nice` ends a card with
+`completion(window.siriData)`, where `siriData` is an array of objects, and the
+value arrives as a list the next action can index.
+
+**The page is a heap between calls.** Three separate cards in one run:
+
+| Card | Script |
+| --- | --- |
+| A | `const tally = {}; …; window.siriData = [tally]; completion("Data stored")` |
+| B | `window.siriData[1] = {...window.siriData[0]}; …; completion("Data stored")` |
+| C | `completion( window.siriData )` |
+
+B reads what A left behind, and nothing carries the value between them except the
+page. `Get-Nice` also puts nine of these calls inside one `Repeat` block, walking
+the DOM and offering each level's children as a menu, so repeated calls against
+one page are the working pattern rather than a curiosity.
+
+**The script itself can be computed.** `WFJavaScript` accepts a
+`WFTextTokenString`, so a variable interpolates into the source. `Utilities Menu`
+embeds one at offset 164 of a longer script; `AI Run JavaScript On Page` goes
+further and makes the **whole** parameter one attachment, `{"{0, 1}": {"Type":
+"Variable", "VariableName": "FinalCode"}}` over a bare `￼`. What runs is
+therefore decided at run time.
+
+**What the input slot accepts** is the part still narrow. Every card in the
+corpus passes a Safari page: of 32 cards across 9 shortcuts, 28 take
+`ExtensionInput` from the share sheet, one a `Variable` named `Safari Web Page`,
+one an `ActionOutput` in `WebTools`, and two carry no input at all.
+**It does not take a tab entity, measured on device 2026-08-28** by
+[`probe-tab-js`](../workflows/probe-tab-js.json). Shortcuts refuses with a type
+error rather than a silence: *"Run JavaScript on Web Page failed because
+Shortcuts couldn't convert from Tab to Safari Web Page."* So the slot wants a
+`WFSafariWebPageContentItem` and there is no converter from the App Intents
+entity, which closes the cheap entry and leaves the share sheet as the only way
+to hand this action a live page.
+
+**`Find Tabs` itself works, and that half is worth keeping.**
+`com.apple.mobilesafari.TabEntity` is used by nothing in 577 shortcuts, and the
+same run counted 190 open tabs and logged them, so the entity query and its
+`Count` are both good. Its card shape is the one Safari's own `BookmarkEntity`
+carries, `AppIntentIdentifier` naming the entity and an empty
+`WFContentItemFilter` meaning no filter. What is missing is a consumer: nothing
+measured here turns a Tab into anything another action will take.
+
+The probe returned itself exactly as built. Its two `Log-Repo` calls are ordered
+so the first lands before the risky card, and three runs each left `tabs=190` in
+`shortcuts/log/` while the JavaScript card failed behind them. A probe that
+fails halfway should still be readable from the repo, and this one was.
+
+The entity-slot question from [the library-management
+section](#the-library-management-actions-address-an-app-intents-entity-not-a-name)
+was left to "fold into the next probe that has a real reason to exist." This is
+that probe, and it still does not carry it, for a reason rather than an
+oversight: answering that one means opening a shortcut in the editor, which ends
+the run and leaves the reader to report what happened. It would turn a probe that
+returns itself into one that asks.
+
+### What it is for
+
+Load the libraries into a page once, from the CDN, and every call after that is
+one line, so the parse cliff never applies:
+
+```js
+completion(bench.call("md", "<base64>"))
+```
+
+web-tools' `pages/bench.html` is that page and
+no chain drives it any more; `bench-call` was withdrawn with the rest of the
+bench chains on 2026-08-29, for the reason under **Withdrawn** below. It would
+have to be reached at its own hosted address, and the 🥏 toss is not a substitute
+for one: `toss-render.html` mounts a page in an **iframe** on a `blob:` URL, so
+the script this action sends runs in the top document, where `bench` does not
+exist and the frame is cross-origin anyway. Input
+crosses as base64 because the payload is interpolated into a string literal,
+where a quote or a newline in the text would end it early; the estate already
+base64s on this boundary, in `Log-Repo`.
+
+The gain is not markdown rendering. It is that a shortcut acquires every library
+on the CDN, with the network, with state that survives between calls, and with
+nothing to install. `TransformTextWithJavaScriptIntent` serves 23 cards in this
+corpus today, and it is a paid third-party app doing strictly less.
+
+**The share sheet is the cost, and there may be a route with none.** With the tab
+entity refused, that route needs the user already on the bench page. The
+`data:` URL route above needs no page at all: `js-data-url` runs a script that
+way and hands the value back in five actions, so a page that fetches its library
+before writing its answer would be the same coprocessor at one tap from
+anywhere. Everything in it has to be **synchronous**, since the coercion captures
+rendered text at a moment nobody has written down and an async resolution is lost
+with no error, which is what a blocking `XMLHttpRequest` and an indirect `eval`
+buy. `probe-inline-bench` was that page under one tap, reporting the fetch, the eval,
+the library's output and the elapsed cost on four lines. It is withdrawn; its
+question is `probe-coercion`'s `e` leg now.
+
+**It came back empty on device 2026-08-28, and that said nothing about the
+coercion.** The shortcut had no page in it. `plist.py` did not resolve
+`{"$file": path}`, so the Text action carried the literal dictionary and the
+`data:` URL was built from a base64 of that. `pack.py` had resolved the directive
+since it was introduced; the plist mirror never did, and nothing errored at any
+point. The shortcut generated, imported, ran, and returned an empty string.
+
+**Two mirrors of one chain set have to resolve a directive the same way, or the
+cheaper one lies.** This repo already learned that on 2026-08-27, when the suite
+and `--check` disagreed about orphans, and wrote down that where two things state
+one invariant the weaker one is a wrong answer rather than a gap. The same shape
+returned in a different place two days later. `plist.py` now imports `resolve`
+from `pack` rather than carrying a second copy, and `test/plist.test.js` fails on
+any plist shipping a `$file` key.
+
+**The probe was also built wrong, independently of that.** It was shaped to
+separate four failures and separated none, because every one of them collapses
+into a page that renders nothing, which is why a missing page could pass for a
+runtime answer at all. A probe against a stage that can kill the run needs a
+**control that runs first and logs first**.
+[`probe-coercion`](../workflows/probe-coercion.json) is the replacement: four
+legs, each committing before the next begins, over static HTML, a script that
+rewrites its own line, a real `https` URL, and the sync/async pair. Read the first
+empty line and everything above it worked.
+
+### The coercion route, settled on device 2026-08-28
+
+`probe-coercion` ran all five legs. Every one passed, which closes a question
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built for on 2026-08-10
+and never ran, and makes the coercion the cheapest route in this file.
+
+| Leg | Input | Result |
+| --- | --- | --- |
+| `a` | static HTML | `STATIC OK` |
+| `b` | a script that rewrites its own line | `SCRIPT OK` |
+| `c` | `https://api.github.com/zen` | the page source, wrapper and all |
+| `d` | sync and async requests | `sync: 200, 26 bytes` / `async: 26 bytes` |
+| `e` | a page that fetches a library and uses it | 40,214 bytes, `eval: ok`, markdown rendered, 738 ms |
+
+**The coercion waits for asynchronous work, so the standing caution is retired.**
+This file has said since 2026-08-10 to write the request synchronously, because
+an `await` that resolved late would yield an empty result with no error. Leg `d`
+returned both lines. Prefer synchronous anyway where it costs nothing, since it
+keeps the page one straight line, but it is a preference now and not a
+correctness rule.
+
+**Leg `e` is the whole coprocessor, without a live page.** A `data:` URL document
+pulled 40 KB of `marked` off jsDelivr with a blocking `XMLHttpRequest`, evaluated
+it with an indirect `eval`, rendered markdown and handed the result back into the
+shortcut, in 738 ms. No hosted page, no Safari tab, no share sheet, no
+third-party app. That is strictly better than the `Run JavaScript on Web Page`
+route this section opened with, which needs a live Safari page and has no way to
+get one but the share sheet.
+
+[`pages/bench-run.html`](../pages/bench-run.html) is the page, fetching one
+library only when the op needs it, and `test/bench-page.test.js` runs its real
+script in a `vm` against a stubbed document and XHR, the way `show.test.js` runs
+the shell's.
+
+**Withdrawn 2026-08-29: the `Bench` receiver, `Bench-Call` and `Probe-Bench`.**
+The route is measured and the page is tested; the chains around them were not
+worth keeping. `Bench` returned an empty string on device and never worked, and
+all three rebuilt, worse, machinery this library already had: `Get-FileContext`
+types and coerces an input before encoding it, `Get-FileInfo` produces the
+descriptor everything dispatches on, and `Run-Choice` picks a verb and applies
+it. A page that works with no chain is a better record than three chains that
+duplicate the library and one of which is broken.
+
+**Leg `c` carries a trap worth keeping.** Coercing a plain-text `https` URL
+returns Safari's generated document, `<html><head><meta name="color-scheme">…`
+around a `<pre style="word-wrap: break-word; white-space: pre-wrap">`. So the
+coercion yields page **source**, not rendered text, and the wrapper Safari
+supplies is `pre-wrap`: exactly the soft-wrap hazard this file warns about, on a
+document nobody here authored. A page you write should set `white-space: pre`
+itself, which `bench-run.html` does.
+
+Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
+corpus, already falls back exactly this way. Handed something that is not a
+Safari page, it assembles the script into a `data:text/html` URL, coerces it to
+rich text, and URL-decodes the result out of the body. The pattern being reached
+for here is one an imported shortcut settled on first.
 
 ## Some actions are load-bearing without appearing in the data flow
 
@@ -981,16 +1185,28 @@ than a local file, because the origin differs:
   `Access-Control-Allow-Origin: *`, which the GitHub API does. The opaque origin
   does not block it. Sending credentials as an `Authorization` header is fine;
   `credentials: 'include'` would not be.
+
+  **Stale 2026-08-29 (Chromium half only) → the device result below:** this no
+  longer reproduces in the sandbox's Chromium, where a `data:` URL document gets
+  no network at all. Against a local server sending
+  `Access-Control-Allow-Origin: *`, synchronous XHR, asynchronous XHR and `fetch`
+  all failed from a `data:` origin, while the same page on an `http` origin got
+  all three. So it is the opaque origin rather than CORS or the endpoint, and it
+  is not specific to the synchronous form. Whether Chromium changed or the
+  original measurement differed in setup is not established. **The device half is
+  untouched:** WebKit ran both requests on 2026-08-11 and returned real bytes, so
+  the split is browser-to-browser and the device is the authority for this route.
 - **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
   DOM before anything downstream can read the page. This is the reason to prefer
   the deprecated synchronous form here: the behavior it is deprecated for is
   exactly the guarantee this route needs.
 
-*Unconfirmed:* whether an **async** resolution lands before the coercion reads
-the page. If it does not, an `await` yields an empty result with no error, which
-is the worst failure shape available. Until someone runs
-[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
-both paths on separate lines from one tap, write the request synchronously.
+*Settled 2026-08-28, and the answer is yes.* `probe-coercion`'s `d` leg reported
+`sync: 200, 26 bytes` and `async: 26 bytes`, so the coercion waits for an
+asynchronous resolution as well as a blocking one. Prefer the synchronous form
+where it costs nothing, since it keeps a page one straight line with no capture
+moment to reason about, but it is no longer a correctness requirement. See
+[The coercion route](#the-coercion-route-settled-on-device-2026-08-28).
 
 The same page was run on device 2026-08-11 through `Run-Html`, and reported both
 paths resolved. **That is not an answer to the question above**, and the reason
@@ -1027,6 +1243,64 @@ build. Nothing in this repo could have checked them, and the ToolKit catalog
 carries Apple's metadata rather than a third party's. The cheap route, unspent
 here, is one card configured in the app and read back out of a dump: one tap of
 the expensive kind, against a receiver assembled from inference.
+
+## A list handed to Run Shortcut can arrive text-coerced
+
+*Measured on device 2026-08-29.*
+
+`Run-Pick` was split in two so its payload and verb list could both be
+parameters: a caller built a two-item list, `[payload, verbs]`, and passed it
+through `Run Shortcut`. On the other side, `Get Item 1 from Input` and `Get Item
+2 from Input` were supposed to take them apart.
+
+**They did not.** The menu came up with five rows instead of four, the first
+being `Clipboard Aug 29, 2026 at 8.55 AM`. The list had arrived as one
+newline-joined string, so the item grabs returned the whole blob and splitting it
+produced the payload's own line plus the four names. The payload became a menu
+choice.
+
+This is the coercion trap this file already records for base64, at a different
+boundary: a value crossing into another shortcut can be flattened to text, joined
+by newlines, with nothing raising an error. `Run-Choice` does not hit it because
+`Show-Loop` builds the list and consumes it inside one shortcut.
+
+**So a shortcut boundary is not a safe place to carry structure.** Where two
+arguments are needed, either keep the construction and the consumption in one
+shortcut, or make the second argument bounded enough to ride a delimiter, or pass
+one argument and let the other come from somewhere the callee reads itself.
+`Run-Pick` now takes the last route: the verb list is the input and the payload is
+the clipboard, which is one shortcut and no boundary at all.
+
+*Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
+hand-offs preserve a list and which flatten it. Only that this one flattened.
+
+## "Unrecognized archive format" is usually the worker, not the file
+
+*Measured on device 2026-08-28.*
+
+`Library-Import` fetches a plist, gzips it, POSTs it to a third-party signing
+worker over plain `http`, and unzips the reply. That last card is where the alert
+comes from: it is `unzip` refusing a response that is not an archive, which means
+the worker returned something else.
+
+**It fires intermittently on files that are perfectly good.** `Pick-Clip` failed
+with it, then installed from the *same SHA-pinned URL* on an immediate retry, with
+the served bytes verified identical to local and every card shape matched against
+a real card in the corpus. `Run-Pick` had installed from the same commit seconds
+before the failure, so the URL, the CDN and the rest of the pipeline were all fine.
+
+So the working rule: **retry once before suspecting the file.** Two failures in a
+row is evidence about the plist; one is not.
+
+Two consequences worth stating. `Library-Install` is the fallback and also the
+discriminator, since it fetches the packed actions and pastes them without
+touching the worker, at the cost of one paste; it reaches everything except
+file-level settings, so it suits any chain not declaring `WFWorkflowTypes` or
+input classes. And the 2026-08-29 commit that fixed `plist.py`'s unresolved
+`$file` attributed `Probe-Coercion`'s import failure to that bug. The bug was
+real and worth fixing, but the fix and a retry happened in the same step, so
+whether it caused *that* failure was never isolated and should not be read as
+settled.
 
 ## The library-management actions address an App Intents entity, not a name
 

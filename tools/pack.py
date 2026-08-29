@@ -18,7 +18,7 @@ that file's text instead. Paths are relative to the repository root, so a chain
 carrying an HTML payload references the real file rather than a pasted copy of
 it that drifts. Resolved before packing, so the plist sees only the text.
 """
-import argparse, base64, json, plistlib, re, sys, urllib.parse
+import argparse, base64, hashlib, json, plistlib, re, sys, urllib.parse
 from pathlib import Path
 
 TARGET = "Copy-ActionFromClaude"
@@ -28,8 +28,43 @@ GLYPH = "￼"
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def resolve(node):
-    """Replace every {"$file": path} with the file's text, in place, recursively."""
+def build_id(chain):
+    """A short content hash of the chain, so a shortcut can say which build it is.
+
+    The recurring waste in this repo is not knowing whether the copy that ran is
+    the copy just pushed. An install logs the ref it came from, but a RUN has no
+    way to say, so a stale copy behaves exactly like a fresh one that failed. A
+    chain carrying {"$build": true} gets this substituted, logs it, and the
+    ambiguity is gone.
+
+    Hashed with the directive still in place, so it does not depend on itself,
+    and over the canonical JSON so it is deterministic across runs. Both mirrors
+    substitute it, because a directive resolved by one and not the other is the
+    exact defect $file already caused once.
+    """
+    return hashlib.sha1(json.dumps(chain, sort_keys=True,
+                                   ensure_ascii=False).encode()).hexdigest()[:7]
+
+
+BUILD_TOKEN = "#BUILD#"   # exactly len(build_id), so anchor offsets do not move
+
+
+def resolve(node, build=None):
+    """Replace {"$file": path} and the #BUILD# token, recursively.
+
+    The build id substitutes inside a STRING rather than into an attachment
+    slot, because an attachmentsByRange entry is an attachment descriptor and a
+    bare string there is not one. The token is the same width as the id it
+    becomes, so every U+FFFC offset in the same string survives untouched. That
+    is asserted, not assumed.
+    """
+    if isinstance(node, str):
+        if BUILD_TOKEN in node:
+            if build is None:
+                raise SystemExit("%s used where no build id was supplied" % BUILD_TOKEN)
+            assert len(build) == len(BUILD_TOKEN), "build id must be %d chars" % len(BUILD_TOKEN)
+            return node.replace(BUILD_TOKEN, build)
+        return node
     if isinstance(node, dict):
         if set(node) == {"$file"}:
             path = ROOT / node["$file"]
@@ -40,13 +75,13 @@ def resolve(node):
                 raise SystemExit("$file %s contains a raw U+FFFC, which would "
                                  "become an unbound anchor" % node["$file"])
             return text
-        return {k: resolve(v) for k, v in node.items()}
+        return {k: resolve(v, build) for k, v in node.items()}
     if isinstance(node, list):
-        return [resolve(v) for v in node]
+        return [resolve(v, build) for v in node]
     return node
 
 
-def pack_action(action):
+def pack_action(action, build=None):
     """One {id, p} to base64 plist XML.
 
     Compaction collapses whitespace between tags, which is worth a third of the
@@ -56,7 +91,7 @@ def pack_action(action):
     ships uncompacted. Correct and larger beats smaller and wrong.
     """
     doc = {"WFWorkflowActionIdentifier": action["id"],
-           "WFWorkflowActionParameters": resolve(action["p"])}
+           "WFWorkflowActionParameters": resolve(action["p"], build)}
     full = plistlib.dumps(doc, fmt=plistlib.FMT_XML).decode()
     tight = re.sub(r">\s+<", "><", full)
     xml = tight if plistlib.loads(tight.encode()) == doc else full
@@ -68,7 +103,8 @@ def payload(chain):
     actions = chain["actions"]
     names = [a["id"].replace("is.workflow.actions.", "") for a in actions]
     label = chain.get("label", "%d actions" % len(actions))
-    return {"actions": [pack_action(a) for a in actions],
+    build = build_id(chain)
+    return {"actions": [pack_action(a, build) for a in actions],
             "report": label + "\n" + "\n".join(names)}
 
 

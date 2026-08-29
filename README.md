@@ -112,7 +112,18 @@ python3 tools/run.py Get-FromJs --log            # run it, commit what it return
 python3 tools/run.py Get-FileInfo Show-Table     # pipe one into the next
 python3 tools/run.py Show-Loop --text 'hello'    # bake the input in
 python3 tools/run.py --verify '<link>'           # read one back before sending
+python3 tools/run.py --pick Get-FileInfo Show-Table   # a menu, run on the clipboard
 ```
+
+`--pick` emits a `Run-Pick` link: the names become a menu on the device and the
+one you choose runs on the clipboard, so a link is a menu definition rather than
+a command. It **checks each name against the library index first**, because a
+link's names are unchecked strings and this repository has already lost a
+fortnight to two of them going stale. Two false positives to expect, both from
+the index being a snapshot: anything installed since the last dump, and any name
+computed at run time. `--unchecked` skips the audit for those, and says on stderr
+that it did, because a link nobody verified is otherwise indistinguishable from
+one that was.
 
 Two or more targets, or `--log`, route through `Run-Steps`, which splits its
 input on newlines and runs each name with the previous result as its input. Its
