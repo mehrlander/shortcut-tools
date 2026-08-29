@@ -206,6 +206,11 @@ Three things follow, and none is optional for anything handed over:
    `origin/main` and fetches first, because the working tree is a checkout from
    whenever the session last pulled; reading the tree showed entries three days
    stale while the device had committed minutes earlier.
+   **The reader is a pair, and both halves say the same thing.** web-tools'
+   `pages/shortcut-log.html` renders the same log for whoever tapped the link,
+   from the same two sources, because until it existed the useful half of a run
+   was legible from a checkout and invisible on the phone: Show Result clips a
+   payload and does not scroll.
 2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
    is JSON with `op`, `name` and `build`, so the reader can render it as a row
    rather than a wall of text.
@@ -214,6 +219,13 @@ Three things follow, and none is optional for anything handed over:
    exactly as wide as the id, so U+FFFC anchor offsets beside it survive. Held by
    `test/plist.test.js`; a directive one mirror resolves and the other does not
    is the `$file` defect over again.
+4. **And the id is scored, because alone it answers nothing.** A stamp says
+   which copy ran; it takes `plists/builds.json` (name -> id, published by
+   `plist.py --publish`) to say whether that copy is current. Both readers mark
+   a row `current` or `stale`, and both stay **silent when the manifest is
+   unknown**: an unlooked-up answer reading as a good one is worse than no
+   verdict. Getting this by hand cost a checkout and a hashed chain on
+   2026-08-29, which is the rework the stamp was added to prevent.
 
 **And report it back.** A reply that hands over a link ends by showing the actual
 log rows, so both sides can see what ran rather than inferring it from silence.
