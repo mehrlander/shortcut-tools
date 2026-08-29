@@ -199,7 +199,7 @@ what ran. That asymmetry cost this session hours: a link was handed over, nothin
 came back, and there was no way to tell a stale copy from a fresh one that
 failed, so the next move was rework rather than a fix.
 
-Three things follow, and none is optional for anything handed over:
+Four things follow, and none is optional for anything handed over:
 
 1. **Read the log, do not reconstruct it.** `python3 tools/log.py` prints the
    entries newest first, with the build each install came from. It reads
