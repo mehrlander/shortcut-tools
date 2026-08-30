@@ -49,6 +49,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
+| `dump-one` | One named shortcut, serialized and handed to `Log-Repo` instead of committed by the chain itself. The probe form of `dump-named`: exact-match rather than `⟦name⟧` containment, no token injection and no PUT of its own, and the record lands in `shortcuts/log/`. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -396,6 +397,32 @@ That is the whole loop for the common case. The two-step below is the precise
 form, worth it when the question is "exactly which ones does the corpus lack"
 rather than "give me the recent work", since `dump-recent` cannot know what the
 corpus already holds and will re-send anything that happens to be near the top.
+
+### The probe form: let `Log-Repo` do the committing
+
+`dump-one` is the same loop with the delivery half deleted. `Dump-Named` ends
+with seven actions that stamp a date, base64 the payload, inject the token and
+PUT it, and `Log-Repo` already does exactly that, so the chain calls it and
+stops at thirteen actions.
+
+Three things follow from that, and only the first is about size. The token and
+the PUT live in one place, so a chain that hands over a payload cannot get the
+credential half wrong. The clipboard write inside `Log-Repo` runs first and
+unconditionally, which makes the fallback free rather than something each
+dumper has to remember. And the record lands in `shortcuts/log/` rather than
+`shortcuts/incoming/`, which is the cost: `read-incoming.py` does not see it,
+so a payload routed this way is read where the log is read.
+
+**A miss logs a row rather than nothing.** The chain writes its not-found
+record before the loop, so a name that matches no shortcut still commits
+`found:false` beside the name that was asked for. An empty log entry would read
+as a broken chain rather than a lookup that came up empty, which is the same
+confusion silence caused when a dump did not arrive at all.
+
+It matches by name exactly, where `dump-named` asks whether its input contains
+`⟦name⟧`. The brackets are what let one input carry a list; a single
+target does not need them, and dropping them removes two actions and the
+delimiters from the link.
 
 ### The precise form: manifest, then named
 
