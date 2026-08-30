@@ -51,7 +51,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
 | `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
-| `run-app-determined` | The current app picks the shortcut and the map is the data: seven actions, a literal dictionary of app name to shortcut name, a lookup, and one Run Shortcut on a computed target. Replaces a ladder of app tests where each arm needed its own Stop and Output. |
+| `run-app-determined` | The current app picks the shortcut and the map is the data: seven actions, a text block of `App=Shortcut` rows, a built regex to read one, and a Run Shortcut on a computed target. Replaces a ladder of app tests where each arm needed its own Stop and Output. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -452,12 +452,35 @@ never been run; `Run-Pick`'s five-row menu is the only evidence and it points at
 no. Reading the app in place sidesteps the question and leaves the single input
 slot for the payload.
 
-**The map is data and it is in the file.** `WFDictionaryFieldValueItems` is
-plain key and value strings, as diffable as any other parameter, so a route
-changes by editing the chain and reinstalling. The one real cost is that a
-target name stops living in `WFWorkflowName`, which is the only field the
-by-name audit in `CLAUDE.md` used to read. That audit reads dictionary values
-now.
+**The map is line-delimited text, and the choice against a Dictionary card is
+narrow.** Both forms are seven actions and both are fully visible in the chain
+file; a dictionary literal is `WFDictionaryFieldValueItems`, plain key and value
+strings. What separates them is editing and diffing. Adding a route to the text
+block is one line in the plist and one line in the field on device; adding one
+to a dictionary is a nested structure in the file and a row-at-a-time UI in the
+editor. Against that, a dictionary key matches exactly and a regex does not.
+
+Two sharp edges follow from the regex, and both are the price of the text form:
+
+- **An app name carrying a regex metacharacter breaks the pattern.** The name is
+  interpolated into `(?<=\n<name>=).+`, so a display name with `+`, `(` or `.`
+  matches something other than itself. Same class as the JSON quoting hazard that
+  cost `dump-folder` its parse on a shortcut called `Say "hi"`.
+- **The lookbehind anchors on a newline rather than `^`**, which is why the map
+  begins with one. `^` would need multiline mode and nothing in the corpus says
+  whether Match Text runs in it, so the leading newline sidesteps the question
+  instead of betting on it.
+
+**The middle path, if the regex ever bites:** hold the map as JSON in a Text
+action and parse it with `Get Dictionary from Input`, which is one action more
+and buys exact key matching back while keeping the single editable block. That
+action has 226 real cards in the corpus, so it is not a gamble either.
+
+**Both halves of the mechanism are copied, not invented.** 25 of the corpus's
+146 Match Text cards carry a pattern built at run time, `Reddit Tracker`
+interpolating an output inside a lookahead. And a single match coerces straight
+to text in a token slot, which is how that same shortcut drops `Matches` into a
+URL string.
 
 ### A default in three actions
 

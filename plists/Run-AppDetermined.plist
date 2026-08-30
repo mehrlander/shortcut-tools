@@ -17,86 +17,33 @@
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.dictionary</string>
+			<string>is.workflow.actions.gettext</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Routes</string>
 				<key>UUID</key>
 				<string>8A990000-0002-4A00-9000-000000000001</string>
-				<key>WFItems</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>WFDictionaryFieldValueItems</key>
-						<array>
-							<dict>
-								<key>WFItemType</key>
-								<integer>0</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>GitHub</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>Show-Repo</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
-							<dict>
-								<key>WFItemType</key>
-								<integer>0</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>Shortcuts</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>Choose-Manage</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
-						</array>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFDictionaryFieldValue</string>
-				</dict>
+				<key>WFTextActionText</key>
+				<string>
+GitHub=Show-Repo
+Shortcuts=Choose-Manage</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.getvalueforkey</string>
+			<string>is.workflow.actions.text.match</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
 				<string>8A990000-0003-4A00-9000-000000000001</string>
-				<key>WFDictionaryKey</key>
+				<key>WFMatchTextPattern</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{0, 1}</key>
+							<key>{5, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Current App</string>
@@ -107,24 +54,33 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>￼</string>
+						<string>(?&lt;=
+￼=).+</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
 				</dict>
-				<key>WFInput</key>
+				<key>text</key>
 				<dict>
 					<key>Value</key>
 					<dict>
-						<key>OutputName</key>
-						<string>Dictionary</string>
-						<key>OutputUUID</key>
-						<string>8A990000-0002-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Routes</string>
+								<key>OutputUUID</key>
+								<string>8A990000-0002-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼</string>
 					</dict>
 					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
+					<string>WFTextTokenString</string>
 				</dict>
 			</dict>
 		</dict>
@@ -148,7 +104,7 @@
 						<key>Value</key>
 						<dict>
 							<key>OutputName</key>
-							<string>Dictionary Value</string>
+							<string>Matches</string>
 							<key>OutputUUID</key>
 							<string>8A990000-0003-4A00-9000-000000000001</string>
 							<key>Type</key>
