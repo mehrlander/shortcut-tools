@@ -1,6 +1,6 @@
 {
-  "name": "Get-Shortcut",
-  "label": "Get-Shortcut: one named shortcut as JSON, name included, returned not sent (7 actions)",
+  "name": "Get-ShortcutJson",
+  "label": "Get-ShortcutJson: one named shortcut as JSON, name included, returned not sent (7 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",

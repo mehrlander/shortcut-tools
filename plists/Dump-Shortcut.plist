@@ -24,7 +24,7 @@
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFWorkflowName</key>
-				<string>Get-Shortcut</string>
+				<string>Get-ShortcutJson</string>
 			</dict>
 		</dict>
 		<dict>
@@ -101,7 +101,7 @@
 				<key>WFDictionaryKey</key>
 				<string>build</string>
 				<key>WFDictionaryValue</key>
-				<string>5c8d163</string>
+				<string>45ca776</string>
 			</dict>
 		</dict>
 		<dict>

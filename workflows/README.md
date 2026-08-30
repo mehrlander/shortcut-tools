@@ -49,8 +49,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
-| `get-shortcut` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. |
-| `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
+| `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
+| `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -401,17 +401,26 @@ corpus already holds and will re-send anything that happens to be near the top.
 
 ### Get returns, Dump delivers
 
-Two verbs, and the split is the point rather than the tidiness. `get-shortcut`
+Two verbs, and the split is the point rather than the tidiness. `get-shortcut-json`
 resolves a name and hands back `{"name": …, "shortcut": …}`. It writes nothing,
 reaches no network, and can be called from anything that wants a shortcut's
-contents. `dump-shortcut` is the delivery half: it calls `get-shortcut`, sets
+contents. `dump-shortcut` is the delivery half: it calls `get-shortcut-json`, sets
 `op` and `build` on the dictionary that comes back, and passes it to `Log-Repo`,
 which owns the stamp, the clipboard fallback, the token and the PUT.
 
 So the network appears exactly once in the library, in `Log-Repo`, and the
-retrieval appears exactly once, in `get-shortcut`. A chain that wants one
+retrieval appears exactly once, in `get-shortcut-json`. A chain that wants one
 shortcut's contents for some other purpose calls the getter and pays nothing for
 delivery it does not want.
+
+**The name is `Get-ShortcutJson`, not `Get-Shortcut`, and that is not
+fastidiousness.** The device already carries a `Get-Shortcut`, and
+`Share-ShortcutResult`, `Get-StructuredInput` and `Run-Choice` all do
+`run «Get-Shortcut»` with its result: its contract is a name in and a
+**runnable shortcut** out. Returning JSON under that name would break three
+callers silently, since a Run Shortcut card handed a JSON string fails at run
+time rather than at install. A getter that returns a different type is a
+different verb.
 
 **`op` and `build` are set as dictionary keys, not spliced into the text.**
 `Set Dictionary Value` takes the dictionary explicitly (`WFDictionary`, present
@@ -446,7 +455,7 @@ two-branch read appears 473 times, so the pass-through is about a sixth of all
 End If reads and not a trick.
 
 **Where the literal is a real name, running the chain bare demonstrates it.**
-`get-shortcut` defaults to `Choose-Sample`, so a tap with no input returns a real
+`get-shortcut-json` defaults to `Choose-Sample`, so a tap with no input returns a real
 shortcut rather than failing, the same self-demo prologue [`run-pick`](run-pick.json)
 carries and that 72 shortcuts in the corpus use.
 
