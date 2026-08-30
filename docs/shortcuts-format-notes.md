@@ -1436,6 +1436,14 @@ uninstalled app is outside it.
 *Established 2026-08-30 by searching all three ToolKit catalogs and the 636-file
 corpus, before anything was sent to the device.*
 
+> [!WARNING]
+> **Wrong 2026-08-30 (same day) → the iOS claim below:** the device says
+> `Find Apps` is **Mac-only**. Imported and opened on the phone, the card
+> renders and its body reads *"This action can only run on Mac."* Everything
+> here about the catalog is accurate; the inference drawn from it was not, and
+> what the catalog cannot answer is stated under *The `platforms` field is not a
+> runtime claim* below. **There is no route to the installed-app list on iOS.**
+
 **Apps: `is.workflow.actions.filter.apps`, "Find Apps".** An ordinary content-item
 filter, so the whole `Find X` grammar applies: omit `WFContentItemInputParameter`
 and its source is the system library rather than a piped list, which is the 57-use
@@ -1464,11 +1472,44 @@ an app. This is the same wall as *No action can put actions into a shortcut*
 below, from the other side: Shortcuts will neither read its own action inventory
 nor write one.
 
-**So the action list is reached by inference, not by asking.** Every app-provided
+**So both lists are reached by inference, not by asking.** Every app-provided
 action carries its vendor's bundle id as the identifier prefix, which makes a
 corpus dump a census of the apps whose actions are *in use*: 26 bundles over the
-636 files, against 52 apps named in `WFSelectedApp` pickers. Neither is the
-installed set, and the gap between them is the whole reason the probe exists.
+636 files, against 52 apps named in `WFSelectedApp` pickers, 63 together. That is
+now the ceiling rather than a stopgap.
+
+### The `platforms` field is not a runtime claim
+
+*Established 2026-08-30 on the device, correcting the inference above the same
+day it was written.*
+
+**A catalog hit licenses "this action exists", never "it runs here".** The
+mirror of the honest-search rule, and it cost a tap to learn:
+
+| The catalog said | The device said |
+| --- | --- |
+| `platforms: ["iOS 27 Simulator", "macOS 27"]` | "This action can only run on Mac." |
+| present in the 1,206-id iOS cut | same |
+
+Both fields record **where an action's metadata ships**, and iOS carries metadata
+for Mac-only actions precisely so Shortcuts can draw the card and refuse it. So
+the iOS cut is not a runtime-availability filter, and no cut of this catalog is.
+
+**The reasoning that failed is worth naming, because it looked like evidence.**
+`hide.app` and `quit.app` are absent from the iOS cut, so the cut appeared to
+discriminate, so `filter.apps` being present in it appeared to mean something.
+It does not: absence from the cut and presence in it are not two readings of one
+scale. An action can be absent because iOS ships no metadata for it and present
+while still gated at run time, and nothing in the catalog distinguishes the
+gated from the available.
+
+**What this does not touch.** The parameter tables, the enum cases, and the
+identifiers are all exactly as accurate as before; `Probe-Apps` imported clean
+and every card wired correctly, including the `Name` and `Bundle Identifier`
+aggrandizements. Only availability was ever in question, and only the device
+answers it. `probe-apps.json` therefore keeps its place in `workflows/` and gives
+up its `name`, so it leaves `plists/` and no install link can serve a receiver
+the phone will not run.
 
 ### No action can put actions into a shortcut
 

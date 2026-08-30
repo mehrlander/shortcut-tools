@@ -1,6 +1,5 @@
 {
- "name": "Probe-Apps",
- "label": "Probe-Apps: every installed app, name and bundle id, into the repo log (11 actions)",
+ "label": "Probe-Apps: Find Apps over the whole library, name and bundle id per row. Mac-only, established on device 2026-08-30 (11 actions)",
  "actions": [
   {
    "id": "is.workflow.actions.filter.apps",
