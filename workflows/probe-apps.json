@@ -1,0 +1,185 @@
+{
+ "name": "Probe-Apps",
+ "label": "Probe-Apps: every installed app, name and bundle id, into the repo log (11 actions)",
+ "actions": [
+  {
+   "id": "is.workflow.actions.filter.apps",
+   "p": {
+    "UUID": "A99A0001-0000-4A00-9000-000000000001",
+    "WFContentItemSortProperty": "Name",
+    "WFContentItemSortOrder": "A to Z"
+   }
+  },
+  {
+   "id": "is.workflow.actions.count",
+   "p": {
+    "UUID": "A99A0002-0000-4A00-9000-000000000001",
+    "WFCountType": "Items",
+    "Input": {
+     "Value": {
+      "OutputName": "Apps",
+      "OutputUUID": "A99A0001-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "A99A9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 0,
+    "WFInput": {
+     "Value": {
+      "OutputName": "Apps",
+      "OutputUUID": "A99A0001-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "A99A0004-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Row",
+    "WFTextActionText": {
+     "Value": {
+      "string": "￼\t￼",
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "Type": "Variable",
+        "VariableName": "Repeat Item",
+        "Aggrandizements": [
+         {
+          "Type": "WFPropertyVariableAggrandizement",
+          "PropertyName": "Name"
+         }
+        ]
+       },
+       "{2, 1}": {
+        "Type": "Variable",
+        "VariableName": "Repeat Item",
+        "Aggrandizements": [
+         {
+          "Type": "WFPropertyVariableAggrandizement",
+          "PropertyName": "Bundle Identifier"
+         }
+        ]
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.appendvariable",
+   "p": {
+    "WFVariableName": "Rows",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Row",
+      "OutputUUID": "A99A0004-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "A99A9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 2
+   }
+  },
+  {
+   "id": "is.workflow.actions.getvariable",
+   "p": {
+    "UUID": "A99A0007-0000-4A00-9000-000000000001",
+    "WFVariable": {
+     "Value": {
+      "Type": "Variable",
+      "VariableName": "Rows"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.text.combine",
+   "p": {
+    "UUID": "A99A0008-0000-4A00-9000-000000000001",
+    "WFTextSeparator": "New Lines",
+    "text": {
+     "Value": {
+      "OutputName": "Variable",
+      "OutputUUID": "A99A0007-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "A99A0009-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Report",
+    "WFTextActionText": {
+     "Value": {
+      "string": "apps name=Probe-Apps build=#BUILD# count=￼\n￼",
+      "attachmentsByRange": {
+       "{41, 1}": {
+        "OutputName": "Count",
+        "OutputUUID": "A99A0002-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       },
+       "{43, 1}": {
+        "OutputName": "Combined Text",
+        "OutputUUID": "A99A0008-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "WFWorkflowName": "Log-Repo",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Report",
+      "OutputUUID": "A99A0009-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.output",
+   "p": {
+    "WFOutput": {
+     "Value": {
+      "string": "￼",
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Report",
+        "OutputUUID": "A99A0009-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  }
+ ]
+}

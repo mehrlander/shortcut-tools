@@ -1431,6 +1431,45 @@ lookup, and it reports which of the two sources knows a name.
 first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
 uninstalled app is outside it.
 
+### The device lists apps, and never lists actions
+
+*Established 2026-08-30 by searching all three ToolKit catalogs and the 636-file
+corpus, before anything was sent to the device.*
+
+**Apps: `is.workflow.actions.filter.apps`, "Find Apps".** An ordinary content-item
+filter, so the whole `Find X` grammar applies: omit `WFContentItemInputParameter`
+and its source is the system library rather than a piped list, which is the 57-use
+form the corpus already carries on other `filter.*` actions. Sortable by four
+properties, and that enum is the only published statement of what an App item
+exposes:
+
+| `WFContentItemSortProperty` | |
+| --- | --- |
+| `Name`, `Bundle Identifier` | the two worth reading |
+| `Launch Date`, `Process Identifier` | running-app fields, macOS in origin |
+
+It is in **all three** catalogs, and the one that matters is
+`toolkit-v78-ios27-tool-ids.json`, the 1,206-id cut taken from an iOS 27 runtime
+rather than the 2,731-id union. That cut is discriminating: `hide.app` and
+`quit.app` are absent from it, so `filter.apps` appearing there is a claim about
+iOS and not an artifact of a macOS-hosted Simulator. **Nothing in the corpus has
+ever used it**, across nine other `filter.*` actions and 33,433 cards, so the
+estate had no evidence either way until [`workflows/probe-apps.json`](../workflows/probe-apps.json).
+
+**Actions: nothing.** `com.apple.shortcuts.SearchActionDrawerAction` is the only
+tool in the catalog that has actions as its subject, and its whole parameter table
+is `query: str`. It opens the picker; it returns nothing. There is no
+`properties.apps` either, so the sort enum above is the entire readable surface of
+an app. This is the same wall as *No action can put actions into a shortcut*
+below, from the other side: Shortcuts will neither read its own action inventory
+nor write one.
+
+**So the action list is reached by inference, not by asking.** Every app-provided
+action carries its vendor's bundle id as the identifier prefix, which makes a
+corpus dump a census of the apps whose actions are *in use*: 26 bundles over the
+636 files, against 52 apps named in `WFSelectedApp` pickers. Neither is the
+installed set, and the gap between them is the whole reason the probe exists.
+
 ### No action can put actions into a shortcut
 
 *Established 2026-08-15 by searching all 2,585 first-party parameter tables in
