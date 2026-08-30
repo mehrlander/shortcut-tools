@@ -180,14 +180,46 @@ python3 - <<'EOF'
 import json
 idx = {r["name"] for r in json.load(open("index.json"))}
 for a in json.load(open("<chain>.json"))["actions"]:
-    n = a["p"].get("WFWorkflowName")
-    if isinstance(n, str) and n not in idx: print("missing:", n)
+    names = [a["p"].get("WFWorkflowName")]
+    # A router keeps its targets as dictionary values, where WFWorkflowName
+    # never looks. Read those too, or the audit passes a map full of dead names.
+    for item in (a["p"].get("WFItems", {}).get("Value", {})
+                 .get("WFDictionaryFieldValueItems", []) or []):
+        names.append(item.get("WFValue", {}).get("Value", {}).get("string"))
+    for n in names:
+        if isinstance(n, str) and n not in idx: print("missing:", n)
 EOF
 ```
 
 Two false positives to expect, both from the index being a snapshot: anything
 installed since the last dump, and any name computed at run time, which is a
 token rather than a string and cannot be checked this way at all.
+
+**Audit the chain's own name too, not only its targets.** `Get-ShortcutJson`
+was published on 2026-08-30 over a 4-action predecessor doing nearly the same
+job, because the collision check was run against `Get-Shortcut` and never
+against the name actually chosen. Nothing called the predecessor and the
+replacement is a superset, so it cost nothing, and the device log settled that
+the new copy is the one running. The check is one line and belongs beside the
+target audit:
+
+```python
+name = json.load(open("<chain>.json")).get("name")
+if name in idx: print("name already in the library:", name)
+```
+
+A hit is not automatically wrong. It means the install will offer to save over
+something, and the question of whether that something is wanted has to be
+answered before the link goes out rather than after.
+
+**A dictionary value is a shortcut name that no field name marks as one**, which
+is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
+cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is
+plain key and value strings in the chain file, as readable and as diffable as
+any other parameter. What changes is that the names stop living in
+`WFWorkflowName`, which is the only field the audit knew to read, so the audit
+reads both now. Any future carrier for a target name has to be added here in the
+same commit that introduces it.
 
 ## Every handover reports itself, with its build id
 

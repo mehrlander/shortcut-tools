@@ -51,6 +51,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
 | `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
+| `run-app-determined` | The current app picks the shortcut and the map is the data: seven actions, a literal dictionary of app name to shortcut name, a lookup, and one Run Shortcut on a computed target. Replaces a ladder of app tests where each arm needed its own Stop and Output. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -428,6 +429,35 @@ in 343 of the 374 real cards in the corpus), so nothing re-serializes the
 payload and `name` stays at the top level where `tools/log.py` reads it for the
 row. The alternative, building a second JSON string around the first, is the
 `Say "hi"` quoting hazard again for no gain.
+
+### The app is a key, not a branch
+
+`Back-DoubleTap` tests the current app five times, and each test is three
+control cards plus a body plus a Stop and Output. `run-app-determined` is the
+same dispatch as a lookup: a literal dictionary, one `Get Dictionary Value`
+keyed on the app, the else-less If for the default, and one Run Shortcut on the
+result. Seven actions.
+
+**The card shape is not invented.** [`Nav-CurrentApp`](https://github.com/mehrlander/shortcut-tools)
+has been keying a dictionary on `Get Current App` on device since the 2026-08-13
+dump, and its keys are plain display names (`ChatGPT`, `Claude`). That is how we
+know an app coerces to its display name in a key slot, without spending a probe
+on it: only four shortcuts in 636 use `Get Current App` at all, and that one
+answers it.
+
+**It reads the app rather than taking one.** Handing in an app name *and* a
+payload is two arguments across a `Run Shortcut` boundary, which
+[`probe-list-handoff`](probe-list-handoff.json) exists to settle and which has
+never been run; `Run-Pick`'s five-row menu is the only evidence and it points at
+no. Reading the app in place sidesteps the question and leaves the single input
+slot for the payload.
+
+**The map is data and it is in the file.** `WFDictionaryFieldValueItems` is
+plain key and value strings, as diffable as any other parameter, so a route
+changes by editing the chain and reinstalling. The one real cost is that a
+target name stops living in `WFWorkflowName`, which is the only field the
+by-name audit in `CLAUDE.md` used to read. That audit reads dictionary values
+now.
 
 ### A default in three actions
 
