@@ -1,0 +1,86 @@
+{
+  "name": "Dump-Shortcut",
+  "label": "Dump-Shortcut: Get-Shortcut's result, stamped and committed through Log-Repo (5 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "D5700000-0001-4A00-9000-000000000001",
+        "WFWorkflowName": "Get-Shortcut",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.dictionary",
+      "p": {
+        "UUID": "D5700000-0002-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D5700000-0001-4A00-9000-000000000001",
+            "OutputName": "Shortcut Result"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvalueforkey",
+      "p": {
+        "UUID": "D5700000-0003-4A00-9000-000000000001",
+        "WFDictionary": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D5700000-0002-4A00-9000-000000000001",
+            "OutputName": "Dictionary"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFDictionaryKey": "op",
+        "WFDictionaryValue": "dump"
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvalueforkey",
+      "p": {
+        "UUID": "D5700000-0004-4A00-9000-000000000001",
+        "WFDictionary": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D5700000-0003-4A00-9000-000000000001",
+            "OutputName": "Dictionary"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFDictionaryKey": "build",
+        "WFDictionaryValue": "#BUILD#"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "D5700000-0005-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D5700000-0004-4A00-9000-000000000001",
+            "OutputName": "Dictionary",
+            "Aggrandizements": [
+              {
+                "Type": "WFCoercionVariableAggrandizement",
+                "CoercionItemClass": "WFStringContentItem"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

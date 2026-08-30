@@ -12,7 +12,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>6E100000-9001-4A00-9000-000000009001</string>
+				<string>6E700000-9001-4A00-9000-000000009001</string>
 				<key>WFCondition</key>
 				<integer>101</integer>
 				<key>WFControlFlowMode</key>
@@ -40,9 +40,9 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>6E100000-0002-4A00-9000-000000000001</string>
+				<string>6E700000-0002-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>Back-DoubleTap</string>
+				<string>Choose-Sample</string>
 			</dict>
 		</dict>
 		<dict>
@@ -51,9 +51,9 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>6E100000-9001-4A00-9000-000000009001</string>
+				<string>6E700000-9001-4A00-9000-000000009001</string>
 				<key>UUID</key>
-				<string>6E100000-0003-4A00-9000-000000000001</string>
+				<string>6E700000-0003-4A00-9000-000000000001</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
@@ -64,7 +64,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>6E100000-0004-4A00-9000-000000000001</string>
+				<string>6E700000-0004-4A00-9000-000000000001</string>
 			</dict>
 		</dict>
 		<dict>
@@ -75,7 +75,7 @@
 				<key>CustomOutputName</key>
 				<string>Match</string>
 				<key>UUID</key>
-				<string>6E100000-0005-4A00-9000-000000000001</string>
+				<string>6E700000-0005-4A00-9000-000000000001</string>
 				<key>WFContentItemFilter</key>
 				<dict>
 					<key>Value</key>
@@ -104,7 +104,7 @@
 													<key>OutputName</key>
 													<string>If Result</string>
 													<key>OutputUUID</key>
-													<string>6E100000-0003-4A00-9000-000000000001</string>
+													<string>6E700000-0003-4A00-9000-000000000001</string>
 													<key>Type</key>
 													<string>ActionOutput</string>
 												</dict>
@@ -133,7 +133,7 @@
 						<key>OutputName</key>
 						<string>My Shortcuts</string>
 						<key>OutputUUID</key>
-						<string>6E100000-0004-4A00-9000-000000000001</string>
+						<string>6E700000-0004-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -152,7 +152,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>6E100000-0006-4A00-9000-000000000001</string>
+				<string>6E700000-0006-4A00-9000-000000000001</string>
 				<key>WFFileType</key>
 				<string>public.json</string>
 				<key>WFInput</key>
@@ -162,7 +162,7 @@
 						<key>OutputName</key>
 						<string>Match</string>
 						<key>OutputUUID</key>
-						<string>6E100000-0005-4A00-9000-000000000001</string>
+						<string>6E700000-0005-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -177,65 +177,40 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>CustomOutputName</key>
-				<string>Record</string>
+				<string>Shortcut JSON</string>
 				<key>UUID</key>
-				<string>6E100000-0007-4A00-9000-000000000001</string>
+				<string>6E700000-0007-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{21, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>If Result</string>
-								<key>OutputUUID</key>
-								<string>6E100000-0003-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-							<key>{53, 1}</key>
+							<key>{23, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>File of Type</string>
 								<key>OutputUUID</key>
-								<string>6E100000-0006-4A00-9000-000000000001</string>
+								<string>6E700000-0006-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{9, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>If Result</string>
+								<key>OutputUUID</key>
+								<string>6E700000-0003-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"dump","name":"￼","build":"a376463","shortcut":￼}</string>
+						<string>{"name":"￼","shortcut":￼}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
 				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.runworkflow</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>6E100000-0008-4A00-9000-000000000001</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Record</string>
-						<key>OutputUUID</key>
-						<string>6E100000-0007-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-				<key>WFWorkflowName</key>
-				<string>Log-Repo</string>
 			</dict>
 		</dict>
 	</array>

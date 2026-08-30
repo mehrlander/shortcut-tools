@@ -49,8 +49,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
-| `dump-one` | One named shortcut, serialized and handed to `Log-Repo` instead of committed by the chain itself. The probe form of `dump-named`: exact-match rather than `⟦name⟧` containment, no token injection and no PUT of its own, and the record lands in `shortcuts/log/`. |
-| `get-one` | The same job in eight actions, resolving the name with Filter Files instead of a Repeat over the library, and defaulting to a sample name through an else-less If. What `dump-one` should have been: `Get My Shortcuts` enumerates, and asking Shortcuts to match the row is not the same as walking 605 of them in interpreted control flow. |
+| `get-shortcut` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. |
+| `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -399,78 +399,56 @@ form, worth it when the question is "exactly which ones does the corpus lack"
 rather than "give me the recent work", since `dump-recent` cannot know what the
 corpus already holds and will re-send anything that happens to be near the top.
 
-### The probe form: let `Log-Repo` do the committing
+### Get returns, Dump delivers
 
-`dump-one` is the same loop with the delivery half deleted. `Dump-Named` ends
-with seven actions that stamp a date, base64 the payload, inject the token and
-PUT it, and `Log-Repo` already does exactly that, so the chain calls it and
-stops at thirteen actions.
+Two verbs, and the split is the point rather than the tidiness. `get-shortcut`
+resolves a name and hands back `{"name": …, "shortcut": …}`. It writes nothing,
+reaches no network, and can be called from anything that wants a shortcut's
+contents. `dump-shortcut` is the delivery half: it calls `get-shortcut`, sets
+`op` and `build` on the dictionary that comes back, and passes it to `Log-Repo`,
+which owns the stamp, the clipboard fallback, the token and the PUT.
 
-Three things follow from that, and only the first is about size. The token and
-the PUT live in one place, so a chain that hands over a payload cannot get the
-credential half wrong. The clipboard write inside `Log-Repo` runs first and
-unconditionally, which makes the fallback free rather than something each
-dumper has to remember. And the record lands in `shortcuts/log/` rather than
-`shortcuts/incoming/`, which is the cost: `read-incoming.py` does not see it,
-so a payload routed this way is read where the log is read.
+So the network appears exactly once in the library, in `Log-Repo`, and the
+retrieval appears exactly once, in `get-shortcut`. A chain that wants one
+shortcut's contents for some other purpose calls the getter and pays nothing for
+delivery it does not want.
 
-**A miss logs a row rather than nothing.** The chain writes its not-found
-record before the loop, so a name that matches no shortcut still commits
-`found:false` beside the name that was asked for. An empty log entry would read
-as a broken chain rather than a lookup that came up empty, which is the same
-confusion silence caused when a dump did not arrive at all.
+**`op` and `build` are set as dictionary keys, not spliced into the text.**
+`Set Dictionary Value` takes the dictionary explicitly (`WFDictionary`, present
+in 343 of the 374 real cards in the corpus), so nothing re-serializes the
+payload and `name` stays at the top level where `tools/log.py` reads it for the
+row. The alternative, building a second JSON string around the first, is the
+`Say "hi"` quoting hazard again for no gain.
 
-It matches by name exactly, where `dump-named` asks whether its input contains
-`⟦name⟧`. The brackets are what let one input carry a list; a single
-target does not need them, and dropping them removes two actions and the
-delimiters from the link.
+### A default in three actions
 
-**The loop was the wrong shape, and `Library-Open` already knew it.** `dump-one`
-walks every shortcut, reads each name and compares it, which is 605 iterations
-of interpreted control flow to reach one row, and it is slow enough on device to
-read as a hang. `Filter Files` does the match natively, and the card shape has
-been resolving a name that way in `Library-Open` since 2026-08-15. `get-one` is
-the same chain with the loop replaced by that filter: five actions, one of them
-the call to `Log-Repo`.
-
-Two things carry over unchanged and one is lost. The `Log-Repo` handover and the
-`#BUILD#` stamp are the same. The not-found record is gone, since there is no
-loop to write it before: a name matching nothing yields an empty filter, so the
-record commits with an empty `shortcut` value rather than a `found:false` flag.
-That is the honest cost of the shorter form, and it is legible in the log either
-way.
-
-### A default in three actions: the else-less If passes its input through
-
-The End If action carries the block's result, and where the block has no
-`Otherwise` and the condition is false, that result is the conditional's own
-**input**. So testing `has no value` against Shortcut Input, with one Text
-action inside, yields a value that is the input when there is one and the
-literal when there is not:
+[`docs/dataflow.md`](../docs/dataflow.md) owns the mechanism: Shortcuts carries
+a current value, a non-matching `If` preserves it, and the End If result can
+therefore be the value that survived the block rather than one created inside
+it. The idiom that falls out of it is worth naming here, because it replaces a
+shape this repo still ships.
 
 ```
 if $input no value
-  text Back-DoubleTap
+  text Choose-Sample
 end if
 … «End If» is the name to use
 ```
 
-Three actions, no variable, no otherwise branch. The shape it replaces is six:
-a Text action for the default, Set Variable, an `if has value`, a second Set
-Variable, End If, Get Variable, which is what `dump-recent` still does for its
-`Days` parameter.
+Three actions, no variable, no otherwise branch: the input when there is one and
+the literal when there is not. The shape it replaces is six, which is what
+`dump-recent` still does for its `Days` parameter.
 
-**The corpus already runs it, 82 times in 36 shortcuts.** Every instance is an
-End If whose output is consumed downstream where the group carries no
-`WFControlFlowMode` 1, `Shortcut Source Tool` and `Get-ShortcutSource` leading
-at seven and five. The ordinary case, an End If read after a real two-branch
-choice, appears 473 times, so the pass-through is roughly a sixth of all
+**The corpus runs it 82 times across 36 shortcuts**, counted as End If outputs
+consumed downstream where the group carries no `WFControlFlowMode` 1, led by
+`Shortcut Source Tool` at seven and `Get-ShortcutSource` at five. The ordinary
+two-branch read appears 473 times, so the pass-through is about a sixth of all
 End If reads and not a trick.
 
 **Where the literal is a real name, running the chain bare demonstrates it.**
-`get-one` defaults to `Back-DoubleTap`, so a tap with no input dumps a real
-shortcut rather than failing, which is the same self-demo prologue
-[`run-pick`](run-pick.json) uses and that 72 shortcuts in the corpus carry.
+`get-shortcut` defaults to `Choose-Sample`, so a tap with no input returns a real
+shortcut rather than failing, the same self-demo prologue [`run-pick`](run-pick.json)
+carries and that 72 shortcuts in the corpus use.
 
 ### One wire format, because the others are derivable
 

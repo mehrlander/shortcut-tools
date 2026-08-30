@@ -1,11 +1,11 @@
 {
-  "name": "Get-One",
-  "label": "Get-One: one named shortcut, no loop, sample default (8 actions)",
+  "name": "Get-Shortcut",
+  "label": "Get-Shortcut: one named shortcut as JSON, name included, returned not sent (7 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "6E100000-9001-4A00-9000-000000009001",
+        "GroupingIdentifier": "6E700000-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 0,
         "WFCondition": 101,
         "WFInput": {
@@ -22,33 +22,33 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "6E100000-0002-4A00-9000-000000000001",
-        "WFTextActionText": "Back-DoubleTap"
+        "UUID": "6E700000-0002-4A00-9000-000000000001",
+        "WFTextActionText": "Choose-Sample"
       }
     },
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "6E100000-9001-4A00-9000-000000009001",
+        "GroupingIdentifier": "6E700000-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 2,
-        "UUID": "6E100000-0003-4A00-9000-000000000001"
+        "UUID": "6E700000-0003-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.getmyworkflows",
       "p": {
-        "UUID": "6E100000-0004-4A00-9000-000000000001"
+        "UUID": "6E700000-0004-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.filter.files",
       "p": {
-        "UUID": "6E100000-0005-4A00-9000-000000000001",
+        "UUID": "6E700000-0005-4A00-9000-000000000001",
         "CustomOutputName": "Match",
         "WFContentItemInputParameter": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "6E100000-0004-4A00-9000-000000000001",
+            "OutputUUID": "6E700000-0004-4A00-9000-000000000001",
             "OutputName": "My Shortcuts"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -71,7 +71,7 @@
                       "attachmentsByRange": {
                         "{0, 1}": {
                           "Type": "ActionOutput",
-                          "OutputUUID": "6E100000-0003-4A00-9000-000000000001",
+                          "OutputUUID": "6E700000-0003-4A00-9000-000000000001",
                           "OutputName": "If Result"
                         }
                       }
@@ -90,12 +90,12 @@
     {
       "id": "is.workflow.actions.gettypeaction",
       "p": {
-        "UUID": "6E100000-0006-4A00-9000-000000000001",
+        "UUID": "6E700000-0006-4A00-9000-000000000001",
         "WFFileType": "public.json",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "6E100000-0005-4A00-9000-000000000001",
+            "OutputUUID": "6E700000-0005-4A00-9000-000000000001",
             "OutputName": "Match"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -105,40 +105,25 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "6E100000-0007-4A00-9000-000000000001",
-        "CustomOutputName": "Record",
+        "UUID": "6E700000-0007-4A00-9000-000000000001",
+        "CustomOutputName": "Shortcut JSON",
         "WFTextActionText": {
           "Value": {
-            "string": "{\"op\":\"dump\",\"name\":\"￼\",\"build\":\"#BUILD#\",\"shortcut\":￼}",
+            "string": "{\"name\":\"￼\",\"shortcut\":￼}",
             "attachmentsByRange": {
-              "{21, 1}": {
+              "{9, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "6E100000-0003-4A00-9000-000000000001",
+                "OutputUUID": "6E700000-0003-4A00-9000-000000000001",
                 "OutputName": "If Result"
               },
-              "{53, 1}": {
+              "{23, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "6E100000-0006-4A00-9000-000000000001",
+                "OutputUUID": "6E700000-0006-4A00-9000-000000000001",
                 "OutputName": "File of Type"
               }
             }
           },
           "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "UUID": "6E100000-0008-4A00-9000-000000000001",
-        "WFWorkflowName": "Log-Repo",
-        "WFInput": {
-          "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "6E100000-0007-4A00-9000-000000000001",
-            "OutputName": "Record"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     }
