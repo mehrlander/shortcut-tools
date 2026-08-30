@@ -50,6 +50,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `dump-one` | One named shortcut, serialized and handed to `Log-Repo` instead of committed by the chain itself. The probe form of `dump-named`: exact-match rather than `⟦name⟧` containment, no token injection and no PUT of its own, and the record lands in `shortcuts/log/`. |
+| `get-one` | The same job in five actions, resolving the name with Filter Files instead of a Repeat over the library. What `dump-one` should have been: `Get My Shortcuts` enumerates, and asking Shortcuts to match the row is not the same as walking 605 of them in interpreted control flow. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -423,6 +424,21 @@ It matches by name exactly, where `dump-named` asks whether its input contains
 `⟦name⟧`. The brackets are what let one input carry a list; a single
 target does not need them, and dropping them removes two actions and the
 delimiters from the link.
+
+**The loop was the wrong shape, and `Library-Open` already knew it.** `dump-one`
+walks every shortcut, reads each name and compares it, which is 605 iterations
+of interpreted control flow to reach one row, and it is slow enough on device to
+read as a hang. `Filter Files` does the match natively, and the card shape has
+been resolving a name that way in `Library-Open` since 2026-08-15. `get-one` is
+the same chain with the loop replaced by that filter: five actions, one of them
+the call to `Log-Repo`.
+
+Two things carry over unchanged and one is lost. The `Log-Repo` handover and the
+`#BUILD#` stamp are the same. The not-found record is gone, since there is no
+loop to write it before: a name matching nothing yields an empty filter, so the
+record commits with an empty `shortcut` value rather than a `found:false` flag.
+That is the honest cost of the shorter form, and it is legible in the log either
+way.
 
 ### The precise form: manifest, then named
 
