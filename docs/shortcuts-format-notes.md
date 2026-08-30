@@ -1503,6 +1503,21 @@ scale. An action can be absent because iOS ships no metadata for it and present
 while still gated at run time, and nothing in the catalog distinguishes the
 gated from the available.
 
+**And it fails in both directions, which is why the corpus outranks it.** Two
+disagreements, found within an hour of each other on 2026-08-30:
+
+| Action | Catalog | Truth |
+| --- | --- | --- |
+| `is.workflow.actions.filter.apps` | iOS and macOS | Mac-only, per the device |
+| `is.workflow.actions.extracttextfromimage` | macOS-only, key `imageFile` | runs on the phone, key `WFImage`, per 7 uses in the corpus |
+
+So a catalog "no" is as weak as a catalog "yes". The second case cost nothing
+because the corpus settled it for free, and that is the general order: **the
+device is the authority, the corpus is the cheapest witness to it, and the
+catalog is neither.** The catalog's own strength is unchanged and is elsewhere:
+which parameters exist, and what their enums allow.
+
+
 **What this does not touch.** The parameter tables, the enum cases, and the
 identifiers are all exactly as accurate as before; `Probe-Apps` imported clean
 and every card wired correctly, including the `Name` and `Bundle Identifier`
