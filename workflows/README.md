@@ -50,7 +50,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `dump-one` | One named shortcut, serialized and handed to `Log-Repo` instead of committed by the chain itself. The probe form of `dump-named`: exact-match rather than `⟦name⟧` containment, no token injection and no PUT of its own, and the record lands in `shortcuts/log/`. |
-| `get-one` | The same job in five actions, resolving the name with Filter Files instead of a Repeat over the library. What `dump-one` should have been: `Get My Shortcuts` enumerates, and asking Shortcuts to match the row is not the same as walking 605 of them in interpreted control flow. |
+| `get-one` | The same job in eight actions, resolving the name with Filter Files instead of a Repeat over the library, and defaulting to a sample name through an else-less If. What `dump-one` should have been: `Get My Shortcuts` enumerates, and asking Shortcuts to match the row is not the same as walking 605 of them in interpreted control flow. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -439,6 +439,61 @@ loop to write it before: a name matching nothing yields an empty filter, so the
 record commits with an empty `shortcut` value rather than a `found:false` flag.
 That is the honest cost of the shorter form, and it is legible in the log either
 way.
+
+### A default in three actions: the else-less If passes its input through
+
+The End If action carries the block's result, and where the block has no
+`Otherwise` and the condition is false, that result is the conditional's own
+**input**. So testing `has no value` against Shortcut Input, with one Text
+action inside, yields a value that is the input when there is one and the
+literal when there is not:
+
+```
+if $input no value
+  text Back-DoubleTap
+end if
+… «End If» is the name to use
+```
+
+Three actions, no variable, no otherwise branch. The shape it replaces is six:
+a Text action for the default, Set Variable, an `if has value`, a second Set
+Variable, End If, Get Variable, which is what `dump-recent` still does for its
+`Days` parameter.
+
+**The corpus already runs it, 82 times in 36 shortcuts.** Every instance is an
+End If whose output is consumed downstream where the group carries no
+`WFControlFlowMode` 1, `Shortcut Source Tool` and `Get-ShortcutSource` leading
+at seven and five. The ordinary case, an End If read after a real two-branch
+choice, appears 473 times, so the pass-through is roughly a sixth of all
+End If reads and not a trick.
+
+**Where the literal is a real name, running the chain bare demonstrates it.**
+`get-one` defaults to `Back-DoubleTap`, so a tap with no input dumps a real
+shortcut rather than failing, which is the same self-demo prologue
+[`run-pick`](run-pick.json) uses and that 72 shortcuts in the corpus carry.
+
+### One wire format, because the others are derivable
+
+`Get file of type public.json` returns the **whole workflow**, every top-level
+key: the actions, the icon, `WFWorkflowTypes`, the input classes. Not the action
+list alone. So the XML plist and the indented sketch are both views the repo can
+render from what the device already sends, and asking the device which format it
+should produce buys nothing.
+
+Measured over the 636 shortcuts in the dumps: **633 round-trip plist to JSON to
+plist unchanged.** The three that do not are the whole argument for ever asking
+for XML, and they fail on two plist types JSON has no representation for:
+
+| Shortcut | Type | Where |
+| --- | --- | --- |
+| `Quick Actions` | `<data>` | `WFSendMessageActionRecipients`, serialized contact cards |
+| `Grok AI Chat` | `<data>` | `UserActivityData` |
+| `Anmod om kørsel af "past photo review"` | `<date>` | a bounded-date filter template |
+
+JSON is also half the size: `Back-DoubleTap` is 22,834 bytes as the device sends
+it and 47,866 rendered back to XML. So the rule is JSON on the wire, and a
+format switch is worth its actions only for a shortcut carrying `<data>` or a
+`<date>`, which is now a thing that can be predicted rather than discovered.
 
 ### The precise form: manifest, then named
 
