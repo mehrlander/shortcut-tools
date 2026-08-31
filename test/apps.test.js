@@ -150,3 +150,18 @@ test("a vendor-only row gets a name from its bundle id and can join", () => {
   assert.equal(rows.length, 1, "one app, not an orphan row beside a vendor row");
   assert.equal(rows[0].installed, true);
 });
+
+// A payload from a chain running two recognizers is a dict per screenshot. One
+// engine space-joins a screen, losing the line breaks that mark a label's end,
+// so the parse must take the richer read rather than the first one.
+test("a dual-read payload parses from the richer engine", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "shots-"));
+  const p = path.join(dir, "dual.txt");
+  fs.writeFileSync(p, "shots name=Read-Shots build=abc count=1\n" + JSON.stringify({
+    "Extract text from": "Apps\nAcrobat\nAirtable\nQ Search Apps",
+    "Recognize text in": "Apps Acrobat Airtable Q Search Apps",
+  }) + "\n");
+  const out = execFileSync("python3", [path.join("tools", "shots.py"), p],
+                           { cwd: ROOT, encoding: "utf8" }).trim().split("\n");
+  assert.deepEqual(out, ["Acrobat", "Airtable"]);
+});

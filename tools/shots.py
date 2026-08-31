@@ -35,6 +35,24 @@ STATUS = re.compile(r"^\d{1,2}:\d{2}$|^[.,|l·•\s]*\d?g\s*\d*$|^[.,|l·•\s]+
 letters = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
 
 
+def reads(text):
+    """Every OCR read in a payload, keyed by the action that produced it.
+
+    A chain running one recognizer returns plain text. Running two returns a
+    dict per screenshot, keyed by action label, which is the shape to prefer:
+    a second engine is the only witness available to a capture that cannot be
+    taken again.
+    """
+    body = text.split("\n", 1)[1] if text.startswith("shots ") else text
+    rows = [json.loads(l) for l in body.splitlines() if l.strip().startswith("{")]
+    if not rows:
+        return {"": body}
+    out = {}
+    for k in sorted({k for r in rows for k in r}):
+        out[k] = "\n".join(r.get(k, "") for r in rows)
+    return out
+
+
 def clean(line):
     """One raw OCR line to a candidate name, or None when it is chrome."""
     s = line.strip()
@@ -94,14 +112,33 @@ def main():
     ap.add_argument("payload", help="the Read-Shots log entry, or - for stdin")
     ap.add_argument("--corrections", default=str(ROOT / "tools" / "shots-corrections.json"))
     ap.add_argument("-o", dest="out", help="write the names here, one per line")
+    ap.add_argument("--corroborate", action="store_true",
+                    help="check the parse against the payload's other OCR reads")
     ap.add_argument("--flag", action="store_true",
                     help="also list names worth a second look")
     a = ap.parse_args()
 
     text = sys.stdin.read() if a.payload == "-" else Path(a.payload).read_text()
-    text = text.split("\n", 1)[1] if text.startswith("shots ") else text
     c = json.loads(Path(a.corrections).read_text()) if Path(a.corrections).is_file() else {}
-    rows = names(text, c)
+    got = reads(text)
+    # The richest read wins: one engine may space-join a screen, losing the line
+    # breaks that mark where one label ends and the next begins.
+    primary = max(got, key=lambda k: len(names(got[k], c)))
+    rows = names(got[primary], c)
+
+    if a.corroborate:
+        fold = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
+        others = {k: fold(v) for k, v in got.items() if k != primary}
+        if not others:
+            print("only one read in this payload; nothing to corroborate", file=sys.stderr)
+        for k, blob in others.items():
+            miss = [n for n in rows if fold(n) not in blob]
+            print("\n%s: %d of %d names it does not support: %s"
+                  % (k, len(miss), len(rows), ", ".join(miss)), file=sys.stderr)
+            for bad, good in c.get("rename", {}).items():
+                verdict = ("agrees" if fold(good) in blob else
+                           "SAME misread" if fold(bad) in blob else "silent")
+                print("   %-18s -> %-16s %s" % (bad, good, verdict), file=sys.stderr)
 
     if a.out:
         Path(a.out).write_text("\n".join(rows) + "\n")

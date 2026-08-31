@@ -1,5 +1,5 @@
 {
- "_": "Vision misreads that no rule can reach. Each was checked against the raw payload's neighbours before being written here.",
+ "_": "Vision misreads that no rule can reach. `basis` records whether a second OCR engine backs the fix or whether it is inference; run `shots.py --corroborate` against a dual-read payload to re-derive it.",
  "drop": [
   ".1 5G",
   "bll",
@@ -26,5 +26,13 @@
    "Edge",
    "Eloquent"
   ]
+ },
+ "basis": {
+  "Linkedin": "corroborated: the second engine reads LinkedIn",
+  "> play fi": "corroborated: the second engine reads play fi beside MusicCast and ONKYO",
+  "Spotity": "inferred: BOTH engines read Spotity. Spotify is world knowledge, not evidence from this capture",
+  "Character.Al": "inferred: both engines read a lowercase l. Character.AI is the product name",
+  "Meta Al": "inferred: both engines read a lowercase l. Meta AI is the product name",
+  "Edge Eloquent": "corroborated: the second engine lists Edge separately, so this row is two apps merged"
  }
 }
