@@ -38,7 +38,7 @@
       "p": {
         "UUID": "6A700000-0004-4A00-9000-000000000001",
         "CustomOutputName": "Routes",
-        "WFTextActionText": "[Audible]=Speak-Text\n[Music]=Open-WiFi\n[Roku]=Open-WiFi\n[Shortcuts]=Choose-Manage"
+        "WFTextActionText": "[Audible]=Speak-Text\n[Music]=Open-WiFi\n[Roku]=Open-WiFi\n[Shortcuts]=Choose-BackTap"
       }
     },
     {

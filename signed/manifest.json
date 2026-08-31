@@ -1,6 +1,11 @@
 {
+ "Choose-BackTap": {
+  "plist_sha256": "49965e43283d290409a7387a39c6620dae4e3dca7329dcc8bbad621a77949c30",
+  "bytes": 23052,
+  "signed": "2026-08-31"
+ },
  "Get-AppRoute": {
-  "plist_sha256": "f5a921a81c3d9def6b66ce5acd1ac0b913f16ec9531c976a9256021a0b777c7e",
+  "plist_sha256": "3701191f0b9b4b4ec7716aa5a324e2d755a38843c86013279ca3d9488597d6c7",
   "bytes": 22178,
   "signed": "2026-08-31"
  },
@@ -22,6 +27,11 @@
  "Run-AppDetermined": {
   "plist_sha256": "6f52c1f441d94bf244d7bea80364cc861a44f3b80f8703ecc94442c2711370af",
   "bytes": 22086,
+  "signed": "2026-08-31"
+ },
+ "Run-BackTap": {
+  "plist_sha256": "b52f7d4a774032007a4e9acda2ce5488f94c76565c7b24205586e0c07d12073c",
+  "bytes": 23829,
   "signed": "2026-08-31"
  },
  "Speak-Text": {

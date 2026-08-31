@@ -53,6 +53,8 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
 | `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `App=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
 | `probe-route` | Asks `get-app-route` about a named app and logs the answer. Three actions. It exists because a `shortcuts://` link makes Shortcuts the current app, so a route keyed on anything else cannot be reached from a tap. |
+| `run-backtap` | `Back-DoubleTap` with its five app branches replaced by one `get-app-route` call: 29 actions against 59. Spliced from a device dump rather than re-authored, so every card kept is the card running today. |
+| `choose-backtap` | The Shortcuts-app menu lifted out whole, still titled with the clipboard's state because the caption block came with it. 16 actions, and the route map points at it. |
 | `run-app-determined` | `get-app-route` plus a default plus the running: six actions. The standalone form, for when the app is the only question being asked. |
 | `speak-text` | Reads the input aloud in the back tap's voice. One action, and it fills a name `Show-Loop` has been calling all along that resolved to nothing. |
 | `open-wifi` | Opens the Wi-Fi settings pane, two actions, for when a cast is failing. |
@@ -523,6 +525,34 @@ action has 226 real cards in the corpus, so it is not a gamble either.
 interpolating an output inside a lookahead. And a single match coerces straight
 to text in a token slot, which is how that same shortcut drops `Matches` into a
 URL string.
+
+### Converting the dispatcher by splicing, not re-authoring
+
+`run-backtap` is built from the device dump of `Back-DoubleTap`, keeping actions
+0 to 7 and 43 to 58 verbatim and replacing 8 to 42 with five: call
+`get-app-route`, and run what comes back if anything did. Every card kept is the
+card running on the phone today, moved rather than rebuilt, so the only
+behaviour that can change is the behaviour named here.
+
+| Section | Before | After |
+| --- | --- | --- |
+| No current app | 6 actions | unchanged |
+| GitHub, Audible, Music/Roku, Shortcuts | 35 actions | 5 |
+| Image, URL, dictation, fallthrough | 16 actions | unchanged |
+| **Total** | **59** | **29** |
+
+Three deliberate differences, none of them incidental:
+
+- **The GitHub arm is gone**, not reproduced. `Show-Repo` was retired the same
+  day for loading a `gh-fetch.js` path that 404s, and there is nothing working to
+  point a row at. GitHub taps now reach the same fallthrough as any unmapped app.
+- **The Shortcuts menu moved into `choose-backtap`** and took the clipboard
+  caption block with it, since the caption exists only to title that menu. The
+  `choosefromlist` prompt references the caption's End If by UUID, and lifting
+  both together keeps the reference intact.
+- **Seven Stop and Output cards become two.** The app arms no longer need one
+  each, because the lookup either answers and stops or returns nothing and lets
+  the type tests run, which is the property `get-app-route` exists to have.
 
 ### Why the lookup and the default are separate shortcuts
 
