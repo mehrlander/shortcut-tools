@@ -1,7 +1,7 @@
 {
  "Choose-BackTap": {
-  "plist_sha256": "49965e43283d290409a7387a39c6620dae4e3dca7329dcc8bbad621a77949c30",
-  "bytes": 23052,
+  "plist_sha256": "de7468503c9ae77361f549befeb894149a5b4ada6742fb91e226ff1d4a5e2a65",
+  "bytes": 23109,
   "signed": "2026-08-31"
  },
  "Get-AppRoute": {

@@ -1,6 +1,6 @@
 {
   "name": "Choose-BackTap",
-  "label": "Choose-BackTap: the Shortcuts-app menu, titled with the clipboard's state (16 actions)",
+  "label": "Choose-BackTap: the Shortcuts-app menu, titled with the clipboard's state (17 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
@@ -71,15 +71,30 @@
     {
       "id": "is.workflow.actions.runworkflow",
       "p": {
+        "UUID": "8ACC0000-0011-4A00-9000-000000000001",
+        "WFWorkflowName": "Describe-Input",
         "WFInput": {
           "Value": {
             "Type": "Clipboard"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        },
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "8ACC0000-0012-4A00-9000-000000000001",
         "CustomOutputName": "Text header",
-        "UUID": "137DC359-A629-479B-93C8-C3461B965368",
-        "WFWorkflowName": "Get-FileCaption"
+        "WFDictionaryKey": "detail.caption",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "8ACC0000-0011-4A00-9000-000000000001",
+            "OutputName": "Shortcut Result"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     },
     {

@@ -54,7 +54,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `App=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
 | `probe-route` | Asks `get-app-route` about a named app and logs the answer. Three actions. It exists because a `shortcuts://` link makes Shortcuts the current app, so a route keyed on anything else cannot be reached from a tap. |
 | `run-backtap` | `Back-DoubleTap` with its five app branches replaced by one `get-app-route` call: 29 actions against 59. Spliced from a device dump rather than re-authored, so every card kept is the card running today. |
-| `choose-backtap` | The Shortcuts-app menu lifted out whole, still titled with the clipboard's state because the caption block came with it. 16 actions, and the route map points at it. |
+| `choose-backtap` | The Shortcuts-app menu lifted out whole, still titled with the clipboard's state because the caption block came with it. 17 actions, and the route map points at it. The caption now comes from `describe-input` rather than the five-shortcut chain it used to walk. |
 | `run-app-determined` | `get-app-route` plus a default plus the running: six actions. The standalone form, for when the app is the only question being asked. |
 | `speak-text` | Reads the input aloud in the back tap's voice. One action, and it fills a name `Show-Loop` has been calling all along that resolved to nothing. |
 | `open-wifi` | Opens the Wi-Fi settings pane, two actions, for when a cast is failing. |
@@ -553,6 +553,26 @@ Three deliberate differences, none of them incidental:
 - **Seven Stop and Output cards become two.** The app arms no longer need one
   each, because the lookup either answers and stops or returns nothing and lets
   the type tests run, which is the property `get-app-route` exists to have.
+
+### The caption path was five shortcuts and is now one
+
+Lifting the menu exposed what titles it. `Get-FileCaption` runs `Get-FileInfo`
+and reads `detail.caption`; `Get-FileInfo` runs `Get-FileContext`,
+`Combine-JsonList` and `Get-JsonFromJs` around 4,449 characters of inline
+JavaScript. Five shortcuts deep, to put one line above a menu.
+
+[`describe-input`](describe-input.json) already does that whole job in one, and
+its README row has said so since it was written: same work, 17 actions, one text
+card, no Run Shortcut anywhere. It returns `{list, detail}` with
+`detail.caption`, which is the same key `Get-FileCaption` was digging out, so
+the swap is a drop-in: one card becomes two and four device dependencies leave
+the path.
+
+It was already installed, on 2026-08-26, and unchanged since, so nothing new had
+to reach the phone for this. **The lesson is the one worth keeping**: a
+replacement can sit installed and documented for a week while its callers keep
+walking the old route, because nothing points from the thing being replaced to
+the thing replacing it. Only reading the two side by side finds it.
 
 ### Why the lookup and the default are separate shortcuts
 
