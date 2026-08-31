@@ -1,7 +1,7 @@
 {
  "Get-AppRoute": {
-  "plist_sha256": "a014971f57aeb0fc230bfe01612cba5f922cfe657192eb440138ec1d5dc11e21",
-  "bytes": 22197,
+  "plist_sha256": "f5a921a81c3d9def6b66ce5acd1ac0b913f16ec9531c976a9256021a0b777c7e",
+  "bytes": 22178,
   "signed": "2026-08-31"
  },
  "Library-Fetch": {

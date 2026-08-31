@@ -1287,6 +1287,23 @@ the clipboard, which is one shortcut and no boundary at all.
 *Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
 hand-offs preserve a list and which flatten it. Only that this one flattened.
 
+## An inline payload outlives the path it loads from
+
+*Measured 2026-08-30.* `Show-Repo` is two actions: 14,451 characters of HTML
+titled "GH Browse" pasted into a Text action, handed to `Show-Html`. That page
+loads three things from jsDelivr, and one of them is
+`gh/mehrlander/web-tools/gh-fetch.js`, which **404s**. The file moved into
+`lib/` on 2026-08-25 and the pasted copy could not follow it.
+
+A fresh device dump matched the 2026-08-18 corpus copy byte for byte, so this
+was not a stale reading: the shortcut had been opening a page whose script never
+loaded, and nothing said so, because a page that renders empty looks like a page.
+
+**This is the failure [`idioms.md`](idioms.md) predicts** in "Payloads live in
+`pages/`, not pasted into the chain". A hosted page follows its repository when a
+file moves; 14 KB pasted into a Text action on a phone does not, and no check
+here can see inside it. Retired rather than repaired, on the owner's call.
+
 ## A run-shortcut link makes Shortcuts the current app
 
 *Observed on device 2026-08-30.*

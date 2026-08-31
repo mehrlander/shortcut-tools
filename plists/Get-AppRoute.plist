@@ -66,8 +66,7 @@
 				<key>UUID</key>
 				<string>6A700000-0004-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>[GitHub]=Show-Repo
-[Audible]=Speak-Text
+				<string>[Audible]=Speak-Text
 [Music]=Open-WiFi
 [Roku]=Open-WiFi
 [Shortcuts]=Choose-Manage</string>
