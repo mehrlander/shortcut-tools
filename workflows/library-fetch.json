@@ -1,0 +1,157 @@
+{
+  "name": "Library-Fetch",
+  "label": "Library-Fetch: install a shortcut signed in the repo, no worker on device (8 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "1B7C0000-0001-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "1B7C0000-0002-4A00-9000-000000000001",
+        "CustomOutputName": "Shortcut name",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "1B7C0000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "1B7C0000-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Signed URL",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "1B7C0000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.downloadurl",
+      "p": {
+        "UUID": "1B7C0000-0004-4A00-9000-000000000001",
+        "WFURL": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "1B7C0000-0003-4A00-9000-000000000001",
+                "OutputName": "Signed URL"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setitemname",
+      "p": {
+        "UUID": "1B7C0000-0005-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "1B7C0000-0004-4A00-9000-000000000001",
+            "OutputName": "Contents of URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFName": {
+          "Value": {
+            "string": "￼.shortcut",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "1B7C0000-0002-4A00-9000-000000000001",
+                "OutputName": "Shortcut name"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openin",
+      "p": {
+        "UUID": "1B7C0000-0006-4A00-9000-000000000001",
+        "WFOpenInAskWhenRun": false,
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "1B7C0000-0005-4A00-9000-000000000001",
+            "OutputName": "Renamed Item"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFOpenInAppIdentifier": "com.apple.shortcuts",
+        "WFSelectedApp": {
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "1B7C0000-0007-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"fetch\",\"name\":\"￼\",\"build\":\"#BUILD#\",\"from\":\"￼\"}",
+            "attachmentsByRange": {
+              "{22, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "1B7C0000-0002-4A00-9000-000000000001",
+                "OutputName": "Shortcut name"
+              },
+              "{51, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "1B7C0000-0003-4A00-9000-000000000001",
+                "OutputName": "Signed URL"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "1B7C0000-0008-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "1B7C0000-0007-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

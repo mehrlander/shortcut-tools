@@ -1287,9 +1287,126 @@ the clipboard, which is one shortcut and no boundary at all.
 *Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
 hand-offs preserve a list and which flatten it. Only that this one flattened.
 
-## "Unrecognized archive format" is usually the worker, not the file
+## An inline payload outlives the path it loads from
 
-*Measured on device 2026-08-28.*
+*Measured 2026-08-30.* `Show-Repo` is two actions: 14,451 characters of HTML
+titled "GH Browse" pasted into a Text action, handed to `Show-Html`. That page
+loads three things from jsDelivr, and one of them is
+`gh/mehrlander/web-tools/gh-fetch.js`, which **404s**. The file moved into
+`lib/` on 2026-08-25 and the pasted copy could not follow it.
+
+A fresh device dump matched the 2026-08-18 corpus copy byte for byte, so this
+was not a stale reading: the shortcut had been opening a page whose script never
+loaded, and nothing said so, because a page that renders empty looks like a page.
+
+**This is the failure [`idioms.md`](idioms.md) predicts** in "Payloads live in
+`pages/`, not pasted into the chain". A hosted page follows its repository when a
+file moves; 14 KB pasted into a Text action on a phone does not, and no check
+here can see inside it. Retired rather than repaired, on the owner's call.
+
+## A vCard menu hides its URLs from a search for them
+
+*Measured 2026-08-30, after guessing wrong at something the corpus held.*
+
+`Fav-Settings` carries 14 settings pages as a vCard, the idiom
+[`idioms.md`](idioms.md) calls "rich menus smuggle data through contacts": a
+`TEL;TYPE=<url>:<label>` line per entry, coerced to a contact, offered as Choose
+from List, and the chosen row's Label opened as a URL.
+
+**The vCard escapes the colon**, so those entries read `TEL;TYPE=prefs\:root=…`.
+A scan for `prefs:` across the corpus finds the 130 URLs in `Settings Menu` and
+its siblings and **none** of these, which is how a search over 636 shortcuts
+returned a confident "Back Tap is not in the library" while the exact key sat in
+a shortcut named for it.
+
+The keys, since they are worth having written down:
+
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+
+Back Tap is not `TOUCH/Back%20Tap`, which is what the sibling
+`DISPLAY_AND_TEXT` suggests and what was guessed. The Touch page is
+`TOUCH_REACHABILITY_TITLE` and the leaf has no space. The AssistiveTouch key
+reaches that page; the long-press action customisation below it is a further
+level with no key recorded yet.
+
+**Why these two matter operationally rather than as trivia:** re-installing a
+shortcut breaks whatever Back Tap or the AssistiveTouch button had bound to it,
+so a handover that replaces a bound shortcut has to carry the settings link
+beside the install link. That rule lives in `CLAUDE.md`, next to the save-over
+offer it qualifies.
+
+**The rule this earns:** a corpus search for a URL, an identifier or a name must
+allow for escaping, because a payload built as text can carry any of them in a
+form the plain string never matches. Search for the surrounding structure too,
+here `TEL;TYPE=`, not only the value hoped for.
+
+## A run-shortcut link makes Shortcuts the current app
+
+*Observed on device 2026-08-30.*
+
+Tapping a `shortcuts://run-shortcut` URL brings the Shortcuts app to the
+foreground before the shortcut runs, so `Get Current App` reports **Shortcuts**
+no matter where the tap came from. Anything routing on the current app is
+therefore untestable by link: it will take the Shortcuts branch every time, and
+a run that lands there proves the lookup works and proves nothing about which
+app it read.
+
+Two consequences worth stating.
+
+**A back tap is not a link.** The gesture invokes the shortcut from the
+foreground app directly, which is why `Back-DoubleTap`'s GitHub, Audible and
+Music branches have been firing correctly all along. The mechanism is sound; the
+link is the contaminated instrument.
+
+**So test the lookup and the reading separately.** `Get-AppRoute` takes an app
+name as input for exactly this reason, and `probe-route` asks it about a named
+app and logs the answer, which is a question a link *can* ask. Whether
+`Get Current App` reports the foreground app is not a question any link can put,
+and does not need one: the shortcut that depends on it is the one already in
+daily use.
+
+Same shape reaches `Choose-Utility`, whose prompt reads `Current app: ￼`. Run
+from a link it will always say Shortcuts.
+
+## "Unrecognized archive format" is the signing service, not the file
+
+*Measured on device 2026-08-28, cause isolated from the sandbox 2026-08-30.*
+
+**The worker signs by calling Apple's iCloud service, and when that call fails
+it answers HTTP 200 with a plain-text body.** Not a 5xx, not an empty reply: a
+46-byte string.
+
+```
+🛑 ERROR 🛑
+iCloud server failure. Please try again later.
+```
+
+`Extract` is handed that instead of a gzip and reports the only thing it can,
+which is that the archive is unrecognizable. The message names the file and the
+fault is two services away.
+
+Isolated by POSTing four plists in one pass: three signed, `Get-ShortcutJson`
+came back with the string above, and **the identical bytes then signed on all
+three immediate retries**. So the file is not the variable and neither is the
+request.
+
+**There is a second, unrelated 27-byte error from the same worker**, `🛑 Error:
+Invalid Request`, which is what a wrong request content type gets. It signs on
+`application/gzip` and `application/x-gzip` and refuses `application/octet-stream`
+or a multipart form. Two different failures behind one on-device message, which
+is why the device symptom cannot tell them apart.
+
+**The retry belongs in the sandbox, not on a thumb.** `plist.py --sign` POSTs the
+built plist and reports whether a shortcut comes back, retrying an outage up to
+four times. Run it before handing over an install link; a tap spent on an Apple
+outage is a tap wasted, and this cost two of them in one session.
+
+---
+
+*Original note, 2026-08-28, which had the rule right and the cause unknown:*
 
 `Library-Import` fetches a plist, gzips it, POSTs it to a third-party signing
 worker over plain `http`, and unzips the reply. That last card is where the alert

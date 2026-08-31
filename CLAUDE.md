@@ -83,6 +83,29 @@ re-install through it. The cost of that error is not a wasted tap: the link
 names a receiver the device may not have, so it fails at the point of use with
 nothing installed.
 
+**But replacing a shortcut breaks whatever the system had bound to it**
+(reported 2026-08-31). Back Tap holds a reference that a save-over import does
+not preserve, so a re-installed shortcut has to be re-selected in Settings
+before the gesture works again. The name survives and the binding does not,
+which is the opposite of the failure the save-over offer prevents, and it is
+silent: the gesture simply stops doing anything.
+
+So **a handover that re-installs a bound shortcut owes the settings link too**,
+in the same message. The same holds for the AssistiveTouch button's actions.
+Delivery is through `Open-URL`, which already exists, because a bare `prefs:`
+link tapped in a chat client is swallowed and one run from inside Shortcuts is
+not:
+
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+
+Both come from `Fav-Settings`, which has carried a 14-page settings menu all
+along; the second lands on the AssistiveTouch page, and the long-press
+customisation below it has no key recorded yet. Emit them like any other link:
+`python3 tools/run.py Open-URL --text '<the prefs URL>'`.
+
 **Replacing a generated receiver is free**, so spend no care on it. The
 four-step prune exists for shortcuts whose only copy is the device; a receiver
 whose plist is committed here is reproducible from `git`. Reserve staging for
@@ -180,14 +203,46 @@ python3 - <<'EOF'
 import json
 idx = {r["name"] for r in json.load(open("index.json"))}
 for a in json.load(open("<chain>.json"))["actions"]:
-    n = a["p"].get("WFWorkflowName")
-    if isinstance(n, str) and n not in idx: print("missing:", n)
+    names = [a["p"].get("WFWorkflowName")]
+    # A router keeps its targets as dictionary values, where WFWorkflowName
+    # never looks. Read those too, or the audit passes a map full of dead names.
+    for item in (a["p"].get("WFItems", {}).get("Value", {})
+                 .get("WFDictionaryFieldValueItems", []) or []):
+        names.append(item.get("WFValue", {}).get("Value", {}).get("string"))
+    for n in names:
+        if isinstance(n, str) and n not in idx: print("missing:", n)
 EOF
 ```
 
 Two false positives to expect, both from the index being a snapshot: anything
 installed since the last dump, and any name computed at run time, which is a
 token rather than a string and cannot be checked this way at all.
+
+**Audit the chain's own name too, not only its targets.** `Get-ShortcutJson`
+was published on 2026-08-30 over a 4-action predecessor doing nearly the same
+job, because the collision check was run against `Get-Shortcut` and never
+against the name actually chosen. Nothing called the predecessor and the
+replacement is a superset, so it cost nothing, and the device log settled that
+the new copy is the one running. The check is one line and belongs beside the
+target audit:
+
+```python
+name = json.load(open("<chain>.json")).get("name")
+if name in idx: print("name already in the library:", name)
+```
+
+A hit is not automatically wrong. It means the install will offer to save over
+something, and the question of whether that something is wanted has to be
+answered before the link goes out rather than after.
+
+**A dictionary value is a shortcut name that no field name marks as one**, which
+is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
+cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is
+plain key and value strings in the chain file, as readable and as diffable as
+any other parameter. What changes is that the names stop living in
+`WFWorkflowName`, which is the only field the audit knew to read, so the audit
+reads both now. Any future carrier for a target name has to be added here in the
+same commit that introduces it.
 
 ## Every handover reports itself, with its build id
 

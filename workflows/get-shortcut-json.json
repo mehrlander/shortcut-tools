@@ -1,0 +1,131 @@
+{
+  "name": "Get-ShortcutJson",
+  "label": "Get-ShortcutJson: one named shortcut as JSON, name included, returned not sent (7 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "6E700000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 0,
+        "WFCondition": 101,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "6E700000-0002-4A00-9000-000000000001",
+        "WFTextActionText": "Choose-Sample"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "6E700000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 2,
+        "UUID": "6E700000-0003-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "6E700000-0004-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "6E700000-0005-4A00-9000-000000000001",
+        "CustomOutputName": "Match",
+        "WFContentItemInputParameter": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "6E700000-0004-4A00-9000-000000000001",
+            "OutputName": "My Shortcuts"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFContentItemLimitEnabled": true,
+        "WFContentItemLimitNumber": 1,
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFContentPredicateBoundedDate": false,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 4,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": {
+                    "Value": {
+                      "string": "￼",
+                      "attachmentsByRange": {
+                        "{0, 1}": {
+                          "Type": "ActionOutput",
+                          "OutputUUID": "6E700000-0003-4A00-9000-000000000001",
+                          "OutputName": "If Result"
+                        }
+                      }
+                    },
+                    "WFSerializationType": "WFTextTokenString"
+                  },
+                  "Unit": 4
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettypeaction",
+      "p": {
+        "UUID": "6E700000-0006-4A00-9000-000000000001",
+        "WFFileType": "public.json",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "6E700000-0005-4A00-9000-000000000001",
+            "OutputName": "Match"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "6E700000-0007-4A00-9000-000000000001",
+        "CustomOutputName": "Shortcut JSON",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"name\":\"￼\",\"shortcut\":￼}",
+            "attachmentsByRange": {
+              "{9, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "6E700000-0003-4A00-9000-000000000001",
+                "OutputName": "If Result"
+              },
+              "{23, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "6E700000-0006-4A00-9000-000000000001",
+                "OutputName": "File of Type"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

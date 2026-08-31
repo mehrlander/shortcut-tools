@@ -86,8 +86,15 @@ def build_of(url):
     The whole URL is noise in a list; the ref is the only part that answers the
     question actually being asked, which is whether the build just pushed is the
     build that ran.
+
+    Both install routes are read, and the second one is why this was wrong.
+    `Library-Fetch` serves signed/<Name>.shortcut, so a plists-only pattern
+    matched nothing, returned "", and the renderer dropped the empty value: four
+    fetch rows in a row that named no version at all. A row whose version is
+    missing looks exactly like a row that has one, which is the failure the ref
+    exists to prevent.
     """
-    m = re.search(r"/shortcut-tools/(.+?)/plists/", url or "")
+    m = re.search(r"/shortcut-tools/(.+?)/(?:plists|signed)/", url or "")
     if not m:
         return ""
     ref = m.group(1)

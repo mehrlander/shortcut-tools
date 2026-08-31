@@ -1,0 +1,26 @@
+{
+  "name": "Speak-Text",
+  "label": "Speak-Text: read the input aloud, in the back tap's voice (1 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.speaktext",
+      "p": {
+        "UUID": "5B0A0000-0001-4A00-9000-000000000001",
+        "WFSpeakTextPitch": 1.0000000149011612,
+        "WFSpeakTextRate": 0.619696855545044,
+        "WFSpeakTextVoice": "com.apple.ttsbundle.gryphon-neural_aaron_en-US_premium",
+        "WFText": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}
