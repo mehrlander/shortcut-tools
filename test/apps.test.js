@@ -165,3 +165,38 @@ test("a dual-read payload parses from the richer engine", () => {
                            { cwd: ROOT, encoding: "utf8" }).trim().split("\n");
   assert.deepEqual(out, ["Acrobat", "Airtable"]);
 });
+
+// The registry is derived from dumps, catalogs and a names file, none of which
+// announce a change, so without a gate it is the one artifact here that could
+// silently disagree with all three.
+test("--check passes on a current registry and fails on a stale one", () => {
+  const { dir, zip } = fixture();
+  const out = path.join(dir, "apps.json");
+  apps(zip, "--json", out);
+  assert.match(apps(zip, "--json", out, "--check"), /is current/);
+
+  const reg = JSON.parse(fs.readFileSync(out, "utf8"));
+  reg.apps[0].picked_in_actions = 999;
+  fs.writeFileSync(out, JSON.stringify(reg, null, 1) + "\n");
+  assert.throws(() => apps(zip, "--json", out, "--check"), /stale/);
+});
+
+// Rows are built from a set and two bundle ids can carry one label, so a
+// name-only sort key left ties to hash order. The gate caught it on first use.
+test("the registry is byte-identical across runs", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "apps4-"));
+  const w = (b) =>
+    "<dict><key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.openapp</string>" +
+    "<key>WFWorkflowActionParameters</key><dict><key>WFSelectedApp</key><dict>" +
+    `<key>BundleIdentifier</key><string>${b}</string>` +
+    "<key>Name</key><string>GitHub</string></dict></dict></dict>";
+  const f = path.join(dir, "G.wflow"), zip = path.join(dir, "g.zip");
+  fs.writeFileSync(f,
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>" +
+    "<key>WFWorkflowActions</key><array>" +
+    w("com.github.stormbreaker") + w("com.github.stormbreaker.prod") +
+    "</array></dict></plist>");
+  execFileSync("zip", ["-qj", zip, f]);
+  const runs = [0, 1, 2].map(() => apps(zip));
+  assert.equal(new Set(runs).size, 1, "two ids sharing a label must not reorder");
+});

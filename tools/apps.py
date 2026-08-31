@@ -21,7 +21,10 @@ punctuation-insensitive because a Home Screen label and a `WFSelectedApp`
 `Name` are written by different parts of iOS and disagree over spaces,
 ampersands and the leading LTR mark WhatsApp carries.
 
-Why a registry rather than one read of the screenshots: `is.workflow.actions.filter.apps`
+It writes `device/apps.json` in web-tools-private, beside the captures it is
+built from; the placement decision and its revisit trigger are that repo's
+`DESIGN.md`. Why a registry rather than one read of the screenshots:
+`is.workflow.actions.filter.apps`
 is Mac-only (established on device 2026-08-30, see docs/shortcuts-format-notes.md),
 so nothing on iOS can regenerate the installed column. It has to be captured and
 kept, and kept means dated, since it decays with every install.
@@ -147,7 +150,12 @@ def build(zips, names_file=None, catalogs=(), seen=None, aliases=None):
         "sources": {"dumps": [Path(z).name for z in zips],
                     "names": Path(names_file).name if names_file else None,
                     "catalogs": [Path(c).name for c in catalogs]},
-        "apps": sorted(rows.values(), key=lambda r: (r["name"] or "~").lower()),
+        # Total, not just by name: two bundle ids can carry one label
+        # (com.github.stormbreaker and .prod both read "GitHub"), and rows are
+        # built from a set, so a name-only key leaves ties to hash order and
+        # the file is not byte-deterministic between runs.
+        "apps": sorted(rows.values(),
+                       key=lambda r: ((r["name"] or "~").lower(), r["bundle_id"] or "")),
     }
 
 
@@ -170,6 +178,8 @@ def main():
     ap.add_argument("--json", dest="out", help="write the registry here")
     ap.add_argument("--targets", action="store_true",
                     help="print the action-picker shot list and stop")
+    ap.add_argument("--check", action="store_true",
+                    help="fail when the registry at --json is behind its sources")
     ap.add_argument("--aliases", default=str(ROOT / "tools" / "apps-aliases.json"),
                     help="bundle id -> display name, where neither the picker "
                          "nor the bundle id folds onto the screenshot label")
@@ -192,11 +202,25 @@ def main():
                      "" if r["actions_used"] == 1 else "s"))
         return
 
+    text = json.dumps(reg, indent=1, ensure_ascii=False) + "\n"
+
+    if args.check:
+        # The registry is derived from dumps, catalogs and a names file, none of
+        # which announce a change. Without this the one artifact in this estate
+        # with no gate could silently disagree with all three.
+        if not args.out:
+            raise SystemExit("--check needs --json naming the registry to check")
+        have = Path(args.out).read_text() if Path(args.out).is_file() else ""
+        if have == text:
+            print("%s is current" % args.out)
+            return
+        raise SystemExit("stale, re-run without --check:\n  %s" % args.out)
+
     if args.out:
-        Path(args.out).write_text(json.dumps(reg, indent=1, ensure_ascii=False) + "\n")
+        Path(args.out).write_text(text)
         print("wrote %s: %d apps" % (args.out, len(reg["apps"])))
     else:
-        json.dump(reg, sys.stdout, indent=1, ensure_ascii=False)
+        sys.stdout.write(text)
 
 
 if __name__ == "__main__":
