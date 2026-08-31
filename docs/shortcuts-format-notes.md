@@ -1304,6 +1304,36 @@ loaded, and nothing said so, because a page that renders empty looks like a page
 file moves; 14 KB pasted into a Text action on a phone does not, and no check
 here can see inside it. Retired rather than repaired, on the owner's call.
 
+## A vCard menu hides its URLs from a search for them
+
+*Measured 2026-08-30, after guessing wrong at something the corpus held.*
+
+`Fav-Settings` carries 14 settings pages as a vCard, the idiom
+[`idioms.md`](idioms.md) calls "rich menus smuggle data through contacts": a
+`TEL;TYPE=<url>:<label>` line per entry, coerced to a contact, offered as Choose
+from List, and the chosen row's Label opened as a URL.
+
+**The vCard escapes the colon**, so those entries read `TEL;TYPE=prefs\:root=…`.
+A scan for `prefs:` across the corpus finds the 130 URLs in `Settings Menu` and
+its siblings and **none** of these, which is how a search over 636 shortcuts
+returned a confident "Back Tap is not in the library" while the exact key sat in
+a shortcut named for it.
+
+The key, since it is worth having written down: Back Tap is
+
+```
+prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap
+```
+
+Not `TOUCH/Back%20Tap`, which is what the sibling `DISPLAY_AND_TEXT` suggests and
+what was guessed. The Touch page is `TOUCH_REACHABILITY_TITLE` and the leaf has
+no space.
+
+**The rule this earns:** a corpus search for a URL, an identifier or a name must
+allow for escaping, because a payload built as text can carry any of them in a
+form the plain string never matches. Search for the surrounding structure too,
+here `TEL;TYPE=`, not only the value hoped for.
+
 ## A run-shortcut link makes Shortcuts the current app
 
 *Observed on device 2026-08-30.*
