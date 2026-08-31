@@ -1287,6 +1287,34 @@ the clipboard, which is one shortcut and no boundary at all.
 *Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
 hand-offs preserve a list and which flatten it. Only that this one flattened.
 
+## A run-shortcut link makes Shortcuts the current app
+
+*Observed on device 2026-08-30.*
+
+Tapping a `shortcuts://run-shortcut` URL brings the Shortcuts app to the
+foreground before the shortcut runs, so `Get Current App` reports **Shortcuts**
+no matter where the tap came from. Anything routing on the current app is
+therefore untestable by link: it will take the Shortcuts branch every time, and
+a run that lands there proves the lookup works and proves nothing about which
+app it read.
+
+Two consequences worth stating.
+
+**A back tap is not a link.** The gesture invokes the shortcut from the
+foreground app directly, which is why `Back-DoubleTap`'s GitHub, Audible and
+Music branches have been firing correctly all along. The mechanism is sound; the
+link is the contaminated instrument.
+
+**So test the lookup and the reading separately.** `Get-AppRoute` takes an app
+name as input for exactly this reason, and `probe-route` asks it about a named
+app and logs the answer, which is a question a link *can* ask. Whether
+`Get Current App` reports the foreground app is not a question any link can put,
+and does not need one: the shortcut that depends on it is the one already in
+daily use.
+
+Same shape reaches `Choose-Utility`, whose prompt reads `Current app: ￼`. Run
+from a link it will always say Shortcuts.
+
 ## "Unrecognized archive format" is the signing service, not the file
 
 *Measured on device 2026-08-28, cause isolated from the sandbox 2026-08-30.*
