@@ -2,3 +2,7 @@ node_modules/
 __pycache__/
 *.pyc
 *.shortcut
+# except the ones signed here: shortcut.js's export() writes scratch
+# .shortcut files that are unsigned and will not import, but signed/
+# holds the install artifacts and has to travel.
+!signed/*.shortcut

@@ -310,6 +310,13 @@ def write_signed(chain_path):
                  "signed": datetime.date.today().isoformat()}
     man_path.write_text(_json.dumps(dict(sorted(man.items())), indent=1) + "\n")
     print("wrote signed/%s.shortcut (%d bytes)" % (name, len(signed)), file=sys.stderr)
+    # A write git will not carry is a silent miss: the commit succeeds, the push
+    # succeeds, and the install link 404s. Ask git rather than assuming.
+    import subprocess
+    if subprocess.run(["git", "check-ignore", "-q", str(SIGNED / (name + ".shortcut"))],
+                      cwd=ROOT).returncode == 0:
+        print("  WARNING: git ignores that path, so it will not be committed",
+              file=sys.stderr)
     return name
 
 
