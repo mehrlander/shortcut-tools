@@ -1287,9 +1287,42 @@ the clipboard, which is one shortcut and no boundary at all.
 *Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
 hand-offs preserve a list and which flatten it. Only that this one flattened.
 
-## "Unrecognized archive format" is usually the worker, not the file
+## "Unrecognized archive format" is the signing service, not the file
 
-*Measured on device 2026-08-28.*
+*Measured on device 2026-08-28, cause isolated from the sandbox 2026-08-30.*
+
+**The worker signs by calling Apple's iCloud service, and when that call fails
+it answers HTTP 200 with a plain-text body.** Not a 5xx, not an empty reply: a
+46-byte string.
+
+```
+🛑 ERROR 🛑
+iCloud server failure. Please try again later.
+```
+
+`Extract` is handed that instead of a gzip and reports the only thing it can,
+which is that the archive is unrecognizable. The message names the file and the
+fault is two services away.
+
+Isolated by POSTing four plists in one pass: three signed, `Get-ShortcutJson`
+came back with the string above, and **the identical bytes then signed on all
+three immediate retries**. So the file is not the variable and neither is the
+request.
+
+**There is a second, unrelated 27-byte error from the same worker**, `🛑 Error:
+Invalid Request`, which is what a wrong request content type gets. It signs on
+`application/gzip` and `application/x-gzip` and refuses `application/octet-stream`
+or a multipart form. Two different failures behind one on-device message, which
+is why the device symptom cannot tell them apart.
+
+**The retry belongs in the sandbox, not on a thumb.** `plist.py --sign` POSTs the
+built plist and reports whether a shortcut comes back, retrying an outage up to
+four times. Run it before handing over an install link; a tap spent on an Apple
+outage is a tap wasted, and this cost two of them in one session.
+
+---
+
+*Original note, 2026-08-28, which had the rule right and the cause unknown:*
 
 `Library-Import` fetches a plist, gzips it, POSTs it to a third-party signing
 worker over plain `http`, and unzips the reply. That last card is where the alert

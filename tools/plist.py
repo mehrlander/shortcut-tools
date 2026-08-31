@@ -237,6 +237,46 @@ def link(chain_path, ref, target=IMPORT_TARGET):
         target, urllib.parse.quote(payload, safe=""))
 
 
+SIGNER = "http://shortcuts.gluebyte.workers.dev/"
+
+
+def signs(chain_path, tries=4):
+    """POST the built plist to the signing worker; True when a shortcut comes back.
+
+    The worker signs by calling Apple's iCloud service, and when that call fails
+    it answers **HTTP 200 with a plain-text body**, not an error status. On device
+    that lands in Extract as "Unrecognized archive format", which reads like a
+    problem with the file and is not one: measured 2026-08-30, the same plist
+    that failed signed on all three immediate retries.
+
+    So the retry belongs here rather than on the reader's thumb. Run this before
+    handing over an install link; a tap spent on an outage is a tap wasted.
+    """
+    import gzip, subprocess, tempfile
+    name, data = render(chain_path)
+    body = gzip.compress(data)
+    with tempfile.NamedTemporaryFile(suffix=".gz") as f:
+        f.write(body); f.flush()
+        for attempt in range(1, tries + 1):
+            # curl rather than urllib: this sandbox reaches the network through
+            # a proxy curl is configured for and urllib is not, which shows up
+            # as a 403 that has nothing to do with the worker.
+            got = subprocess.run(
+                ["curl", "-sS", "-X", "POST", "-H", "Content-Type: application/gzip",
+                 "--data-binary", "@" + f.name, SIGNER],
+                capture_output=True, timeout=60).stdout
+            # A signed reply is gzip; anything else is the worker talking.
+            if got[:2] == b"\x1f\x8b":
+                print("%s: signs (%d bytes, attempt %d)" % (name, len(got), attempt),
+                      file=sys.stderr)
+                return True
+            print("%s: attempt %d refused: %s"
+                  % (name, attempt,
+                     got.decode("utf-8", "replace").strip().replace("\n", " ")),
+                  file=sys.stderr)
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("chain", nargs="?")
@@ -249,7 +289,13 @@ def main():
     ap.add_argument("--ref", default="main", help="the ref --link points at")
     ap.add_argument("--replace", action="store_true",
                     help="--link through Library-Replace: delete by name, then import")
+    ap.add_argument("--sign", action="store_true",
+                    help="pre-flight: check the worker will sign it, retrying an outage")
     args = ap.parse_args()
+    if args.sign:
+        if not args.chain:
+            raise SystemExit("give a chain to sign-check")
+        raise SystemExit(0 if signs(args.chain) else 1)
     if args.link:
         if not args.chain:
             raise SystemExit("give a chain to link")
