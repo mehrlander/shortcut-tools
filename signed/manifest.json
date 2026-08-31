@@ -1,0 +1,12 @@
+{
+ "Library-Fetch": {
+  "plist_sha256": "74cdcde57e6e790988f2da7299f27dc522a52a2f32241f2eb47cde679cf8fba9",
+  "bytes": 22566,
+  "signed": "2026-08-31"
+ },
+ "Run-AppDetermined": {
+  "plist_sha256": "6599ae897c877f3b57dfaea8c018ccab622101e390df1c655dd664a036090533",
+  "bytes": 22260,
+  "signed": "2026-08-31"
+ }
+}

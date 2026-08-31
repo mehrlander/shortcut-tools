@@ -67,6 +67,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `library-open` | Opens a named shortcut in the editor. Three actions, and the cheapest thing the library view does. |
 | `library-install` | Creates the named shortcut and pastes its actions in. Superseded by `library-import` wherever a plist is committed, because no paste reaches file-level settings. |
 | `library-import` | Fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts. The only route that delivers `WFWorkflowTypes` and the input classes, at one tap plus Apple's import sheet. Its worker signs through Apple's iCloud service, which fails transiently and comes back as a 46-byte text body, surfacing on device as "Unrecognized archive format"; run `plist.py --sign` before sending a link so the retry is spent here rather than on a tap. |
+| `library-fetch` | Installs a shortcut that was **signed in the repo**: fetch the bytes, name them `<Name>.shortcut`, open them in Shortcuts. Eight actions, no gzip, no POST, no Extract, and so no exposure to the iCloud signing outage that fails the other route. |
 | `library-replace` | Delete by name, then import. The way around import never merging: importing over an existing name lands as `Name 1`, and every `run-shortcut?name=` link keeps resolving to the old copy. |
 | `library-stage` | Moves each named shortcut to a folder and logs it. The second step of the prune, and deliberately not the fourth. |
 | `manage-library-probe` | The three library actions whose parameter shapes were unknown, in one tap: open, move, delete. |
@@ -339,6 +340,38 @@ route works before anything large is attempted.
 One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
+
+## Signing here, so the device never does
+
+`library-import` asks the phone to gzip a plist, POST it to a third-party
+worker, and unzip the reply. Three of those steps can fail and one of them
+regularly does, because the worker signs through Apple's iCloud service and
+answers an outage with a 46-byte text body that `Extract` reports as
+"Unrecognized archive format".
+
+Nothing about that has to happen on the phone. `plist.py --write-signed` runs
+the same POST from here, retries an outage, and keeps the signed result in
+[`signed/`](../signed/). `library-fetch` then installs it in three working
+cards: fetch, name, open. The link is emitted the same way, with the same
+two-line payload, so one generator serves both routes:
+
+```bash
+python3 tools/plist.py workflows/<chain>.json --write-signed
+python3 tools/plist.py workflows/<chain>.json --link --fetch --ref <branch>
+```
+
+**`signed/` is not a mirror and cannot be checked like one.** The worker stamps
+a fresh inner name on every call, so signing the same plist twice gives
+different bytes; `--check` would fail on files that are perfectly correct. What
+is checkable is provenance, so `signed/manifest.json` records the sha256 of the
+plist each file was signed from. A recorded hash that no longer matches its
+plist is the staleness that matters, since a stale signed file serves a link
+that works and delivers the wrong shortcut.
+
+**The one call that stays on device is the first.** `library-fetch` has to be
+installed through `library-import` like anything else, so the worker runs on the
+phone exactly once more, ever. After that every install is a fetch of bytes that
+were already signed here.
 
 ## Installing one, rather than pasting it
 

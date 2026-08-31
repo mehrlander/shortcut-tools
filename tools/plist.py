@@ -38,6 +38,10 @@ IMPORT_TARGET = "Library-Import"
 # that is the route a person actually taps, and because a link naming a
 # receiver the device lacks fails at the point of use with nothing installed.
 REPLACE_TARGET = "Library-Replace"
+# Signed here, fetched there: Library-Fetch takes the same two-line payload
+# and just names the bytes and opens them, so no device ever calls the worker.
+FETCH_TARGET = "Library-Fetch"
+SIGNED = ROOT / "signed"
 
 # Observed on a 2026 export. Not guessed: an envelope that disagrees with the
 # client is the failure that presents as "the import sheet appeared and nothing
@@ -230,9 +234,13 @@ def link(chain_path, ref, target=IMPORT_TARGET):
     if not name:
         raise SystemExit("%s declares no name, so there is nothing to install"
                          % Path(chain_path).name)
-    if not (OUT / (name + ".plist")).is_file():
+    if target == FETCH_TARGET:
+        if not (SIGNED / (name + ".shortcut")).is_file():
+            raise SystemExit("no signed/%s.shortcut yet; run --write-signed first" % name)
+    elif not (OUT / (name + ".plist")).is_file():
         raise SystemExit("no plists/%s.plist yet; run --publish first" % name)
-    payload = "%s\n%s/%s/plists/%s.plist" % (name, RAW, ref, urllib.parse.quote(name))
+    where = "signed/%s.shortcut" if target == FETCH_TARGET else "plists/%s.plist"
+    payload = "%s\n%s/%s/%s" % (name, RAW, ref, where % urllib.parse.quote(name))
     return "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
         target, urllib.parse.quote(payload, safe=""))
 
@@ -240,7 +248,7 @@ def link(chain_path, ref, target=IMPORT_TARGET):
 SIGNER = "http://shortcuts.gluebyte.workers.dev/"
 
 
-def signs(chain_path, tries=4):
+def sign_bytes(chain_path, tries=4):
     """POST the built plist to the signing worker; True when a shortcut comes back.
 
     The worker signs by calling Apple's iCloud service, and when that call fails
@@ -269,12 +277,40 @@ def signs(chain_path, tries=4):
             if got[:2] == b"\x1f\x8b":
                 print("%s: signs (%d bytes, attempt %d)" % (name, len(got), attempt),
                       file=sys.stderr)
-                return True
+                import io
+                return name, data, gzip.GzipFile(fileobj=io.BytesIO(got)).read()
             print("%s: attempt %d refused: %s"
                   % (name, attempt,
                      got.decode("utf-8", "replace").strip().replace("\n", " ")),
                   file=sys.stderr)
-    return False
+    return None
+
+
+def write_signed(chain_path):
+    """Sign here and keep the result, with the provenance that makes it checkable.
+
+    The signed file is NOT byte-deterministic: the worker stamps a fresh inner
+    name every call, so this cannot join packed/ and plists/ under --check. What
+    can be checked is where it came from, so the manifest records the sha256 of
+    the plist each one was signed from. A signed file whose recorded hash no
+    longer matches its plist is stale, and stale here means an install link that
+    works and delivers the wrong shortcut.
+    """
+    import hashlib, json as _json, datetime
+    got = sign_bytes(chain_path)
+    if not got:
+        return None
+    name, plist_bytes, signed = got
+    SIGNED.mkdir(exist_ok=True)
+    (SIGNED / (name + ".shortcut")).write_bytes(signed)
+    man_path = SIGNED / "manifest.json"
+    man = _json.loads(man_path.read_text()) if man_path.is_file() else {}
+    man[name] = {"plist_sha256": hashlib.sha256(plist_bytes).hexdigest(),
+                 "bytes": len(signed),
+                 "signed": datetime.date.today().isoformat()}
+    man_path.write_text(_json.dumps(dict(sorted(man.items())), indent=1) + "\n")
+    print("wrote signed/%s.shortcut (%d bytes)" % (name, len(signed)), file=sys.stderr)
+    return name
 
 
 def main():
@@ -291,16 +327,25 @@ def main():
                     help="--link through Library-Replace: delete by name, then import")
     ap.add_argument("--sign", action="store_true",
                     help="pre-flight: check the worker will sign it, retrying an outage")
+    ap.add_argument("--write-signed", action="store_true",
+                    help="sign here and write signed/<Name>.shortcut, so no device signs")
+    ap.add_argument("--fetch", action="store_true",
+                    help="--link through Library-Fetch, which installs an already-signed file")
     args = ap.parse_args()
+    if args.write_signed:
+        if not args.chain:
+            raise SystemExit("give a chain to sign")
+        raise SystemExit(0 if write_signed(args.chain) else 1)
     if args.sign:
         if not args.chain:
             raise SystemExit("give a chain to sign-check")
-        raise SystemExit(0 if signs(args.chain) else 1)
+        raise SystemExit(0 if sign_bytes(args.chain) else 1)
     if args.link:
         if not args.chain:
             raise SystemExit("give a chain to link")
-        print(link(args.chain, args.ref,
-                   REPLACE_TARGET if args.replace else IMPORT_TARGET))
+        target = (FETCH_TARGET if args.fetch else
+                  REPLACE_TARGET if args.replace else IMPORT_TARGET)
+        print(link(args.chain, args.ref, target))
         return
     if args.publish or args.check:
         return publish(args.check,
