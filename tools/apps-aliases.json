@@ -1,0 +1,14 @@
+{
+ "_": "Where neither a picker Name nor the bundle id's last component folds onto the label a screenshot carries.",
+ "aliases": {
+  "com.microsoft.msedge": "Edge",
+  "com.alexhay.ToolboxProForShortcuts": "Toolbox Pro",
+  "AsheKube.app.a-Shell-mini": "a-Shell mini",
+  "com.apple.mobilephone": "Phone",
+  "com.google.chrome": "Chrome",
+  "com.apple.AccessibilityUtilities": "Accessibility Utilities",
+  "com.apple.AccessibilityUIServer": "Accessibility UI Server",
+  "com.github.stormbreaker": "GitHub",
+  "com.apple.TVRemoteUIService": "Apple TV Remote"
+ }
+}
