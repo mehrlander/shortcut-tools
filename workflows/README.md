@@ -496,13 +496,18 @@ editor. Against that, a dictionary key matches exactly and a regex does not.
 Two sharp edges follow from the regex, and both are the price of the text form:
 
 - **An app name carrying a regex metacharacter breaks the pattern.** The name is
-  interpolated into `(?<=\n<name>=).+`, so a display name with `+`, `(` or `.`
+  interpolated into `(?<=<name>=).+`, so a display name with `+`, `(` or `.`
   matches something other than itself. Same class as the JSON quoting hazard that
   cost `dump-folder` its parse on a shortcut called `Say "hi"`.
-- **The lookbehind anchors on a newline rather than `^`**, which is why the map
-  begins with one. `^` would need multiline mode and nothing in the corpus says
-  whether Match Text runs in it, so the leading newline sidesteps the question
-  instead of betting on it.
+- **No key may end with another key.** The lookbehind is the key plus its `=`
+  and nothing more, so looking up `Music` would also match a row for
+  `Apple Music=…`. That is what buys the map its plain first line: an earlier
+  draft anchored on `(?<=\n<name>=)` and needed a leading blank line so the
+  first row was newline-preceded like the rest. Dropping the anchor drops the
+  blank line, and the constraint it leaves is one you keep by owning the map.
+
+`.` does not cross a newline by default, so `.+` stops at the end of its own row
+without anything being said about it.
 
 **The middle path, if the regex ever bites:** hold the map as JSON in a Text
 action and parse it with `Get Dictionary from Input`, which is one action more

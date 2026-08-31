@@ -13,7 +13,7 @@
       "p": {
         "UUID": "8A990000-0002-4A00-9000-000000000001",
         "CustomOutputName": "Routes",
-        "WFTextActionText": "\nGitHub=Show-Repo\nShortcuts=Choose-Manage"
+        "WFTextActionText": "GitHub=Show-Repo\nShortcuts=Choose-Manage"
       }
     },
     {
@@ -22,9 +22,9 @@
         "UUID": "8A990000-0003-4A00-9000-000000000001",
         "WFMatchTextPattern": {
           "Value": {
-            "string": "(?<=\n￼=).+",
+            "string": "(?<=￼=).+",
             "attachmentsByRange": {
-              "{5, 1}": {
+              "{4, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "8A990000-0001-4A00-9000-000000000001",
                 "OutputName": "Current App"

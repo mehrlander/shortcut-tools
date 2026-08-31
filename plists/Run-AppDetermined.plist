@@ -25,8 +25,7 @@
 				<key>UUID</key>
 				<string>8A990000-0002-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>
-GitHub=Show-Repo
+				<string>GitHub=Show-Repo
 Shortcuts=Choose-Manage</string>
 			</dict>
 		</dict>
@@ -43,7 +42,7 @@ Shortcuts=Choose-Manage</string>
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{5, 1}</key>
+							<key>{4, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Current App</string>
@@ -54,8 +53,7 @@ Shortcuts=Choose-Manage</string>
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>(?&lt;=
-￼=).+</string>
+						<string>(?&lt;=￼=).+</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
