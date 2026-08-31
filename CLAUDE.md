@@ -83,6 +83,29 @@ re-install through it. The cost of that error is not a wasted tap: the link
 names a receiver the device may not have, so it fails at the point of use with
 nothing installed.
 
+**But replacing a shortcut breaks whatever the system had bound to it**
+(reported 2026-08-31). Back Tap holds a reference that a save-over import does
+not preserve, so a re-installed shortcut has to be re-selected in Settings
+before the gesture works again. The name survives and the binding does not,
+which is the opposite of the failure the save-over offer prevents, and it is
+silent: the gesture simply stops doing anything.
+
+So **a handover that re-installs a bound shortcut owes the settings link too**,
+in the same message. The same holds for the AssistiveTouch button's actions.
+Delivery is through `Open-URL`, which already exists, because a bare `prefs:`
+link tapped in a chat client is swallowed and one run from inside Shortcuts is
+not:
+
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+
+Both come from `Fav-Settings`, which has carried a 14-page settings menu all
+along; the second lands on the AssistiveTouch page, and the long-press
+customisation below it has no key recorded yet. Emit them like any other link:
+`python3 tools/run.py Open-URL --text '<the prefs URL>'`.
+
 **Replacing a generated receiver is free**, so spend no care on it. The
 four-step prune exists for shortcuts whose only copy is the device; a receiver
 whose plist is committed here is reproducible from `git`. Reserve staging for

@@ -1319,15 +1319,24 @@ its siblings and **none** of these, which is how a search over 636 shortcuts
 returned a confident "Back Tap is not in the library" while the exact key sat in
 a shortcut named for it.
 
-The key, since it is worth having written down: Back Tap is
+The keys, since they are worth having written down:
 
-```
-prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap
-```
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
 
-Not `TOUCH/Back%20Tap`, which is what the sibling `DISPLAY_AND_TEXT` suggests and
-what was guessed. The Touch page is `TOUCH_REACHABILITY_TITLE` and the leaf has
-no space.
+Back Tap is not `TOUCH/Back%20Tap`, which is what the sibling
+`DISPLAY_AND_TEXT` suggests and what was guessed. The Touch page is
+`TOUCH_REACHABILITY_TITLE` and the leaf has no space. The AssistiveTouch key
+reaches that page; the long-press action customisation below it is a further
+level with no key recorded yet.
+
+**Why these two matter operationally rather than as trivia:** re-installing a
+shortcut breaks whatever Back Tap or the AssistiveTouch button had bound to it,
+so a handover that replaces a bound shortcut has to carry the settings link
+beside the install link. That rule lives in `CLAUDE.md`, next to the save-over
+offer it qualifies.
 
 **The rule this earns:** a corpus search for a URL, an identifier or a name must
 allow for escaping, because a payload built as text can carry any of them in a
