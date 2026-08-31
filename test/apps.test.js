@@ -64,7 +64,7 @@ test("the name join tolerates how differently iOS writes one app's name", () => 
   const wa = rows.find((r) => r.bundle_id === "net.whatsapp.WhatsApp");
   assert.equal(wa.installed, true, "the LTR mark must not break the join");
   const charty = rows.find((r) => r.bundle_id === "com.brogrammers.charty");
-  assert.equal(charty.installed, false, "absent from a complete pass means absent");
+  assert.equal(charty.installed, null, "a name the pass did not carry stays unproven");
 });
 
 test("a screenshot name with no bundle id becomes its own row, not an error", () => {
@@ -90,4 +90,63 @@ test("--targets names only vendors with actions used and no catalog entry", () =
   assert.doesNotMatch(covered, /com\.brogrammers\.charty/,
                       "a documented vendor drops off the shot list");
   assert.match(covered, /^0 vendors/);
+});
+
+// The capture can only prove presence. Settings -> Apps omits SpringBoard and
+// Camera, and a pass can miss a screen, so absence from it is not absence.
+test("a names pass never marks a row false", () => {
+  const { dir, zip } = fixture();
+  const names = path.join(dir, "names.txt");
+  fs.writeFileSync(names, "WhatsApp\n");
+  const rows = read(zip, ["--names", names]).apps;
+  assert.ok(rows.every((r) => r.installed !== false));
+  const charty = rows.find((r) => r.bundle_id === "com.brogrammers.charty");
+  assert.equal(charty.installed, null, "not seen is unproven, not absent");
+});
+
+// Apple ships com.apple.mobilenotes and com.apple.Notes both labelled "Notes";
+// a screenshot cannot tell them apart, so both must be marked.
+test("one label marks every bundle id that answers to it", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "apps2-"));
+  const dup =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>" +
+    "<key>WFWorkflowActions</key><array>" +
+    ["com.apple.mobilenotes", "com.apple.Notes"].map((b) =>
+      "<dict><key>WFWorkflowActionIdentifier</key><string>is.workflow.actions.openapp</string>" +
+      "<key>WFWorkflowActionParameters</key><dict><key>WFSelectedApp</key><dict>" +
+      `<key>BundleIdentifier</key><string>${b}</string>` +
+      "<key>Name</key><string>Notes</string></dict></dict></dict>").join("") +
+    "</array></dict></plist>";
+  const f = path.join(dir, "N.wflow"), zip = path.join(dir, "dup.zip");
+  fs.writeFileSync(f, dup);
+  execFileSync("zip", ["-qj", zip, f]);
+  const names = path.join(dir, "names.txt");
+  fs.writeFileSync(names, "Notes\n");
+  const rows = JSON.parse(apps(zip, "--names", names)).apps;
+  const marked = rows.filter((r) => r.installed === true);
+  assert.equal(marked.length, 2, "both Notes bundles are proven installed");
+});
+
+// A vendor-only row has no picker Name, so without a derived one it can never
+// join and the app splits into two rows that disagree about being installed.
+test("a vendor-only row gets a name from its bundle id and can join", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "apps3-"));
+  const w =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>" +
+    "<key>WFWorkflowActions</key><array>" +
+    "<dict><key>WFWorkflowActionIdentifier</key>" +
+    "<string>dk.simonbs.DataJar.SetValueIntent</string>" +
+    "<key>WFWorkflowActionParameters</key><dict/></dict>" +
+    "</array></dict></plist>";
+  const f = path.join(dir, "V.wflow"), zip = path.join(dir, "v.zip");
+  fs.writeFileSync(f, w);
+  execFileSync("zip", ["-qj", zip, f]);
+  const bare = JSON.parse(apps(zip)).apps[0];
+  assert.equal(bare.name, "Data Jar", "camelCase splits back into the label");
+
+  const names = path.join(dir, "names.txt");
+  fs.writeFileSync(names, "Data Jar\n");
+  const rows = JSON.parse(apps(zip, "--names", names)).apps;
+  assert.equal(rows.length, 1, "one app, not an orphan row beside a vendor row");
+  assert.equal(rows[0].installed, true);
 });

@@ -87,15 +87,25 @@ def from_catalog(paths):
     return known
 
 
-def build(zips, names_file=None, catalogs=(), seen=None):
+def from_bundle(bundle):
+    """A display name for a row the picker never named: the last component,
+    camelCase split back into words. `dk.simonbs.DataJar` -> `Data Jar`,
+    which folds onto a screenshot's `Data Jar`. Vendor-only rows exist because
+    an action identifier carries a bundle id and never a label."""
+    tail = bundle.split(".")[-1]
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", tail).replace("-", " ").strip()
+
+
+def build(zips, names_file=None, catalogs=(), seen=None, aliases=None):
     picked, vends, names = from_corpus(zips)
     toolkit = from_catalog(catalogs)
 
+    alias = aliases or {}
     rows = {}
     for bundle in set(picked) | set(vends):
         rows[bundle] = {
             "bundle_id": bundle,
-            "name": names.get(bundle, ""),
+            "name": alias.get(bundle) or names.get(bundle) or from_bundle(bundle),
             "installed": None,          # unknown until a screenshot says so
             "picked_in_actions": picked.get(bundle, 0),
             "actions_used": vends.get(bundle, 0),
@@ -105,25 +115,32 @@ def build(zips, names_file=None, catalogs=(), seen=None):
     # The screenshot pass: names only, joined onto the bundle ids above.
     unmatched = []
     if names_file:
-        by_fold = {fold(r["name"]): b for b, r in rows.items() if r["name"]}
+        # One label can belong to several bundle ids: Apple ships both
+        # com.apple.mobilenotes and com.apple.Notes as "Notes", and a screenshot
+        # cannot tell them apart. Mark every row that answers to the name, or
+        # the capture silently leaves duplicates looking unproven.
+        by_fold = {}
+        for b, r in rows.items():
+            if r["name"]:
+                by_fold.setdefault(fold(r["name"]), []).append(b)
         for line in Path(names_file).read_text().splitlines():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            bundle = by_fold.get(fold(line))
-            if bundle:
-                rows[bundle]["installed"] = True
-            else:
+            hits = by_fold.get(fold(line), [])
+            for b in hits:
+                rows[b]["installed"] = True
+            if not hits:
                 unmatched.append(line)
         for name in unmatched:
             rows["?" + fold(name)] = {
                 "bundle_id": None, "name": name, "installed": True,
                 "picked_in_actions": 0, "actions_used": 0, "toolkit_actions": 0,
             }
-        # A name the screenshots did not carry is absent, not merely unproven.
-        for r in rows.values():
-            if r["installed"] is None and r["bundle_id"]:
-                r["installed"] = False
+        # And nothing is set False. Settings -> Apps omits system apps such as
+        # SpringBoard and Camera, and a pass can miss a screen, so a name the
+        # capture did not carry is unproven rather than absent. The column
+        # answers "seen installed", and its only values are True and unknown.
 
     return {
         "generated": seen or "",
@@ -153,13 +170,18 @@ def main():
     ap.add_argument("--json", dest="out", help="write the registry here")
     ap.add_argument("--targets", action="store_true",
                     help="print the action-picker shot list and stop")
+    ap.add_argument("--aliases", default=str(ROOT / "tools" / "apps-aliases.json"),
+                    help="bundle id -> display name, where neither the picker "
+                         "nor the bundle id folds onto the screenshot label")
     ap.add_argument("--date", default="", help="stamp the registry with this date")
     args = ap.parse_args()
 
     zips = [z for pat in (args.zips or []) for z in sorted(glob.glob(pat))]
     if not zips:
         ap.error("no dumps given")
-    reg = build(zips, args.names, args.catalog, args.date)
+    apath = Path(args.aliases)
+    alias = json.loads(apath.read_text()).get("aliases", {}) if apath.is_file() else {}
+    reg = build(zips, args.names, args.catalog, args.date, alias)
 
     if args.targets:
         rows = targets(reg)

@@ -1,0 +1,30 @@
+{
+ "_": "Vision misreads that no rule can reach. Each was checked against the raw payload's neighbours before being written here.",
+ "drop": [
+  ".1 5G",
+  "bll",
+  "CPEE",
+  "dB",
+  "Dois OIDDS",
+  "fire ty",
+  "Hoalth",
+  "OBEE",
+  "sll",
+  "Wendv's",
+  "WilM",
+  "Xinity"
+ ],
+ "rename": {
+  "Spotity": "Spotify",
+  "Character.Al": "Character.AI",
+  "Meta Al": "Meta AI",
+  "Linkedin": "LinkedIn",
+  "> play fi": "Play-Fi"
+ },
+ "split": {
+  "Edge Eloquent": [
+   "Edge",
+   "Eloquent"
+  ]
+ }
+}
