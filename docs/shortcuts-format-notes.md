@@ -1548,6 +1548,101 @@ lookup, and it reports which of the two sources knows a name.
 first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
 uninstalled app is outside it.
 
+### The device lists apps, and never lists actions
+
+*Established 2026-08-30 by searching all three ToolKit catalogs and the 636-file
+corpus, before anything was sent to the device.*
+
+> [!WARNING]
+> **Wrong 2026-08-30 (same day) → the iOS claim below:** the device says
+> `Find Apps` is **Mac-only**. Imported and opened on the phone, the card
+> renders and its body reads *"This action can only run on Mac."* Everything
+> here about the catalog is accurate; the inference drawn from it was not, and
+> what the catalog cannot answer is stated under *The `platforms` field is not a
+> runtime claim* below. **There is no route to the installed-app list on iOS.**
+
+**Apps: `is.workflow.actions.filter.apps`, "Find Apps".** An ordinary content-item
+filter, so the whole `Find X` grammar applies: omit `WFContentItemInputParameter`
+and its source is the system library rather than a piped list, which is the 57-use
+form the corpus already carries on other `filter.*` actions. Sortable by four
+properties, and that enum is the only published statement of what an App item
+exposes:
+
+| `WFContentItemSortProperty` | |
+| --- | --- |
+| `Name`, `Bundle Identifier` | the two worth reading |
+| `Launch Date`, `Process Identifier` | running-app fields, macOS in origin |
+
+It is in **all three** catalogs, and the one that matters is
+`toolkit-v78-ios27-tool-ids.json`, the 1,206-id cut taken from an iOS 27 runtime
+rather than the 2,731-id union. That cut is discriminating: `hide.app` and
+`quit.app` are absent from it, so `filter.apps` appearing there is a claim about
+iOS and not an artifact of a macOS-hosted Simulator. **Nothing in the corpus has
+ever used it**, across nine other `filter.*` actions and 33,433 cards, so the
+estate had no evidence either way until [`workflows/probe-apps.json`](../workflows/probe-apps.json).
+
+**Actions: nothing.** `com.apple.shortcuts.SearchActionDrawerAction` is the only
+tool in the catalog that has actions as its subject, and its whole parameter table
+is `query: str`. It opens the picker; it returns nothing. There is no
+`properties.apps` either, so the sort enum above is the entire readable surface of
+an app. This is the same wall as *No action can put actions into a shortcut*
+below, from the other side: Shortcuts will neither read its own action inventory
+nor write one.
+
+**So both lists are reached by inference, not by asking.** Every app-provided
+action carries its vendor's bundle id as the identifier prefix, which makes a
+corpus dump a census of the apps whose actions are *in use*: 26 bundles over the
+636 files, against 52 apps named in `WFSelectedApp` pickers, 63 together. That is
+now the ceiling rather than a stopgap.
+
+### The `platforms` field is not a runtime claim
+
+*Established 2026-08-30 on the device, correcting the inference above the same
+day it was written.*
+
+**A catalog hit licenses "this action exists", never "it runs here".** The
+mirror of the honest-search rule, and it cost a tap to learn:
+
+| The catalog said | The device said |
+| --- | --- |
+| `platforms: ["iOS 27 Simulator", "macOS 27"]` | "This action can only run on Mac." |
+| present in the 1,206-id iOS cut | same |
+
+Both fields record **where an action's metadata ships**, and iOS carries metadata
+for Mac-only actions precisely so Shortcuts can draw the card and refuse it. So
+the iOS cut is not a runtime-availability filter, and no cut of this catalog is.
+
+**The reasoning that failed is worth naming, because it looked like evidence.**
+`hide.app` and `quit.app` are absent from the iOS cut, so the cut appeared to
+discriminate, so `filter.apps` being present in it appeared to mean something.
+It does not: absence from the cut and presence in it are not two readings of one
+scale. An action can be absent because iOS ships no metadata for it and present
+while still gated at run time, and nothing in the catalog distinguishes the
+gated from the available.
+
+**And it fails in both directions, which is why the corpus outranks it.** Two
+disagreements, found within an hour of each other on 2026-08-30:
+
+| Action | Catalog | Truth |
+| --- | --- | --- |
+| `is.workflow.actions.filter.apps` | iOS and macOS | Mac-only, per the device |
+| `is.workflow.actions.extracttextfromimage` | macOS-only, key `imageFile` | runs on the phone, key `WFImage`, per 7 uses in the corpus |
+
+So a catalog "no" is as weak as a catalog "yes". The second case cost nothing
+because the corpus settled it for free, and that is the general order: **the
+device is the authority, the corpus is the cheapest witness to it, and the
+catalog is neither.** The catalog's own strength is unchanged and is elsewhere:
+which parameters exist, and what their enums allow.
+
+
+**What this does not touch.** The parameter tables, the enum cases, and the
+identifiers are all exactly as accurate as before; `Probe-Apps` imported clean
+and every card wired correctly, including the `Name` and `Bundle Identifier`
+aggrandizements. Only availability was ever in question, and only the device
+answers it. `probe-apps.json` therefore keeps its place in `workflows/` and gives
+up its `name`, so it leaves `plists/` and no install link can serve a receiver
+the phone will not run.
+
 ### No action can put actions into a shortcut
 
 *Established 2026-08-15 by searching all 2,585 first-party parameter tables in
