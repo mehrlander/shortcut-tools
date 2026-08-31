@@ -1,12 +1,27 @@
 {
+ "Get-AppRoute": {
+  "plist_sha256": "72bf69b241f02232347a06599142da7ae441c4bcee443baab6d95ccebc30a7ac",
+  "bytes": 22181,
+  "signed": "2026-08-31"
+ },
  "Library-Fetch": {
   "plist_sha256": "74cdcde57e6e790988f2da7299f27dc522a52a2f32241f2eb47cde679cf8fba9",
   "bytes": 22566,
   "signed": "2026-08-31"
  },
+ "Open-WiFi": {
+  "plist_sha256": "1c4af78cfc1efe4e1d09f9ae5e3b2db743806bf95f09116ce321ede8930a1145",
+  "bytes": 21748,
+  "signed": "2026-08-31"
+ },
  "Run-AppDetermined": {
-  "plist_sha256": "9193457e64a0a7b3d6633fc3733b8963cc1462c12cd0b2562e688115866b09f3",
-  "bytes": 22255,
+  "plist_sha256": "6f52c1f441d94bf244d7bea80364cc861a44f3b80f8703ecc94442c2711370af",
+  "bytes": 22088,
+  "signed": "2026-08-31"
+ },
+ "Speak-Text": {
+  "plist_sha256": "bd5d94071599f0b0cd91967e0a49550d6cdcf061ddf142dd87463ae842a718f5",
+  "bytes": 21833,
   "signed": "2026-08-31"
  }
 }

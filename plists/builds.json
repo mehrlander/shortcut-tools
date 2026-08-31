@@ -7,6 +7,7 @@
  "Dump-Named": "f0304eb",
  "Dump-Recent": "0fbeca2",
  "Dump-Shortcut": "45ca776",
+ "Get-AppRoute": "f0617c9",
  "Get-FileInfo": "870c492",
  "Get-ShortcutJson": "92c1c3c",
  "Library-Fetch": "16b4f91",
@@ -15,6 +16,7 @@
  "Library-Replace": "5ef9080",
  "Library-Stage": "43be0c3",
  "Log-Repo": "55f7d80",
+ "Open-WiFi": "a980162",
  "Probe-Coercion": "a8406f9",
  "Probe-ListDetail": "2c595ed",
  "Probe-ListHandoff": "ec08965",
@@ -25,8 +27,9 @@
  "Probe-WebView": "f737485",
  "Probe-WebViewCaps": "f86c1d4",
  "Probe-WebViewNet": "3585180",
- "Run-AppDetermined": "c88f084",
+ "Run-AppDetermined": "daa0cf2",
  "Run-Pick": "ccb6cfc",
  "Show-Log": "cea85a3",
+ "Speak-Text": "2dcedbe",
  "Sync-Manifest": "12c521e"
 }

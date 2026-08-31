@@ -51,7 +51,10 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
 | `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
 | `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
-| `run-app-determined` | The current app picks the shortcut and the map is the data: seven actions, a text block of `App=Shortcut` rows, a built regex to read one, and a Run Shortcut on a computed target. Replaces a ladder of app tests where each arm needed its own Stop and Output. |
+| `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `App=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
+| `run-app-determined` | `get-app-route` plus a default plus the running: six actions. The standalone form, for when the app is the only question being asked. |
+| `speak-text` | Reads the input aloud in the back tap's voice. One action, and it fills a name `Show-Loop` has been calling all along that resolved to nothing. |
+| `open-wifi` | Opens the Wi-Fi settings pane, two actions, for when a cast is failing. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
 | `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
@@ -519,6 +522,36 @@ action has 226 real cards in the corpus, so it is not a gamble either.
 interpolating an output inside a lookahead. And a single match coerces straight
 to text in a token slot, which is how that same shortcut drops `Matches` into a
 URL string.
+
+### Why the lookup and the default are separate shortcuts
+
+`run-app-determined` answers every app, because an unmapped one falls to
+`Show-Loop`. That is right when the app is the only question. It is exactly
+wrong inside `Back-DoubleTap`, which still has to test the input's type and
+shape after the app: a lookup that always answers would swallow the Image, URL
+and empty-input arms and every tap would end at `Show-Loop`.
+
+So the lookup returns **nothing** on a miss and lives in `get-app-route`, and
+the default lives one level up in whoever wants one. A dispatcher then reads:
+
+```
+run Get-AppRoute with «Current App»
+if «that» has value
+  run «that» with $input
+  output
+end if
+… the type tests, unchanged
+```
+
+Four actions in place of five app branches, each of which was three control
+cards plus a body plus its own Stop and Output.
+
+**The app is read by the caller, not one level down.** `Get Current App`
+evaluated inside a sub-shortcut may report Shortcuts rather than the app you
+were in, and nothing in the corpus settles which, so the reading stays at the
+top level and the name is passed in. `get-app-route` still defaults to reading
+it, which is what makes it work standalone, and that default is the else-less If
+with an **action** in its body rather than a literal.
 
 ### A default in three actions
 
