@@ -497,18 +497,18 @@ block is one line in the plist and one line in the field on device; adding one
 to a dictionary is a nested structure in the file and a row-at-a-time UI in the
 editor. Against that, a dictionary key matches exactly and a regex does not.
 
-Two sharp edges follow from the regex, and both are the price of the text form:
+One sharp edge survives, and one that looked inherent turned out not to be:
 
 - **An app name carrying a regex metacharacter breaks the pattern.** The name is
-  interpolated into `(?<=<name>=).+`, so a display name with `+`, `(` or `.`
+  interpolated into `(?<=\[<name>\]=).+`, so a display name with `+`, `(` or `.`
   matches something other than itself. Same class as the JSON quoting hazard that
   cost `dump-folder` its parse on a shortcut called `Say "hi"`.
-- **No key may end with another key.** The lookbehind is the key plus its `=`
-  and nothing more, so looking up `Music` would also match a row for
-  `Apple Music=…`. That is what buys the map its plain first line: an earlier
-  draft anchored on `(?<=\n<name>=)` and needed a leading blank line so the
-  first row was newline-preceded like the rest. Dropping the anchor drops the
-  blank line, and the constraint it leaves is one you keep by owning the map.
+- **The keys are bracketed, `[GitHub]=Show-Repo`, and that is load-bearing.**
+  Unbracketed, an **empty** app name collapses the lookbehind to `(?<==)` and
+  matches *every value in the map*, so a tap with no foreground app routes to
+  all five at once rather than to none. The bracket also retires the rule that no
+  key may end with another key, since `[` anchors the left side. One delimiter,
+  two failures gone.
 
 `.` does not cross a newline by default, so `.+` stops at the end of its own row
 without anything being said about it.

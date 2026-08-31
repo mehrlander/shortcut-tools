@@ -38,7 +38,7 @@
       "p": {
         "UUID": "6A700000-0004-4A00-9000-000000000001",
         "CustomOutputName": "Routes",
-        "WFTextActionText": "GitHub=Show-Repo\nAudible=Speak-Text\nMusic=Open-WiFi\nRoku=Open-WiFi\nShortcuts=Choose-Manage"
+        "WFTextActionText": "[GitHub]=Show-Repo\n[Audible]=Speak-Text\n[Music]=Open-WiFi\n[Roku]=Open-WiFi\n[Shortcuts]=Choose-Manage"
       }
     },
     {
@@ -48,9 +48,9 @@
         "CustomOutputName": "Route",
         "WFMatchTextPattern": {
           "Value": {
-            "string": "(?<=￼=).+",
+            "string": "(?<=\\[￼\\]=).+",
             "attachmentsByRange": {
-              "{4, 1}": {
+              "{6, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "6A700000-0003-4A00-9000-000000000001",
                 "OutputName": "If Result"

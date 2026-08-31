@@ -1,7 +1,7 @@
 {
  "Get-AppRoute": {
-  "plist_sha256": "72bf69b241f02232347a06599142da7ae441c4bcee443baab6d95ccebc30a7ac",
-  "bytes": 22181,
+  "plist_sha256": "a014971f57aeb0fc230bfe01612cba5f922cfe657192eb440138ec1d5dc11e21",
+  "bytes": 22197,
   "signed": "2026-08-31"
  },
  "Library-Fetch": {
@@ -21,7 +21,7 @@
  },
  "Run-AppDetermined": {
   "plist_sha256": "6f52c1f441d94bf244d7bea80364cc861a44f3b80f8703ecc94442c2711370af",
-  "bytes": 22088,
+  "bytes": 22086,
   "signed": "2026-08-31"
  },
  "Speak-Text": {
