@@ -4,10 +4,15 @@
   "bytes": 23109,
   "signed": "2026-08-31"
  },
+ "Choose-Claude": {
+  "plist_sha256": "03f781867a80232f61f1195f25107e0a42be18f09ed58c1e01522d8b87942776",
+  "bytes": 22638,
+  "signed": "2026-09-01"
+ },
  "Get-AppRoute": {
-  "plist_sha256": "3701191f0b9b4b4ec7716aa5a324e2d755a38843c86013279ca3d9488597d6c7",
-  "bytes": 22178,
-  "signed": "2026-08-31"
+  "plist_sha256": "ad5829330b5d80e544c8b92d08f95c3a78c0c82a26b87dfc99c1541c69ba03fc",
+  "bytes": 22191,
+  "signed": "2026-09-01"
  },
  "Library-Fetch": {
   "plist_sha256": "74cdcde57e6e790988f2da7299f27dc522a52a2f32241f2eb47cde679cf8fba9",
