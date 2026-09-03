@@ -267,6 +267,13 @@ rule, held by [`test/parameter-shapes.test.js`](../test/parameter-shapes.test.js
 | Replace Text | `WFInput` | 600 | 8 | 0 | **0** |
 | Replace Text | `WFReplaceTextReplace` | 88 | 374 | 146 | **0** |
 | Get Dictionary Value | `WFDictionaryKey` | 276 | 581 | 54 | **0** |
+| Run Shortcut | `WFInput` | **0** | 0 | 175 | 955 |
+
+The Run Shortcut row was learned the same day, one arm later: `Claude-Session`
+build 88b5f49 handed `Log-Repo` a token string in its error arm, the one path no
+headless run exercised, and the phone stopped on "Please choose a value for each
+parameter in this action" the first time that arm ran. Build the text with Get
+Text, then hand it over by attachment, which is what `Library-Fetch` does.
 
 The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
 Replace Text an attachment for both fields, the action produced nothing, and

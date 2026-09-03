@@ -33,6 +33,17 @@ test("Replace Text: input and replacement are token strings or literals, never a
   assert.deepStrictEqual(bad, []);
 });
 
+test("Run Shortcut: the input is an attachment or absent, never a token string (955 of 1130, 0 token strings)", () => {
+  // The shape that took the 2026-09-03 ERROR arm down: a Run Shortcut card
+  // handed a token string shows an empty parameter, and Shortcuts stops with
+  // "Please choose a value for each parameter in this action".
+  const bad = [];
+  for (const [f, c] of chains)
+    for (const a of c.actions)
+      if (a.id.endsWith("runworkflow") && kind(a.p.WFInput) === "WFTextTokenString") bad.push(f);
+  assert.deepStrictEqual(bad, []);
+});
+
 test("Get Dictionary Value: a variable key is a token string (276 of 911, 0 attachments)", () => {
   const bad = [];
   for (const [f, c] of chains)
@@ -91,8 +102,9 @@ test("Claude-Session reads the clipboard as an action, names the op, and opens t
 test("Claude-Session's error arm logs with its build id before showing", () => {
   const i = claude.actions.findIndex((a) => a.p.WFConditionalActionString === "ERROR");
   assert.ok(i > 0);
-  const log = claude.actions[i + 1], show = claude.actions[i + 2];
+  const line = claude.actions[i + 1], log = claude.actions[i + 2], show = claude.actions[i + 3];
+  assert.ok(line.id.endsWith("gettext") && line.p.WFTextActionText.Value.string.includes('"build":"#BUILD#"'));
   assert.strictEqual(log.p.WFWorkflowName, "Log-Repo");
-  assert.ok(log.p.WFInput.Value.string.includes('"build":"#BUILD#"'));
+  assert.strictEqual(log.p.WFInput.WFSerializationType, "WFTextTokenAttachment");
   assert.ok(show.id.endsWith("showresult"));
 });

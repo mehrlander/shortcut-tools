@@ -1,6 +1,6 @@
 {
   "name": "Claude-Session",
-  "label": "Claude-Session: pick a session on the copied branch, open it in Web Tools (15 actions)",
+  "label": "Claude-Session: pick a session on the copied branch, open it in Web Tools (16 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getclipboard",
@@ -79,11 +79,11 @@
       }
     },
     {
-      "id": "is.workflow.actions.runworkflow",
+      "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "5E550000-0006-4A00-9000-000000000001",
-        "WFWorkflowName": "Log-Repo",
-        "WFInput": {
+        "UUID": "5E550000-0016-4A00-9000-000000000001",
+        "CustomOutputName": "Log line",
+        "WFTextActionText": {
           "Value": {
             "string": "{\"op\":\"session-pick\",\"name\":\"Claude-Session\",\"build\":\"#BUILD#\",\"said\":\"￼\"}",
             "attachmentsByRange": {
@@ -95,6 +95,21 @@
             }
           },
           "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "5E550000-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5E550000-0016-4A00-9000-000000000001",
+            "OutputName": "Log line"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     },
