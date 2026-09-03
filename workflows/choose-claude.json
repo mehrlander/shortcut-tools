@@ -1,6 +1,6 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, reading the copied branch's session aloud (13 actions)",
+  "label": "Choose-Claude: the Claude-app menu, reading the copied branch's session aloud on the phone (11 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.gettext",
@@ -60,51 +60,15 @@
       }
     },
     {
-      "id": "is.workflow.actions.url",
+      "id": "is.workflow.actions.runworkflow",
       "p": {
         "UUID": "C1A0DE00-0005-4A00-9000-000000000001",
-        "WFURLActionURL": {
-          "Value": {
-            "string": "https://mehrlander.github.io/web-tools/pages/session.html#branch=￼",
-            "attachmentsByRange": {
-              "{65, 1}": {
-                "Type": "Clipboard"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.openurl",
-      "p": {
-        "UUID": "C1A0DE00-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Claude-Session",
         "WFInput": {
           "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "C1A0DE00-0005-4A00-9000-000000000001",
-            "OutputName": "URL"
+            "Type": "Clipboard"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "Type": "ActionOutput",
-                "OutputUUID": "C1A0DE00-0005-4A00-9000-000000000001",
-                "OutputName": "URL"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
         }
       }
     },
