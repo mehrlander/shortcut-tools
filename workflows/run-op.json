@@ -1,6 +1,6 @@
 {
   "name": "Run-Op",
-  "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (7 actions)",
+  "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (8 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.text.split",
@@ -90,13 +90,28 @@
     {
       "id": "is.workflow.actions.runworkflow",
       "p": {
-        "UUID": "52550000-0006-4A00-9000-000000000001",
-        "WFWorkflowName": "Get-JsonFromJs",
+        "UUID": "52550000-0008-4A00-9000-000000000001",
+        "WFWorkflowName": "Inject-🎟️GitHubToken",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
             "OutputUUID": "52550000-0005-4A00-9000-000000000001",
             "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "52550000-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Get-JsonFromJs",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "52550000-0008-4A00-9000-000000000001",
+            "OutputName": "Shortcut Result"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }

@@ -103,8 +103,17 @@ test("Run-Op fetches the op by name from web-tools, evaluates it synchronously, 
   // honours the phone's HTTP cache: without this the op ran stale for seven
   // days (2026-09-03, two runs of an already-replaced op).
   assert.ok(expr.includes(".js?_='+Date.now()"), "the op address defeats the client cache");
-  assert.strictEqual(JSON.stringify(runOp).split("🎟️GitHubToken").length - 1, 1);
-  assert.ok(runOp.actions.some((a) => a.p.WFWorkflowName === "Get-JsonFromJs"), "runs through the proven receiver");
+  assert.strictEqual(expr.split("🎟️GitHubToken").length - 1, 1, "the placeholder is spelled once in the expression");
+  // Get-JsonFromJs calls the injector only inside its no-input demo branch
+  // (actions 0 to 5 of the dump); the real path never does. The first device
+  // run to reach the op failed at setRequestHeader with a bare TypeError, which
+  // is what a header value carrying the literal emoji placeholder produces.
+  const names = runOp.actions.filter((a) => a.id.endsWith("runworkflow")).map((a) => a.p.WFWorkflowName);
+  assert.deepStrictEqual(names, ["Inject-🎟️GitHubToken", "Get-JsonFromJs"], "inject, then evaluate");
+  const inject = runOp.actions.find((a) => a.p.WFWorkflowName === "Inject-🎟️GitHubToken");
+  const evalr = runOp.actions.find((a) => a.p.WFWorkflowName === "Get-JsonFromJs");
+  assert.strictEqual(inject.p.WFInput.Value.OutputName, "Text");
+  assert.strictEqual(evalr.p.WFInput.Value.OutputUUID, inject.p.UUID, "the evaluator receives the injected text");
   assert.ok(!runOp.actions.some((a) => a.id.endsWith("openurl") || a.id.endsWith("detect.text")),
     "Run-Op neither opens nor coerces: Get-JsonFromJs owns the data: URL");
 });

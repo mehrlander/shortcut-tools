@@ -289,6 +289,14 @@ been replaced and purged at the CDN. The address carries `?_=` and the time now.
 The CDN's own cache still wants the purge, on the `@main` path rather than the
 bare one, which is the form that refreshed the alias.
 
+**`Get-JsonFromJs` injects only in its demo.** Its call to `Inject-🎟️GitHubToken`
+sits inside the no-input branch (actions 0 to 5); given real input it evaluates
+the text as handed. A caller wanting the token substitutes first, as
+`gh-recent-branches-picker` and now `Run-Op` do. The tell on device is a bare
+`TypeError` at `setRequestHeader`: WebIDL converts a header value to a
+ByteString and throws TypeError for any code unit above 255, which the literal
+emoji placeholder is. Measured 2026-09-03 by the op's own stage marker.
+
 The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
 Replace Text an attachment for both fields, the action produced nothing, and
 the injector's first branch (`WFCondition` 101, no input) built its demo page
