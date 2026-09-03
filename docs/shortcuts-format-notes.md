@@ -282,6 +282,13 @@ headless run exercised, and the phone stopped on "Please choose a value for each
 parameter in this action" the first time that arm ran. Build the text with Get
 Text, then hand it over by attachment, which is what `Library-Fetch` does.
 
+**A synchronous request honours the HTTP cache.** jsDelivr serves a branch ref
+with `max-age=604800`, so an op fetched once by `Run-Op` was the op for seven
+days whatever main said; two runs on 2026-09-03 executed a copy that had already
+been replaced and purged at the CDN. The address carries `?_=` and the time now.
+The CDN's own cache still wants the purge, on the `@main` path rather than the
+bare one, which is the form that refreshed the alias.
+
 The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
 Replace Text an attachment for both fields, the action produced nothing, and
 the injector's first branch (`WFCondition` 101, no input) built its demo page

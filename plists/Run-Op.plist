@@ -130,7 +130,7 @@
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
-							<key>{340, 1}</key>
+							<key>{354, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Base64 Encoded</string>
@@ -141,7 +141,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>(function(){var n='￼';var x=new XMLHttpRequest();x.open('GET','https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/'+n+'.js',false);x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob('￼'))),token:'🎟️GitHubToken'})})()</string>
+						<string>(function(){var n='￼';var x=new XMLHttpRequest();x.open('GET','https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/'+n+'.js?_='+Date.now(),false);x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob('￼'))),token:'🎟️GitHubToken'})})()</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

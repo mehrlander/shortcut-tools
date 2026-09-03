@@ -99,6 +99,10 @@ test("Run-Op fetches the op by name from web-tools, evaluates it synchronously, 
   assert.ok(expr.includes("https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/"), "the op address");
   assert.ok(expr.includes("x.open('GET'") && expr.includes(",false)"), "synchronous XMLHttpRequest");
   assert.ok(expr.includes("eval(x.responseText)"), "the file is a value");
+  // jsDelivr serves a branch ref with max-age=604800, and a sync XMLHttpRequest
+  // honours the phone's HTTP cache: without this the op ran stale for seven
+  // days (2026-09-03, two runs of an already-replaced op).
+  assert.ok(expr.includes(".js?_='+Date.now()"), "the op address defeats the client cache");
   assert.strictEqual(JSON.stringify(runOp).split("🎟️GitHubToken").length - 1, 1);
   assert.ok(runOp.actions.some((a) => a.p.WFWorkflowName === "Get-JsonFromJs"), "runs through the proven receiver");
   assert.ok(!runOp.actions.some((a) => a.id.endsWith("openurl") || a.id.endsWith("detect.text")),
