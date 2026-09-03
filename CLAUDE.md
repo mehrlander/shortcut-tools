@@ -123,6 +123,17 @@ authored work, where it is earned.
 Everything else the library view does is one tap from a web page, and it stays
 that way.
 
+## A chain is built the way the library builds chains
+
+**Read [`docs/idioms.md`](docs/idioms.md) before authoring a chain**, and hold
+to its idiom 4: **past about five actions of real work, write the operation in
+JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
+typed result, `Run-Op` to fetch the code from web-tools by name). That document
+was the specification all along and `CLAUDE.md` never named it, which is how a
+21-action chain was hand-built on 2026-09-03 with parameter shapes copied from
+the one chain the README flagged as inferred. The shapes are now a gate,
+`test/parameter-shapes.test.js`, and the census behind it is in the format notes.
+
 ## Deletion is never one step
 
 The prune workflow is nominate, stage, wait, delete, and the page and its

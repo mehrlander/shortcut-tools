@@ -120,11 +120,16 @@
         "WFReplaceTextCaseSensitive": true,
         "WFInput": {
           "Value": {
-            "OutputName": "Chosen Item",
-            "OutputUUID": "5D3A0000-0007-4A00-9000-000000000007",
-            "Type": "ActionOutput"
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Chosen Item",
+                "OutputUUID": "5D3A0000-0007-4A00-9000-000000000007",
+                "Type": "ActionOutput"
+              }
+            }
           },
-          "WFSerializationType": "WFTextTokenAttachment"
+          "WFSerializationType": "WFTextTokenString"
         }
       }
     },

@@ -252,6 +252,62 @@ The later ` ```\s* ` pass covers the same ground, so the effect is invisible.
 Flagged rather than fixed, since it is not this repo's shortcut, and since the
 note above about vestigial-looking actions counsels confirming on device first.
 
+## Parameter shapes, by census
+
+*Measured 2026-09-03, over every action in the fifteen dumps, after a chain
+handed `Inject-🎟️GitHubToken` an empty input and the injector ran its demo.*
+
+A text field and a variable slot serialise differently, and the difference is
+invisible in the editor: a value in the wrong form renders as an empty field
+and the action yields nothing. Where the corpus is unanimous, its form is the
+rule, held by [`test/parameter-shapes.test.js`](../test/parameter-shapes.test.js):
+
+| action | field | token string | literal | absent | attachment |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Replace Text | `WFInput` | 600 | 8 | 0 | **0** |
+| Replace Text | `WFReplaceTextReplace` | 88 | 374 | 146 | **0** |
+| Get Dictionary Value | `WFDictionaryKey` | 276 | 581 | 54 | **0** |
+| Run Shortcut | `WFInput` | **0** | 0 | 175 | 955 |
+
+And one that is a type rather than a serialisation: an **If** whose text
+condition reads a Get Dictionary Value output carries a `WFStringContentItem`
+coercion on the variable in all 158 corpus instances. Without it the editor
+shows the condition in red, since a dictionary value offers only has-value
+conditions, and the run stops on the same "choose a value for each parameter"
+message. Reported from the editor on 2026-09-03, build f53dcbc.
+
+The Run Shortcut row was learned the same day, one arm later: `Claude-Session`
+build 88b5f49 handed `Log-Repo` a token string in its error arm, the one path no
+headless run exercised, and the phone stopped on "Please choose a value for each
+parameter in this action" the first time that arm ran. Build the text with Get
+Text, then hand it over by attachment, which is what `Library-Fetch` does.
+
+**A synchronous request honours the HTTP cache.** jsDelivr serves a branch ref
+with `max-age=604800`, so an op fetched once by `Run-Op` was the op for seven
+days whatever main said; two runs on 2026-09-03 executed a copy that had already
+been replaced and purged at the CDN. The address carries `?_=` and the time now.
+The CDN's own cache still wants the purge, on the `@main` path rather than the
+bare one, which is the form that refreshed the alias.
+
+**`Get-JsonFromJs` injects only in its demo.** Its call to `Inject-🎟️GitHubToken`
+sits inside the no-input branch (actions 0 to 5); given real input it evaluates
+the text as handed. A caller wanting the token substitutes first, as
+`gh-recent-branches-picker` and now `Run-Op` do. The tell on device is a bare
+`TypeError` at `setRequestHeader`: WebIDL converts a header value to a
+ByteString and throws TypeError for any code unit above 255, which the literal
+emoji placeholder is. Measured 2026-09-03 by the op's own stage marker.
+
+The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
+Replace Text an attachment for both fields, the action produced nothing, and
+the injector's first branch (`WFCondition` 101, no input) built its demo page
+and opened it through `Show-Html`. What appeared on the phone, a `data:` page
+of GitHub API JSON with Repo, Commit and Branch tabs and a jsDelivr connection
+prompt, was that demo, and the chain then coerced the demo's text and offered
+its button labels as a menu. The shape had been copied from
+`gh-recent-branches-picker`, which the workflows README described as "the only
+chain still carrying inferred parameter shapes"; it is corrected in the same
+commit.
+
 ## The token-injection pattern
 
 *Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
