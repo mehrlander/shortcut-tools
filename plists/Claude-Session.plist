@@ -120,6 +120,15 @@
 					<dict>
 						<key>Value</key>
 						<dict>
+							<key>Aggrandizements</key>
+							<array>
+								<dict>
+									<key>CoercionItemClass</key>
+									<string>WFStringContentItem</string>
+									<key>Type</key>
+									<string>WFCoercionVariableAggrandizement</string>
+								</dict>
+							</array>
 							<key>OutputName</key>
 							<string>Caption</string>
 							<key>OutputUUID</key>
@@ -159,7 +168,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"session-pick","name":"Claude-Session","build":"f53dcbc","said":"￼"}</string>
+						<string>{"op":"session-pick","name":"Claude-Session","build":"2c999bb","said":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

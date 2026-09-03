@@ -269,6 +269,13 @@ rule, held by [`test/parameter-shapes.test.js`](../test/parameter-shapes.test.js
 | Get Dictionary Value | `WFDictionaryKey` | 276 | 581 | 54 | **0** |
 | Run Shortcut | `WFInput` | **0** | 0 | 175 | 955 |
 
+And one that is a type rather than a serialisation: an **If** whose text
+condition reads a Get Dictionary Value output carries a `WFStringContentItem`
+coercion on the variable in all 158 corpus instances. Without it the editor
+shows the condition in red, since a dictionary value offers only has-value
+conditions, and the run stops on the same "choose a value for each parameter"
+message. Reported from the editor on 2026-09-03, build f53dcbc.
+
 The Run Shortcut row was learned the same day, one arm later: `Claude-Session`
 build 88b5f49 handed `Log-Repo` a token string in its error arm, the one path no
 headless run exercised, and the phone stopped on "Please choose a value for each

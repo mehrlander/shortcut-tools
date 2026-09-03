@@ -44,6 +44,25 @@ test("Run Shortcut: the input is an attachment or absent, never a token string (
   assert.deepStrictEqual(bad, []);
 });
 
+test("If: a text condition on a Get Dictionary Value output reads it as text (158 of 158 coerce, 0 do not)", () => {
+  // The red "contains" of 2026-09-03: a dictionary value offers only has-value
+  // conditions, so an If comparing it as text is invalid until the variable is
+  // coerced to WFStringContentItem, which every corpus instance does.
+  const TEXT = new Set([4, 5, 8, 9, 99, 999]);
+  const bad = [];
+  for (const [f, c] of chains) {
+    const kinds = Object.fromEntries(c.actions.filter((a) => a.p.UUID).map((a) => [a.p.UUID, a.id.split(".").pop()]));
+    for (const a of c.actions) {
+      if (!a.id.endsWith("conditional") || a.p.WFControlFlowMode !== 0 || !TEXT.has(a.p.WFCondition)) continue;
+      const v = a.p.WFInput?.Variable?.Value || {};
+      if (kinds[v.OutputUUID] !== "getvalueforkey") continue;
+      const coerced = (v.Aggrandizements || []).some((g) => g.CoercionItemClass === "WFStringContentItem");
+      if (!coerced) bad.push(`${f} If ${a.p.WFConditionalActionString}`);
+    }
+  }
+  assert.deepStrictEqual(bad, []);
+});
+
 test("Get Dictionary Value: a variable key is a token string (276 of 911, 0 attachments)", () => {
   const bad = [];
   for (const [f, c] of chains)

@@ -71,7 +71,13 @@
             "Value": {
               "Type": "ActionOutput",
               "OutputUUID": "5E550000-0004-4A00-9000-000000000001",
-              "OutputName": "Caption"
+              "OutputName": "Caption",
+              "Aggrandizements": [
+                {
+                  "Type": "WFCoercionVariableAggrandizement",
+                  "CoercionItemClass": "WFStringContentItem"
+                }
+              ]
             },
             "WFSerializationType": "WFTextTokenAttachment"
           }
