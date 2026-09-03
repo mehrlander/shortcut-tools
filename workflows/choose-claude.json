@@ -1,12 +1,12 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, reading the copied branch's session aloud on the phone (11 actions)",
+  "label": "Choose-Claude: the Claude-app menu, opening the copied branch's session in Web Tools (11 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "C1A0DE00-0001-4A00-9000-000000000001",
-        "WFTextActionText": "Read the session aloud\nShow-Loop\nOut"
+        "WFTextActionText": "Session in Web Tools\nShow-Loop\nOut"
       }
     },
     {
@@ -45,7 +45,7 @@
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 0,
         "WFCondition": 4,
-        "WFConditionalActionString": "Read the session aloud",
+        "WFConditionalActionString": "Session in Web Tools",
         "WFInput": {
           "Type": "Variable",
           "Variable": {

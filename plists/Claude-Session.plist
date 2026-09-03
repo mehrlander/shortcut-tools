@@ -12,42 +12,48 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>C1A5E550-0001-4A00-9000-000000000001</string>
+				<string>5E550000-0001-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
 				<string>&lt;!doctype html&gt;
-&lt;html lang="en" data-theme="winter"&gt;
 &lt;meta charset="utf-8"&gt;
-&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
-&lt;title&gt;Claude session&lt;/title&gt;
-&lt;link href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/themes.css,npm/daisyui@5" rel="stylesheet"&gt;
-&lt;script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/kits/read-aloud.js"&gt;&lt;/script&gt;
-&lt;script defer src="https://unpkg.com/alpinejs"&gt;&lt;/script&gt;
+&lt;title&gt;Session lines&lt;/title&gt;
+&lt;style&gt;
+  /* The page has one consumer that matters: a rich-text coercion, which runs
+     the script and reads the text back. So the visible text is only ever the
+     lines themselves. No headings, no buttons, nothing an extraction would
+     pick up and a downstream split would miscount. Same contract, and the same
+     reasoning, as pages/gh-recent-branches.html. */
+  body { font: 15px/1.5 ui-monospace, Menlo, monospace; margin: 0; padding: .75rem; }
+  #out { white-space: pre; overflow-x: auto; }
+&lt;/style&gt;
+&lt;div id="out"&gt;&lt;/div&gt;
 
-&lt;!--
-  claude-session.html: the session behind the copied branch, read aloud on the
-  phone, with every step it takes shown on the page.
+&lt;script&gt;
+// session-lines.html: the session picker's data, computed on the phone.
+//
+// Not a page anybody is meant to look at. Claude-Session builds it into a
+// data: URL, coerces that URL to rich text (which runs this script and returns
+// its text), and feeds the result to Shortcuts' own Choose from List. The menu
+// is native; this only supplies what goes in it.
+//
+// The output is one caption, then the rows, joined by the separator below:
+//
+//   &lt;caption&gt;§§&lt;id&gt; · this branch · 2h · &lt;the ask&gt;
+//            &lt;id&gt; · 5h · &lt;the ask&gt;
+//
+// The caption becomes the menu's prompt and the rows become its items, so the
+// split is by separator first and by newline second. A row leads with its
+// eight-hex id because the chain recovers the id by deleting from the first
+// " · " onward, which is the one extraction this repository has already proven
+// (gh-recent-branches-picker). Nothing later in a row can break it.
+//
+// Two values arrive by substitution before this runs: the GitHub token, from
+// the injector that owns it, and the clipboard as base64, which is where the
+// branch comes from. Neither travels in an address. The placeholder below is
+// the only place its name may be spelled, since naming the injector in a
+// comment would paste the live token into that comment.
 
-  Delivered through Show-Html, so two values arrive by substitution before any
-  script runs: the clipboard as base64 and the GitHub token. Neither travels in
-  a URL, which is the failure this page replaces: Choose-Claude built
-  session.html#branch= around the clipboard and the page opened empty. Here the
-  header prints what the clipboard held and what it reduced to, so the next run
-  answers that question instead of leaving it open.
-
-  The reading is the same one pages/session.html gives: a card per ask, the ask
-  and the prose replies spoken, the tool calls left on the screen. The reduction
-  is web-tools' kits/read-aloud.js, loaded from jsDelivr, so what is heard here
-  and there is one function.
-
-  The index read is web-tools-private/state/sessions.json, one file naming every
-  record with its branches, rather than the walk session-brief does through
-  whole records: one fetch resolves the branch, and the rest of the index is the
-  fallback list when the clipboard held something else.
---&gt;
-
-&lt;script id="logic"&gt;
-// Two placeholders, each spelled once in this file, comments included. The
+// Each placeholder is spelled once in this file, comments included. The
 // sentinels are built from halves so the substitution cannot reach them.
 var CLIP = '📋ClipboardBase64';
 var TOKEN = '🎟️GitHubToken';
@@ -56,20 +62,18 @@ var TOKEN_KEY = '🎟️' + 'GitHubToken';
 
 var STORE = 'mehrlander/web-tools-private';
 var INDEX = 'state/sessions.json';
-var API = 'https://api.github.com/repos/' + STORE + '/contents/';
-var SESSION_PAGE = 'https://mehrlander.github.io/web-tools/pages/session.html#id=';
-var NEW_TOKEN = 'https://github.com/settings/tokens/new?scopes=repo&amp;description=shortcut-tools';
-var SPEAKER = 'Speak-Text';
-var LATEST = 12;
+var SEP = '§§';
+var ROWS = 14;          // rows offered when the branch does not fill the list
+var ASK = 64;           // characters of the ask a row carries, about two phone lines
 
 function fromB64(b64) {
   var raw = atob(b64);
   return new TextDecoder().decode(Uint8Array.from(raw, function (c) { return c.charCodeAt(0); }));
 }
 
-// The same tolerance session.html applies: a full ref, a URL carrying one, or
-// the bare name all reduce to the name. Only the first line counts, since a
-// clipboard can hold a caption with the branch on its first line.
+// What the Claude app puts on the clipboard has varied, so a full ref, a URL
+// carrying one, or the bare name all reduce to the name. Only the first line
+// counts, since a clipboard can hold a caption whose first line is the branch.
 function branchOf(text) {
   var s = String(text || '').trim().split(/\r?\n/)[0].trim();
   s = s.replace(/^.*?(?:tree\/|compare\/|branch\.html#gh=[^@]+@|branch=)/, '')
@@ -78,8 +82,26 @@ function branchOf(text) {
   return /\//.test(s) &amp;&amp; !/\s/.test(s) ? s : '';
 }
 
+// The stored token may or may not carry its scheme. Accept either rather than
+// making the config file's exact contents load-bearing.
 function auth(token) {
   return /^(Bearer|token) /i.test(token) ? token : 'Bearer ' + token;
+}
+
+// Synchronous on purpose, and this is the rule the whole page turns on: the
+// coercion captures the document at a moment nobody has documented, and a
+// promise that resolves after it returns empty with no error. Blocking the
+// load is the only safe shape here.
+function readIndex(token) {
+  var x = new XMLHttpRequest();
+  x.open('GET', 'https://api.github.com/repos/' + STORE + '/contents/' + INDEX + '?ref=main', false);
+  x.setRequestHeader('Authorization', auth(token));
+  // Raw, not the contents envelope: the envelope base64s the body and this one
+  // is 877 KB before encoding.
+  x.setRequestHeader('Accept', 'application/vnd.github.raw');
+  x.send();
+  if (x.status !== 200) throw new Error('HTTP ' + x.status + ' reading ' + INDEX);
+  return JSON.parse(x.responseText);
 }
 
 function onBranch(row, branch) {
@@ -87,70 +109,7 @@ function onBranch(row, branch) {
     || (row.repos || []).some(function (r) { return r &amp;&amp; r.branch === branch; }));
 }
 
-// Newest first, by `started`, which is what the index's rows already carry.
 function byStarted(a, b) { return a.started &lt; b.started ? 1 : a.started &gt; b.started ? -1 : 0; }
-
-function matches(rows, branch) {
-  return (rows || []).filter(function (r) { return onBranch(r, branch); }).sort(byStarted);
-}
-
-function latest(rows, n) {
-  return (rows || []).slice().sort(byStarted).slice(0, n || LATEST);
-}
-
-function recordPath(row) {
-  var day = row.day || '';
-  return 'sessions/' + day.slice(0, 4) + '/' + day.slice(5, 7) + '/' + day + '-' + row.id + '.json';
-}
-
-// A card per ask: the ask and every prose reply before the next ask, in time
-// order. Tool calls are not read, which is session-render's rule too. A record
-// with no replies still has `last_message`, the one sentence that survived.
-// A preview line is read, not spoken, so only the loudest syntax goes: bold
-// and code marks, a link's brackets and its URL, a heading's hashes.
-function plain(md) {
-  return String(md || '').replace(/```[\s\S]*?```/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#&gt;]+/g, '').replace(/\s+/g, ' ').trim();
-}
-
-function cards(record) {
-  var r = record || {};
-  var turns = [];
-  (r.prompts || []).forEach(function (p) { turns.push({ role: 'user', at: p.at || '', md: p.text || '' }); });
-  (r.replies || []).forEach(function (x) { turns.push({ role: 'assistant', at: x.at || '', md: x.text || '' }); });
-  turns.forEach(function (t, i) { t._i = i; });
-  turns.sort(function (a, b) {
-    return (a.at &lt; b.at ? -1 : a.at &gt; b.at ? 1 : 0)
-      || ((a.role === 'user' ? 0 : 1) - (b.role === 'user' ? 0 : 1)) || (a._i - b._i);
-  });
-  if (!(r.replies || []).length &amp;&amp; r.last_message) turns.push({ role: 'assistant', at: '', md: r.last_message });
-  var out = [];
-  turns.forEach(function (t) {
-    if (!out.length || t.role === 'user') out.push({ ask: '', replies: [], at: t.at });
-    var c = out[out.length - 1];
-    if (t.role === 'user') c.ask = t.md; else if (t.md) c.replies.push(t.md);
-  });
-  return out.map(function (c, i) {
-    var lead = plain(c.ask || c.replies[0] || '');
-    return {
-      key: i,
-      label: 'Card ' + (i + 1),
-      ts: (c.at || '').slice(11, 16),
-      ask: c.ask,
-      lead: lead.length &gt; 140 ? lead.slice(0, 139) + '…' : lead,
-      closing: plain(c.replies[c.replies.length - 1] || '').slice(0, 200),
-      md: [c.ask].concat(c.replies).filter(Boolean).join('\n\n'),
-    };
-  });
-}
-
-// The card handed to Shortcuts' own Speak Text, already reduced to speech so
-// the receiver has nothing to strip. The link is long and that is fine: a
-// shortcuts:// URL carries kilobytes, and pack links are far larger.
-function speakLink(text) {
-  return 'shortcuts://run-shortcut?name=' + encodeURIComponent(SPEAKER)
-    + '&amp;input=text&amp;text=' + encodeURIComponent(text || '');
-}
 
 function ago(iso) {
   var mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
@@ -159,182 +118,122 @@ function ago(iso) {
   if (mins &lt; 1440) return Math.round(mins / 60) + 'h';
   return Math.round(mins / 1440) + 'd';
 }
+
+// An ask is markdown and a menu row is not, so the loudest syntax goes: fences,
+// a link's brackets and URL, emphasis and heading marks.
+function plain(md) {
+  return String(md || '').replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#&gt;]+/g, '')
+    // The separator is structure, so an ask that happens to contain it would
+    // split the caption off the rows and take the rows with it.
+    .split(SEP).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function row(r, here) {
+  var ask = plain(r.ask);
+  if (ask.length &gt; ASK) ask = ask.slice(0, ASK - 1) + '…';
+  return [r.id, (here ? 'this branch' : ''), ago(r.started), ask]
+    .filter(Boolean).join(' · ');
+}
+
+// Branch matches first, then the most recent regardless, so the list is never
+// empty and never hides what it did not find. The caption says which case this
+// is, in words, because the rows alone cannot: a list with no marked row could
+// mean the branch had no session or that no branch was on the clipboard.
+function build(rows, branch, at) {
+  var here = branch ? rows.filter(function (r) { return onBranch(r, branch); }).sort(byStarted) : [];
+  var seen = {};
+  here.forEach(function (r) { seen[r.id] = true; });
+  var rest = rows.slice().sort(byStarted).filter(function (r) { return !seen[r.id]; })
+                 .slice(0, Math.max(0, ROWS - here.length));
+
+  var caption = !branch ? 'No branch on the clipboard, showing recent'
+    : here.length ? here.length + ' on ' + branch
+    : 'No session on ' + branch + ' yet, showing recent';
+  if (at) caption += ' · index ' + ago(at);
+
+  var lines = here.map(function (r) { return row(r, true); })
+        .concat(rest.map(function (r) { return row(r, false); }));
+  return caption + SEP + lines.join('\n');
+}
+
+function run() {
+  if (TOKEN === TOKEN_KEY) return 'ERROR no token substituted; Inject-' + TOKEN_KEY + ' did not run';
+  try {
+    var idx = readIndex(TOKEN);
+    return build(idx.rows || [], branchOf(CLIP === CLIP_KEY ? '' : fromB64(CLIP)), idx.generatedAt);
+  } catch (err) {
+    return 'ERROR ' + err.message;
+  }
+}
+
+document.getElementById('out').textContent = run();
 &lt;/script&gt;
-
-&lt;body class="bg-base-100 text-base-content"&gt;
-&lt;div x-data="page" class="fixed inset-0 grid grid-rows-[auto_1fr_auto]"&gt;
-
-  &lt;!-- Header: what arrived, and where the read stands. --&gt;
-  &lt;header class="border-b border-base-300 px-3 py-2 flex flex-col gap-1"&gt;
-    &lt;div class="flex items-center gap-2 min-w-0"&gt;
-      &lt;i class="ph ph-speaker-high text-lg"&gt;&lt;/i&gt;
-      &lt;form @submit.prevent="setBranch(branchInput)" class="flex-1 min-w-0 flex gap-1"&gt;
-        &lt;input x-model="branchInput" class="input input-sm input-bordered w-full font-mono" placeholder="owner/branch"&gt;
-        &lt;button class="btn btn-sm btn-square" title="Look up"&gt;&lt;i class="ph ph-magnifying-glass"&gt;&lt;/i&gt;&lt;/button&gt;
-      &lt;/form&gt;
-      &lt;span class="badge badge-sm" :class="token ? 'badge-success' : 'badge-error'" x-text="token ? 'token' : 'no token'"&gt;&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class="text-xs font-mono opacity-70 truncate"&gt;
-      &lt;span x-text="'clipboard: ' + (clip ? JSON.stringify(clip.slice(0, 80)) : '(empty)')"&gt;&lt;/span&gt;
-    &lt;/div&gt;
-    &lt;div class="text-xs font-mono opacity-70 truncate" x-text="status"&gt;&lt;/div&gt;
-  &lt;/header&gt;
-
-  &lt;!-- Content: the index until a record is chosen, then its cards. --&gt;
-  &lt;main class="min-h-0 overflow-y-auto"&gt;
-
-    &lt;template x-if="!token"&gt;
-      &lt;form @submit.prevent="setToken(tokenInput)" class="p-3 flex flex-col gap-2"&gt;
-        &lt;input x-model="tokenInput" type="password" autocomplete="off" class="input input-bordered font-mono" placeholder="ghp_… (repo scope)"&gt;
-        &lt;div class="flex gap-2"&gt;
-          &lt;button class="btn btn-sm"&gt;Use token&lt;/button&gt;
-          &lt;a class="btn btn-sm btn-ghost" :href="NEW_TOKEN"&gt;Get one&lt;/a&gt;
-        &lt;/div&gt;
-      &lt;/form&gt;
-    &lt;/template&gt;
-
-    &lt;template x-if="token &amp;&amp; !record"&gt;
-      &lt;div&gt;
-        &lt;template x-if="branch"&gt;
-          &lt;ul class="menu w-full p-0"&gt;
-            &lt;li class="menu-title font-mono text-xs" x-text="branch + ' · ' + hits.length"&gt;&lt;/li&gt;
-            &lt;template x-for="row in hits" :key="row.id"&gt;
-              &lt;li&gt;&lt;a @click.prevent="open(row)" class="w-full min-w-0 flex flex-col items-start gap-0 py-2"&gt;
-                &lt;span class="text-base text-pretty" x-text="row.ask"&gt;&lt;/span&gt;
-                &lt;span class="text-xs font-mono opacity-70" x-text="rowLine(row)"&gt;&lt;/span&gt;
-              &lt;/a&gt;&lt;/li&gt;
-            &lt;/template&gt;
-            &lt;template x-if="!hits.length &amp;&amp; rows.length"&gt;&lt;li class="px-4 py-2 text-xs font-mono opacity-70"&gt;no session on this branch yet&lt;/li&gt;&lt;/template&gt;
-          &lt;/ul&gt;
-        &lt;/template&gt;
-        &lt;ul class="menu w-full p-0"&gt;
-          &lt;li class="menu-title font-mono text-xs" x-text="'latest ' + recent.length + ' of ' + rows.length"&gt;&lt;/li&gt;
-          &lt;template x-for="row in recent" :key="'r' + row.id"&gt;
-            &lt;li&gt;&lt;a @click.prevent="open(row)" class="w-full min-w-0 flex flex-col items-start gap-0 py-2"&gt;
-              &lt;span class="text-base text-pretty" x-text="row.ask"&gt;&lt;/span&gt;
-              &lt;span class="text-xs font-mono opacity-70" x-text="rowLine(row)"&gt;&lt;/span&gt;
-            &lt;/a&gt;&lt;/li&gt;
-          &lt;/template&gt;
-        &lt;/ul&gt;
-      &lt;/div&gt;
-    &lt;/template&gt;
-
-    &lt;template x-if="record"&gt;
-      &lt;ul class="menu w-full p-0"&gt;
-        &lt;li class="menu-title font-mono text-xs w-full flex flex-row justify-between"&gt;
-          &lt;span x-text="record.short + ' · ' + record.day + ' · ' + deck.length + ' cards'"&gt;&lt;/span&gt;
-          &lt;a class="link" :href="SESSION_PAGE + record.short"&gt;open page&lt;/a&gt;
-        &lt;/li&gt;
-        &lt;template x-for="c in deck" :key="c.key"&gt;
-          &lt;li&gt;&lt;a @click.prevent="play(c.key)" class="w-full min-w-0 flex flex-col items-start gap-1 py-2"
-                 :class="c.key === at ? 'menu-active' : ''"&gt;
-            &lt;span class="text-xs font-mono opacity-70" x-text="c.label + (c.ts ? ' · ' + c.ts : '')"&gt;&lt;/span&gt;
-            &lt;span class="w-full text-base text-pretty" x-text="c.lead"&gt;&lt;/span&gt;
-            &lt;span class="w-full text-base opacity-70 text-pretty" x-show="c.closing &amp;&amp; c.closing !== c.lead" x-text="c.closing"&gt;&lt;/span&gt;
-          &lt;/a&gt;&lt;/li&gt;
-        &lt;/template&gt;
-      &lt;/ul&gt;
-    &lt;/template&gt;
-  &lt;/main&gt;
-
-  &lt;!-- Footer: the transport. --&gt;
-  &lt;footer class="border-t border-base-300 px-2 py-1.5 flex items-center gap-1"&gt;
-    &lt;button class="btn btn-sm btn-ghost btn-square" @click="back()" :disabled="!record" title="Back to the list"&gt;&lt;i class="ph ph-list"&gt;&lt;/i&gt;&lt;/button&gt;
-    &lt;button class="btn btn-sm btn-square" @click="player &amp;&amp; player.prev()" :disabled="!deck.length"&gt;&lt;i class="ph ph-skip-back"&gt;&lt;/i&gt;&lt;/button&gt;
-    &lt;button class="btn btn-sm btn-square btn-primary" @click="toggle()" :disabled="!deck.length || !speaks"&gt;
-      &lt;i class="ph" :class="state === 'speaking' ? 'ph-pause' : 'ph-play'"&gt;&lt;/i&gt;
-    &lt;/button&gt;
-    &lt;button class="btn btn-sm btn-square" @click="player &amp;&amp; player.next()" :disabled="!deck.length"&gt;&lt;i class="ph ph-skip-forward"&gt;&lt;/i&gt;&lt;/button&gt;
-    &lt;select class="select select-sm w-20" x-model="rate" @change="player &amp;&amp; player.setRate(rate)"&gt;
-      &lt;option value="0.8"&gt;0.8×&lt;/option&gt;&lt;option value="1"&gt;1×&lt;/option&gt;&lt;option value="1.2"&gt;1.2×&lt;/option&gt;&lt;option value="1.5"&gt;1.5×&lt;/option&gt;
-    &lt;/select&gt;
-    &lt;span class="text-xs font-mono opacity-70 flex-1 text-center" x-text="deck.length ? (at + 1) + '/' + deck.length + ' · ' + state : (speaks ? '' : 'no speech here')"&gt;&lt;/span&gt;
-    &lt;a class="btn btn-sm btn-ghost btn-square" :href="deck.length ? speakLink(spoken(at)) : '#'" :class="deck.length ? '' : 'btn-disabled'" title="Speak this card through Shortcuts"&gt;&lt;i class="ph ph-device-mobile-speaker"&gt;&lt;/i&gt;&lt;/a&gt;
-  &lt;/footer&gt;
-&lt;/div&gt;
-
-&lt;script&gt;
-document.addEventListener('alpine:init', function () {
-  Alpine.data('page', function () {
-    return {
-      NEW_TOKEN: NEW_TOKEN, SESSION_PAGE: SESSION_PAGE,
-      clip: '', branch: '', branchInput: '', token: '', tokenInput: '',
-      rows: [], hits: [], recent: [], record: null, deck: [], at: 0,
-      state: 'idle', rate: '1', status: 'starting', player: null,
-      speaks: !!(window.readAloud &amp;&amp; window.readAloud.supported),
-
-      init: function () {
-        this.clip = CLIP === CLIP_KEY ? '' : fromB64(CLIP);
-        this.token = TOKEN === TOKEN_KEY ? '' : TOKEN;
-        this.branch = branchOf(this.clip);
-        this.branchInput = this.branch;
-        var self = this;
-        if (this.speaks) this.player = window.readAloud.player({
-          onState: function (s) { self.state = s.state; self.at = s.i; },
-        });
-        if (this.token) this.loadIndex();
-        else this.status = 'opened without a token';
-      },
-
-      setToken: function (t) { t = (t || '').trim(); if (!t) return; this.token = t; this.loadIndex(); },
-      setBranch: function (b) { this.branch = branchOf(b) || (b || '').trim(); this.back(); this.sift(); },
-
-      get: async function (path) {
-        var res = await fetch(API + path + '?ref=main', {
-          headers: { Authorization: auth(this.token), Accept: 'application/vnd.github.raw+json' },
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' on ' + path);
-        return res.json();
-      },
-
-      loadIndex: async function () {
-        this.status = 'reading ' + INDEX;
-        try {
-          var idx = await this.get(INDEX);
-          this.rows = idx.rows || [];
-          this.status = this.rows.length + ' sessions · index ' + ago(idx.generatedAt) + ' old';
-          this.sift();
-        } catch (e) { this.status = e.message; }
-      },
-
-      sift: function () {
-        this.hits = matches(this.rows, this.branch);
-        this.recent = latest(this.rows, LATEST);
-      },
-
-      open: async function (row) {
-        var path = recordPath(row);
-        this.status = 'reading ' + path;
-        try {
-          var rec = await this.get(path);
-          this.record = rec;
-          this.deck = cards(rec);
-          this.at = 0;
-          if (this.player) this.player.load(this.deck);
-          this.status = row.id + ' · ' + this.deck.length + ' cards · ' + (rec.reply_chars || 0) + ' chars of reply';
-          this.play(0);
-        } catch (e) { this.status = e.message; }
-      },
-
-      back: function () {
-        if (this.player) this.player.stop();
-        this.record = null; this.deck = []; this.at = 0;
-      },
-
-      play: function (i) { if (this.player) { this.player.setRate(Number(this.rate)); this.player.play(i); } },
-      toggle: function () { if (this.player) this.player.toggle(); },
-      spoken: function (i) { return window.readAloud ? window.readAloud.speechText((this.deck[i] || {}).md || '') : ''; },
-      speakLink: speakLink,
-      rowLine: function (row) {
-        return [row.id, row.day, (row.mins || 0) + 'm', (row.branches || [])[0] || ''].filter(Boolean).join(' · ');
-      },
-    };
-  });
-});
-&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
 </string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.base64encode</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0002-4A00-9000-000000000001</string>
+				<key>WFBase64LineBreakMode</key>
+				<string>None</string>
+				<key>WFEncodeMode</key>
+				<string>Encode</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Clipboard</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.replace</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0003-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0001-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFReplaceTextFind</key>
+				<string>📋ClipboardBase64</string>
+				<key>WFReplaceTextRegularExpression</key>
+				<false/>
+				<key>WFReplaceTextReplace</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Base64 Encoded</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0002-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
 			</dict>
 		</dict>
 		<dict>
@@ -343,15 +242,15 @@ document.addEventListener('alpine:init', function () {
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>C1A5E550-0002-4A00-9000-000000000002</string>
+				<string>5E550000-0004-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Text</string>
+						<string>Updated Text</string>
 						<key>OutputUUID</key>
-						<string>C1A5E550-0001-4A00-9000-000000000001</string>
+						<string>5E550000-0003-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -359,7 +258,474 @@ document.addEventListener('alpine:init', function () {
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFWorkflowName</key>
-				<string>Show-Html</string>
+				<string>Inject-🎟️GitHubToken</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.base64encode</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0005-4A00-9000-000000000001</string>
+				<key>WFBase64LineBreakMode</key>
+				<string>None</string>
+				<key>WFEncodeMode</key>
+				<string>Encode</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Shortcut Result</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0004-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.url</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0006-4A00-9000-000000000001</string>
+				<key>WFURLActionURL</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{36, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Base64 Encoded</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0005-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>data:text/html;charset=utf-8;base64,￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.detect.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0007-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Aggrandizements</key>
+						<array>
+							<dict>
+								<key>CoercionItemClass</key>
+								<string>WFRichTextContentItem</string>
+								<key>Type</key>
+								<string>WFCoercionVariableAggrandizement</string>
+							</dict>
+						</array>
+						<key>OutputName</key>
+						<string>URL</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0006-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.split</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0008-4A00-9000-000000000001</string>
+				<key>WFTextCustomSeparator</key>
+				<string>§§</string>
+				<key>WFTextSeparator</key>
+				<string>Custom</string>
+				<key>text</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0007-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getitemfromlist</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>CustomOutputName</key>
+				<string>Caption</string>
+				<key>UUID</key>
+				<string>5E550000-0009-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Split Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0008-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getitemfromlist</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>CustomOutputName</key>
+				<string>Rows</string>
+				<key>UUID</key>
+				<string>5E550000-0010-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Split Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0008-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFItemSpecifier</key>
+				<string>Last Item</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>5E550000-9001-4A00-9000-000000009001</string>
+				<key>WFCondition</key>
+				<integer>99</integer>
+				<key>WFConditionalActionString</key>
+				<string>ERROR</string>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Type</key>
+					<string>Variable</string>
+					<key>Variable</key>
+					<dict>
+						<key>Value</key>
+						<dict>
+							<key>OutputName</key>
+							<string>Caption</string>
+							<key>OutputUUID</key>
+							<string>5E550000-0009-4A00-9000-000000000001</string>
+							<key>Type</key>
+							<string>ActionOutput</string>
+						</dict>
+						<key>WFSerializationType</key>
+						<string>WFTextTokenAttachment</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0012-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{71, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Caption</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>{"op":"session-pick","name":"Claude-Session","build":"f54da35","said":"￼"}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Log-Repo</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.showresult</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>Text</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Caption</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>UUID</key>
+				<string>5E550000-0013-4A00-9000-000000000001</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>5E550000-9001-4A00-9000-000000009001</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.split</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0015-4A00-9000-000000000001</string>
+				<key>WFTextSeparator</key>
+				<string>New Lines</string>
+				<key>text</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Rows</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0010-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.choosefromlist</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0016-4A00-9000-000000000001</string>
+				<key>WFChooseFromListActionPrompt</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Caption</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Split Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0015-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.replace</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0017-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Chosen Item</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0016-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFReplaceTextCaseSensitive</key>
+				<true/>
+				<key>WFReplaceTextFind</key>
+				<string> · .*$</string>
+				<key>WFReplaceTextRegularExpression</key>
+				<true/>
+				<key>WFReplaceTextReplace</key>
+				<string></string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0018-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{61, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Updated Text</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0017-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>https://mehrlander.github.io/web-tools/pages/session.html#id=￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.url</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0019-4A00-9000-000000000001</string>
+				<key>WFURLActionURL</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0018-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.openurl</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E550000-0020-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>URL</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0019-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>5E550000-9001-4A00-9000-000000009001</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
 			</dict>
 		</dict>
 	</array>

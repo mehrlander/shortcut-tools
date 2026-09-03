@@ -14,7 +14,7 @@
 				<key>UUID</key>
 				<string>C1A0DE00-0001-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>Read the session aloud
+				<string>Session in Web Tools
 Show-Loop
 Out</string>
 			</dict>
@@ -79,7 +79,7 @@ Out</string>
 				<key>WFCondition</key>
 				<integer>4</integer>
 				<key>WFConditionalActionString</key>
-				<string>Read the session aloud</string>
+				<string>Session in Web Tools</string>
 				<key>WFControlFlowMode</key>
 				<integer>0</integer>
 				<key>WFInput</key>
