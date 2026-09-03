@@ -1,0 +1,124 @@
+{
+  "name": "Run-Op",
+  "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (7 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "52550000-0001-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "52550000-0002-4A00-9000-000000000001",
+        "CustomOutputName": "Op",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "52550000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "52550000-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Input",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "52550000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "52550000-0004-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "52550000-0003-4A00-9000-000000000001",
+            "OutputName": "Input"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "52550000-0005-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "(function(){var n='￼';var x=new XMLHttpRequest();x.open('GET','https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/'+n+'.js',false);x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob('￼'))),token:'🎟️GitHubToken'})})()",
+            "attachmentsByRange": {
+              "{19, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "52550000-0002-4A00-9000-000000000001",
+                "OutputName": "Op"
+              },
+              "{340, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "52550000-0004-4A00-9000-000000000001",
+                "OutputName": "Base64 Encoded"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "52550000-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Get-JsonFromJs",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "52550000-0005-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "WFOutput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "52550000-0006-4A00-9000-000000000001",
+                "OutputName": "Shortcut Result"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    }
+  ]
+}

@@ -8,196 +8,48 @@
 	<array>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.gettext</string>
+			<string>is.workflow.actions.getclipboard</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
 				<string>5E550000-0001-4A00-9000-000000000001</string>
-				<key>WFTextActionText</key>
-				<string>&lt;!doctype html&gt;
-&lt;meta charset="utf-8"&gt;
-&lt;title&gt;Session lines&lt;/title&gt;
-&lt;style&gt;
-  /* The page has one consumer that matters: a rich-text coercion, which runs
-     the script and reads the text back. So the visible text is only ever the
-     lines themselves. No headings, no buttons, nothing an extraction would
-     pick up and a downstream split would miscount. Same contract, and the same
-     reasoning, as pages/gh-recent-branches.html. */
-  body { font: 15px/1.5 ui-monospace, Menlo, monospace; margin: 0; padding: .75rem; }
-  #out { white-space: pre; overflow-x: auto; }
-&lt;/style&gt;
-&lt;div id="out"&gt;&lt;/div&gt;
-
-&lt;script&gt;
-// session-lines.html: the session picker's data, computed on the phone.
-//
-// Not a page anybody is meant to look at. Claude-Session builds it into a
-// data: URL, coerces that URL to rich text (which runs this script and returns
-// its text), and feeds the result to Shortcuts' own Choose from List. The menu
-// is native; this only supplies what goes in it.
-//
-// The output is one caption, then the rows, joined by the separator below:
-//
-//   &lt;caption&gt;§§&lt;id&gt; · this branch · 2h · &lt;the ask&gt;
-//            &lt;id&gt; · 5h · &lt;the ask&gt;
-//
-// The caption becomes the menu's prompt and the rows become its items, so the
-// split is by separator first and by newline second. A row leads with its
-// eight-hex id because the chain recovers the id by deleting from the first
-// " · " onward, which is the one extraction this repository has already proven
-// (gh-recent-branches-picker). Nothing later in a row can break it.
-//
-// Two values arrive by substitution before this runs: the GitHub token, from
-// the injector that owns it, and the clipboard as base64, which is where the
-// branch comes from. Neither travels in an address. The placeholder below is
-// the only place its name may be spelled, since naming the injector in a
-// comment would paste the live token into that comment.
-
-// Each placeholder is spelled once in this file, comments included. The
-// sentinels are built from halves so the substitution cannot reach them.
-var CLIP = '📋ClipboardBase64';
-var TOKEN = '🎟️GitHubToken';
-var CLIP_KEY = '📋' + 'ClipboardBase64';
-var TOKEN_KEY = '🎟️' + 'GitHubToken';
-
-var STORE = 'mehrlander/web-tools-private';
-var INDEX = 'state/sessions.json';
-var SEP = '§§';
-var ROWS = 14;          // rows offered when the branch does not fill the list
-var ASK = 64;           // characters of the ask a row carries, about two phone lines
-
-function fromB64(b64) {
-  var raw = atob(b64);
-  return new TextDecoder().decode(Uint8Array.from(raw, function (c) { return c.charCodeAt(0); }));
-}
-
-// What the Claude app puts on the clipboard has varied, so a full ref, a URL
-// carrying one, or the bare name all reduce to the name. Only the first line
-// counts, since a clipboard can hold a caption whose first line is the branch.
-function branchOf(text) {
-  var s = String(text || '').trim().split(/\r?\n/)[0].trim();
-  s = s.replace(/^.*?(?:tree\/|compare\/|branch\.html#gh=[^@]+@|branch=)/, '')
-       .replace(/^origin\//, '').replace(/^refs\/heads\//, '')
-       .replace(/[?#&amp;].*$/, '').replace(/\/$/, '');
-  return /\//.test(s) &amp;&amp; !/\s/.test(s) ? s : '';
-}
-
-// The stored token may or may not carry its scheme. Accept either rather than
-// making the config file's exact contents load-bearing.
-function auth(token) {
-  return /^(Bearer|token) /i.test(token) ? token : 'Bearer ' + token;
-}
-
-// Synchronous on purpose, and this is the rule the whole page turns on: the
-// coercion captures the document at a moment nobody has documented, and a
-// promise that resolves after it returns empty with no error. Blocking the
-// load is the only safe shape here.
-function readIndex(token) {
-  var x = new XMLHttpRequest();
-  x.open('GET', 'https://api.github.com/repos/' + STORE + '/contents/' + INDEX + '?ref=main', false);
-  x.setRequestHeader('Authorization', auth(token));
-  // Raw, not the contents envelope: the envelope base64s the body and this one
-  // is 877 KB before encoding.
-  x.setRequestHeader('Accept', 'application/vnd.github.raw');
-  x.send();
-  if (x.status !== 200) throw new Error('HTTP ' + x.status + ' reading ' + INDEX);
-  return JSON.parse(x.responseText);
-}
-
-function onBranch(row, branch) {
-  return !!branch &amp;&amp; ((row.branches || []).indexOf(branch) &gt;= 0
-    || (row.repos || []).some(function (r) { return r &amp;&amp; r.branch === branch; }));
-}
-
-function byStarted(a, b) { return a.started &lt; b.started ? 1 : a.started &gt; b.started ? -1 : 0; }
-
-function ago(iso) {
-  var mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  if (!isFinite(mins)) return '';
-  if (mins &lt; 60) return mins + 'm';
-  if (mins &lt; 1440) return Math.round(mins / 60) + 'h';
-  return Math.round(mins / 1440) + 'd';
-}
-
-// An ask is markdown and a menu row is not, so the loudest syntax goes: fences,
-// a link's brackets and URL, emphasis and heading marks.
-function plain(md) {
-  return String(md || '').replace(/```[\s\S]*?```/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#&gt;]+/g, '')
-    // The separator is structure, so an ask that happens to contain it would
-    // split the caption off the rows and take the rows with it.
-    .split(SEP).join(' ').replace(/\s+/g, ' ').trim();
-}
-
-function row(r, here) {
-  var ask = plain(r.ask);
-  if (ask.length &gt; ASK) ask = ask.slice(0, ASK - 1) + '…';
-  return [r.id, (here ? 'this branch' : ''), ago(r.started), ask]
-    .filter(Boolean).join(' · ');
-}
-
-// Branch matches first, then the most recent regardless, so the list is never
-// empty and never hides what it did not find. The caption says which case this
-// is, in words, because the rows alone cannot: a list with no marked row could
-// mean the branch had no session or that no branch was on the clipboard.
-function build(rows, branch, at) {
-  var here = branch ? rows.filter(function (r) { return onBranch(r, branch); }).sort(byStarted) : [];
-  var seen = {};
-  here.forEach(function (r) { seen[r.id] = true; });
-  var rest = rows.slice().sort(byStarted).filter(function (r) { return !seen[r.id]; })
-                 .slice(0, Math.max(0, ROWS - here.length));
-
-  var caption = !branch ? 'No branch on the clipboard, showing recent'
-    : here.length ? here.length + ' on ' + branch
-    : 'No session on ' + branch + ' yet, showing recent';
-  if (at) caption += ' · index ' + ago(at);
-
-  var lines = here.map(function (r) { return row(r, true); })
-        .concat(rest.map(function (r) { return row(r, false); }));
-  return caption + SEP + lines.join('\n');
-}
-
-function run() {
-  if (TOKEN === TOKEN_KEY) return 'ERROR no token substituted; Inject-' + TOKEN_KEY + ' did not run';
-  try {
-    var idx = readIndex(TOKEN);
-    return build(idx.rows || [], branchOf(CLIP === CLIP_KEY ? '' : fromB64(CLIP)), idx.generatedAt);
-  } catch (err) {
-    return 'ERROR ' + err.message;
-  }
-}
-
-document.getElementById('out').textContent = run();
-&lt;/script&gt;
-</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.base64encode</string>
+			<string>is.workflow.actions.gettext</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
 				<string>5E550000-0002-4A00-9000-000000000001</string>
-				<key>WFBase64LineBreakMode</key>
-				<string>None</string>
-				<key>WFEncodeMode</key>
-				<string>Encode</string>
-				<key>WFInput</key>
+				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
 					<dict>
-						<key>Type</key>
-						<string>Clipboard</string>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{13, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Clipboard</string>
+								<key>OutputUUID</key>
+								<string>5E550000-0001-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>session-menu
+￼</string>
 					</dict>
 					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
+					<string>WFTextTokenString</string>
 				</dict>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text.replace</string>
+			<string>is.workflow.actions.runworkflow</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
@@ -209,24 +61,6 @@ document.getElementById('out').textContent = run();
 						<key>OutputName</key>
 						<string>Text</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0001-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-				<key>WFReplaceTextFind</key>
-				<string>📋ClipboardBase64</string>
-				<key>WFReplaceTextRegularExpression</key>
-				<false/>
-				<key>WFReplaceTextReplace</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Base64 Encoded</string>
-						<key>OutputUUID</key>
 						<string>5E550000-0002-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
@@ -234,21 +68,27 @@ document.getElementById('out').textContent = run();
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
 				</dict>
+				<key>WFWorkflowName</key>
+				<string>Run-Op</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.runworkflow</string>
+			<string>is.workflow.actions.getvalueforkey</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Caption</string>
 				<key>UUID</key>
 				<string>5E550000-0004-4A00-9000-000000000001</string>
+				<key>WFDictionaryKey</key>
+				<string>caption</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Updated Text</string>
+						<string>Shortcut Result</string>
 						<key>OutputUUID</key>
 						<string>5E550000-0003-4A00-9000-000000000001</string>
 						<key>Type</key>
@@ -257,177 +97,6 @@ document.getElementById('out').textContent = run();
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
 				</dict>
-				<key>WFWorkflowName</key>
-				<string>Inject-🎟️GitHubToken</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.base64encode</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>5E550000-0005-4A00-9000-000000000001</string>
-				<key>WFBase64LineBreakMode</key>
-				<string>None</string>
-				<key>WFEncodeMode</key>
-				<string>Encode</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Shortcut Result</string>
-						<key>OutputUUID</key>
-						<string>5E550000-0004-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.url</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>5E550000-0006-4A00-9000-000000000001</string>
-				<key>WFURLActionURL</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict>
-							<key>{36, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Base64 Encoded</string>
-								<key>OutputUUID</key>
-								<string>5E550000-0005-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-						</dict>
-						<key>string</key>
-						<string>data:text/html;charset=utf-8;base64,￼</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.detect.text</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>5E550000-0007-4A00-9000-000000000001</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>Aggrandizements</key>
-						<array>
-							<dict>
-								<key>CoercionItemClass</key>
-								<string>WFRichTextContentItem</string>
-								<key>Type</key>
-								<string>WFCoercionVariableAggrandizement</string>
-							</dict>
-						</array>
-						<key>OutputName</key>
-						<string>URL</string>
-						<key>OutputUUID</key>
-						<string>5E550000-0006-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text.split</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>5E550000-0008-4A00-9000-000000000001</string>
-				<key>WFTextCustomSeparator</key>
-				<string>§§</string>
-				<key>WFTextSeparator</key>
-				<string>Custom</string>
-				<key>text</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Text</string>
-						<key>OutputUUID</key>
-						<string>5E550000-0007-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.getitemfromlist</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>CustomOutputName</key>
-				<string>Caption</string>
-				<key>UUID</key>
-				<string>5E550000-0009-4A00-9000-000000000001</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Split Text</string>
-						<key>OutputUUID</key>
-						<string>5E550000-0008-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.getitemfromlist</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>CustomOutputName</key>
-				<string>Rows</string>
-				<key>UUID</key>
-				<string>5E550000-0010-4A00-9000-000000000001</string>
-				<key>WFInput</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Split Text</string>
-						<key>OutputUUID</key>
-						<string>5E550000-0008-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-				<key>WFItemSpecifier</key>
-				<string>Last Item</string>
 			</dict>
 		</dict>
 		<dict>
@@ -454,7 +123,7 @@ document.getElementById('out').textContent = run();
 							<key>OutputName</key>
 							<string>Caption</string>
 							<key>OutputUUID</key>
-							<string>5E550000-0009-4A00-9000-000000000001</string>
+							<string>5E550000-0004-4A00-9000-000000000001</string>
 							<key>Type</key>
 							<string>ActionOutput</string>
 						</dict>
@@ -470,7 +139,7 @@ document.getElementById('out').textContent = run();
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5E550000-0012-4A00-9000-000000000001</string>
+				<string>5E550000-0006-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -482,13 +151,13 @@ document.getElementById('out').textContent = run();
 								<key>OutputName</key>
 								<string>Caption</string>
 								<key>OutputUUID</key>
-								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<string>5E550000-0004-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"session-pick","name":"Claude-Session","build":"f54da35","said":"￼"}</string>
+						<string>{"op":"session-pick","name":"Claude-Session","build":"88b5f49","said":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -513,7 +182,7 @@ document.getElementById('out').textContent = run();
 								<key>OutputName</key>
 								<string>Caption</string>
 								<key>OutputUUID</key>
-								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<string>5E550000-0004-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -525,7 +194,7 @@ document.getElementById('out').textContent = run();
 					<string>WFTextTokenString</string>
 				</dict>
 				<key>UUID</key>
-				<string>5E550000-0013-4A00-9000-000000000001</string>
+				<string>5E550000-0007-4A00-9000-000000000001</string>
 			</dict>
 		</dict>
 		<dict>
@@ -541,21 +210,23 @@ document.getElementById('out').textContent = run();
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text.split</string>
+			<string>is.workflow.actions.getvalueforkey</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Rows</string>
 				<key>UUID</key>
-				<string>5E550000-0015-4A00-9000-000000000001</string>
-				<key>WFTextSeparator</key>
-				<string>New Lines</string>
-				<key>text</key>
+				<string>5E550000-0009-4A00-9000-000000000001</string>
+				<key>WFDictionaryKey</key>
+				<string>rows</string>
+				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Rows</string>
+						<string>Shortcut Result</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0010-4A00-9000-000000000001</string>
+						<string>5E550000-0003-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -570,7 +241,7 @@ document.getElementById('out').textContent = run();
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5E550000-0016-4A00-9000-000000000001</string>
+				<string>5E550000-0010-4A00-9000-000000000001</string>
 				<key>WFChooseFromListActionPrompt</key>
 				<dict>
 					<key>Value</key>
@@ -582,7 +253,7 @@ document.getElementById('out').textContent = run();
 								<key>OutputName</key>
 								<string>Caption</string>
 								<key>OutputUUID</key>
-								<string>5E550000-0009-4A00-9000-000000000001</string>
+								<string>5E550000-0004-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -598,9 +269,9 @@ document.getElementById('out').textContent = run();
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Split Text</string>
+						<string>Rows</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0015-4A00-9000-000000000001</string>
+						<string>5E550000-0009-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -611,63 +282,75 @@ document.getElementById('out').textContent = run();
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.text.replace</string>
+			<string>is.workflow.actions.getvalueforkey</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Urls</string>
 				<key>UUID</key>
-				<string>5E550000-0017-4A00-9000-000000000001</string>
+				<string>5E550000-0011-4A00-9000-000000000001</string>
+				<key>WFDictionaryKey</key>
+				<string>urls</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Chosen Item</string>
+						<string>Shortcut Result</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0016-4A00-9000-000000000001</string>
+						<string>5E550000-0003-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
 				</dict>
-				<key>WFReplaceTextCaseSensitive</key>
-				<true/>
-				<key>WFReplaceTextFind</key>
-				<string> · .*$</string>
-				<key>WFReplaceTextRegularExpression</key>
-				<true/>
-				<key>WFReplaceTextReplace</key>
-				<string></string>
 			</dict>
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.gettext</string>
+			<string>is.workflow.actions.getvalueforkey</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Url</string>
 				<key>UUID</key>
-				<string>5E550000-0018-4A00-9000-000000000001</string>
-				<key>WFTextActionText</key>
+				<string>5E550000-0012-4A00-9000-000000000001</string>
+				<key>WFDictionaryKey</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{61, 1}</key>
+							<key>{0, 1}</key>
 							<dict>
 								<key>OutputName</key>
-								<string>Updated Text</string>
+								<string>Chosen Item</string>
 								<key>OutputUUID</key>
-								<string>5E550000-0017-4A00-9000-000000000001</string>
+								<string>5E550000-0010-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>https://mehrlander.github.io/web-tools/pages/session.html#id=￼</string>
+						<string>￼</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Urls</string>
+						<key>OutputUUID</key>
+						<string>5E550000-0011-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
 				</dict>
 			</dict>
 		</dict>
@@ -677,15 +360,15 @@ document.getElementById('out').textContent = run();
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5E550000-0019-4A00-9000-000000000001</string>
+				<string>5E550000-0013-4A00-9000-000000000001</string>
 				<key>WFURLActionURL</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Text</string>
+						<string>Url</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0018-4A00-9000-000000000001</string>
+						<string>5E550000-0012-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -700,7 +383,7 @@ document.getElementById('out').textContent = run();
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5E550000-0020-4A00-9000-000000000001</string>
+				<string>5E550000-0014-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -708,7 +391,7 @@ document.getElementById('out').textContent = run();
 						<key>OutputName</key>
 						<string>URL</string>
 						<key>OutputUUID</key>
-						<string>5E550000-0019-4A00-9000-000000000001</string>
+						<string>5E550000-0013-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>

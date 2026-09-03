@@ -252,6 +252,33 @@ The later ` ```\s* ` pass covers the same ground, so the effect is invisible.
 Flagged rather than fixed, since it is not this repo's shortcut, and since the
 note above about vestigial-looking actions counsels confirming on device first.
 
+## Parameter shapes, by census
+
+*Measured 2026-09-03, over every action in the fifteen dumps, after a chain
+handed `Inject-🎟️GitHubToken` an empty input and the injector ran its demo.*
+
+A text field and a variable slot serialise differently, and the difference is
+invisible in the editor: a value in the wrong form renders as an empty field
+and the action yields nothing. Where the corpus is unanimous, its form is the
+rule, held by [`test/parameter-shapes.test.js`](../test/parameter-shapes.test.js):
+
+| action | field | token string | literal | absent | attachment |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Replace Text | `WFInput` | 600 | 8 | 0 | **0** |
+| Replace Text | `WFReplaceTextReplace` | 88 | 374 | 146 | **0** |
+| Get Dictionary Value | `WFDictionaryKey` | 276 | 581 | 54 | **0** |
+
+The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
+Replace Text an attachment for both fields, the action produced nothing, and
+the injector's first branch (`WFCondition` 101, no input) built its demo page
+and opened it through `Show-Html`. What appeared on the phone, a `data:` page
+of GitHub API JSON with Repo, Commit and Branch tabs and a jsDelivr connection
+prompt, was that demo, and the chain then coerced the demo's text and offered
+its button labels as a menu. The shape had been copied from
+`gh-recent-branches-picker`, which the workflows README described as "the only
+chain still carrying inferred parameter shapes"; it is corrected in the same
+commit.
+
 ## The token-injection pattern
 
 *Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
