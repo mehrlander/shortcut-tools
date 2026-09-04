@@ -14,7 +14,8 @@
       "appView": true,
       "viewLabel": "Shortcuts",
       "icon": "ph-lightning",
-      "order": 30
+      "order": 30,
+      "slug": "shortcuts"
     }
   ]
 }
