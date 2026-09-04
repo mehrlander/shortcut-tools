@@ -1,12 +1,12 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, opening the copied branch's session in Web Tools (11 actions)",
+  "label": "Choose-Claude: the Claude-app menu, opening the copied branch's session in Web Tools directly or through the session list (18 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "C1A0DE00-0001-4A00-9000-000000000001",
-        "WFTextActionText": "Session in Web Tools\nShow-Loop\nOut"
+        "WFTextActionText": "Session on this branch\nPick a session\nShow-Loop\nOut"
       }
     },
     {
@@ -42,10 +42,90 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
+        "GroupingIdentifier": "C1A0DE00-9000-4A00-9000-000000009000",
+        "WFControlFlowMode": 0,
+        "WFCondition": 4,
+        "WFConditionalActionString": "Session on this branch",
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1A0DE00-0003-4A00-9000-000000000001",
+              "OutputName": "Chosen Item"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "C1A0DE00-0020-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1A0DE00-0021-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "https://mehrlander.github.io/web-tools/pages/session.html#branch=￼",
+            "attachmentsByRange": {
+              "{65, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0020-4A00-9000-000000000001",
+                "OutputName": "Clipboard"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "C1A0DE00-0022-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1A0DE00-0021-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "C1A0DE00-0023-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1A0DE00-0022-4A00-9000-000000000001",
+            "OutputName": "URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9000-4A00-9000-000000009000",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 0,
         "WFCondition": 4,
-        "WFConditionalActionString": "Session in Web Tools",
+        "WFConditionalActionString": "Pick a session",
         "WFInput": {
           "Type": "Variable",
           "Variable": {
@@ -145,17 +225,25 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "UUID": "C1A0DE00-0012-4A00-9000-000000000001",
         "GroupingIdentifier": "C1A0DE00-9002-4A00-9000-000000009002",
-        "WFControlFlowMode": 2
+        "WFControlFlowMode": 2,
+        "UUID": "C1A0DE00-0012-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "UUID": "C1A0DE00-0013-4A00-9000-000000000001",
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
-        "WFControlFlowMode": 2
+        "WFControlFlowMode": 2,
+        "UUID": "C1A0DE00-0013-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9000-4A00-9000-000000009000",
+        "WFControlFlowMode": 2,
+        "UUID": "C1A0DE00-0014-4A00-9000-000000000001"
       }
     }
   ]
