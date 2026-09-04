@@ -93,6 +93,7 @@ test("every U+FFFC anchor sits where its range says, in every chain", () => {
 
 const runOp = chains.find(([f]) => f === "run-op.json")[1];
 const claude = chains.find(([f]) => f === "claude-session.json")[1];
+const choose = chains.find(([f]) => f === "choose-claude.json")[1];
 
 test("Run-Op fetches the op by name from web-tools, evaluates it synchronously, and spells the token placeholder once", () => {
   const expr = runOp.actions.find((a) => a.id.endsWith("gettext")).p.WFTextActionText.Value.string;
@@ -139,4 +140,34 @@ test("Claude-Session's error arm logs with its build id before showing", () => {
   assert.strictEqual(log.p.WFWorkflowName, "Log-Repo");
   assert.strictEqual(log.p.WFInput.WFSerializationType, "WFTextTokenAttachment");
   assert.ok(show.id.endsWith("showresult"));
+});
+
+test("Choose-Claude's menu rows and its conditionals name the same strings", () => {
+  // The silent failure this catches: rename a row in the Get Text card and the
+  // conditional still tests the old string, so its arm goes dead and the row
+  // falls through to the run-by-name arm, which looks for a shortcut of that
+  // name and finds none. Nothing errors. The tap just does nothing.
+  const rows = choose.actions[0].p.WFTextActionText.split("\n");
+  for (const a of choose.actions)
+    if (a.id.endsWith("conditional") && a.p.WFConditionalActionString)
+      assert.ok(rows.includes(a.p.WFConditionalActionString),
+        `a conditional tests "${a.p.WFConditionalActionString}", which is not one of the menu rows`);
+});
+
+test("Choose-Claude builds its direct address with Get Text and hands it over by attachment", () => {
+  // THE 2026-09-03 FAILURE, in the arm that brought this route back. That
+  // attempt built `session.html#branch=` around the clipboard inside the URL
+  // card's own field and the address arrived empty on the phone. The corrective
+  // the format notes give is the shape asserted here: build the text with Get
+  // Text, then hand it over by attachment, which is what Library-Fetch does.
+  const i = choose.actions.findIndex((a) => a.p.WFConditionalActionString === "Session on this branch");
+  assert.ok(i >= 0, "the direct arm is there to guard");
+  const [clip, text, url, open] = choose.actions.slice(i + 1, i + 5);
+  assert.ok(clip.id.endsWith("getclipboard"), "the clipboard is read by an action, not inlined as a token");
+  assert.ok(text.id.endsWith("gettext"), "the address is built as text first");
+  assert.match(text.p.WFTextActionText.Value.string, /^https:\/\/\S+\/session\.html#branch=\uFFFC$/);
+  assert.strictEqual(url.p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment",
+    "the URL card takes the built text by attachment, never a string it interpolates itself");
+  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, text.p.UUID);
+  assert.ok(open.id.endsWith("openurl"));
 });
