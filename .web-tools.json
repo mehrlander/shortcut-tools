@@ -3,9 +3,16 @@
   "estate": true,
   "group": "tools",
   "order": 40,
-  "quickLink": true,
   "note": "Apple Shortcuts action reference dataset and tooling.",
   "scope": "An Apple Shortcuts reference: an action dictionary mapping human-readable names to WFWorkflowActionIdentifier values across the built-in and third-party bundles, packaged with a small CLI to search it. A self-contained dataset and tool, useful on its own.",
+  "tracker": "tracker/board.md",
+  "outbox": "plists",
+  "pins": [
+    "workflows",
+    "plists",
+    "docs/idioms.md",
+    "docs/shortcuts-format-notes.md"
+  ],
   "pages": [
     {
       "path": "pages/library.html",
@@ -16,6 +23,63 @@
       "icon": "ph-lightning",
       "order": 30,
       "slug": "shortcuts"
+    },
+    {
+      "path": "mehrlander/web-tools:pages/shortcut-log.html",
+      "title": "Shortcut log",
+      "note": "The return channel: every Log-Repo entry from the phone, each install scored current or stale against plists/builds.json.",
+      "appView": true,
+      "viewLabel": "Shortcut log",
+      "icon": "ph-list-checks",
+      "order": 31,
+      "slug": "shortcut-log"
+    },
+    {
+      "path": "pages/gh-recent-branches.html",
+      "title": "Recent branches",
+      "note": "The page Show-Html opens: branches whose latest commit is yours, each a link. Token injected on the way through.",
+      "icon": "ph-git-branch",
+      "order": 40
+    },
+    {
+      "path": "pages/xhr-probe.html",
+      "title": "XHR probe",
+      "note": "What a page can reach from a data: URL on the device. Carried by sync-xhr-probe.",
+      "icon": "ph-plugs",
+      "order": 50
+    },
+    {
+      "path": "pages/bench-inline.html",
+      "title": "Bench, inline",
+      "note": "The timing bench a chain carries inline, for the Run JavaScript performance cliff.",
+      "icon": "ph-timer",
+      "order": 60
+    },
+    {
+      "path": "pages/bench-run.html",
+      "title": "Bench, run",
+      "note": "The bench as a page a shortcut calls into, the coercion probe's payload.",
+      "icon": "ph-timer",
+      "order": 61
+    }
+  ],
+  "checks": [
+    {
+      "kind": "newer-than",
+      "path": "plists/builds.json",
+      "sources": ["workflows"],
+      "label": "plists"
+    },
+    {
+      "kind": "newer-than",
+      "path": "packed",
+      "sources": ["workflows"],
+      "label": "packed"
+    },
+    {
+      "kind": "tracker",
+      "path": "tracker/board.csv",
+      "staleAfterDays": 45
     }
   ]
 }

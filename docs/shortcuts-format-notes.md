@@ -835,88 +835,6 @@ The operand rides one of four keys and reading only the first drops the rest
 silently: `WFConditionalActionString`, `WFNumberValue`, `WFAnotherNumber`, and
 `WFMeasurement`, the last a `{Magnitude, Unit}` pair.
 
-## The device can gzip, and it is one action
-
-*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
-
-`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
-value beside the default zip. So compression is available on device, in one
-action, with no tool and no library:
-
-```
-Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
-Base64 Encode  WFBase64LineBreakMode: "None"
-```
-
-That is worth knowing because this repo compresses in Python
-([`tools/show.py`](../tools/show.py)) and had no record that the device could do
-it at all. The two solve different problems and both are right: `show.py`
-compresses so the **link** is short, since a link is transcribed and a long one
-is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
-is short, for a page assembled on device where no link exists to shorten.
-
-The distilled variant is five actions: `makezip` → `base64encode` →
-`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
-Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
-arrived at independently, which is some evidence the shape is forced rather than
-chosen.
-
-One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
-so the page fetches a CDN script before it can render itself. `gz-shell.html`
-uses `DecompressionStream('gzip')`, which is native, needs no network, and
-cannot fail because a CDN is slow or a captive portal is in the way. A
-self-extracting page that depends on the network to extract itself gives up the
-property that made it worth making. Prefer the native stream.
-
-## Every verb demos itself, and it shows up as a self-call
-
-*Measured 2026-08-13 across 579 shortcuts.*
-
-**55 shortcuts call themselves**, and almost all for one reason. The opening
-action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
-and runs the shortcut on it:
-
-```
-If  Shortcut Input  <101>
-  Text        <a sample payload>
-  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
-  Run Shortcut  Show-Html            (or Stop and Output)
-  Stop and Output
-End If
-<the real body>
-```
-
-Run it from the Shortcuts app with nothing selected and it demonstrates itself;
-run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
-`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
-all open this way.
-
-That explains two things the index reports. A self-call is a demo, not
-recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
-under **called by nothing** is often an entry point precisely because it is
-runnable alone.
-
-`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
-Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
-without it.
-
-### Condition codes seen in the corpus
-
-Three are pinned by the strings beside them. Two are not.
-
-| Code | Meaning | Uses |
-| ---: | --- | ---: |
-| 4 | `is` | 326 |
-| 101 | a value test, no string, gates absent-input branches | 132 |
-| 100 | the same shape as 101 | 130 |
-| 99 | `contains` | 83 |
-| 8 | `begins with` | 68 |
-
-`100` and `101` both take no `WFConditionalActionString` and both appear on
-branches handling missing input, so which is `has any value` and which is its
-negation is not settled by reading alone. Do not guess: copy the pair from a
-working export, or set it in the editor and read it back.
-
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -1853,7 +1771,12 @@ formed, the multi-variant entry is the only one, nothing carries a
 every block is balanced and shares one grouping, presets merge, the serializer
 escapes markup). `test/show.test.js` is the exception to what follows: it runs
 the shell's real JavaScript out of a real link, so the compressed route is
-exercised rather than asserted about.
+exercised rather than asserted about. `test/docs-repetition.test.js` holds
+this file, and the other prose here, to one copy of each paragraph and each
+heading: from 2026-08-13 to 2026-09-05 two sections above appeared twice, one
+copy with the condition codes settled and the other still saying not to guess,
+and nothing noticed because a cross-file duplicate scan does not look inside a
+file.
 
 What the tests cannot tell you is whether the output imports. That needs a
 device, and is a separate open task.
