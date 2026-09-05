@@ -29,6 +29,11 @@
   "bytes": 21985,
   "signed": "2026-08-31"
  },
+ "Probe-Unattended": {
+  "plist_sha256": "4ddfa558418e06e80f245903d1fd54fedf25153ade3c9073c386c1d1b5636d19",
+  "bytes": 24137,
+  "signed": "2026-09-05"
+ },
  "Run-AppDetermined": {
   "plist_sha256": "6f52c1f441d94bf244d7bea80364cc861a44f3b80f8703ecc94442c2711370af",
   "bytes": 22086,
