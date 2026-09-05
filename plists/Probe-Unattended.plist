@@ -23,7 +23,7 @@
 				<key>UUID</key>
 				<string>0A770000-0001-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>Bearer 🎟GitHubToken</string>
+				<string>Bearer 🎟️GitHubToken</string>
 			</dict>
 		</dict>
 		<dict>
@@ -48,7 +48,7 @@
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFWorkflowName</key>
-				<string>Inject-🎟GitHubToken</string>
+				<string>Inject-🎟️GitHubToken</string>
 			</dict>
 		</dict>
 		<dict>
@@ -61,7 +61,7 @@
 				<key>UUID</key>
 				<string>0A770000-0003-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"control","build":"cddc645"}</string>
+				<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"control","build":"2979036"}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -417,7 +417,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"js","said":"￼","build":"cddc645"}</string>
+						<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"js","said":"￼","build":"2979036"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -725,7 +725,7 @@
 				<key>UUID</key>
 				<string>0A770000-0010-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"log-repo","build":"cddc645"}</string>
+				<string>{"op":"probe-unattended","name":"Probe-Unattended","leg":"log-repo","build":"2979036"}</string>
 			</dict>
 		</dict>
 		<dict>
