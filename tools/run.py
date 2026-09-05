@@ -26,10 +26,11 @@ check is that a link nobody verified is indistinguishable from one that was.
 
 --pick emits a Run-Pick link instead: the names become a menu on the device and
 the chosen one runs on the clipboard. It CHECKS each name against the library
-index first, because a link's names are unchecked strings and this repository has
-already lost a fortnight to two of them going stale. Two false positives to
-expect, both from the index being a snapshot: anything installed since the last
-dump, and any name computed at run time.
+index and the newest device manifest first, because a link's names are unchecked
+strings and this repository has already lost a fortnight to two of them going
+stale. The manifest is what removes the false positive for a shortcut installed
+since the last dump (Speak-Text, on 2026-09-05, was in no dump and in the
+2026-09-02 manifest). One false positive remains: a name computed at run time.
 
 --log appends Log-Repo, which writes the payload to the clipboard first and
 unconditionally, then commits it to shortcuts/log/ in web-tools-private. That
@@ -74,8 +75,31 @@ def build(targets, log=False, text=None):
                      urllib.parse.quote("\n".join(steps), safe=""))
 
 
+def manifest_names(index=INDEX):
+    """The names in the newest device manifest beside the index, or an empty set.
+
+    The index is a snapshot of the last dump; the manifest is what the device
+    said its library was at the last Sync-Manifest tap, usually later. A name
+    in either is a name the device has had, so the audit reads both and the
+    false positive for a shortcut installed since the dump goes away. A name
+    in neither is still refused.
+    """
+    try:
+        found = sorted((Path(index).parent / "manifests").glob("*.txt"))
+        if not found:
+            return set()
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "manifest_delta", Path(__file__).resolve().parent / "manifest-delta.py")
+        md = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(md)
+        return {r["name"] for r in md.parse_manifest(found[-1].read_text())}
+    except Exception:
+        return set()
+
+
 def audit(names, index=INDEX):
-    """Which of these names the library index does not hold.
+    """Which of these names neither the library index nor the newest manifest holds.
 
     Returns None when there is no index to check against, which is different
     from "all present" and is reported that way: a silent search licenses "I did
@@ -85,6 +109,7 @@ def audit(names, index=INDEX):
         have = {r["name"] for r in json.loads(Path(index).read_text())}
     except (OSError, ValueError, KeyError, TypeError):
         return None
+    have |= manifest_names(index)
     return [n for n in names if n not in have]
 
 
@@ -171,9 +196,9 @@ def main():
             raise SystemExit(
                 "not in the library index: %s\n"
                 "A link's names are unchecked strings and a stale one fails at the "
-                "point of use. Two false positives, both from the index being a "
-                "snapshot: anything installed since the last dump, and any name "
-                "computed at run time. Pass --unchecked to send it anyway."
+                "point of use. The index and the newest device manifest were both "
+                "read; the one false positive left is a name computed at run time. "
+                "Pass --unchecked to send it anyway."
                 % ", ".join(missing))
         link = pick_link(args.targets)
         print(link)

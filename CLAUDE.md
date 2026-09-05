@@ -17,7 +17,7 @@ Rank every delivery route by what it costs the person on the other end:
 
 | Cost | Route |
 | --- | --- |
-| Free | Read the corpus. 577 shortcuts and 29,713 actions are on disk, parseable, and answer most questions about how a real library is built. |
+| Free | Read the corpus. Some 600 shortcuts and 30,000 actions are on disk, parseable, and answer most questions about how a real library is built; `library.json`'s `meta` block in web-tools-private has the live count, and `tools/freshness.py` says whether it is current. |
 | Free | Read the public record. The format notes cite what exists and, more usefully, where it stops. |
 | One tap | A `shortcuts://run-shortcut` link to a receiver that already exists. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
@@ -31,7 +31,8 @@ Rank every delivery route by what it costs the person on the other end:
    `OpenWorkflowAction` was in eight shortcuts when it was probed anyway.
    **Search the ToolKit catalog too, and it is the one that answers.**
    `shortcuts-playground-plugin` ships Apple's own metadata as JSON: 2,731
-   identifiers and 2,585 parameter tables against this repo's 774.
+   identifiers and 2,585 parameter tables against the 774 distinct identifiers
+   behind this repo's 810 `actions.json` entries.
    `python3 tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>`.
    It would have supplied every shape that was instead obtained by asking the
    user to configure cards. **Search for a catalog, not just for an answer.**
@@ -206,8 +207,11 @@ used to mean. The device cannot answer the second question either, since a
 rename leaves no record on it.
 
 **So audit the names against the library index whenever a chain gains one, and
-always after stripping identifiers.** `web-tools-private`'s
-`shortcuts/index.json` is one row per shortcut in the last full dump:
+always after stripping identifiers.** `run.py` does this for every link it
+emits, against `index.json` and the newest `manifests/*.txt` together, since
+the manifest is the device's own list and the index is a snapshot of the last
+dump. By hand, `web-tools-private`'s `shortcuts/index.json` is one row per
+shortcut in the last dump:
 
 ```bash
 python3 - <<'EOF'
@@ -226,8 +230,9 @@ EOF
 ```
 
 Two false positives to expect, both from the index being a snapshot: anything
-installed since the last dump, and any name computed at run time, which is a
-token rather than a string and cannot be checked this way at all.
+installed since the last dump, which the newest `manifests/*.txt` settles (read
+both, as `run.py` does), and any name computed at run time, which is a token
+rather than a string and cannot be checked this way at all.
 
 **Audit the chain's own name too, not only its targets.** `Get-ShortcutJson`
 was published on 2026-08-30 over a 4-action predecessor doing nearly the same
