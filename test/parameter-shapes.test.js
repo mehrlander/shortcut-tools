@@ -95,16 +95,39 @@ const runOp = chains.find(([f]) => f === "run-op.json")[1];
 const claude = chains.find(([f]) => f === "claude-session.json")[1];
 const choose = chains.find(([f]) => f === "choose-claude.json")[1];
 
-test("Run-Op fetches the op by name from web-tools, evaluates it synchronously, and spells the token placeholder once", () => {
+test("Run-Op fetches the op through the API that needs no purge, evaluates it synchronously, and spells the token placeholder once", () => {
   const expr = runOp.actions.find((a) => a.id.endsWith("gettext")).p.WFTextActionText.Value.string;
-  assert.ok(expr.includes("https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/"), "the op address");
+  // NOT jsDelivr, and the header is the whole reason. Measured 2026-09-08:
+  // jsDelivr serves a branch ref `public, max-age=604800, s-maxage=43200`, so
+  // an edge holds a replaced op for twelve hours and every publish owed a purge
+  // of the ref path. The contents API serves `private, max-age=60`: no shared
+  // cache exists to go stale, so a merge is the whole publish. The op's own
+  // data fetch has always used this route and has never needed a purge, which
+  // is what made the choice obvious once anyone compared the two.
+  assert.ok(expr.includes("https://api.github.com/repos/mehrlander/web-tools/contents/lib/ops/"), "the op address");
+  assert.ok(!expr.includes("cdn.jsdelivr.net"), "no CDN in the path, or the purge comes back");
   assert.ok(expr.includes("x.open('GET'") && expr.includes(",false)"), "synchronous XMLHttpRequest");
   assert.ok(expr.includes("eval(x.responseText)"), "the file is a value");
-  // jsDelivr serves a branch ref with max-age=604800, and a sync XMLHttpRequest
-  // honours the phone's HTTP cache: without this the op ran stale for seven
-  // days (2026-09-03, two runs of an already-replaced op).
-  assert.ok(expr.includes(".js?_='+Date.now()"), "the op address defeats the client cache");
+  // The envelope this API returns by default base64s the body; the raw media
+  // type is what makes `eval(x.responseText)` the file rather than JSON around
+  // it. Same pair of headers the op sets on its own fetch, which is the reason
+  // this route is known to survive the data: page's null origin at all.
+  assert.ok(expr.includes("'Accept','application/vnd.github.raw'"), "raw, not the contents envelope");
+  assert.ok(expr.includes("x.setRequestHeader('Authorization'"), "authenticated, for the rate limit and for a private repo");
+  // A sync XMLHttpRequest honours the phone's own HTTP cache, which the API
+  // still sets to 60 seconds. Cheap to defeat, and it keeps "current" meaning
+  // current (2026-09-03, two runs of an already-replaced op under the old CDN).
+  assert.ok(expr.includes("&_='+Date.now()"), "the op address defeats the client cache");
   assert.strictEqual(expr.split("🎟️GitHubToken").length - 1, 1, "the placeholder is spelled once in the expression");
+  // BOTH ANCHORS SIT ABOVE THE PLACEHOLDER, deliberately. U+FFFC offsets are
+  // stored as one number, and `🎟️` is two code points but three UTF-16 units,
+  // so an anchor below it lands in a different place depending on which
+  // convention writes the file and which reads it. Keeping the placeholder last
+  // makes the two agree and removes the question.
+  const anchors = Object.keys(runOp.actions.find((a) => a.id.endsWith("gettext"))
+    .p.WFTextActionText.Value.attachmentsByRange).map((k) => Number(k.match(/\{(\d+), 1\}/)[1]));
+  assert.ok(Math.max(...anchors) < expr.indexOf("🎟️GitHubToken"),
+    "an anchor below the placeholder makes code-point and UTF-16 offsets disagree");
   // Get-JsonFromJs calls the injector only inside its no-input demo branch
   // (actions 0 to 5 of the dump); the real path never does. The first device
   // run to reach the op failed at setRequestHeader with a bare TypeError, which
