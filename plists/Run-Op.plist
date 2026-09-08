@@ -130,7 +130,7 @@
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
-							<key>{354, 1}</key>
+							<key>{29, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Base64 Encoded</string>
@@ -141,7 +141,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>(function(){var n='￼';var x=new XMLHttpRequest();x.open('GET','https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/'+n+'.js?_='+Date.now(),false);x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob('￼'))),token:'🎟️GitHubToken'})})()</string>
+						<string>(function(){var n='￼';var i='￼';var t='🎟️GitHubToken';var a=/^(Bearer|token) /i.test(t)?t:'Bearer '+t;var x=new XMLHttpRequest();x.open('GET','https://api.github.com/repos/mehrlander/web-tools/contents/lib/ops/'+n+'.js?ref=main&amp;_='+Date.now(),false);x.setRequestHeader('Authorization',a);x.setRequestHeader('Accept','application/vnd.github.raw');x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob(i))),token:t})})()</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

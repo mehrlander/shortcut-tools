@@ -95,16 +95,39 @@ const runOp = chains.find(([f]) => f === "run-op.json")[1];
 const claude = chains.find(([f]) => f === "claude-session.json")[1];
 const choose = chains.find(([f]) => f === "choose-claude.json")[1];
 
-test("Run-Op fetches the op by name from web-tools, evaluates it synchronously, and spells the token placeholder once", () => {
+test("Run-Op fetches the op through the API that needs no purge, evaluates it synchronously, and spells the token placeholder once", () => {
   const expr = runOp.actions.find((a) => a.id.endsWith("gettext")).p.WFTextActionText.Value.string;
-  assert.ok(expr.includes("https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/"), "the op address");
+  // NOT jsDelivr, and the header is the whole reason. Measured 2026-09-08:
+  // jsDelivr serves a branch ref `public, max-age=604800, s-maxage=43200`, so
+  // an edge holds a replaced op for twelve hours and every publish owed a purge
+  // of the ref path. The contents API serves `private, max-age=60`: no shared
+  // cache exists to go stale, so a merge is the whole publish. The op's own
+  // data fetch has always used this route and has never needed a purge, which
+  // is what made the choice obvious once anyone compared the two.
+  assert.ok(expr.includes("https://api.github.com/repos/mehrlander/web-tools/contents/lib/ops/"), "the op address");
+  assert.ok(!expr.includes("cdn.jsdelivr.net"), "no CDN in the path, or the purge comes back");
   assert.ok(expr.includes("x.open('GET'") && expr.includes(",false)"), "synchronous XMLHttpRequest");
   assert.ok(expr.includes("eval(x.responseText)"), "the file is a value");
-  // jsDelivr serves a branch ref with max-age=604800, and a sync XMLHttpRequest
-  // honours the phone's HTTP cache: without this the op ran stale for seven
-  // days (2026-09-03, two runs of an already-replaced op).
-  assert.ok(expr.includes(".js?_='+Date.now()"), "the op address defeats the client cache");
+  // The envelope this API returns by default base64s the body; the raw media
+  // type is what makes `eval(x.responseText)` the file rather than JSON around
+  // it. Same pair of headers the op sets on its own fetch, which is the reason
+  // this route is known to survive the data: page's null origin at all.
+  assert.ok(expr.includes("'Accept','application/vnd.github.raw'"), "raw, not the contents envelope");
+  assert.ok(expr.includes("x.setRequestHeader('Authorization'"), "authenticated, for the rate limit and for a private repo");
+  // A sync XMLHttpRequest honours the phone's own HTTP cache, which the API
+  // still sets to 60 seconds. Cheap to defeat, and it keeps "current" meaning
+  // current (2026-09-03, two runs of an already-replaced op under the old CDN).
+  assert.ok(expr.includes("&_='+Date.now()"), "the op address defeats the client cache");
   assert.strictEqual(expr.split("🎟️GitHubToken").length - 1, 1, "the placeholder is spelled once in the expression");
+  // BOTH ANCHORS SIT ABOVE THE PLACEHOLDER, deliberately. U+FFFC offsets are
+  // stored as one number, and `🎟️` is two code points but three UTF-16 units,
+  // so an anchor below it lands in a different place depending on which
+  // convention writes the file and which reads it. Keeping the placeholder last
+  // makes the two agree and removes the question.
+  const anchors = Object.keys(runOp.actions.find((a) => a.id.endsWith("gettext"))
+    .p.WFTextActionText.Value.attachmentsByRange).map((k) => Number(k.match(/\{(\d+), 1\}/)[1]));
+  assert.ok(Math.max(...anchors) < expr.indexOf("🎟️GitHubToken"),
+    "an anchor below the placeholder makes code-point and UTF-16 offsets disagree");
   // Get-JsonFromJs calls the injector only inside its no-input demo branch
   // (actions 0 to 5 of the dump); the real path never does. The first device
   // run to reach the op failed at setRequestHeader with a bare TypeError, which
@@ -173,34 +196,83 @@ test("Choose-Claude is a shell: it asks the op for the whole menu and draws it",
     "the rows are `menu`, which the op guarantees is never empty, an ERROR included");
 });
 
-test("Choose-Claude dispatches a row by the map first and by name second, and Out leaves", () => {
-  // The dispatch that lets the op mix sessions and verbs in one list: look the
-  // chosen row up in `urls`; a hit is a page, a miss is a shortcut name. Same
-  // has-value idiom Get-AppRoute uses. Reverse the two arms and every session
-  // row becomes a search for a shortcut named after somebody's ask.
+test("Choose-Claude makes the choice text before anything reads it", () => {
+  // 2026-09-08, and the reason all four rows failed at once. The list handed to
+  // Choose from List is a value out of the op's JSON, not a Split Text output,
+  // so the chosen item is not natively a string. The first card after the
+  // selection was a text condition, which is on every path, and every row
+  // stopped with "Please choose a value for each parameter in this action".
+  //
+  // The corpus says how unusual that was. Across 613 workflows and 33,153
+  // actions, a Choose from List fed from a dictionary value is reused exactly
+  // four times, all as a dictionary key, and NOT ONCE in a text condition or as
+  // a Run Shortcut name. Get Text is the idiom the library does have.
+  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  const i = choose.actions.indexOf(list);
+  const choice = choose.actions[i + 1];
+  assert.ok(choice.id.endsWith("gettext"), "the card after the selection makes it text");
+  assert.strictEqual(choice.p.CustomOutputName, "Choice");
+  assert.strictEqual(choice.p.WFTextActionText.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
+  // And nothing downstream may reach past it to the raw item, which is the half
+  // a shape check would miss: one stray reference reopens the whole failure.
+  const after = JSON.stringify(choose.actions.slice(i + 2));
+  assert.ok(!after.includes(list.p.UUID), "no action after the selection reads the raw chosen item");
+});
+
+
+test("Choose-Claude dispatches by the map, then by name, and a row that reaches neither says so", () => {
+  // The dispatch that lets the op mix pages and verbs in one list: look the
+  // chosen row up in `urls`; a hit is a page, a miss is a shortcut to run by
+  // name. Reverse the two arms and every page row becomes a search for a
+  // shortcut named after somebody's ask.
   const out = choose.actions.find((a) => a.p.WFConditionalActionString === "Out");
   assert.ok(out, "Out is tested explicitly, not left to fail a name lookup");
   assert.strictEqual(out.p.WFCondition, 5, "`is not`, so every other row falls through to the dispatch");
-  // "Out" is web-tools' VERBS, the tail lib/ops/session-menu.js appends to every
-  // result; tools/test/ops.test.mjs pins the other half of this pair. Two repos,
-  // no shared CI, so each side pins the string it names.
-  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
-  assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
+  const choice = choose.actions.find((a) => a.p.CustomOutputName === "Choice");
+  assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, choice.p.UUID);
 
-  const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Url");
+  const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Target");
+  assert.ok(lookup, "the looked-up destination is not named `Url`");
+  // Open URL reads the URL card's own built-in output, which Shortcuts calls
+  // `URL`. A custom name differing from it only in case is one resolver away
+  // from binding the wrong output, and costs nothing to avoid.
+  assert.ok(!choose.actions.some((a) => String(a.p.CustomOutputName || "").toLowerCase() === "url"),
+    "no custom output name collides with the URL card's own, even in case");
   assert.strictEqual(lookup.p.WFDictionaryKey.WFSerializationType, "WFTextTokenString",
     "the chosen row is the key, and a variable key is a token string");
-  assert.strictEqual(lookup.p.WFInput.Value.OutputUUID,
-    choose.actions.find((a) => a.p.CustomOutputName === "Urls").p.UUID);
 
   const i = choose.actions.indexOf(lookup);
-  const [has, url, open, other, run] = choose.actions.slice(i + 1, i + 6);
+  const [has, url, open] = choose.actions.slice(i + 1, i + 4);
   assert.strictEqual(has.p.WFCondition, 100, "has any value");
   assert.strictEqual(has.p.WFInput.Variable.Value.OutputUUID, lookup.p.UUID);
   assert.ok(url.id.endsWith("url") && open.id.endsWith("openurl"), "a hit opens the page");
-  assert.strictEqual(url.p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment",
-    "the URL card takes the looked-up value by attachment, never a string it interpolates itself");
+  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, lookup.p.UUID);
+});
+
+test("a row that is in no map and cannot be a shortcut name is logged, not run", () => {
+  // 2026-09-08: a row absent from `urls` fell straight to Run Shortcut, which
+  // hunted for a shortcut named after a menu row, found none, and stopped with
+  // "Please choose a value for each parameter in this action" against
+  // Run-BackTap, three levels above anything a reader could act on. A SPACE
+  // separates the two kinds of row: a verb is a shortcut name, hyphenated and
+  // space-free; a prose row came from `urls` and should have been found there.
+  const choice = choose.actions.find((a) => a.p.CustomOutputName === "Choice");
+  const space = choose.actions.find((a) => a.p.WFConditionalActionString === " ");
+  assert.ok(space, "the miss arm tests for a space before assuming a shortcut name");
+  assert.strictEqual(space.p.WFCondition, 99, "`contains`");
+  assert.strictEqual(space.p.WFInput.Variable.Value.OutputUUID, choice.p.UUID);
+
+  const j = choose.actions.indexOf(space);
+  const [miss, log, show, other, run] = choose.actions.slice(j + 1, j + 6);
+  assert.strictEqual(miss.p.CustomOutputName, "Miss");
+  // The payload carries both halves of the comparison, because a miss is only
+  // diagnosable by putting the chosen text beside the keys the op published.
+  const anchors = Object.values(miss.p.WFTextActionText.Value.attachmentsByRange).map((v) => v.OutputUUID);
+  const dest = choose.actions.find((a) => a.p.CustomOutputName === "Destinations").p.UUID;
+  assert.deepStrictEqual(anchors.sort(), [choice.p.UUID, dest].sort());
+  assert.strictEqual(log.p.WFWorkflowName, "Log-Repo", "a diagnostic returns itself");
+  assert.ok(show.id.endsWith("showresult"), "and says so on the device, where Log-Repo may not reach the network");
   assert.strictEqual(other.p.WFControlFlowMode, 1);
-  assert.ok(run.id.endsWith("runworkflow"), "a miss runs the row as a shortcut name");
-  assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
+  assert.ok(run.id.endsWith("runworkflow"), "a space-free row is still run by name");
+  assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, choice.p.UUID);
 });

@@ -69,14 +69,14 @@
         "UUID": "52550000-0005-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
-            "string": "(function(){var n='￼';var x=new XMLHttpRequest();x.open('GET','https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/'+n+'.js?_='+Date.now(),false);x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob('￼'))),token:'🎟️GitHubToken'})})()",
+            "string": "(function(){var n='￼';var i='￼';var t='🎟️GitHubToken';var a=/^(Bearer|token) /i.test(t)?t:'Bearer '+t;var x=new XMLHttpRequest();x.open('GET','https://api.github.com/repos/mehrlander/web-tools/contents/lib/ops/'+n+'.js?ref=main&_='+Date.now(),false);x.setRequestHeader('Authorization',a);x.setRequestHeader('Accept','application/vnd.github.raw');x.send();if(x.status!==200)return{caption:'ERROR HTTP '+x.status+' fetching op '+n,rows:[],urls:{},error:'HTTP '+x.status};var f=eval(x.responseText);return f({input:decodeURIComponent(escape(atob(i))),token:t})})()",
             "attachmentsByRange": {
               "{19, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "52550000-0002-4A00-9000-000000000001",
                 "OutputName": "Op"
               },
-              "{354, 1}": {
+              "{29, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "52550000-0004-4A00-9000-000000000001",
                 "OutputName": "Base64 Encoded"
