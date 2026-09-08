@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>WFQuickActionSurfaces</key>
+	<array/>
+	<key>WFWorkflowActions</key>
+	<array>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.comment</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFCommentActionText</key>
+				<string>A hosted https URL, not HTML text, and the difference decides whether this works at all. Show Web View takes either, but HTML text lands at a file:// origin, a different storage partition, where localStorage.ghToken is not; a plain https URL keeps the page on its own origin and the stored token with it. Measured 2026-08-26 by Probe-WebViewCaps, and Dictate already takes this route. One action, because the page does the work.</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.showwebpage</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5109F000-0001-4A00-9000-000000000001</string>
+				<key>WFURL</key>
+				<string>https://mehrlander.github.io/web-tools/pages/shortcut-log.html</string>
+			</dict>
+		</dict>
+	</array>
+	<key>WFWorkflowClientVersion</key>
+	<string>4711</string>
+	<key>WFWorkflowHasOutputFallback</key>
+	<false/>
+	<key>WFWorkflowHasShortcutInputVariables</key>
+	<false/>
+	<key>WFWorkflowIcon</key>
+	<dict>
+		<key>WFWorkflowIconGlyphNumber</key>
+		<integer>61440</integer>
+		<key>WFWorkflowIconStartColor</key>
+		<integer>-314141441</integer>
+	</dict>
+	<key>WFWorkflowImportQuestions</key>
+	<array/>
+	<key>WFWorkflowInputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowMinimumClientVersion</key>
+	<integer>900</integer>
+	<key>WFWorkflowMinimumClientVersionString</key>
+	<string>900</string>
+	<key>WFWorkflowOutputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowTypes</key>
+	<array>
+		<string>WFWorkflowTypeShowInSearch</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,163 @@
+{
+ "name": "Read-Shots",
+ "label": "Read-Shots: OCR a set of screenshots and commit the text to the repo log (11 actions)",
+ "actions": [
+  {
+   "id": "is.workflow.actions.selectphoto",
+   "p": {
+    "UUID": "B77B0001-0000-4A00-9000-000000000001",
+    "WFSelectMultiplePhotos": true
+   }
+  },
+  {
+   "id": "is.workflow.actions.count",
+   "p": {
+    "UUID": "B77B0002-0000-4A00-9000-000000000001",
+    "WFCountType": "Items",
+    "Input": {
+     "Value": {
+      "OutputName": "Photos",
+      "OutputUUID": "B77B0001-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "B77B9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 0,
+    "WFInput": {
+     "Value": {
+      "OutputName": "Photos",
+      "OutputUUID": "B77B0001-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.extracttextfromimage",
+   "p": {
+    "UUID": "B77B0004-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Shot Text",
+    "WFImage": {
+     "Value": {
+      "Type": "Variable",
+      "VariableName": "Repeat Item"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.appendvariable",
+   "p": {
+    "WFVariableName": "Chunks",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Shot Text",
+      "OutputUUID": "B77B0004-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.repeat.each",
+   "p": {
+    "GroupingIdentifier": "B77B9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 2
+   }
+  },
+  {
+   "id": "is.workflow.actions.getvariable",
+   "p": {
+    "UUID": "B77B0007-0000-4A00-9000-000000000001",
+    "WFVariable": {
+     "Value": {
+      "Type": "Variable",
+      "VariableName": "Chunks"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.text.combine",
+   "p": {
+    "UUID": "B77B0008-0000-4A00-9000-000000000001",
+    "WFTextSeparator": "New Lines",
+    "text": {
+     "Value": {
+      "OutputName": "Variable",
+      "OutputUUID": "B77B0007-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "B77B0009-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Report",
+    "WFTextActionText": {
+     "Value": {
+      "string": "shots name=Read-Shots build=#BUILD# count=￼\n￼",
+      "attachmentsByRange": {
+       "{42, 1}": {
+        "OutputName": "Count",
+        "OutputUUID": "B77B0002-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       },
+       "{44, 1}": {
+        "OutputName": "Combined Text",
+        "OutputUUID": "B77B0008-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "WFWorkflowName": "Log-Repo",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Report",
+      "OutputUUID": "B77B0009-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.output",
+   "p": {
+    "WFOutput": {
+     "Value": {
+      "string": "￼",
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Report",
+        "OutputUUID": "B77B0009-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      }
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  }
+ ]
+}

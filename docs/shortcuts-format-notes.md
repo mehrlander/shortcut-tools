@@ -252,6 +252,62 @@ The later ` ```\s* ` pass covers the same ground, so the effect is invisible.
 Flagged rather than fixed, since it is not this repo's shortcut, and since the
 note above about vestigial-looking actions counsels confirming on device first.
 
+## Parameter shapes, by census
+
+*Measured 2026-09-03, over every action in the fifteen dumps, after a chain
+handed `Inject-🎟️GitHubToken` an empty input and the injector ran its demo.*
+
+A text field and a variable slot serialise differently, and the difference is
+invisible in the editor: a value in the wrong form renders as an empty field
+and the action yields nothing. Where the corpus is unanimous, its form is the
+rule, held by [`test/parameter-shapes.test.js`](../test/parameter-shapes.test.js):
+
+| action | field | token string | literal | absent | attachment |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Replace Text | `WFInput` | 600 | 8 | 0 | **0** |
+| Replace Text | `WFReplaceTextReplace` | 88 | 374 | 146 | **0** |
+| Get Dictionary Value | `WFDictionaryKey` | 276 | 581 | 54 | **0** |
+| Run Shortcut | `WFInput` | **0** | 0 | 175 | 955 |
+
+And one that is a type rather than a serialisation: an **If** whose text
+condition reads a Get Dictionary Value output carries a `WFStringContentItem`
+coercion on the variable in all 158 corpus instances. Without it the editor
+shows the condition in red, since a dictionary value offers only has-value
+conditions, and the run stops on the same "choose a value for each parameter"
+message. Reported from the editor on 2026-09-03, build f53dcbc.
+
+The Run Shortcut row was learned the same day, one arm later: `Claude-Session`
+build 88b5f49 handed `Log-Repo` a token string in its error arm, the one path no
+headless run exercised, and the phone stopped on "Please choose a value for each
+parameter in this action" the first time that arm ran. Build the text with Get
+Text, then hand it over by attachment, which is what `Library-Fetch` does.
+
+**A synchronous request honours the HTTP cache.** jsDelivr serves a branch ref
+with `max-age=604800`, so an op fetched once by `Run-Op` was the op for seven
+days whatever main said; two runs on 2026-09-03 executed a copy that had already
+been replaced and purged at the CDN. The address carries `?_=` and the time now.
+The CDN's own cache still wants the purge, on the `@main` path rather than the
+bare one, which is the form that refreshed the alias.
+
+**`Get-JsonFromJs` injects only in its demo.** Its call to `Inject-🎟️GitHubToken`
+sits inside the no-input branch (actions 0 to 5); given real input it evaluates
+the text as handed. A caller wanting the token substitutes first, as
+`gh-recent-branches-picker` and now `Run-Op` do. The tell on device is a bare
+`TypeError` at `setRequestHeader`: WebIDL converts a header value to a
+ByteString and throws TypeError for any code unit above 255, which the literal
+emoji placeholder is. Measured 2026-09-03 by the op's own stage marker.
+
+The failure this explains: `Claude-Session` (2026-09-03, build 94ef81b) gave
+Replace Text an attachment for both fields, the action produced nothing, and
+the injector's first branch (`WFCondition` 101, no input) built its demo page
+and opened it through `Show-Html`. What appeared on the phone, a `data:` page
+of GitHub API JSON with Repo, Commit and Branch tabs and a jsDelivr connection
+prompt, was that demo, and the chain then coerced the demo's text and offered
+its button labels as a menu. The shape had been copied from
+`gh-recent-branches-picker`, which the workflows README described as "the only
+chain still carrying inferred parameter shapes"; it is corrected in the same
+commit.
+
 ## The token-injection pattern
 
 *Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
@@ -312,6 +368,118 @@ Three constraints follow, and the first is the trap:
 3. **The wrapper's own comments are not free.** They ship inside the link and cost
    about 1,800 characters, more than the compression saves on a small page, so
    `show.py` strips them at build time.
+
+## Two ways to put HTML on screen, and only one of them keeps you in the shortcut
+
+`Open URL` on a `data:text/html` URL leaves the app: it is a real Safari
+navigation, measured below. `Show Web View`
+(`is.workflow.actions.showwebpage`, a Safari app action) raises a sheet over
+Shortcuts instead, and the run continues behind it. That difference is the
+whole reason to care, since a shortcut that dumps its output into Safari has
+ended its own flow and left a tab behind.
+
+It is not a fringe action: **32 shortcuts in the library use it**, and one of
+them, `Show-WebView`, is already the generic receiver. Three of its seven
+actions are the entire recipe, the other four being a self-demo prologue:
+
+```
+getrichtextfromhtml   (Shortcut Input)
+as file com.apple.webarchive
+showwebpage
+```
+
+`WFURL` is the only parameter and it accepts four different things across the
+library, which is worth knowing before assuming one shape is required: rich
+text from HTML (`Show-WebView`, `Show-Table`, `JSON Viewer`, `Popup Helper`,
+and four more), the downloaded contents of a `data:text/html;base64` URL
+(`Open-DataUrlHelper`, `Pack-ToUrlPage`), a named or typed file
+(`Get-ShortcutSource`, `ShortcutML`), or a plain `https` URL (`Open-LiveCodes`,
+`Emmet`).
+
+**The sheet runs the page's JavaScript. Confirmed on device 2026-08-26** by
+`Probe-WebView`, which hands `Show-WebView` a page whose only line reads
+`STATIC` until its own script rewrites it to `SCRIPT RAN`. It read `SCRIPT
+RAN`. That was the doubtful part: rich text is an attributed string, so the
+`getrichtextfromhtml` step looked like it should strip a `<script>`, and it
+does not.
+
+**And it reaches the network. Confirmed the same day** by `Probe-WebViewNet`,
+whose page fetches `api.github.com/zen` and reports what came back. It returned
+`NETWORK OK: Non-blocking is better than blocking.`, which is that endpoint's
+real body, so the request completed rather than merely being attempted.
+
+So the sheet is a full browsing context: script runs, `fetch` resolves. The
+pages here that inflate a gzip payload, substitute a token and call an API are
+candidates for it rather than being ruled out, and the four closing actions of
+`Show-Html` (base64, build the data URL, make it a URL, Open URL) could become
+one `Run Shortcut` on `Show-WebView`.
+
+**What else the sheet offers, measured 2026-08-26** by `Probe-WebViewCaps`:
+
+| | | |
+| --- | --- | --- |
+| `origin` | `file://` | see below, this is the one with consequences |
+| `secure` | Y | a secure context despite the origin, which is why the rest is offered at all |
+| `mic` | Y | `getUserMedia` opens a stream, so `Dictate` can move here |
+| `speech` | Y | `SpeechRecognition` is present |
+| `gz` | Y | `DecompressionStream`, so a `#gz=` payload inflates |
+| `cdn` | Y | a jsDelivr `<script src>` loads, which `fetch` working does not imply |
+| `ls` | Y | localStorage reads and writes, but see below |
+
+**The `file://` origin splits the toss routes.** localStorage works, but at a
+`file://` origin, which is a different storage partition from Safari's. The
+GitHub token that `#gh=` and `#stage=` addresses read is browser-local *and*
+origin-local, so it is not there. A `#gz=` address carries its payload in the
+fragment and needs no token, so it works; a `#gh=` or `#stage=` address will
+fail. This is the same caveat the conventions already state for an in-app
+browser, now measured for the sheet.
+
+Worth noting against expectation: the network check above succeeded from that
+`file://` origin, which is not how a browser usually treats a cross-origin
+`fetch` from one.
+
+**Clipboard writes are untested here, not broken.** Both paths failed in the
+probe, `navigator.clipboard.writeText` with `NotAllowedError` and
+`execCommand("copy")` returning false, because both ran automatically on load
+and iOS gates clipboard writes behind a user gesture. The estate's working
+pages copy from a button tap; see the `ios-clipboard` skill, which also records
+that `navigator.clipboard` is undefined in data-URL contexts and that the
+textarea plus `execCommand` is the path that covers both.
+
+Two things still unmeasured. Whether a `shortcuts://` link fires from inside
+the sheet, which would let a page return its own results. And what the sheet
+costs in exchange: a Safari tab can be bookmarked, shared and returned to,
+while a sheet is gone when it is dismissed.
+
+**A hosted page skips the whole `file://` problem, and costs one action.**
+`showwebpage` takes a plain `https` string in `WFURL` with no wrapper at all,
+which the corpus already showed in `Auto Message` and `Routine search`. The
+sheet then loads that address directly, so the page keeps its own origin and
+with it the localStorage partition the stored GitHub token lives in.
+
+**Wrong 2026-08-29 → the sentence above:** keeping the origin is right; keeping
+the *token* is not, and the two were conflated. A storage partition is keyed by
+origin **within a data store**, and the data store is per-app: the sheet is a
+`WKWebView` inside Shortcuts, with its own store, so a token saved in Safari is
+not there however correct the origin is. Reported from the device on 2026-08-29,
+when a hosted page opened in the sheet and asked for a token.
+
+So the hosted route fixes what `file://` broke, which is the origin, and does
+not deliver Safari's token. What it should buy instead is a token entered **once
+per app**, and whether the sheet's store survives dismissal is the open
+measurement: enter a token, dismiss, run the receiver again. If it persists, the
+cost is one entry per app rather than one per run. So the
+split is not sheet-versus-Safari, it is which of the two sheet inputs a page
+arrives on: HTML text lands at `file://` and loses the token, while a hosted URL
+does not. `Dictate` is one action on that route, and the back tap's
+empty-clipboard branch inlines the same action rather than calling out to it.
+
+**The sheet sibling was already installed, so nothing was built for it.**
+`Show-Html` (data URL, Open URL, a Safari tab) and `Show-WebView` (rich text,
+webarchive, `showwebpage`) are the two receivers, and both have been on the
+device throughout. A caller moves to the sheet by naming the other one. The
+back tap's pasted-HTML branch was switched that way on 2026-08-26; `Show-Html`
+stays as it is, for pages that need Safari's storage partition.
 
 Rendering the result is a real navigation, not a webview: a `data:text/html`
 URL carrying the shell inflates, substitutes, and runs the page's own script,
@@ -667,88 +835,6 @@ The operand rides one of four keys and reading only the first drops the rest
 silently: `WFConditionalActionString`, `WFNumberValue`, `WFAnotherNumber`, and
 `WFMeasurement`, the last a `{Magnitude, Unit}` pair.
 
-## The device can gzip, and it is one action
-
-*Read 2026-08-13 from `Show-HtmlViaZip`, eight variants of one experiment.*
-
-`is.workflow.actions.makezip` takes **`WFArchiveFormat`**, and `"gz"` is a valid
-value beside the default zip. So compression is available on device, in one
-action, with no tool and no library:
-
-```
-Make Archive   WFArchiveFormat: "gz",  WFZIPName: ""
-Base64 Encode  WFBase64LineBreakMode: "None"
-```
-
-That is worth knowing because this repo compresses in Python
-([`tools/show.py`](../tools/show.py)) and had no record that the device could do
-it at all. The two solve different problems and both are right: `show.py`
-compresses so the **link** is short, since a link is transcribed and a long one
-is the failure this repo keeps hitting. `makezip` compresses so the **data URL**
-is short, for a page assembled on device where no link exists to shorten.
-
-The distilled variant is five actions: `makezip` → `base64encode` →
-`dictionary` → `gettext` (a shell holding the base64) → hand to `Show-Html`.
-Structurally identical to `show.py` plus [`tools/gz-shell.html`](../tools/gz-shell.html),
-arrived at independently, which is some evidence the shape is forced rather than
-chosen.
-
-One difference is not cosmetic. That shell inflates with **pako from jsDelivr**,
-so the page fetches a CDN script before it can render itself. `gz-shell.html`
-uses `DecompressionStream('gzip')`, which is native, needs no network, and
-cannot fail because a CDN is slow or a captive portal is in the way. A
-self-extracting page that depends on the network to extract itself gives up the
-property that made it worth making. Prefer the native stream.
-
-## Every verb demos itself, and it shows up as a self-call
-
-*Measured 2026-08-13 across 579 shortcuts.*
-
-**55 shortcuts call themselves**, and almost all for one reason. The opening
-action is `If Shortcut Input <WFCondition: 101>`, and the branch builds a sample
-and runs the shortcut on it:
-
-```
-If  Shortcut Input  <101>
-  Text        <a sample payload>
-  Run Shortcut  <self>       WFWorkflow: {"isSelf": true, …}
-  Run Shortcut  Show-Html            (or Stop and Output)
-  Stop and Output
-End If
-<the real body>
-```
-
-Run it from the Shortcuts app with nothing selected and it demonstrates itself;
-run it from another shortcut and the branch is skipped. `Inject-🎟️GitHubToken`,
-`Get-FromJs`, `Fetch-Data`, `Combine-JsonList`, `Use-Shortcut`, and `Show-Loop`
-all open this way.
-
-That explains two things the index reports. A self-call is a demo, not
-recursion, so `calls: Run-List` on `Run-List` is noise. And a shortcut appearing
-under **called by nothing** is often an entry point precisely because it is
-runnable alone.
-
-`isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
-Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
-without it.
-
-### Condition codes seen in the corpus
-
-Three are pinned by the strings beside them. Two are not.
-
-| Code | Meaning | Uses |
-| ---: | --- | ---: |
-| 4 | `is` | 326 |
-| 101 | a value test, no string, gates absent-input branches | 132 |
-| 100 | the same shape as 101 | 130 |
-| 99 | `contains` | 83 |
-| 8 | `begins with` | 68 |
-
-`100` and `101` both take no `WFConditionalActionString` and both appear on
-branches handling missing input, so which is `has any value` and which is its
-negation is not settled by reading alone. Do not guess: copy the pair from a
-working export, or set it in the editor and read it back.
-
 ## The packed route inverts the glyph rule
 
 *Observed 2026-08-10.*
@@ -832,8 +918,212 @@ expression, prefer repeating a cheap accessor over binding it to a variable, and
 avoid object-to-array conversions. Code written this way looks worse than normal
 JavaScript, on purpose.
 
+**The mechanism argues for a route this file has been reading as a prohibition.**
+The cost is in the SOURCE, not in the work: a script that parses in one line
+stays cheap however much that line goes on to do. So the discipline above is the
+second-best answer to the cliff, and the best one is to stop sending source at
+all, keeping the heavy code somewhere that has already parsed it and sending a
+call. A page that has pulled its libraries off a CDN is that somewhere, and this
+action is how a shortcut talks to one. See
+[The browser is a coprocessor](#the-browser-is-a-coprocessor-not-only-a-destination),
+which is the same action read the other way round.
+
 Sources: [Apple Shortcuts JavaScript performance fast-path discovery](https://claude.ai/chat/1742ec65-706f-4515-babc-d12c37cd9468)
 (2025-09-14) and the same-day Gemini session `gemini-session/134`.
+
+## The browser is a coprocessor, not only a destination
+
+*Read out of the corpus 2026-08-29. Every card quoted below is on this device.*
+
+Every render route this estate has built sends a page **out**. `Show-Html`
+navigates Safari to a `data:` URL, `Show-WebView` raises a sheet, `show.py` gzips
+a page into a link. In all three the shortcut's flow ends where the page begins,
+which is why the return channel needed `Log-Repo` and why a diagnostic used to
+end in a question.
+
+`Run JavaScript on Web Page` runs the other way. It executes inside a running
+shortcut and hands its value back through `completion()`, so a page is something
+a shortcut **calls**. The last full dump has 26 such cards across 4 shortcuts, 20
+of them in `Get-Nice` alone, which is authored, live, and called by nothing;
+across all 15 dumps, 9 shortcuts have used it.
+
+Three properties, each from a real card rather than inferred:
+
+**`completion()` returns structure, not only text.** `Get-Nice` ends a card with
+`completion(window.siriData)`, where `siriData` is an array of objects, and the
+value arrives as a list the next action can index.
+
+**The page is a heap between calls.** Three separate cards in one run:
+
+| Card | Script |
+| --- | --- |
+| A | `const tally = {}; …; window.siriData = [tally]; completion("Data stored")` |
+| B | `window.siriData[1] = {...window.siriData[0]}; …; completion("Data stored")` |
+| C | `completion( window.siriData )` |
+
+B reads what A left behind, and nothing carries the value between them except the
+page. `Get-Nice` also puts nine of these calls inside one `Repeat` block, walking
+the DOM and offering each level's children as a menu, so repeated calls against
+one page are the working pattern rather than a curiosity.
+
+**The script itself can be computed.** `WFJavaScript` accepts a
+`WFTextTokenString`, so a variable interpolates into the source. `Utilities Menu`
+embeds one at offset 164 of a longer script; `AI Run JavaScript On Page` goes
+further and makes the **whole** parameter one attachment, `{"{0, 1}": {"Type":
+"Variable", "VariableName": "FinalCode"}}` over a bare `￼`. What runs is
+therefore decided at run time.
+
+**What the input slot accepts** is the part still narrow. Every card in the
+corpus passes a Safari page: of 32 cards across 9 shortcuts, 28 take
+`ExtensionInput` from the share sheet, one a `Variable` named `Safari Web Page`,
+one an `ActionOutput` in `WebTools`, and two carry no input at all.
+**It does not take a tab entity, measured on device 2026-08-28** by
+[`probe-tab-js`](../workflows/probe-tab-js.json). Shortcuts refuses with a type
+error rather than a silence: *"Run JavaScript on Web Page failed because
+Shortcuts couldn't convert from Tab to Safari Web Page."* So the slot wants a
+`WFSafariWebPageContentItem` and there is no converter from the App Intents
+entity, which closes the cheap entry and leaves the share sheet as the only way
+to hand this action a live page.
+
+**`Find Tabs` itself works, and that half is worth keeping.**
+`com.apple.mobilesafari.TabEntity` is used by nothing in 577 shortcuts, and the
+same run counted 190 open tabs and logged them, so the entity query and its
+`Count` are both good. Its card shape is the one Safari's own `BookmarkEntity`
+carries, `AppIntentIdentifier` naming the entity and an empty
+`WFContentItemFilter` meaning no filter. What is missing is a consumer: nothing
+measured here turns a Tab into anything another action will take.
+
+The probe returned itself exactly as built. Its two `Log-Repo` calls are ordered
+so the first lands before the risky card, and three runs each left `tabs=190` in
+`shortcuts/log/` while the JavaScript card failed behind them. A probe that
+fails halfway should still be readable from the repo, and this one was.
+
+The entity-slot question from [the library-management
+section](#the-library-management-actions-address-an-app-intents-entity-not-a-name)
+was left to "fold into the next probe that has a real reason to exist." This is
+that probe, and it still does not carry it, for a reason rather than an
+oversight: answering that one means opening a shortcut in the editor, which ends
+the run and leaves the reader to report what happened. It would turn a probe that
+returns itself into one that asks.
+
+### What it is for
+
+Load the libraries into a page once, from the CDN, and every call after that is
+one line, so the parse cliff never applies:
+
+```js
+completion(bench.call("md", "<base64>"))
+```
+
+web-tools' `pages/bench.html` is that page and
+no chain drives it any more; `bench-call` was withdrawn with the rest of the
+bench chains on 2026-08-29, for the reason under **Withdrawn** below. It would
+have to be reached at its own hosted address, and the 🥏 toss is not a substitute
+for one: `toss-render.html` mounts a page in an **iframe** on a `blob:` URL, so
+the script this action sends runs in the top document, where `bench` does not
+exist and the frame is cross-origin anyway. Input
+crosses as base64 because the payload is interpolated into a string literal,
+where a quote or a newline in the text would end it early; the estate already
+base64s on this boundary, in `Log-Repo`.
+
+The gain is not markdown rendering. It is that a shortcut acquires every library
+on the CDN, with the network, with state that survives between calls, and with
+nothing to install. `TransformTextWithJavaScriptIntent` serves 23 cards in this
+corpus today, and it is a paid third-party app doing strictly less.
+
+**The share sheet is the cost, and there may be a route with none.** With the tab
+entity refused, that route needs the user already on the bench page. The
+`data:` URL route above needs no page at all: `js-data-url` runs a script that
+way and hands the value back in five actions, so a page that fetches its library
+before writing its answer would be the same coprocessor at one tap from
+anywhere. Everything in it has to be **synchronous**, since the coercion captures
+rendered text at a moment nobody has written down and an async resolution is lost
+with no error, which is what a blocking `XMLHttpRequest` and an indirect `eval`
+buy. `probe-inline-bench` was that page under one tap, reporting the fetch, the eval,
+the library's output and the elapsed cost on four lines. It is withdrawn; its
+question is `probe-coercion`'s `e` leg now.
+
+**It came back empty on device 2026-08-28, and that said nothing about the
+coercion.** The shortcut had no page in it. `plist.py` did not resolve
+`{"$file": path}`, so the Text action carried the literal dictionary and the
+`data:` URL was built from a base64 of that. `pack.py` had resolved the directive
+since it was introduced; the plist mirror never did, and nothing errored at any
+point. The shortcut generated, imported, ran, and returned an empty string.
+
+**Two mirrors of one chain set have to resolve a directive the same way, or the
+cheaper one lies.** This repo already learned that on 2026-08-27, when the suite
+and `--check` disagreed about orphans, and wrote down that where two things state
+one invariant the weaker one is a wrong answer rather than a gap. The same shape
+returned in a different place two days later. `plist.py` now imports `resolve`
+from `pack` rather than carrying a second copy, and `test/plist.test.js` fails on
+any plist shipping a `$file` key.
+
+**The probe was also built wrong, independently of that.** It was shaped to
+separate four failures and separated none, because every one of them collapses
+into a page that renders nothing, which is why a missing page could pass for a
+runtime answer at all. A probe against a stage that can kill the run needs a
+**control that runs first and logs first**.
+[`probe-coercion`](../workflows/probe-coercion.json) is the replacement: four
+legs, each committing before the next begins, over static HTML, a script that
+rewrites its own line, a real `https` URL, and the sync/async pair. Read the first
+empty line and everything above it worked.
+
+### The coercion route, settled on device 2026-08-28
+
+`probe-coercion` ran all five legs. Every one passed, which closes a question
+[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) was built for on 2026-08-10
+and never ran, and makes the coercion the cheapest route in this file.
+
+| Leg | Input | Result |
+| --- | --- | --- |
+| `a` | static HTML | `STATIC OK` |
+| `b` | a script that rewrites its own line | `SCRIPT OK` |
+| `c` | `https://api.github.com/zen` | the page source, wrapper and all |
+| `d` | sync and async requests | `sync: 200, 26 bytes` / `async: 26 bytes` |
+| `e` | a page that fetches a library and uses it | 40,214 bytes, `eval: ok`, markdown rendered, 738 ms |
+
+**The coercion waits for asynchronous work, so the standing caution is retired.**
+This file has said since 2026-08-10 to write the request synchronously, because
+an `await` that resolved late would yield an empty result with no error. Leg `d`
+returned both lines. Prefer synchronous anyway where it costs nothing, since it
+keeps the page one straight line, but it is a preference now and not a
+correctness rule.
+
+**Leg `e` is the whole coprocessor, without a live page.** A `data:` URL document
+pulled 40 KB of `marked` off jsDelivr with a blocking `XMLHttpRequest`, evaluated
+it with an indirect `eval`, rendered markdown and handed the result back into the
+shortcut, in 738 ms. No hosted page, no Safari tab, no share sheet, no
+third-party app. That is strictly better than the `Run JavaScript on Web Page`
+route this section opened with, which needs a live Safari page and has no way to
+get one but the share sheet.
+
+[`pages/bench-run.html`](../pages/bench-run.html) is the page, fetching one
+library only when the op needs it, and `test/bench-page.test.js` runs its real
+script in a `vm` against a stubbed document and XHR, the way `show.test.js` runs
+the shell's.
+
+**Withdrawn 2026-08-29: the `Bench` receiver, `Bench-Call` and `Probe-Bench`.**
+The route is measured and the page is tested; the chains around them were not
+worth keeping. `Bench` returned an empty string on device and never worked, and
+all three rebuilt, worse, machinery this library already had: `Get-FileContext`
+types and coerces an input before encoding it, `Get-FileInfo` produces the
+descriptor everything dispatches on, and `Run-Choice` picks a verb and applies
+it. A page that works with no chain is a better record than three chains that
+duplicate the library and one of which is broken.
+
+**Leg `c` carries a trap worth keeping.** Coercing a plain-text `https` URL
+returns Safari's generated document, `<html><head><meta name="color-scheme">…`
+around a `<pre style="word-wrap: break-word; white-space: pre-wrap">`. So the
+coercion yields page **source**, not rendered text, and the wrapper Safari
+supplies is `pre-wrap`: exactly the soft-wrap hazard this file warns about, on a
+document nobody here authored. A page you write should set `white-space: pre`
+itself, which `bench-run.html` does.
+
+Worth noting against this whole section: `Run JavaScript on Web Page B1`, in the
+corpus, already falls back exactly this way. Handed something that is not a
+Safari page, it assembles the script into a `data:text/html` URL, coerces it to
+rich text, and URL-decodes the result out of the body. The pattern being reached
+for here is one an imported shortcut settled on first.
 
 ## Some actions are load-bearing without appearing in the data flow
 
@@ -882,16 +1172,28 @@ than a local file, because the origin differs:
   `Access-Control-Allow-Origin: *`, which the GitHub API does. The opaque origin
   does not block it. Sending credentials as an `Authorization` header is fine;
   `credentials: 'include'` would not be.
+
+  **Stale 2026-08-29 (Chromium half only) → the device result below:** this no
+  longer reproduces in the sandbox's Chromium, where a `data:` URL document gets
+  no network at all. Against a local server sending
+  `Access-Control-Allow-Origin: *`, synchronous XHR, asynchronous XHR and `fetch`
+  all failed from a `data:` origin, while the same page on an `http` origin got
+  all three. So it is the opaque origin rather than CORS or the endpoint, and it
+  is not specific to the synchronous form. Whether Chromium changed or the
+  original measurement differed in setup is not established. **The device half is
+  untouched:** WebKit ran both requests on 2026-08-11 and returned real bytes, so
+  the split is browser-to-browser and the device is the authority for this route.
 - **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
   DOM before anything downstream can read the page. This is the reason to prefer
   the deprecated synchronous form here: the behavior it is deprecated for is
   exactly the guarantee this route needs.
 
-*Unconfirmed:* whether an **async** resolution lands before the coercion reads
-the page. If it does not, an `await` yields an empty result with no error, which
-is the worst failure shape available. Until someone runs
-[`sync-xhr-probe`](../workflows/sync-xhr-probe.json) on a device, which reports
-both paths on separate lines from one tap, write the request synchronously.
+*Settled 2026-08-28, and the answer is yes.* `probe-coercion`'s `d` leg reported
+`sync: 200, 26 bytes` and `async: 26 bytes`, so the coercion waits for an
+asynchronous resolution as well as a blocking one. Prefer the synchronous form
+where it costs nothing, since it keeps a page one straight line with no capture
+moment to reason about, but it is no longer a correctness requirement. See
+[The coercion route](#the-coercion-route-settled-on-device-2026-08-28).
 
 The same page was run on device 2026-08-11 through `Run-Html`, and reported both
 paths resolved. **That is not an answer to the question above**, and the reason
@@ -910,6 +1212,199 @@ unconfirmed, and not wrapping costs nothing.
 
 The performance cliff above does not apply here. That is the `Run JavaScript on
 Web Page` action's interpreter; this route is a real WebKit render.
+
+## A third-party app intent is not a receiver you can build blind
+
+`ai.x.GrokApp.AskGrok` was written up here as a four-action receiver on
+2026-08-27: Shortcut Input to text, the intent, the reply to the clipboard, the
+reply shown. It installed and it did not work on device. The cause was not
+diagnosed and the chain was withdrawn the same day rather than debugged, so this
+records only where it stopped.
+
+**What is worth carrying forward is the shape of the gap, since it will recur
+with any third-party intent.** The corpus answers Apple's own actions well and
+answers this class hardly at all: `AskGrok` appears in no shortcut of the 605,
+so its parameter names, whether `ShowWhenRun: false` suppresses the app or the
+result, and whether it returns output at all were all guesses dressed as a
+build. Nothing in this repo could have checked them, and the ToolKit catalog
+carries Apple's metadata rather than a third party's. The cheap route, unspent
+here, is one card configured in the app and read back out of a dump: one tap of
+the expensive kind, against a receiver assembled from inference.
+
+## A list handed to Run Shortcut can arrive text-coerced
+
+*Measured on device 2026-08-29.*
+
+`Run-Pick` was split in two so its payload and verb list could both be
+parameters: a caller built a two-item list, `[payload, verbs]`, and passed it
+through `Run Shortcut`. On the other side, `Get Item 1 from Input` and `Get Item
+2 from Input` were supposed to take them apart.
+
+**They did not.** The menu came up with five rows instead of four, the first
+being `Clipboard Aug 29, 2026 at 8.55 AM`. The list had arrived as one
+newline-joined string, so the item grabs returned the whole blob and splitting it
+produced the payload's own line plus the four names. The payload became a menu
+choice.
+
+This is the coercion trap this file already records for base64, at a different
+boundary: a value crossing into another shortcut can be flattened to text, joined
+by newlines, with nothing raising an error. `Run-Choice` does not hit it because
+`Show-Loop` builds the list and consumes it inside one shortcut.
+
+**So a shortcut boundary is not a safe place to carry structure.** Where two
+arguments are needed, either keep the construction and the consumption in one
+shortcut, or make the second argument bounded enough to ride a delimiter, or pass
+one argument and let the other come from somewhere the callee reads itself.
+`Run-Pick` now takes the last route: the verb list is the input and the payload is
+the clipboard, which is one shortcut and no boundary at all.
+
+*Unmeasured, and the reason this is stated as a hazard rather than a rule:* which
+hand-offs preserve a list and which flatten it. Only that this one flattened.
+
+## An inline payload outlives the path it loads from
+
+*Measured 2026-08-30.* `Show-Repo` is two actions: 14,451 characters of HTML
+titled "GH Browse" pasted into a Text action, handed to `Show-Html`. That page
+loads three things from jsDelivr, and one of them is
+`gh/mehrlander/web-tools/gh-fetch.js`, which **404s**. The file moved into
+`lib/` on 2026-08-25 and the pasted copy could not follow it.
+
+A fresh device dump matched the 2026-08-18 corpus copy byte for byte, so this
+was not a stale reading: the shortcut had been opening a page whose script never
+loaded, and nothing said so, because a page that renders empty looks like a page.
+
+**This is the failure [`idioms.md`](idioms.md) predicts** in "Payloads live in
+`pages/`, not pasted into the chain". A hosted page follows its repository when a
+file moves; 14 KB pasted into a Text action on a phone does not, and no check
+here can see inside it. Retired rather than repaired, on the owner's call.
+
+## A vCard menu hides its URLs from a search for them
+
+*Measured 2026-08-30, after guessing wrong at something the corpus held.*
+
+`Fav-Settings` carries 14 settings pages as a vCard, the idiom
+[`idioms.md`](idioms.md) calls "rich menus smuggle data through contacts": a
+`TEL;TYPE=<url>:<label>` line per entry, coerced to a contact, offered as Choose
+from List, and the chosen row's Label opened as a URL.
+
+**The vCard escapes the colon**, so those entries read `TEL;TYPE=prefs\:root=…`.
+A scan for `prefs:` across the corpus finds the 130 URLs in `Settings Menu` and
+its siblings and **none** of these, which is how a search over 636 shortcuts
+returned a confident "Back Tap is not in the library" while the exact key sat in
+a shortcut named for it.
+
+The keys, since they are worth having written down:
+
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+
+Back Tap is not `TOUCH/Back%20Tap`, which is what the sibling
+`DISPLAY_AND_TEXT` suggests and what was guessed. The Touch page is
+`TOUCH_REACHABILITY_TITLE` and the leaf has no space. The AssistiveTouch key
+reaches that page; the long-press action customisation below it is a further
+level with no key recorded yet.
+
+**Why these two matter operationally rather than as trivia:** re-installing a
+shortcut breaks whatever Back Tap or the AssistiveTouch button had bound to it,
+so a handover that replaces a bound shortcut has to carry the settings link
+beside the install link. That rule lives in `CLAUDE.md`, next to the save-over
+offer it qualifies.
+
+**The rule this earns:** a corpus search for a URL, an identifier or a name must
+allow for escaping, because a payload built as text can carry any of them in a
+form the plain string never matches. Search for the surrounding structure too,
+here `TEL;TYPE=`, not only the value hoped for.
+
+## A run-shortcut link makes Shortcuts the current app
+
+*Observed on device 2026-08-30.*
+
+Tapping a `shortcuts://run-shortcut` URL brings the Shortcuts app to the
+foreground before the shortcut runs, so `Get Current App` reports **Shortcuts**
+no matter where the tap came from. Anything routing on the current app is
+therefore untestable by link: it will take the Shortcuts branch every time, and
+a run that lands there proves the lookup works and proves nothing about which
+app it read.
+
+Two consequences worth stating.
+
+**A back tap is not a link.** The gesture invokes the shortcut from the
+foreground app directly, which is why `Back-DoubleTap`'s GitHub, Audible and
+Music branches have been firing correctly all along. The mechanism is sound; the
+link is the contaminated instrument.
+
+**So test the lookup and the reading separately.** `Get-AppRoute` takes an app
+name as input for exactly this reason, and `probe-route` asks it about a named
+app and logs the answer, which is a question a link *can* ask. Whether
+`Get Current App` reports the foreground app is not a question any link can put,
+and does not need one: the shortcut that depends on it is the one already in
+daily use.
+
+Same shape reaches `Choose-Utility`, whose prompt reads `Current app: ￼`. Run
+from a link it will always say Shortcuts.
+
+## "Unrecognized archive format" is the signing service, not the file
+
+*Measured on device 2026-08-28, cause isolated from the sandbox 2026-08-30.*
+
+**The worker signs by calling Apple's iCloud service, and when that call fails
+it answers HTTP 200 with a plain-text body.** Not a 5xx, not an empty reply: a
+46-byte string.
+
+```
+🛑 ERROR 🛑
+iCloud server failure. Please try again later.
+```
+
+`Extract` is handed that instead of a gzip and reports the only thing it can,
+which is that the archive is unrecognizable. The message names the file and the
+fault is two services away.
+
+Isolated by POSTing four plists in one pass: three signed, `Get-ShortcutJson`
+came back with the string above, and **the identical bytes then signed on all
+three immediate retries**. So the file is not the variable and neither is the
+request.
+
+**There is a second, unrelated 27-byte error from the same worker**, `🛑 Error:
+Invalid Request`, which is what a wrong request content type gets. It signs on
+`application/gzip` and `application/x-gzip` and refuses `application/octet-stream`
+or a multipart form. Two different failures behind one on-device message, which
+is why the device symptom cannot tell them apart.
+
+**The retry belongs in the sandbox, not on a thumb.** `plist.py --sign` POSTs the
+built plist and reports whether a shortcut comes back, retrying an outage up to
+four times. Run it before handing over an install link; a tap spent on an Apple
+outage is a tap wasted, and this cost two of them in one session.
+
+---
+
+*Original note, 2026-08-28, which had the rule right and the cause unknown:*
+
+`Library-Import` fetches a plist, gzips it, POSTs it to a third-party signing
+worker over plain `http`, and unzips the reply. That last card is where the alert
+comes from: it is `unzip` refusing a response that is not an archive, which means
+the worker returned something else.
+
+**It fires intermittently on files that are perfectly good.** `Pick-Clip` failed
+with it, then installed from the *same SHA-pinned URL* on an immediate retry, with
+the served bytes verified identical to local and every card shape matched against
+a real card in the corpus. `Run-Pick` had installed from the same commit seconds
+before the failure, so the URL, the CDN and the rest of the pipeline were all fine.
+
+So the working rule: **retry once before suspecting the file.** Two failures in a
+row is evidence about the plist; one is not.
+
+Two consequences worth stating. `Library-Install` is the fallback and also the
+discriminator, since it fetches the packed actions and pastes them without
+touching the worker, at the cost of one paste; it reaches everything except
+file-level settings, so it suits any chain not declaring `WFWorkflowTypes` or
+input classes. And the 2026-08-29 commit that fixed `plist.py`'s unresolved
+`$file` attributed `Probe-Coercion`'s import failure to that bug. The bug was
+real and worth fixing, but the fix and a retry happened in the same step, so
+whether it caused *that* failure was never isolated and should not be read as
+settled.
 
 ## The library-management actions address an App Intents entity, not a name
 
@@ -1026,6 +1521,101 @@ lookup, and it reports which of the two sources knows a name.
 **Still not a census**, so the honest-search rule stands: it is one OS version's
 first-party surface plus the third-party apps ToolKit saw, and a newer OS or an
 uninstalled app is outside it.
+
+### The device lists apps, and never lists actions
+
+*Established 2026-08-30 by searching all three ToolKit catalogs and the 636-file
+corpus, before anything was sent to the device.*
+
+> [!WARNING]
+> **Wrong 2026-08-30 (same day) → the iOS claim below:** the device says
+> `Find Apps` is **Mac-only**. Imported and opened on the phone, the card
+> renders and its body reads *"This action can only run on Mac."* Everything
+> here about the catalog is accurate; the inference drawn from it was not, and
+> what the catalog cannot answer is stated under *The `platforms` field is not a
+> runtime claim* below. **There is no route to the installed-app list on iOS.**
+
+**Apps: `is.workflow.actions.filter.apps`, "Find Apps".** An ordinary content-item
+filter, so the whole `Find X` grammar applies: omit `WFContentItemInputParameter`
+and its source is the system library rather than a piped list, which is the 57-use
+form the corpus already carries on other `filter.*` actions. Sortable by four
+properties, and that enum is the only published statement of what an App item
+exposes:
+
+| `WFContentItemSortProperty` | |
+| --- | --- |
+| `Name`, `Bundle Identifier` | the two worth reading |
+| `Launch Date`, `Process Identifier` | running-app fields, macOS in origin |
+
+It is in **all three** catalogs, and the one that matters is
+`toolkit-v78-ios27-tool-ids.json`, the 1,206-id cut taken from an iOS 27 runtime
+rather than the 2,731-id union. That cut is discriminating: `hide.app` and
+`quit.app` are absent from it, so `filter.apps` appearing there is a claim about
+iOS and not an artifact of a macOS-hosted Simulator. **Nothing in the corpus has
+ever used it**, across nine other `filter.*` actions and 33,433 cards, so the
+estate had no evidence either way until [`workflows/probe-apps.json`](../workflows/probe-apps.json).
+
+**Actions: nothing.** `com.apple.shortcuts.SearchActionDrawerAction` is the only
+tool in the catalog that has actions as its subject, and its whole parameter table
+is `query: str`. It opens the picker; it returns nothing. There is no
+`properties.apps` either, so the sort enum above is the entire readable surface of
+an app. This is the same wall as *No action can put actions into a shortcut*
+below, from the other side: Shortcuts will neither read its own action inventory
+nor write one.
+
+**So both lists are reached by inference, not by asking.** Every app-provided
+action carries its vendor's bundle id as the identifier prefix, which makes a
+corpus dump a census of the apps whose actions are *in use*: 26 bundles over the
+636 files, against 52 apps named in `WFSelectedApp` pickers, 63 together. That is
+now the ceiling rather than a stopgap.
+
+### The `platforms` field is not a runtime claim
+
+*Established 2026-08-30 on the device, correcting the inference above the same
+day it was written.*
+
+**A catalog hit licenses "this action exists", never "it runs here".** The
+mirror of the honest-search rule, and it cost a tap to learn:
+
+| The catalog said | The device said |
+| --- | --- |
+| `platforms: ["iOS 27 Simulator", "macOS 27"]` | "This action can only run on Mac." |
+| present in the 1,206-id iOS cut | same |
+
+Both fields record **where an action's metadata ships**, and iOS carries metadata
+for Mac-only actions precisely so Shortcuts can draw the card and refuse it. So
+the iOS cut is not a runtime-availability filter, and no cut of this catalog is.
+
+**The reasoning that failed is worth naming, because it looked like evidence.**
+`hide.app` and `quit.app` are absent from the iOS cut, so the cut appeared to
+discriminate, so `filter.apps` being present in it appeared to mean something.
+It does not: absence from the cut and presence in it are not two readings of one
+scale. An action can be absent because iOS ships no metadata for it and present
+while still gated at run time, and nothing in the catalog distinguishes the
+gated from the available.
+
+**And it fails in both directions, which is why the corpus outranks it.** Two
+disagreements, found within an hour of each other on 2026-08-30:
+
+| Action | Catalog | Truth |
+| --- | --- | --- |
+| `is.workflow.actions.filter.apps` | iOS and macOS | Mac-only, per the device |
+| `is.workflow.actions.extracttextfromimage` | macOS-only, key `imageFile` | runs on the phone, key `WFImage`, per 7 uses in the corpus |
+
+So a catalog "no" is as weak as a catalog "yes". The second case cost nothing
+because the corpus settled it for free, and that is the general order: **the
+device is the authority, the corpus is the cheapest witness to it, and the
+catalog is neither.** The catalog's own strength is unchanged and is elsewhere:
+which parameters exist, and what their enums allow.
+
+
+**What this does not touch.** The parameter tables, the enum cases, and the
+identifiers are all exactly as accurate as before; `Probe-Apps` imported clean
+and every card wired correctly, including the `Name` and `Bundle Identifier`
+aggrandizements. Only availability was ever in question, and only the device
+answers it. `probe-apps.json` therefore keeps its place in `workflows/` and gives
+up its `name`, so it leaves `plists/` and no install link can serve a receiver
+the phone will not run.
 
 ### No action can put actions into a shortcut
 
@@ -1181,7 +1771,12 @@ formed, the multi-variant entry is the only one, nothing carries a
 every block is balanced and shares one grouping, presets merge, the serializer
 escapes markup). `test/show.test.js` is the exception to what follows: it runs
 the shell's real JavaScript out of a real link, so the compressed route is
-exercised rather than asserted about.
+exercised rather than asserted about. `test/docs-repetition.test.js` holds
+this file, and the other prose here, to one copy of each paragraph and each
+heading: from 2026-08-13 to 2026-09-05 two sections above appeared twice, one
+copy with the condition codes settled and the other still saying not to guess,
+and nothing noticed because a cross-file duplicate scan does not look inside a
+file.
 
 What the tests cannot tell you is whether the output imports. That needs a
 device, and is a separate open task.

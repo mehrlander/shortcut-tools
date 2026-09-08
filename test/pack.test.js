@@ -60,6 +60,56 @@ test("packed/ holds a payload for every chain, and is current", () => {
   assert.deepStrictEqual(packed.sort(), chains.sort(), "one payload per chain, no orphans");
 });
 
+// A withdrawn chain used to leave its payload behind, and --check called the
+// tree current while the assertion above failed on it: two gates stating one
+// invariant, and the one a person runs for a fast answer was the one that lied.
+//
+// IN A TEMP TREE, NOT packed/. An orphan made briefly visible in the real
+// directory is the race this repo already documents in plist.py, and the
+// assertion above is exactly what would see it.
+test("a payload no chain claims is reported by --check and removed by --publish", () => {
+  const os = require("node:os");
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), "pack-src-"));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), "pack-out-"));
+  try {
+    const chain = { label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
+    fs.writeFileSync(path.join(src, "kept.json"), JSON.stringify(chain));
+    pack("--publish", "--workflows", src, "--out", out);
+    fs.writeFileSync(path.join(out, "withdrawn.json"), "{}");
+
+    assert.throws(() => pack("--check", "--workflows", src, "--out", out),
+      /withdrawn\.json \(no chain claims it\)/,
+      "--check must name the orphan, and name it as unclaimed rather than stale");
+
+    const said = pack("--publish", "--workflows", src, "--out", out);
+    assert.match(said, /removed 1 unclaimed/, "and the publish says what it deleted");
+    assert.deepStrictEqual(fs.readdirSync(out).sort(), ["kept.json"]);
+    assert.doesNotThrow(() => pack("--check", "--workflows", src, "--out", out));
+  } finally {
+    fs.rmSync(src, { recursive: true, force: true });
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+// The prune has to be able to delete, so the one thing it must never do is
+// delete from a directory that does not answer to the chains it was given.
+test("--workflows without --out never prunes, since the pair is not matched", () => {
+  const os = require("node:os");
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), "pack-foreign-"));
+  const before = fs.readdirSync(path.join(ROOT, "packed")).sort();
+  try {
+    fs.writeFileSync(path.join(src, "lone.json"),
+      JSON.stringify({ label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] }));
+    pack("--publish", "--workflows", src);
+    assert.deepStrictEqual(
+      fs.readdirSync(path.join(ROOT, "packed")).filter(f => f !== "lone.json").sort(), before,
+      "a foreign chain set must not take the real payload mirror with it");
+  } finally {
+    fs.rmSync(path.join(ROOT, "packed", "lone.json"), { force: true });
+    fs.rmSync(src, { recursive: true, force: true });
+  }
+});
+
 // The address form was documented and not emitted, so it was typed by hand
 // every time, which is exactly the failure packed/ was built to end.
 test("--url emits the address link rather than leaving it to be typed", () => {

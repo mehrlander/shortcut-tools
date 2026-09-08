@@ -100,6 +100,57 @@ inject is refused rather than quietly loaded unauthenticated.
 `--raw` skips the shell and sends the page as itself, which is what a device
 without `DecompressionStream` needs (Safari gained it in 16.4).
 
+## Running a shortcut, not sending anything
+
+`pack.py` sends actions and `show.py` sends a page. [`tools/run.py`](tools/run.py)
+sends **nothing** and just runs what is already installed, which is the cheapest
+route in the table above and the one that had no emitter.
+
+```bash
+python3 tools/run.py Get-FromJs                  # one shortcut, no input
+python3 tools/run.py Get-FromJs --log            # run it, commit what it returned
+python3 tools/run.py Get-FileInfo Show-Table     # pipe one into the next
+python3 tools/run.py Show-Loop --text 'hello'    # bake the input in
+python3 tools/run.py --verify '<link>'           # read one back before sending
+python3 tools/run.py --pick Get-FileInfo Show-Table   # a menu, run on the clipboard
+```
+
+`--pick` emits a `Run-Pick` link: the names become a menu on the device and the
+one you choose runs on the clipboard, so a link is a menu definition rather than
+a command. It **checks each name against the library index first**, because a
+link's names are unchecked strings and this repository has already lost a
+fortnight to two of them going stale. Two false positives to expect, both from
+the index being a snapshot: anything installed since the last dump, and any name
+computed at run time. `--unchecked` skips the audit for those, and says on stderr
+that it did, because a link nobody verified is otherwise indistinguishable from
+one that was.
+
+Two or more targets, or `--log`, route through `Run-Steps`, which splits its
+input on newlines and runs each name with the previous result as its input. Its
+first pass has no `Carry` set, so the first shortcut runs with no input, which
+is what a bare diagnostic wants.
+
+`--log` appends `Log-Repo`, so a probe returns itself: the payload goes to the
+clipboard first and unconditionally, then to `shortcuts/log/` in
+web-tools-private. Tap once and the answer is already here. That is the rule
+this repository already stated and had no tool for, which is why every
+diagnostic ended by asking the reader to open the Shortcuts app and hunt for a
+name.
+
+The handover form goes to stderr, so the link itself pipes cleanly while the
+markdown arrives ready to paste: `📲 [label](shortcuts://…)`. Both halves are
+rules from SURFACING.md that fail silently when dropped. The phone mark tells
+the reader something is being asked of the device rather than offered to read,
+and a custom scheme rendered bare or in a code span is dead text, since the chat
+client will not autolink one. Emitted rather than remembered, which is the same
+argument as the link.
+
+Two refusals rather than a link that under-delivers. `--text` with several
+targets is rejected, because `Run-Steps` consumes its input as the step list and
+a payload has no slot left. And a single target with no input emits
+`?name=X` with no `text=` at all, since an empty string is a value and every
+diagnostic here branches on "input has no value".
+
 ## Menus with icons
 
 Choose from List shows one plain line per row. Given **contacts** it shows an

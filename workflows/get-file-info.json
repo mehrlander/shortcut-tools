@@ -1,0 +1,190 @@
+{
+  "name": "Get-FileInfo",
+  "label": "Get-FileInfo: describe the input, one item or a list (10 actions)",
+  "workflow": {
+    "WFQuickActionSurfaces": [],
+    "WFWorkflowClientVersion": "4711",
+    "WFWorkflowHasOutputFallback": false,
+    "WFWorkflowIcon": {
+      "WFWorkflowIconGlyphNumber": 61440,
+      "WFWorkflowIconStartColor": -20702977
+    },
+    "WFWorkflowImportQuestions": [],
+    "WFWorkflowInputContentItemClasses": [
+      "WFAppContentItem",
+      "WFAppStoreAppContentItem",
+      "WFArticleContentItem",
+      "WFContactContentItem",
+      "WFDateContentItem",
+      "WFEmailAddressContentItem",
+      "WFFolderContentItem",
+      "WFGenericFileContentItem",
+      "WFImageContentItem",
+      "WFiTunesProductContentItem",
+      "WFLocationContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFAVAssetContentItem",
+      "WFPDFContentItem",
+      "WFPhoneNumberContentItem",
+      "WFRichTextContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem",
+      "WFURLContentItem"
+    ],
+    "WFWorkflowMinimumClientVersion": 900,
+    "WFWorkflowMinimumClientVersionString": "900",
+    "WFWorkflowOutputContentItemClasses": [
+      "WFContentItem"
+    ],
+    "WFWorkflowTypes": [
+      "ActionExtension",
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "4BBB0323-8BC6-4C00-BBE0-190A0B1CA052",
+        "WFCondition": 101,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.list",
+      "p": {
+        "UUID": "C17DEAFC-CA9F-45AF-A4F9-52DBE85B2BDA",
+        "WFItems": [
+          "Choose-Sample",
+          "Get-FileInfo"
+        ]
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "A4EDB6ED-878E-4C9D-B3F6-758B7C87FCCB",
+        "WFInput": {
+          "Value": {
+            "OutputName": "List",
+            "OutputUUID": "C17DEAFC-CA9F-45AF-A4F9-52DBE85B2BDA",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": "Run-List"
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "23F449F5-D0B8-458F-86C6-69DF38B4115E",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "A4EDB6ED-878E-4C9D-B3F6-758B7C87FCCB",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "4BBB0323-8BC6-4C00-BBE0-190A0B1CA052",
+        "UUID": "0B71307C-A1AE-4F95-8357-D1ACBF58612B",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "6BDB0CA0-EFBF-40F0-A175-6AE9CC88C73E",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": "Get-FileContext"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "2243627E-1FD7-4E50-AD9F-603787BBA12A",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Shortcut Result",
+            "OutputUUID": "6BDB0CA0-EFBF-40F0-A175-6AE9CC88C73E",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": "Combine-JsonList"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "CustomOutputName": "Map card",
+        "UUID": "1E327D44-A1DB-4286-9034-46CD5FD43A65",
+        "WFTextActionText": "((input) => {\n  const cap = 32\n  const clipEnd = s => (s = s ?? \"\", s.length > cap ? s.slice(0, cap - 1) + \"…\" : s)\n  const clipMid = s => {\n    s = s ?? \"\"\n    if (s.length <= cap) return s\n    const head = Math.floor((cap - 1) / 2), tail = (cap - 1) - head\n    return s.slice(0, head) + \"…\" + s.slice(-tail)\n  }\n  const F = [...\"𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯\"]\n  const sans = s => String(s).toLowerCase().replace(/[a-z]/g, c => F[c.charCodeAt(0) - 97] || c)\n  const sup = d => d === \"0\" ? \"⁰\" : \"¹²³⁴⁵⁶⁷⁸⁹\"[d.charCodeAt(0) - 49]\n  const supNum = x => String(x).replace(/\\d/g, d => sup(d))\n  const supTag = x => \"⁽\" + supNum(x) + \"⁾\"\n  const rpad = (s, w) => s + \" \".repeat(Math.max(0, w - s.length))\n\n  const RULES = {\n    \"icloud.com/shortcuts\": \"shortcut\",\n    \"lawfilesext.leg.wa.gov\": \"lawfiles\",\n    \"shortcuts://open-shortcut\": \"open shortcut\",\n    \"shortcuts://run-shortcut\": \"run shortcut\",\n    \"http\": \"URL\"\n  }\n  const classifyUrl = u => {\n    const hay = u.toLowerCase()\n    const match = Object.entries(RULES).find(([k]) => hay.includes(k))\n    return match ? match[1] : \"URL\"\n  }\n  const looksUrl = s => /^(https?:\\/\\/|shortcuts:\\/\\/)\\S+$/i.test(s)\n\n  const decodeB64 = b64 => {\n    try {\n      return new TextDecoder().decode(\n        Uint8Array.from(atob(b64.replace(/\\s+/g, \"\")), c => c.charCodeAt(0))\n      )\n    } catch (e) { return \"\" }\n  }\n\n  const transformOne = o => {\n    const base64 = String(o[\"Base64\"] || \"\")\n    const count = Number(o[\"Count\"] || 0) || 0\n    const isList = count > 1\n\n    const first = base64.split(/\\r?\\n/)[0] || \"\"\n    const preview = first.slice(0, 10) + (first.length > 10 ? \"…\" : \"\")\n\n    const rawType = String(o[\"Type\"] || \"\")\n    const name = String(o[\"Name\"] || \"\")\n    const ext  = String(o[\"File Extension\"] || \"\")\n\n    // Decode once. List items don't carry a single payload, so skip it there.\n    const decoded = isList ? \"\" : decodeB64(base64)\n\n    // A URL is either declared in the URL field, or it's the entire text payload.\n    const fieldUrl = String(o[\"URL\"] || \"\")\n    const textUrl = (!isList && !fieldUrl && looksUrl(decoded.trim())) ? decoded.trim() : \"\"\n    const url = fieldUrl || textUrl\n    const isUrlItem = url.length > 0\n\n    const fileName = isList ? \"LIST\"\n      : isUrlItem ? (name || url)\n      : (ext ? (name ? (name + \".\" + ext) : (\".\" + ext)) : name)\n\n    let type\n    if (isList) {\n      const exts = ext.split(/\\r?\\n/).map(s => s.trim()).filter(Boolean)\n      let tagLabel = \"mixed\"\n      if (exts.length) {\n        const e0 = exts[0]\n        let same = true\n        for (const e of exts) if (e !== e0) { same = false; break }\n        if (same) tagLabel = e0\n      }\n      type = \"List (\" + tagLabel + \")\"\n    } else if (isUrlItem) {\n      type = classifyUrl(url)\n    } else if (ext.toLowerCase() === \"skill\") {\n      type = \"skill\"\n    } else if (first.startsWith(\"YnBsa\")) {\n      type = \"Action\"\n    } else {\n      type = rawType\n    }\n\n    const urlTypes = [\"URL\", \"shortcut\", \"open shortcut\", \"run shortcut\", \"lawfiles\"]\n    const isUrl = urlTypes.includes(type)\n    const icon = isList ? \"📇 \" : (isUrl ? \"🔗 \" : (type === \"skill\" ? \"🧩 \" : \"🧾 \"))\n    const inner = icon + sans(type || \"item\")\n    const W = 68, baseStr = \"- \" + inner + \" -\"\n    const header = \" \".repeat(Math.max(0, Math.floor((W - baseStr.length) / 2) + 2)) + baseStr\n\n    let lines\n    if (isList) {\n      const names = name.split(/\\r?\\n/).map(s => s.trim())\n      const exts  = ext.split(/\\r?\\n/).map(s => s.trim())\n      const n = Math.max(count || 0, names.length, exts.length, 0)\n      lines = []\n      for (let i = 0; i < n; i++) {\n        const nm = names[i] || \"\"\n        const ex = exts[i] || \"\"\n        let fn = ex ? (nm ? (nm + \".\" + ex) : (\".\" + ex)) : nm\n        if (!fn) fn = \"Item \" + (i + 1)\n        lines.push(fn)\n      }\n      if (!lines.length) lines = [\"LIST\"]\n    } else if (isUrlItem) {\n      lines = [name || \"\", url].filter(Boolean)\n      if (!lines.length) lines = [\"URL\"]\n    } else {\n      let textLines = null\n      const looksBinary = !decoded || /[\\x00-\\x08\\x0E-\\x1F]/.test(decoded.slice(0, 200))\n      if (!looksBinary) {\n        textLines = decoded.split(/\\r?\\n/)\n        while (textLines.length && !textLines[textLines.length - 1]) textLines.pop()\n      }\n      lines = (textLines && textLines.length) ? textLines : [fileName || \"Item\"]\n    }\n\n    const n = lines.length || 1\n    const Lw = supTag(n).length\n    const mid = lines.length <= 2 ? \"\" : clipEnd(lines.slice(1, -1).join(\"\\n\").replace(/\\r?\\n/g, \"␤\"))\n    const row = i => rpad(supTag(i), Lw) + \" \" + clipMid(lines[i - 1] || \"\")\n    const body = [row(1), n == 2 ? row(2) : n > 2 ? (\"⋯\" + (mid ? \" \" + mid : \"\")) : null, n > 2 ? row(n) : null].filter(Boolean).join(\"\\n\")\n\n    const detail = { type, fileName, preview, caption: header + \"\\n\" + body }\n    if (isUrlItem) detail.url = url\n\n    return { ...o, detail }\n  }\n\n  if (input && Array.isArray(input.list)) {\n    const items = input.list.map(transformOne)\n    const join = k => input.list.map(o => String(o[k] || \"\")).join(\"\\n\")\n    const summary = transformOne({ Count: items.length, Name: join(\"Name\"),\n      \"File Extension\": join(\"File Extension\"), Base64: \"\" })\n    return { list: items, detail: summary.detail }\n  }\n  return transformOne(input)\n})\n"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C314AEA1-CB3B-4298-96BF-A039F88BAD34",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{1, 1}": {
+                "OutputName": "Map card",
+                "OutputUUID": "1E327D44-A1DB-4286-9034-46CD5FD43A65",
+                "Type": "ActionOutput"
+              },
+              "{4, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "2243627E-1FD7-4E50-AD9F-603787BBA12A",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "(￼)(￼)\n"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "16D7A980-E4B0-4FE8-A3E9-03C181CDB285",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "C314AEA1-CB3B-4298-96BF-A039F88BAD34",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": "Get-JsonFromJs"
+      }
+    }
+  ]
+}

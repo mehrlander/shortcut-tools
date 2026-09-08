@@ -16,21 +16,26 @@ sibling directory ../web-tools-private. Exit codes are the contract the test
 wrapper reads: 0 current, 1 stale (the fix is printed), 2 no checkout (a
 public-only clone; the caller should skip, not fail).
 
-Three derivatives gate, each compared byte-for-byte against a regeneration
+Five derivatives gate, each compared byte-for-byte against a regeneration
 into a temp dir, committed inputs only, so a failure names the first stage
 that is behind rather than the whole pipeline:
 
     index.json     from dumps/*.zip        (index-dump.py)
     library.json   from committed index    (survey.py --json)
     library.html   from committed index    (survey.py -o)
+    sketches/      from dumps/*.zip        (sketch.py --all --dir)
+    core/          from dumps via index    (harvest.py --config core/harvest.json)
 
-Two derivatives deliberately do not gate. sketches/ has known, accepted gaps
-(a shortcut whose plist will not sketch is a gap in the archive, not a
-failure) and the step that splits the --all stream into files is unrecorded,
-so coverage is reported as an advisory count instead. harvest's core/ output
-depends on --rename/--drop-call arguments recorded only in the private
-shortcuts/README.md; until that invocation moves somewhere machine-readable,
-checking it here would mean keeping a second copy of those arguments.
+core/ gates only where core/harvest.json exists beside it: that file holds the
+renames and dropped calls the harvest applies, which until 2026-09-05 lived in
+README prose where nothing could rerun them. A shortcut whose plist will not
+sketch is absent from both sides of the sketches comparison, so a known
+unreadable one is not a failure.
+
+incoming/ is the sixth check and is not a derivative: a Dump-Named export that
+has not been folded is state the corpus does not yet hold, with a one-command
+fix. `tools/fold-incoming.py` performs the fold and the whole regeneration, and
+`--regen` regenerates alone, which is the fix this tool prints.
 """
 
 import argparse
@@ -48,6 +53,11 @@ def find_private(arg):
         if cand and (Path(cand) / "shortcuts" / "index.json").exists():
             return Path(cand)
     return None
+
+
+def tree(d):
+    """A directory as {name: bytes}, so two trees compare in one expression."""
+    return {p.name: p.read_bytes() for p in Path(d).iterdir() if p.is_file()}
 
 
 def regen(out, *cmd):
@@ -92,19 +102,34 @@ def main():
         if got != (sc / "library.html").read_bytes():
             stale.append("shortcuts/library.html (from index.json)")
 
+        out = tmp / "sketches"
+        subprocess.run([sys.executable, str(ROOT / "tools" / "sketch.py"), *map(str, dumps),
+                        "--all", "--dir", str(out)], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if tree(out) != tree(sc / "sketches"):
+            stale.append("shortcuts/sketches/ (from dumps/*.zip)")
+
+        cfg = sc / "core" / "harvest.json"
+        if cfg.exists():
+            out = tmp / "core"
+            subprocess.run([sys.executable, str(ROOT / "tools" / "harvest.py"), *map(str, dumps),
+                            "--index", str(sc / "index.json"), "--config", str(cfg), "-o", str(out)],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            have = {k: v for k, v in tree(sc / "core").items() if k != "harvest.json"}
+            if tree(out) != have:
+                stale.append("shortcuts/core/ (from dumps via core/harvest.json)")
+
+    waiting = sorted(p.name for p in sc.glob("incoming/*.txt"))
+    if waiting:
+        stale.append("shortcuts/incoming/ holds %d unfolded export(s): %s"
+                     % (len(waiting), ", ".join(waiting)))
+
     import json
     names = {r["name"] for r in json.loads((sc / "index.json").read_text())}
-    sketched = {p.stem for p in sc.glob("sketches/*.txt")}
-    missing, extra = sorted(names - sketched), sorted(sketched - names)
-    if missing or extra:
-        print("advisory: sketches/ covers %d of %d shortcuts (%d unsketched%s)"
-              % (len(sketched & names), len(names), len(missing),
-                 ", %d stale files for departed shortcuts: %s" % (len(extra), ", ".join(extra))
-                 if extra else ""), file=sys.stderr)
 
     if stale:
-        print("stale, rerun the pipeline in %s/shortcuts/README.md:\n  %s"
-              % (private, "\n  ".join(stale)), file=sys.stderr)
+        print("stale:\n  %s\nfix: python3 tools/fold-incoming.py%s   (from %s)"
+              % ("\n  ".join(stale), "" if waiting else " --regen", ROOT), file=sys.stderr)
         return 1
     print("derivatives current with %d dumps (%d shortcuts)" % (len(dumps), len(names)),
           file=sys.stderr)

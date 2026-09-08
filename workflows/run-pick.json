@@ -1,0 +1,204 @@
+{
+  "name": "Run-Pick",
+  "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, log it and open the log (14 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Verb list in, one name per line; the clipboard is the payload; the chosen verb runs on it and the result is shown. No list crosses a shortcut boundary: the two-shortcut version passed [payload, verbs] through Run Shortcut and the list arrived TEXT-COERCED, newline-joined, so the menu offered the payload as a choice (device, 2026-08-29). The prompt is set because unset iOS supplies its own \"Which one?\", which says nothing. Run it with nothing and the prologue supplies a default menu and re-enters, which is the idiom 72 shortcuts in this library carry. It ends in Show-Log rather than Show Result, which clipped a long payload to a few lines and did not scroll, so the useful half of a run was legible to the session reading git and not to the person who ran it. It reports every run through Log-Repo, stamped with its own build id, because a stale copy and a fresh copy that failed are indistinguishable otherwise and this session lost hours to that. The build id is a content hash of the chain, substituted by BOTH mirrors. Two things the first logged run exposed. The payload is a HEADER LINE then the raw result, not JSON with the result interpolated in: the result carries quotes and broke the outer object on the first try. And Log-Repo writes its payload to the clipboard first and unconditionally, so without the Copy card at the end the next run reads the log line instead of your text, which is a tool poisoning its own input."
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "91CE0000-BEEF-4A00-9000-000000000001",
+        "WFCondition": 101,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "91CE0000-0008-4A00-9000-000000000001",
+        "WFTextActionText": "Get-FileInfo\nShow-Table\nLog-Repo"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0009-4A00-9000-000000000001",
+        "WFWorkflowName": "Run-Pick",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "91CE0000-0008-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "91CE0000-0010-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "91CE0000-0009-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "UUID": "91CE0000-0011-4A00-9000-000000000001",
+        "GroupingIdentifier": "91CE0000-BEEF-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "91CE0000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "91CE0000-0002-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "91CE0000-0003-4A00-9000-000000000001",
+        "WFChooseFromListActionPrompt": "Run which one on the clipboard?",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "91CE0000-0002-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0004-4A00-9000-000000000001",
+        "WFWorkflowName": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Chosen Item",
+                "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "91CE0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "91CE0000-0006-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{38, 1}": {
+                "OutputName": "Chosen Item",
+                "OutputUUID": "91CE0000-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{40, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "91CE0000-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "run name=Run-Pick build=#BUILD# chose=￼\n￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0007-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "91CE0000-0006-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "91CE0000-0012-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "91CE0000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "91CE0000-0013-4A00-9000-000000000001",
+        "WFWorkflowName": "Show-Log"
+      }
+    }
+  ]
+}

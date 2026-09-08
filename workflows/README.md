@@ -39,7 +39,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `menu` | Three cases under one `GroupingIdentifier`, modes 0/1/1/1/2. |
 | `sync-xhr-probe` | Whether that coercion waits for the network, and for which kind of request. Two lines, one tap. |
 | `gh-recent-branches` | The branches you last committed on, shown as a tappable list in the browser. Two actions: build the page, hand it to `Show-Html`. |
-| `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`, and the only chain still carrying inferred parameter shapes. |
+| `gh-recent-branches-picker` | The same page read back as text and fed to Choose from List. The fallback that needs no `Show-Html`. Its Replace Text input was an inferred shape until 2026-09-03, when a census of 754 uses found the corpus unanimous for the token-string form; `test/parameter-shapes.test.js` holds it now. |
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `dump-shortcuts` | Every shortcut on the device as one combined JSON, onto the clipboard. Two actions plus a copy, because `Use-Shortcut` already does the work. |
@@ -49,13 +49,55 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. |
+| `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
+| `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
+| `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `App=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
+| `probe-route` | Asks `get-app-route` about a named app and logs the answer. Three actions. It exists because a `shortcuts://` link makes Shortcuts the current app, so a route keyed on anything else cannot be reached from a tap. |
+| `run-backtap` | `Back-DoubleTap` with its five app branches replaced by one `get-app-route` call: 29 actions against 59. Spliced from a device dump rather than re-authored, so every card kept is the card running today. |
+| `choose-backtap` | The Shortcuts-app menu lifted out whole, still titled with the clipboard's state because the caption block came with it. 17 actions, and the route map points at it. The caption now comes from `describe-input` rather than the five-shortcut chain it used to walk. |
+| `choose-claude` | The Claude-app menu, 17 actions and no rows of its own. It reads the clipboard, hands `session-menu` and that text to `run-op`, and draws what comes back: `caption` as the prompt, `menu` as the rows. A chosen row is a key into the `urls` map the same call returned, so a hit opens a page and a miss runs the row as a shortcut name, which is the same has-value idiom `get-app-route` uses and what lets one list mix sessions with verbs. `Out` is tested explicitly rather than left to fail a name lookup. **So the menu lives in web-tools now**, in `lib/ops/session-menu.js`: its wording, its order, its verbs and the address each row opens are a commit there and cost no install here, which is the rule at the top of `CLAUDE.md` applied to the menu itself. The header says whether the clipboard held a branch this estate recognises, and the rows change with the answer: a recognised branch leads with its session, an unrecognised one leads with a row that opens `session.html#branch=`, the route that walks the store and reaches no cache. `test/parameter-shapes.test.js` holds the shell's shape; web-tools' `tools/test/ops.test.mjs` holds what the op must always return, including the verbs, so a failed op still draws a working menu. **Wrong 2026-09-08 → the row above:** it described a four-row menu whose first row, **Session on this branch**, was offered whether or not a branch was on the clipboard, and whose prompt was the literal string `Claude`. Both are gone. |
+| `run-op` | Name an op in web-tools, hand it one line of input, get its JSON back. 7 actions, and the layer `docs/idioms.md` predicts: `Get-FromJs` is the one door to JavaScript, and this adds addressing to it. The op's file is fetched from jsDelivr by name inside the expression `Get-JsonFromJs` evaluates, so the code lives in the repo and runs on the phone; the input rides in as base64 so nothing it contains can break the expression, the op address carries a timestamp because jsDelivr's seven-day `max-age` otherwise pins a sync request to the first copy the phone saw, and the token reaches the op as an argument through `Inject-🎟️GitHubToken`, which Run-Op calls itself: `Get-JsonFromJs` calls it only inside its no-input demo, a reading error that cost one device run (2026-09-03, `TypeError at headers`). Every future chain that needs computation is this one action plus what it does with the result. The contract on the other side: web-tools `lib/ops/README.md`. |
+| `claude-session` | The session picker as its own shortcut, 15 actions, off the back-tap route since `choose-claude` began drawing the same op's menu inline. Kept because it is installed, still works, and reads only `caption` and `rows`, which the op still returns unchanged: `menu` is the key that carries the verbs, and `rows` is the sessions alone. A caption carrying `ERROR` is logged with the build id and shown instead of opening a menu, which is the half of it `choose-claude` does not reproduce. The logic is web-tools' `lib/ops/session-menu.js`, which the app can run too. |
+| `run-app-determined` | `get-app-route` plus a default plus the running: six actions. The standalone form, for when the app is the only question being asked. |
+| `speak-text` | Reads the input aloud in the back tap's voice. One action, and it fills a name `Show-Loop` has been calling all along that resolved to nothing. |
+| `open-wifi` | Opens the Wi-Fi settings pane, two actions, for when a cast is failing. |
 | `copy-action-from-url` | Fetches a packed payload and hands it to `Copy-ActionFromClaude`. Two actions, and the last one that ever has to arrive as an embedded payload. |
 | `run-steps` | Runs named shortcuts in order, piping each result into the next. One shortcut instead of one per sequence, which only became possible once a variable could name the target. |
+| `run-pick` | Pick a verb from the input list, one name per line, and run it on the clipboard, then show what came back. Run it bare and the self-demo prologue supplies a default menu and re-enters, the idiom 72 shortcuts in the corpus carry. Eleven cards, no `Get-Shortcut`: Run Shortcut's target is a plain string key, which `run-steps` already relies on. The two-shortcut version that passed `[payload, verbs]` through Run Shortcut is gone; the list arrived text-coerced and the menu offered the payload as a choice. |
+| `show-log` | The device log as a sheet over Shortcuts, one action. A hosted `https` URL rather than HTML text: Show Web View takes either, but HTML text lands at a `file://` origin where the stored GitHub token is not, and the page needs it to read a private repo. Replaces Show Result, which clipped a long payload and would not scroll. |
+| `probe-list-handoff` | Whether a list survives `Run Shortcut`, settled by crossing the boundary into **itself**: bare it builds a two-item list and re-enters, and on the second pass it counts what arrived and logs it. `count=2 first=AAA` means lists survive and two arguments can be passed between shortcuts; `count=1` means they cannot, which is what `Run-Pick`'s five-row menu implied. |
 | `show-menu` | Renders whatever menu it is handed. Four actions: name the text `.vcf`, coerce it to contacts inside Choose from List, read the chosen row's Notes, open it. The receiver for `vcard.py --data`. |
 | `run-html` | Renders whatever page it is handed. Three actions: base64-encode Shortcut Input, build the data URL, open it. The receiver for [`tools/show.py`](../tools/show.py) when the page needs no credential. |
 | `show-html-js` | `Show-Html`'s job in 9 actions instead of 23, with the text work moved into the page it is about to open. Reads [`tools/show-shell.html`](../tools/show-shell.html). |
 | `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
 | `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
+| `log-repo` | The return channel. Writes the input to the clipboard first and unconditionally, then commits it to `shortcuts/log/` in web-tools-private, so a diagnostic ends in a commit rather than in a question. |
+| `capture-link` | The share sheet's end of that channel: whatever was shared, straight into the repo log. Two actions. |
+| `library-open` | Opens a named shortcut in the editor. Three actions, and the cheapest thing the library view does. |
+| `library-install` | Creates the named shortcut and pastes its actions in. Superseded by `library-import` wherever a plist is committed, because no paste reaches file-level settings. |
+| `library-import` | Fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts. The only route that delivers `WFWorkflowTypes` and the input classes, at one tap plus Apple's import sheet. Its worker signs through Apple's iCloud service, which fails transiently and comes back as a 46-byte text body, surfacing on device as "Unrecognized archive format"; run `plist.py --sign` before sending a link so the retry is spent here rather than on a tap. |
+| `library-fetch` | Installs a shortcut that was **signed in the repo**: fetch the bytes, name them `<Name>.shortcut`, open them in Shortcuts. Eight actions, no gzip, no POST, no Extract, and so no exposure to the iCloud signing outage that fails the other route. |
+| `library-replace` | Delete by name, then import. The way around import never merging: importing over an existing name lands as `Name 1`, and every `run-shortcut?name=` link keeps resolving to the old copy. |
+| `library-stage` | Moves each named shortcut to a folder and logs it. The second step of the prune, and deliberately not the fourth. |
+| `manage-library-probe` | The three library actions whose parameter shapes were unknown, in one tap: open, move, delete. |
+| `ask-report` | Walks a list of questions, asks each in turn, and commits the whole transcript through `Log-Repo`. A battery of probes comes back as one commit instead of one message each. |
+| `probe-step` | The same job interleaved: each tap asks about the probe the last tap fired, commits that answer, then fires the next probe. |
+| `back-doubletap` | The double back tap dispatcher itself, 59 actions, recovered from the 2026-08-22 device dump so it can be revised here and re-installed in one tap. Dispatches on the current app, then on the clipboard's type; an empty clipboard opens the dictation page in the sheet and everything else falls to `Show-Loop`. Pasted HTML goes to `Show-WebView` rather than `Show-Html`, so a quick look costs no Safari tab. |
+| `describe-input` | The same job as `get-file-info` in 17 actions, one shortcut, one text card and no Run Shortcut anywhere. The floor is what only Shortcuts can do: walk the items, read each one's name, type and bytes, and hand one page to the renderer. Everything above that is text assembly, so it went into the function. |
+| `get-file-info` | Describes the input for a menu title: type, filename, preview, and a rendered caption. The one chain here whose original lives on the device rather than in this repo, carried in as source so the list-shape fix could ship; `web-tools-private`'s `shortcuts/core/` copy is a corpus snapshot, refreshed by dumps, not the authored version. |
+| `probe-list-detail` | Builds a two-item list and sends it through `Get-FileInfo` and then `Get-FileCaption`, logging each. The regression probe for the list-shape bug: no link can put two items on a clipboard, so the probe makes its own. Two log entries means fixed, one means the caption path is still broken. |
+| `probe-webview-caps` | The remaining sheet questions in one run: origin, secure context, `DecompressionStream`, SpeechRecognition, localStorage, a jsDelivr script tag, the microphone, and both copy paths. It returns itself through a Send results link firing `Log-Repo`, because the first version routed its answer through the clipboard and the clipboard was one of the things it was measuring. |
+| `probe-webview-net` | The follow-on: the same sheet, a page that fetches `api.github.com/zen` and reports OK, BLOCKED, or nothing. Scripts run in the sheet, so whether it also reaches the network is what decides if the estate's pages can move off the Safari navigation. |
+| `probe-webview` | Hands a one-line page whose script rewrites that line to `Show-WebView`, the library's existing Show Web View receiver. Two actions, because the receiver already exists and the only open question is whether its HTML-to-rich-text step survives a script. |
+| `probe-quicklook` | Quick Looks a one-line page whose script rewrites that line. Settles whether `previewdocument` renders HTML as a live document or as inert markup, which decides whether the sheet is an alternative to `Show-Html`'s Safari navigation or only a viewer for static pages. |
+| `probe-watch` | Brief, fire, ask, log, in one tap. Three lines in: what to watch for, what to run, what to answer. The alert blocks before the target runs and the question lands immediately after it, so nothing has to be remembered between taps. |
+| `probe-apps` | The probe that settled the app question, kept as its record. Eleven cards around `is.workflow.actions.filter.apps`, **Find Apps**, which the ToolKit catalog lists on iOS and the device refuses: *"This action can only run on Mac."* Imported clean and wired correctly, so what failed was the catalog inference, not the chain. It declares no `name` and so has no plist: there is no receiver to install, because there is nothing the phone would run. Restore the `name` to get one on a Mac. |
+| `read-shots` | Screenshots in, text in the repo, one tap. Select photos, OCR each, combine, commit through `Log-Repo`. The capture route for anything the phone will only show and never hand over: an app list, a picker, a settings pane. It uses `WFImage` on `extracttextfromimage`, which the corpus runs 7 times on device while the ToolKit catalog calls the action macOS-only and names the key `imageFile`. The corpus wins that disagreement. |
+| `dictate` | Opens web-tools' full-page voice capture surface in the Show Web View sheet. One action, and the shortest thing in this table on purpose: Back Tap can run a shortcut and cannot open a URL, so this exists to be the target of a back tap (or an Action Button, or a Control Center control) rather than to be run from the app. The sheet keeps the page on its own `https` origin, which the HTML-text route does not. |
+| `probe-tab-js` | Whether `Run JavaScript on Web Page` accepts a Safari **tab entity** rather than only a shared page. Find Tabs, count them, log; then run one line in the first tab and log that. Two commits in that order, so a failure at the second card still proves the first worked, and no commit at all means the entity was what failed. If it passes, the bench needs no share sheet and the whole loop is one tap. |
+| `probe-coercion` | Which of five inputs the rich-text coercion actually renders, logging each before the next runs. Its withdrawn predecessor came back as one empty line and could not say whether the coercion refused a `data:` URL, ran no script, or timed out on the network; these five separate those. Static HTML, a script that rewrites its own line, a real `https` URL, the sync/async network pair, then the CDN library page. Read the first empty line: everything above it worked. |
+| `probe-unattended` | Does the phone do its bookkeeping while nobody is holding it? Four legs, each committing before the next and ordered by risk: a control row PUT straight to `shortcuts/log/` (token injection, no UI), `Get-FromJs` on `(()=>1+1)()` written the same way, `Sync-Manifest`, then `Log-Repo`. The last two each end in a Show Result, which is the thing a background run may not survive, so they go last. Run it once by tap for the attended baseline, then from a time-of-day automation with Run Immediately. Read the first missing row: everything above it works unattended. Built for the unattended-venue proposal, home PR #585. |
+| `run-probe-unattended` | One `Run Shortcut` card naming `Probe-Unattended`, for pasting into a blank time-of-day automation. The automation editor is the ordinary action editor, so the card lands there like anywhere else, and pasting it skips searching the action list and then the shortcut list. Not a receiver, so it declares no `name` and stays out of `plists/`. |
 | `local-open` | Reopens a copied loopback URL against the PC's LAN address. Three actions: read the clipboard, rewrite the host, open it. For a local app that prints `http://127.0.0.1:<port>/?token=...`, which is an address only the PC can resolve. |
 
 `run-html` is the one chain here that is not a payload of its own. Paste it into
@@ -232,6 +274,54 @@ without reading anything. Failure is legible too and arrives earlier: a target
 Shortcuts cannot resolve pastes as an action with an empty picker, visible in
 the editor before the shortcut is ever run.
 
+## Two walkers, and why one asks before it runs
+
+`ask-report` and `probe-step` do the same job and differ only in ordering, which
+is the whole lesson. Both exist because diagnosing across chat was costing one
+message per probe while the probes themselves ran in seconds.
+
+`ask-report` collects: hand it a list of questions, it asks each in turn and
+commits the transcript through `Log-Repo`. It deliberately does not run the
+probes. Shortcuts has no error handling, and a crashing probe is exactly what
+these batteries test, so a walker that ran them would die at the first failure
+and lose the answers already collected. Splitting run from report sidesteps
+that, since the probe links stay separate taps and cannot take the transcript
+down with them.
+
+`probe-step` interleaves instead, and is the better shape for the same reason.
+Each tap asks about the probe the **previous** tap fired, commits that answer
+through `Log-Repo`, and only then runs the next probe. Asking before running is
+what makes it crash-safe: a probe that dies takes down whatever follows it in
+the same run, so putting the ask at the top of the next run means a crashed
+probe still gets reported. A single looping walker cannot have that property.
+Each step commits its own question and answer, so nothing has to survive
+between runs. Three lines in, with `-` standing for an absent question, target,
+or payload.
+
+The value of an in-flow question is that it arrives while the screen is still in
+front of you, so the answer needs no explanation of what it answers. That is
+what `ask-report` misses by collecting after the fact, and it is the reason
+`probe-step` is one step per tap rather than one loop over everything.
+
+Drive either with [`tools/run.py`](../tools/run.py), which emits the tappable
+link rather than asking anyone to type one.
+
+### `probe-step` ran, 2026-08-23
+
+Two taps, both branches. The first carried `-` as its question and a target, and
+committed its payload without asking anything. The second carried a question and
+`-` for both target and payload, asked, committed the question and the answer
+together, and fired nothing. So the split, the `-` conditionals, the
+run-by-variable target, and the `Log-Repo` return all hold on device.
+
+The second tap also demonstrated the rule it broke. It asked whether the first
+tap's commit had landed, which is a fact `shortcuts/log/` already held, so the
+tap bought nothing and the answer said so. A probe asks what only the device
+knows: what the Ask dialog rendered, whether a banner or a permissions sheet
+appeared, what Apple's UI decided. Anything a file in this estate can answer is
+answered here before the link is sent. Written up in
+[`CLAUDE.md`](../CLAUDE.md#a-diagnostic-returns-itself).
+
 ## Three dumps, and which to use
 
 `dump-folder-zip` is the one to reach for: four actions, names preserved, and
@@ -265,6 +355,38 @@ One known sharp edge: the name is interpolated into JSON as text, so a shortcut
 named with a `"` or a `\` produces a line that does not parse. The push page
 counts unparseable lines rather than hiding them.
 
+## Signing here, so the device never does
+
+`library-import` asks the phone to gzip a plist, POST it to a third-party
+worker, and unzip the reply. Three of those steps can fail and one of them
+regularly does, because the worker signs through Apple's iCloud service and
+answers an outage with a 46-byte text body that `Extract` reports as
+"Unrecognized archive format".
+
+Nothing about that has to happen on the phone. `plist.py --write-signed` runs
+the same POST from here, retries an outage, and keeps the signed result in
+[`signed/`](../signed/). `library-fetch` then installs it in three working
+cards: fetch, name, open. The link is emitted the same way, with the same
+two-line payload, so one generator serves both routes:
+
+```bash
+python3 tools/plist.py workflows/<chain>.json --write-signed
+python3 tools/plist.py workflows/<chain>.json --link --fetch --ref <branch>
+```
+
+**`signed/` is not a mirror and cannot be checked like one.** The worker stamps
+a fresh inner name on every call, so signing the same plist twice gives
+different bytes; `--check` would fail on files that are perfectly correct. What
+is checkable is provenance, so `signed/manifest.json` records the sha256 of the
+plist each file was signed from. A recorded hash that no longer matches its
+plist is the staleness that matters, since a stale signed file serves a link
+that works and delivers the wrong shortcut.
+
+**The one call that stays on device is the first.** `library-fetch` has to be
+installed through `library-import` like anything else, so the worker runs on the
+phone exactly once more, ever. After that every install is a fetch of bytes that
+were already signed here.
+
 ## Installing one, rather than pasting it
 
 A chain that declares a `name` gets a plist in [`plists/`](../plists/), and
@@ -280,10 +402,37 @@ the shape `Library-Import` splits on. The form was recorded here and in the
 device log and nowhere emitted, so it was reassembled by hand on every install:
 the same failure `--url` already fixed for the paste route, and the same fix.
 
-**Importing never merges by name**, so the new copy becomes `Name 1` and every
-`run-shortcut?name=Name` link keeps resolving to the old one. Delete the existing
-copy first for anything generated from this repo, where the plist is the source
-and a re-import costs nothing.
+**Importing over an existing name puts a choice on screen**, and Apple's own
+sheet offers to save over the existing shortcut. Take the offer. Decline it and
+the new copy becomes `Name 1` while the original keeps the clean name, so every
+`run-shortcut?name=Name` link and every `runworkflow` card naming it still
+resolves to the **old** copy: an import that looks like an upgrade has done the
+opposite. Nothing has to be deleted first.
+
+**Wrong 2026-08-15 → the paragraph above:** this read "importing never merges by
+name" and told you to delete the existing copy first. The duplicate and its
+index consequence are real, but they follow from declining the sheet's offer,
+not from importing at all. `CLAUDE.md` carried the correction from 2026-08-26
+and this page kept the old instruction, which is the cost of stating one rule in
+two places.
+
+**Install a chain AFTER the op it reads, never before.** An op is fetched from
+`@main` at run time and a chain is installed from a branch plist, so installing
+first means the new chain runs against the old op. That is not a degraded menu,
+it is a stop: the old op answers without the key the new chain reads, the card
+reading it yields nothing, and the next required parameter is empty, which
+Shortcuts reports as "Please choose a value for each parameter in this action"
+under the name of whatever was launched at top level. Measured 2026-09-08, with
+`Choose-Claude` reading `menu` before web-tools carried it, and the notification
+naming `Run-BackTap` three levels above the failing card.
+
+**And purge the ref path after the merge**, because the merge alone is not
+enough: jsDelivr caches a branch ref for up to twelve hours, and `Run-Op`'s
+`?_=` defeats only the phone's own HTTP cache.
+
+```
+https://purge.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/<op>.js
+```
 
 ## Keeping the corpus current without re-dumping it
 
@@ -324,6 +473,224 @@ That is the whole loop for the common case. The two-step below is the precise
 form, worth it when the question is "exactly which ones does the corpus lack"
 rather than "give me the recent work", since `dump-recent` cannot know what the
 corpus already holds and will re-send anything that happens to be near the top.
+
+### Get returns, Dump delivers
+
+Two verbs, and the split is the point rather than the tidiness. `get-shortcut-json`
+resolves a name and hands back `{"name": …, "shortcut": …}`. It writes nothing,
+reaches no network, and can be called from anything that wants a shortcut's
+contents. `dump-shortcut` is the delivery half: it calls `get-shortcut-json`, sets
+`op` and `build` on the dictionary that comes back, and passes it to `Log-Repo`,
+which owns the stamp, the clipboard fallback, the token and the PUT.
+
+So the network appears exactly once in the library, in `Log-Repo`, and the
+retrieval appears exactly once, in `get-shortcut-json`. A chain that wants one
+shortcut's contents for some other purpose calls the getter and pays nothing for
+delivery it does not want.
+
+**The name is `Get-ShortcutJson`, not `Get-Shortcut`, and that is not
+fastidiousness.** The device already carries a `Get-Shortcut`, and
+`Share-ShortcutResult`, `Get-StructuredInput` and `Run-Choice` all do
+`run «Get-Shortcut»` with its result: its contract is a name in and a
+**runnable shortcut** out. Returning JSON under that name would break three
+callers silently, since a Run Shortcut card handed a JSON string fails at run
+time rather than at install. A getter that returns a different type is a
+different verb.
+
+**`op` and `build` are set as dictionary keys, not spliced into the text.**
+`Set Dictionary Value` takes the dictionary explicitly (`WFDictionary`, present
+in 343 of the 374 real cards in the corpus), so nothing re-serializes the
+payload and `name` stays at the top level where `tools/log.py` reads it for the
+row. The alternative, building a second JSON string around the first, is the
+`Say "hi"` quoting hazard again for no gain.
+
+### The app is a key, not a branch
+
+`Back-DoubleTap` tests the current app five times, and each test is three
+control cards plus a body plus a Stop and Output. `run-app-determined` is the
+same dispatch as a lookup: a literal dictionary, one `Get Dictionary Value`
+keyed on the app, the else-less If for the default, and one Run Shortcut on the
+result. Seven actions.
+
+**The card shape is not invented.** [`Nav-CurrentApp`](https://github.com/mehrlander/shortcut-tools)
+has been keying a dictionary on `Get Current App` on device since the 2026-08-13
+dump, and its keys are plain display names (`ChatGPT`, `Claude`). That is how we
+know an app coerces to its display name in a key slot, without spending a probe
+on it: only four shortcuts in 636 use `Get Current App` at all, and that one
+answers it.
+
+**It reads the app rather than taking one.** Handing in an app name *and* a
+payload is two arguments across a `Run Shortcut` boundary, which
+[`probe-list-handoff`](probe-list-handoff.json) exists to settle and which has
+never been run; `Run-Pick`'s five-row menu is the only evidence and it points at
+no. Reading the app in place sidesteps the question and leaves the single input
+slot for the payload.
+
+**The map is line-delimited text, and the choice against a Dictionary card is
+narrow.** Both forms are seven actions and both are fully visible in the chain
+file; a dictionary literal is `WFDictionaryFieldValueItems`, plain key and value
+strings. What separates them is editing and diffing. Adding a route to the text
+block is one line in the plist and one line in the field on device; adding one
+to a dictionary is a nested structure in the file and a row-at-a-time UI in the
+editor. Against that, a dictionary key matches exactly and a regex does not.
+
+One sharp edge survives, and one that looked inherent turned out not to be:
+
+- **An app name carrying a regex metacharacter breaks the pattern.** The name is
+  interpolated into `(?<=\[<name>\]=).+`, so a display name with `+`, `(` or `.`
+  matches something other than itself. Same class as the JSON quoting hazard that
+  cost `dump-folder` its parse on a shortcut called `Say "hi"`.
+- **The keys are bracketed, `[GitHub]=Show-Repo`, and that is load-bearing.**
+  Unbracketed, an **empty** app name collapses the lookbehind to `(?<==)` and
+  matches *every value in the map*, so a tap with no foreground app routes to
+  all five at once rather than to none. The bracket also retires the rule that no
+  key may end with another key, since `[` anchors the left side. One delimiter,
+  two failures gone.
+
+`.` does not cross a newline by default, so `.+` stops at the end of its own row
+without anything being said about it.
+
+**The middle path, if the regex ever bites:** hold the map as JSON in a Text
+action and parse it with `Get Dictionary from Input`, which is one action more
+and buys exact key matching back while keeping the single editable block. That
+action has 226 real cards in the corpus, so it is not a gamble either.
+
+**Both halves of the mechanism are copied, not invented.** 25 of the corpus's
+146 Match Text cards carry a pattern built at run time, `Reddit Tracker`
+interpolating an output inside a lookahead. And a single match coerces straight
+to text in a token slot, which is how that same shortcut drops `Matches` into a
+URL string.
+
+### Converting the dispatcher by splicing, not re-authoring
+
+`run-backtap` is built from the device dump of `Back-DoubleTap`, keeping actions
+0 to 7 and 43 to 58 verbatim and replacing 8 to 42 with five: call
+`get-app-route`, and run what comes back if anything did. Every card kept is the
+card running on the phone today, moved rather than rebuilt, so the only
+behaviour that can change is the behaviour named here.
+
+| Section | Before | After |
+| --- | --- | --- |
+| No current app | 6 actions | unchanged |
+| GitHub, Audible, Music/Roku, Shortcuts | 35 actions | 5 |
+| Image, URL, dictation, fallthrough | 16 actions | unchanged |
+| **Total** | **59** | **29** |
+
+Three deliberate differences, none of them incidental:
+
+- **The GitHub arm is gone**, not reproduced. `Show-Repo` was retired the same
+  day for loading a `gh-fetch.js` path that 404s, and there is nothing working to
+  point a row at. GitHub taps now reach the same fallthrough as any unmapped app.
+- **The Shortcuts menu moved into `choose-backtap`** and took the clipboard
+  caption block with it, since the caption exists only to title that menu. The
+  `choosefromlist` prompt references the caption's End If by UUID, and lifting
+  both together keeps the reference intact.
+- **Seven Stop and Output cards become two.** The app arms no longer need one
+  each, because the lookup either answers and stops or returns nothing and lets
+  the type tests run, which is the property `get-app-route` exists to have.
+
+### The caption path was five shortcuts and is now one
+
+Lifting the menu exposed what titles it. `Get-FileCaption` runs `Get-FileInfo`
+and reads `detail.caption`; `Get-FileInfo` runs `Get-FileContext`,
+`Combine-JsonList` and `Get-JsonFromJs` around 4,449 characters of inline
+JavaScript. Five shortcuts deep, to put one line above a menu.
+
+[`describe-input`](describe-input.json) already does that whole job in one, and
+its README row has said so since it was written: same work, 17 actions, one text
+card, no Run Shortcut anywhere. It returns `{list, detail}` with
+`detail.caption`, which is the same key `Get-FileCaption` was digging out, so
+the swap is a drop-in: one card becomes two and four device dependencies leave
+the path.
+
+It was already installed, on 2026-08-26, and unchanged since, so nothing new had
+to reach the phone for this. **The lesson is the one worth keeping**: a
+replacement can sit installed and documented for a week while its callers keep
+walking the old route, because nothing points from the thing being replaced to
+the thing replacing it. Only reading the two side by side finds it.
+
+### Why the lookup and the default are separate shortcuts
+
+`run-app-determined` answers every app, because an unmapped one falls to
+`Show-Loop`. That is right when the app is the only question. It is exactly
+wrong inside `Back-DoubleTap`, which still has to test the input's type and
+shape after the app: a lookup that always answers would swallow the Image, URL
+and empty-input arms and every tap would end at `Show-Loop`.
+
+So the lookup returns **nothing** on a miss and lives in `get-app-route`, and
+the default lives one level up in whoever wants one. A dispatcher then reads:
+
+```
+run Get-AppRoute with «Current App»
+if «that» has value
+  run «that» with $input
+  output
+end if
+… the type tests, unchanged
+```
+
+Four actions in place of five app branches, each of which was three control
+cards plus a body plus its own Stop and Output.
+
+**The app is read by the caller, not one level down.** `Get Current App`
+evaluated inside a sub-shortcut may report Shortcuts rather than the app you
+were in, and nothing in the corpus settles which, so the reading stays at the
+top level and the name is passed in. `get-app-route` still defaults to reading
+it, which is what makes it work standalone, and that default is the else-less If
+with an **action** in its body rather than a literal.
+
+### A default in three actions
+
+[`docs/dataflow.md`](../docs/dataflow.md) owns the mechanism: Shortcuts carries
+a current value, a non-matching `If` preserves it, and the End If result can
+therefore be the value that survived the block rather than one created inside
+it. The idiom that falls out of it is worth naming here, because it replaces a
+shape this repo still ships.
+
+```
+if $input no value
+  text Choose-Sample
+end if
+… «End If» is the name to use
+```
+
+Three actions, no variable, no otherwise branch: the input when there is one and
+the literal when there is not. The shape it replaces is six, which is what
+`dump-recent` still does for its `Days` parameter.
+
+**The corpus runs it 82 times across 36 shortcuts**, counted as End If outputs
+consumed downstream where the group carries no `WFControlFlowMode` 1, led by
+`Shortcut Source Tool` at seven and `Get-ShortcutSource` at five. The ordinary
+two-branch read appears 473 times, so the pass-through is about a sixth of all
+End If reads and not a trick.
+
+**Where the literal is a real name, running the chain bare demonstrates it.**
+`get-shortcut-json` defaults to `Choose-Sample`, so a tap with no input returns a real
+shortcut rather than failing, the same self-demo prologue [`run-pick`](run-pick.json)
+carries and that 72 shortcuts in the corpus use.
+
+### One wire format, because the others are derivable
+
+`Get file of type public.json` returns the **whole workflow**, every top-level
+key: the actions, the icon, `WFWorkflowTypes`, the input classes. Not the action
+list alone. So the XML plist and the indented sketch are both views the repo can
+render from what the device already sends, and asking the device which format it
+should produce buys nothing.
+
+Measured over the 636 shortcuts in the dumps: **633 round-trip plist to JSON to
+plist unchanged.** The three that do not are the whole argument for ever asking
+for XML, and they fail on two plist types JSON has no representation for:
+
+| Shortcut | Type | Where |
+| --- | --- | --- |
+| `Quick Actions` | `<data>` | `WFSendMessageActionRecipients`, serialized contact cards |
+| `Grok AI Chat` | `<data>` | `UserActivityData` |
+| `Anmod om kørsel af "past photo review"` | `<date>` | a bounded-date filter template |
+
+JSON is also half the size: `Back-DoubleTap` is 22,834 bytes as the device sends
+it and 47,866 rendered back to XML. So the rule is JSON on the wire, and a
+format switch is worth its actions only for a shortcut carrying `<data>` or a
+`<date>`, which is now a thing that can be predicted rather than discovered.
 
 ### The precise form: manifest, then named
 

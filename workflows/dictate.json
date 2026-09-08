@@ -1,0 +1,13 @@
+{
+  "name": "Dictate",
+  "label": "Dictate: open the full-page voice capture surface in the sheet (1 action)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.showwebpage",
+      "p": {
+        "UUID": "D1C7A7E0-0001-4A00-9000-000000000001",
+        "WFURL": "https://mehrlander.github.io/web-tools/pages/dictate.html"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Open-WiFi",
+  "label": "Open-WiFi: the Wi-Fi settings pane, for when a cast is failing (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "0F10000-0001-4A00-9000-000000000001",
+        "WFURLActionURL": "prefs:root=WIFI"
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "0F10000-0002-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "0F10000-0001-4A00-9000-000000000001",
+            "OutputName": "URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

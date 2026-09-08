@@ -1,0 +1,192 @@
+{
+  "name": "Probe-ListHandoff",
+  "label": "Probe-ListHandoff: whether a list survives Run Shortcut, by crossing into itself (12 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Does a list survive Run Shortcut? Run-Pick's two-shortcut version passed [payload, verbs] across and the far side saw one newline-joined string, so the menu offered the payload as a choice. Whether that is true of every hand-off or only that one was never established, and it gates ever passing two arguments between shortcuts again. This settles it by crossing the boundary into ITSELF: bare, it builds a two-item list and re-enters; on the second pass it counts what arrived and logs it. count=2 first=AAA means lists survive. count=1 means they do not."
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "11570000-BEEF-4A00-9000-000000000001",
+        "WFCondition": 101,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "11570000-0001-4A00-9000-000000000001",
+        "WFTextActionText": "AAA"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "11570000-0002-4A00-9000-000000000001",
+        "WFTextActionText": "BBB"
+      }
+    },
+    {
+      "id": "is.workflow.actions.list",
+      "p": {
+        "UUID": "11570000-0003-4A00-9000-000000000001",
+        "WFItems": [
+          {
+            "WFItemType": 0,
+            "WFValue": {
+              "Value": {
+                "attachmentsByRange": {
+                  "{0, 1}": {
+                    "OutputName": "Text",
+                    "OutputUUID": "11570000-0001-4A00-9000-000000000001",
+                    "Type": "ActionOutput"
+                  }
+                },
+                "string": "￼"
+              },
+              "WFSerializationType": "WFTextTokenString"
+            }
+          },
+          {
+            "WFItemType": 0,
+            "WFValue": {
+              "Value": {
+                "attachmentsByRange": {
+                  "{0, 1}": {
+                    "OutputName": "Text",
+                    "OutputUUID": "11570000-0002-4A00-9000-000000000001",
+                    "Type": "ActionOutput"
+                  }
+                },
+                "string": "￼"
+              },
+              "WFSerializationType": "WFTextTokenString"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "11570000-0004-4A00-9000-000000000001",
+        "WFWorkflowName": "Probe-ListHandoff",
+        "WFInput": {
+          "Value": {
+            "OutputName": "List",
+            "OutputUUID": "11570000-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "11570000-0009-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut Result",
+                "OutputUUID": "11570000-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "UUID": "11570000-0010-4A00-9000-000000000001",
+        "GroupingIdentifier": "11570000-BEEF-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "11570000-0005-4A00-9000-000000000001",
+        "WFCountType": "Items",
+        "Input": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "11570000-0006-4A00-9000-000000000001",
+        "CustomOutputName": "First",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "1",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "11570000-0007-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{14, 1}": {
+                "OutputName": "Count",
+                "OutputUUID": "11570000-0005-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{22, 1}": {
+                "OutputName": "First",
+                "OutputUUID": "11570000-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "handoff count=￼ first=￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "11570000-0008-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "11570000-0007-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

@@ -4,6 +4,14 @@
     python3 tools/harvest.py <dump.zip …> --index <index.json> -o <dir>
     python3 tools/harvest.py <dump.zip …> --name Show-Loop -o <dir>
     python3 tools/harvest.py … --rename Old=New --rename Other=Newer
+    python3 tools/harvest.py … --config <core>/harvest.json     # the flags, committed
+
+`--config` reads the same renames and dropped calls from a JSON file,
+`{"rename": {"Old": "New"}, "drop_call": ["Name"]}`, kept beside the output it
+shapes. Until 2026-09-05 those arguments lived only in the private
+`shortcuts/README.md`, so nothing could regenerate `core/` and compare, and it
+fell two shortcuts behind its own tier without a word. With the file committed,
+`freshness.py` gates `core/` the way it gates `library.json`.
 
 A zip of plists is a backup. A directory of `{label, actions}` chain files is
 source: it diffs, it reviews, `pack.py` turns any of it back into a paste link,
@@ -131,9 +139,14 @@ def main():
                     help="repoint Run Shortcut targets; repeatable")
     ap.add_argument("--drop-call", action="append", default=[], metavar="NAME",
                     help="remove calls to NAME, and the branch left empty; repeatable")
+    ap.add_argument("--config", help="a JSON file of {rename: {OLD: NEW}, drop_call: [NAME]}")
     args = ap.parse_args()
 
     renames = {}
+    if args.config:
+        cfg = json.loads(Path(args.config).read_text())
+        renames.update(cfg.get("rename", {}))
+        args.drop_call = list(cfg.get("drop_call", [])) + args.drop_call
     for pair in args.rename:
         if "=" not in pair:
             raise SystemExit("--rename takes OLD=NEW, got %r" % pair)

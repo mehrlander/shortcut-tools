@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>WFQuickActionSurfaces</key>
+	<array/>
+	<key>WFWorkflowActions</key>
+	<array>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>4BBB0323-8BC6-4C00-BBE0-190A0B1CA052</string>
+				<key>WFCondition</key>
+				<integer>101</integer>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Type</key>
+					<string>Variable</string>
+					<key>Variable</key>
+					<dict>
+						<key>Value</key>
+						<dict>
+							<key>Type</key>
+							<string>ExtensionInput</string>
+						</dict>
+						<key>WFSerializationType</key>
+						<string>WFTextTokenAttachment</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.list</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>C17DEAFC-CA9F-45AF-A4F9-52DBE85B2BDA</string>
+				<key>WFItems</key>
+				<array>
+					<string>Choose-Sample</string>
+					<string>Get-FileInfo</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A4EDB6ED-878E-4C9D-B3F6-758B7C87FCCB</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>List</string>
+						<key>OutputUUID</key>
+						<string>C17DEAFC-CA9F-45AF-A4F9-52DBE85B2BDA</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Run-List</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.output</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>23F449F5-D0B8-458F-86C6-69DF38B4115E</string>
+				<key>WFOutput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut Result</string>
+								<key>OutputUUID</key>
+								<string>A4EDB6ED-878E-4C9D-B3F6-758B7C87FCCB</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>4BBB0323-8BC6-4C00-BBE0-190A0B1CA052</string>
+				<key>UUID</key>
+				<string>0B71307C-A1AE-4F95-8357-D1ACBF58612B</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>6BDB0CA0-EFBF-40F0-A175-6AE9CC88C73E</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>ExtensionInput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Get-FileContext</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>2243627E-1FD7-4E50-AD9F-603787BBA12A</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Shortcut Result</string>
+						<key>OutputUUID</key>
+						<string>6BDB0CA0-EFBF-40F0-A175-6AE9CC88C73E</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Combine-JsonList</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>CustomOutputName</key>
+				<string>Map card</string>
+				<key>UUID</key>
+				<string>1E327D44-A1DB-4286-9034-46CD5FD43A65</string>
+				<key>WFTextActionText</key>
+				<string>((input) =&gt; {
+  const cap = 32
+  const clipEnd = s =&gt; (s = s ?? "", s.length &gt; cap ? s.slice(0, cap - 1) + "…" : s)
+  const clipMid = s =&gt; {
+    s = s ?? ""
+    if (s.length &lt;= cap) return s
+    const head = Math.floor((cap - 1) / 2), tail = (cap - 1) - head
+    return s.slice(0, head) + "…" + s.slice(-tail)
+  }
+  const F = [..."𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯"]
+  const sans = s =&gt; String(s).toLowerCase().replace(/[a-z]/g, c =&gt; F[c.charCodeAt(0) - 97] || c)
+  const sup = d =&gt; d === "0" ? "⁰" : "¹²³⁴⁵⁶⁷⁸⁹"[d.charCodeAt(0) - 49]
+  const supNum = x =&gt; String(x).replace(/\d/g, d =&gt; sup(d))
+  const supTag = x =&gt; "⁽" + supNum(x) + "⁾"
+  const rpad = (s, w) =&gt; s + " ".repeat(Math.max(0, w - s.length))
+
+  const RULES = {
+    "icloud.com/shortcuts": "shortcut",
+    "lawfilesext.leg.wa.gov": "lawfiles",
+    "shortcuts://open-shortcut": "open shortcut",
+    "shortcuts://run-shortcut": "run shortcut",
+    "http": "URL"
+  }
+  const classifyUrl = u =&gt; {
+    const hay = u.toLowerCase()
+    const match = Object.entries(RULES).find(([k]) =&gt; hay.includes(k))
+    return match ? match[1] : "URL"
+  }
+  const looksUrl = s =&gt; /^(https?:\/\/|shortcuts:\/\/)\S+$/i.test(s)
+
+  const decodeB64 = b64 =&gt; {
+    try {
+      return new TextDecoder().decode(
+        Uint8Array.from(atob(b64.replace(/\s+/g, "")), c =&gt; c.charCodeAt(0))
+      )
+    } catch (e) { return "" }
+  }
+
+  const transformOne = o =&gt; {
+    const base64 = String(o["Base64"] || "")
+    const count = Number(o["Count"] || 0) || 0
+    const isList = count &gt; 1
+
+    const first = base64.split(/\r?\n/)[0] || ""
+    const preview = first.slice(0, 10) + (first.length &gt; 10 ? "…" : "")
+
+    const rawType = String(o["Type"] || "")
+    const name = String(o["Name"] || "")
+    const ext  = String(o["File Extension"] || "")
+
+    // Decode once. List items don't carry a single payload, so skip it there.
+    const decoded = isList ? "" : decodeB64(base64)
+
+    // A URL is either declared in the URL field, or it's the entire text payload.
+    const fieldUrl = String(o["URL"] || "")
+    const textUrl = (!isList &amp;&amp; !fieldUrl &amp;&amp; looksUrl(decoded.trim())) ? decoded.trim() : ""
+    const url = fieldUrl || textUrl
+    const isUrlItem = url.length &gt; 0
+
+    const fileName = isList ? "LIST"
+      : isUrlItem ? (name || url)
+      : (ext ? (name ? (name + "." + ext) : ("." + ext)) : name)
+
+    let type
+    if (isList) {
+      const exts = ext.split(/\r?\n/).map(s =&gt; s.trim()).filter(Boolean)
+      let tagLabel = "mixed"
+      if (exts.length) {
+        const e0 = exts[0]
+        let same = true
+        for (const e of exts) if (e !== e0) { same = false; break }
+        if (same) tagLabel = e0
+      }
+      type = "List (" + tagLabel + ")"
+    } else if (isUrlItem) {
+      type = classifyUrl(url)
+    } else if (ext.toLowerCase() === "skill") {
+      type = "skill"
+    } else if (first.startsWith("YnBsa")) {
+      type = "Action"
+    } else {
+      type = rawType
+    }
+
+    const urlTypes = ["URL", "shortcut", "open shortcut", "run shortcut", "lawfiles"]
+    const isUrl = urlTypes.includes(type)
+    const icon = isList ? "📇 " : (isUrl ? "🔗 " : (type === "skill" ? "🧩 " : "🧾 "))
+    const inner = icon + sans(type || "item")
+    const W = 68, baseStr = "- " + inner + " -"
+    const header = " ".repeat(Math.max(0, Math.floor((W - baseStr.length) / 2) + 2)) + baseStr
+
+    let lines
+    if (isList) {
+      const names = name.split(/\r?\n/).map(s =&gt; s.trim())
+      const exts  = ext.split(/\r?\n/).map(s =&gt; s.trim())
+      const n = Math.max(count || 0, names.length, exts.length, 0)
+      lines = []
+      for (let i = 0; i &lt; n; i++) {
+        const nm = names[i] || ""
+        const ex = exts[i] || ""
+        let fn = ex ? (nm ? (nm + "." + ex) : ("." + ex)) : nm
+        if (!fn) fn = "Item " + (i + 1)
+        lines.push(fn)
+      }
+      if (!lines.length) lines = ["LIST"]
+    } else if (isUrlItem) {
+      lines = [name || "", url].filter(Boolean)
+      if (!lines.length) lines = ["URL"]
+    } else {
+      let textLines = null
+      const looksBinary = !decoded || /[\x00-\x08\x0E-\x1F]/.test(decoded.slice(0, 200))
+      if (!looksBinary) {
+        textLines = decoded.split(/\r?\n/)
+        while (textLines.length &amp;&amp; !textLines[textLines.length - 1]) textLines.pop()
+      }
+      lines = (textLines &amp;&amp; textLines.length) ? textLines : [fileName || "Item"]
+    }
+
+    const n = lines.length || 1
+    const Lw = supTag(n).length
+    const mid = lines.length &lt;= 2 ? "" : clipEnd(lines.slice(1, -1).join("\n").replace(/\r?\n/g, "␤"))
+    const row = i =&gt; rpad(supTag(i), Lw) + " " + clipMid(lines[i - 1] || "")
+    const body = [row(1), n == 2 ? row(2) : n &gt; 2 ? ("⋯" + (mid ? " " + mid : "")) : null, n &gt; 2 ? row(n) : null].filter(Boolean).join("\n")
+
+    const detail = { type, fileName, preview, caption: header + "\n" + body }
+    if (isUrlItem) detail.url = url
+
+    return { ...o, detail }
+  }
+
+  if (input &amp;&amp; Array.isArray(input.list)) {
+    const items = input.list.map(transformOne)
+    const join = k =&gt; input.list.map(o =&gt; String(o[k] || "")).join("\n")
+    const summary = transformOne({ Count: items.length, Name: join("Name"),
+      "File Extension": join("File Extension"), Base64: "" })
+    return { list: items, detail: summary.detail }
+  }
+  return transformOne(input)
+})
+</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>C314AEA1-CB3B-4298-96BF-A039F88BAD34</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{1, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Map card</string>
+								<key>OutputUUID</key>
+								<string>1E327D44-A1DB-4286-9034-46CD5FD43A65</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{4, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut Result</string>
+								<key>OutputUUID</key>
+								<string>2243627E-1FD7-4E50-AD9F-603787BBA12A</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>(￼)(￼)
+</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>16D7A980-E4B0-4FE8-A3E9-03C181CDB285</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>C314AEA1-CB3B-4298-96BF-A039F88BAD34</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Get-JsonFromJs</string>
+			</dict>
+		</dict>
+	</array>
+	<key>WFWorkflowClientVersion</key>
+	<string>4711</string>
+	<key>WFWorkflowHasOutputFallback</key>
+	<false/>
+	<key>WFWorkflowHasShortcutInputVariables</key>
+	<true/>
+	<key>WFWorkflowIcon</key>
+	<dict>
+		<key>WFWorkflowIconGlyphNumber</key>
+		<integer>61440</integer>
+		<key>WFWorkflowIconStartColor</key>
+		<integer>-20702977</integer>
+	</dict>
+	<key>WFWorkflowImportQuestions</key>
+	<array/>
+	<key>WFWorkflowInputContentItemClasses</key>
+	<array>
+		<string>WFAppContentItem</string>
+		<string>WFAppStoreAppContentItem</string>
+		<string>WFArticleContentItem</string>
+		<string>WFContactContentItem</string>
+		<string>WFDateContentItem</string>
+		<string>WFEmailAddressContentItem</string>
+		<string>WFFolderContentItem</string>
+		<string>WFGenericFileContentItem</string>
+		<string>WFImageContentItem</string>
+		<string>WFiTunesProductContentItem</string>
+		<string>WFLocationContentItem</string>
+		<string>WFDCMapsLinkContentItem</string>
+		<string>WFAVAssetContentItem</string>
+		<string>WFPDFContentItem</string>
+		<string>WFPhoneNumberContentItem</string>
+		<string>WFRichTextContentItem</string>
+		<string>WFSafariWebPageContentItem</string>
+		<string>WFStringContentItem</string>
+		<string>WFURLContentItem</string>
+	</array>
+	<key>WFWorkflowMinimumClientVersion</key>
+	<integer>900</integer>
+	<key>WFWorkflowMinimumClientVersionString</key>
+	<string>900</string>
+	<key>WFWorkflowOutputContentItemClasses</key>
+	<array>
+		<string>WFContentItem</string>
+	</array>
+	<key>WFWorkflowTypes</key>
+	<array>
+		<string>ActionExtension</string>
+		<string>WFWorkflowTypeShowInSearch</string>
+	</array>
+</dict>
+</plist>

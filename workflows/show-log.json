@@ -1,0 +1,24 @@
+{
+  "name": "Show-Log",
+  "label": "Show-Log: the device log as a sheet over Shortcuts (2 actions)",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "A hosted https URL, not HTML text, and the difference decides whether this works at all. Show Web View takes either, but HTML text lands at a file:// origin, a different storage partition, where localStorage.ghToken is not; a plain https URL keeps the page on its own origin and the stored token with it. Measured 2026-08-26 by Probe-WebViewCaps, and Dictate already takes this route. One action, because the page does the work."
+      }
+    },
+    {
+      "id": "is.workflow.actions.showwebpage",
+      "p": {
+        "UUID": "5109F000-0001-4A00-9000-000000000001",
+        "WFURL": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "label": "One Run Shortcut card naming Probe-Unattended, to paste into a blank time-of-day automation instead of searching the action list for it (1 action)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "WFWorkflowName": "Probe-Unattended"
+      }
+    }
+  ]
+}

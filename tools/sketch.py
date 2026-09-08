@@ -132,6 +132,11 @@ VERB = {
 }
 
 
+def offset_of(rng):
+    """The integer offset out of an "{offset, length}" attachment range key."""
+    return int(rng.strip("{}").split(",")[0])
+
+
 def short(value, produced, limit=48):
     """One readable token for a parameter value.
 
@@ -144,7 +149,14 @@ def short(value, produced, limit=48):
         v = value.get("Value", value)
         if isinstance(v, dict) and "string" in v:
             s = v["string"]
-            for rng, att in sorted((v.get("attachmentsByRange") or {}).items()):
+            # Sort by the offset as a NUMBER. These keys are "{5, 1}" strings,
+            # so sorting them as text puts "{10, 1}" before "{5, 1}" and every
+            # attachment past the ninth character lands in the wrong slot: the
+            # placeholders are filled left to right, so one mis-ordered key
+            # shifts all of them. It renders a plausible line that names the
+            # wrong variables, which is worse than a line that fails to render.
+            for _, att in sorted((v.get("attachmentsByRange") or {}).items(),
+                                 key=lambda kv: offset_of(kv[0])):
                 s = s.replace("￼", ref(att, produced), 1)
             return clip(s, limit)
         if isinstance(v, dict) and ("Type" in v or "OutputUUID" in v):

@@ -17,7 +17,7 @@ Rank every delivery route by what it costs the person on the other end:
 
 | Cost | Route |
 | --- | --- |
-| Free | Read the corpus. 577 shortcuts and 29,713 actions are on disk, parseable, and answer most questions about how a real library is built. |
+| Free | Read the corpus. Some 600 shortcuts and 30,000 actions are on disk, parseable, and answer most questions about how a real library is built; `library.json`'s `meta` block in web-tools-private has the live count, and `tools/freshness.py` says whether it is current. |
 | Free | Read the public record. The format notes cite what exists and, more usefully, where it stops. |
 | One tap | A `shortcuts://run-shortcut` link to a receiver that already exists. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
@@ -31,7 +31,8 @@ Rank every delivery route by what it costs the person on the other end:
    `OpenWorkflowAction` was in eight shortcuts when it was probed anyway.
    **Search the ToolKit catalog too, and it is the one that answers.**
    `shortcuts-playground-plugin` ships Apple's own metadata as JSON: 2,731
-   identifiers and 2,585 parameter tables against this repo's 774.
+   identifiers and 2,585 parameter tables against the 774 distinct identifiers
+   behind this repo's 810 `actions.json` entries.
    `python3 tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>`.
    It would have supplied every shape that was instead obtained by asking the
    user to configure cards. **Search for a catalog, not just for an answer.**
@@ -61,22 +62,55 @@ axis, and it is the only route that can deliver **file-level** settings, since
 file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And **import never merges by name**:
-importing over an existing shortcut creates a second one.
+only because nothing here holds a secret. And importing over a name that already
+exists puts a choice on screen: **Apple's own sheet offers to save over the
+existing shortcut**, and taking that offer is all a re-install needs (reported
+2026-08-26). Nothing has to be deleted first.
 
-**The index goes to the newcomer, which makes this a correctness problem rather
-than an untidiness problem.** The existing shortcut keeps the clean name and the
-version just imported becomes `Name 1`, so every
+**Take the offer, because keeping both is a correctness problem rather than an
+untidiness one.** A second copy takes the index: the original keeps the clean
+name and the newcomer becomes `Name 1`, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
-it, keeps resolving to the **old** copy. An import that appears to have upgraded
-something has silently done the opposite. So clearing the name first is
-mandatory, not stylistic.
+it, still resolves to the **old** copy. An import that looks like an upgrade has
+then done the opposite.
 
-**Delete before importing, for anything generated from this repo.** The
+**Wrong 2026-08-15 → the paragraph above:** this read "import never merges by
+name" and called clearing the name first "mandatory, not stylistic." The
+duplicate and its index consequence are real, but they follow from declining the
+sheet's offer, not from importing at all. `Library-Replace` deletes by name
+before importing and is worth having where no one is present to answer the
+sheet; it is not a prerequisite, and a session should not route a normal
+re-install through it. The cost of that error is not a wasted tap: the link
+names a receiver the device may not have, so it fails at the point of use with
+nothing installed.
+
+**But replacing a shortcut breaks whatever the system had bound to it**
+(reported 2026-08-31). Back Tap holds a reference that a save-over import does
+not preserve, so a re-installed shortcut has to be re-selected in Settings
+before the gesture works again. The name survives and the binding does not,
+which is the opposite of the failure the save-over offer prevents, and it is
+silent: the gesture simply stops doing anything.
+
+So **a handover that re-installs a bound shortcut owes the settings link too**,
+in the same message. The same holds for the AssistiveTouch button's actions.
+Delivery is through `Open-URL`, which already exists, because a bare `prefs:`
+link tapped in a chat client is swallowed and one run from inside Shortcuts is
+not:
+
+| Setting | Key |
+| --- | --- |
+| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
+| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+
+Both come from `Fav-Settings`, which has carried a 14-page settings menu all
+along; the second lands on the AssistiveTouch page, and the long-press
+customisation below it has no key recorded yet. Emit them like any other link:
+`python3 tools/run.py Open-URL --text '<the prefs URL>'`.
+
+**Replacing a generated receiver is free**, so spend no care on it. The
 four-step prune exists for shortcuts whose only copy is the device; a receiver
-whose plist is committed here is reproducible from `git`, so deleting it costs a
-re-import and nothing else. Reserve staging for authored work, where it is
-earned.
+whose plist is committed here is reproducible from `git`. Reserve staging for
+authored work, where it is earned.
 
 **The one-time cost so far, in full**, so nothing re-spends it by accident:
 
@@ -89,6 +123,17 @@ earned.
 
 Everything else the library view does is one tap from a web page, and it stays
 that way.
+
+## A chain is built the way the library builds chains
+
+**Read [`docs/idioms.md`](docs/idioms.md) before authoring a chain**, and hold
+to its idiom 4: **past about five actions of real work, write the operation in
+JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
+typed result, `Run-Op` to fetch the code from web-tools by name). That document
+was the specification all along and `CLAUDE.md` never named it, which is how a
+21-action chain was hand-built on 2026-09-03 with parameter shapes copied from
+the one chain the README flagged as inferred. The shapes are now a gate,
+`test/parameter-shapes.test.js`, and the census behind it is in the format notes.
 
 ## Deletion is never one step
 
@@ -115,6 +160,147 @@ A chain opts into `plists/` by declaring a name, because most of them are probes
 and demos rather than receivers. Deriving the name from the label instead put 27
 chains into 24 files, three overwriting each other in silence.
 
+**A mirror is the chain set, which means deleting too.** A chain removed,
+renamed, or giving up its `name` leaves behind an artifact no chain
+regenerates, and that artifact keeps serving a link that works and delivers
+something the repo has retracted: the same failure as a stale one, arriving by
+the other door. `--publish` removes what no chain claims and says how many, so
+withdrawing a chain is one command rather than a command plus a `rm` nobody
+remembers.
+
+The reason this needed fixing on 2026-08-27 is worth more than the fix. Both
+gates existed and they disagreed: the suite asserted one artifact per chain and
+failed on an orphan, while the tools' own `--check` looped over chains only and
+called the same tree current. The one a person runs for a fast answer was the
+one that lied, which is worse than having no check at all, and it is why
+`--check` now reports an orphan in the same breath as a stale file. Where two
+things state one invariant, the cheaper one being weaker is not a gap in
+coverage; it is a wrong answer.
+
+## A name is not a reference until something checks it
+
+Resolving a Run Shortcut target by name rather than by `workflowIdentifier` is
+what makes a chain portable, and the suite enforces it. It also trades a
+device-local pointer for a string nothing validates, so a target renamed on the
+phone leaves a card that looks correct and resolves to nothing.
+
+That is not hypothetical. Stripping the identifiers out of `Back-DoubleTap`
+exposed two names that had been stale for at least a fortnight, still working
+only because the identifier beside them was carrying the call:
+`Use-RecentShortcut`, since renamed to `Open-RecentShortcut`, and `Repo-Viewer`,
+now pointed at `Show-Repo`.
+
+**The corpus settled the second one without a tap, and the way it did is the
+method.** The identifier was no help: `962A04D2-78A9-4AD8-91B9-A51E3F3F6CB1`
+appears in the corpus only inside `Back-DoubleTap` itself, since a `.wflow` does
+not carry its own identifier and only a *caller* records a target's. What
+settled it was elimination. `Repo-Viewer` exists nowhere in 605 names or 15
+dumps, and exactly one repo browser does exist, `Show-Repo`, whose two actions
+build a `gh-fetch` page and hand it to `Show-Html`. The branch calling it fires
+when the current app is GitHub, which is what that page is for. Retargeting is
+not merely the best guess available, it is strictly better than any alternative:
+the old name resolves to nothing, so the branch was dead either way.
+
+The general shape, since this will recur: a stale by-name target is resolved by
+asking what the library *has* that does the job, not by recovering what the name
+used to mean. The device cannot answer the second question either, since a
+rename leaves no record on it.
+
+**So audit the names against the library index whenever a chain gains one, and
+always after stripping identifiers.** `run.py` does this for every link it
+emits, against `index.json` and the newest `manifests/*.txt` together, since
+the manifest is the device's own list and the index is a snapshot of the last
+dump. By hand, `web-tools-private`'s `shortcuts/index.json` is one row per
+shortcut in the last dump:
+
+```bash
+python3 - <<'EOF'
+import json
+idx = {r["name"] for r in json.load(open("index.json"))}
+for a in json.load(open("<chain>.json"))["actions"]:
+    names = [a["p"].get("WFWorkflowName")]
+    # A router keeps its targets as dictionary values, where WFWorkflowName
+    # never looks. Read those too, or the audit passes a map full of dead names.
+    for item in (a["p"].get("WFItems", {}).get("Value", {})
+                 .get("WFDictionaryFieldValueItems", []) or []):
+        names.append(item.get("WFValue", {}).get("Value", {}).get("string"))
+    for n in names:
+        if isinstance(n, str) and n not in idx: print("missing:", n)
+EOF
+```
+
+Two false positives to expect, both from the index being a snapshot: anything
+installed since the last dump, which the newest `manifests/*.txt` settles (read
+both, as `run.py` does), and any name computed at run time, which is a token
+rather than a string and cannot be checked this way at all.
+
+**Audit the chain's own name too, not only its targets.** `Get-ShortcutJson`
+was published on 2026-08-30 over a 4-action predecessor doing nearly the same
+job, because the collision check was run against `Get-Shortcut` and never
+against the name actually chosen. Nothing called the predecessor and the
+replacement is a superset, so it cost nothing, and the device log settled that
+the new copy is the one running. The check is one line and belongs beside the
+target audit:
+
+```python
+name = json.load(open("<chain>.json")).get("name")
+if name in idx: print("name already in the library:", name)
+```
+
+A hit is not automatically wrong. It means the install will offer to save over
+something, and the question of whether that something is wanted has to be
+answered before the link goes out rather than after.
+
+**A dictionary value is a shortcut name that no field name marks as one**, which
+is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
+cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is
+plain key and value strings in the chain file, as readable and as diffable as
+any other parameter. What changes is that the names stop living in
+`WFWorkflowName`, which is the only field the audit knew to read, so the audit
+reads both now. Any future carrier for a target name has to be added here in the
+same commit that introduces it.
+
+## Every handover reports itself, with its build id
+
+**Confirming an install was never the problem; confirming a RUN was.**
+`Library-Import` ends by calling `Log-Repo`, so every install lands in
+`shortcuts/log/` with the ref it came from. Nothing else logs unless a chain says
+so, which means a session can always see what installed and usually cannot see
+what ran. That asymmetry cost this session hours: a link was handed over, nothing
+came back, and there was no way to tell a stale copy from a fresh one that
+failed, so the next move was rework rather than a fix.
+
+Four things follow, and none is optional for anything handed over:
+
+1. **Read the log, do not reconstruct it.** `python3 tools/log.py` prints the
+   entries newest first, with the build each install came from. It reads
+   `origin/main` and fetches first, because the working tree is a checkout from
+   whenever the session last pulled; reading the tree showed entries three days
+   stale while the device had committed minutes earlier.
+   **The reader is a pair, and both halves say the same thing.** web-tools'
+   `pages/shortcut-log.html` renders the same log for whoever tapped the link,
+   from the same two sources, because until it existed the useful half of a run
+   was legible from a checkout and invisible on the phone: Show Result clips a
+   payload and does not scroll.
+2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
+   is JSON with `op`, `name` and `build`, so the reader can render it as a row
+   rather than a wall of text.
+3. **The chain stamps its own build.** `#BUILD#` anywhere in a string is replaced
+   with a short content hash of the chain, by **both** mirrors. The token is
+   exactly as wide as the id, so U+FFFC anchor offsets beside it survive. Held by
+   `test/plist.test.js`; a directive one mirror resolves and the other does not
+   is the `$file` defect over again.
+4. **And the id is scored, because alone it answers nothing.** A stamp says
+   which copy ran; it takes `plists/builds.json` (name -> id, published by
+   `plist.py --publish`) to say whether that copy is current. Both readers mark
+   a row `current` or `stale`, and both stay **silent when the manifest is
+   unknown**: an unlooked-up answer reading as a good one is worse than no
+   verdict. Getting this by hand cost a checkout and a hashed chain on
+   2026-08-29, which is the rework the stamp was added to prevent.
+
+**And report it back.** A reply that hands over a link ends by showing the actual
+log rows, so both sides can see what ran rather than inferring it from silence.
+
 ## A diagnostic returns itself
 
 **Never end a probe by asking what happened.** That makes the user read a
@@ -129,6 +315,57 @@ failed commit degrades to the cheap path rather than losing the result.
 
 This is why the repo carries a logger at all. It is not telemetry, it is the
 return channel that makes a probe cost one tap.
+
+**And a question is worth a tap only when the repo cannot answer it.** The rule
+above stops a probe ending in "what did you see?"; this one stops the question
+that survives it. Before asking anything, answer it here: read
+`shortcuts/log/`, the corpus dumps, the plists, the ToolKit catalog. Whatever is
+left is the question, and it is always the same kind of thing: what the screen
+did, what the dialog rendered, what Apple's own UI decided. Those exist nowhere
+but the device. Anything derivable from a file in this estate is a `git pull`
+dressed up as a favor, and it costs a tap, a context switch, and the reader's
+willingness to answer the next one.
+
+Measured 2026-08-23, validating `Probe-Step`. The second of two taps asked
+whether the first tap's commit had landed. It had, in `shortcuts/log/`, two
+commits away from the session that asked. The reply was "Come on, this is not
+what you should be asking me. You can see these things yourself," which is the
+correct answer and the reason this paragraph exists. The tap was not wasted
+because the walker failed, it worked; it was wasted because the question was
+already answered before it was sent. This is judgment and stays prose: no check
+can read a question and tell whether the repo holds its answer.
+
+## A probe carries its own instructions
+
+**The reader arrives knowing nothing, and should not have to.** Running a link
+is cheap and the user has said so. What costs is having to remember what the
+tap was for, watch for the right thing without being told what it is, and work
+out afterwards which part mattered. That is the expensive kind of ask, and it
+is the one that hides inside a link that looks like one tap.
+
+So a probe that needs an observation says all three parts on the device, in
+order:
+
+1. **Brief, before anything happens.** What is about to run and what to watch
+   for. `Probe-Watch` puts it in an alert titled "Watch what happens next", so
+   it blocks until it is read.
+2. **The thing itself.**
+3. **The question, immediately after**, naming the specific outcome rather than
+   asking what happened. "Did the dictation page open?" not "what did you see?"
+
+[`workflows/probe-watch.json`](workflows/probe-watch.json) is the receiver, and
+the payload is three lines: brief, target, question. It logs `Ran:`, `Q:` and
+`A:` through `Log-Repo`, so the answer arrives here without a paste.
+
+**This is why `Probe-Step` was not enough.** It asks before it fires, so its
+question is about the *previous* tap: on 2026-08-23 that meant asking about a
+commit from twenty minutes earlier, and the honest reply was that the repo
+already held the answer. Announce, fire, then ask, all in one tap, is what
+removes the remembering.
+
+The rule above still governs what the question may be: ask only what the repo
+cannot answer, which is what the screen did, what the dialog rendered, what
+Apple's own UI decided.
 
 ## Handing over a link
 
