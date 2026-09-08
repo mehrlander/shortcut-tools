@@ -196,34 +196,59 @@ test("Choose-Claude is a shell: it asks the op for the whole menu and draws it",
     "the rows are `menu`, which the op guarantees is never empty, an ERROR included");
 });
 
-test("Choose-Claude dispatches a row by the map first and by name second, and Out leaves", () => {
-  // The dispatch that lets the op mix sessions and verbs in one list: look the
-  // chosen row up in `urls`; a hit is a page, a miss is a shortcut name. Same
-  // has-value idiom Get-AppRoute uses. Reverse the two arms and every session
-  // row becomes a search for a shortcut named after somebody's ask.
+test("Choose-Claude dispatches by the map, then by name, and a row that reaches neither says so", () => {
+  // The dispatch that lets the op mix pages and verbs in one list: look the
+  // chosen row up in `urls`; a hit is a page, a miss is a shortcut to run by
+  // name. Reverse the two arms and every page row becomes a search for a
+  // shortcut named after somebody's ask.
   const out = choose.actions.find((a) => a.p.WFConditionalActionString === "Out");
   assert.ok(out, "Out is tested explicitly, not left to fail a name lookup");
   assert.strictEqual(out.p.WFCondition, 5, "`is not`, so every other row falls through to the dispatch");
-  // "Out" is web-tools' VERBS, the tail lib/ops/session-menu.js appends to every
-  // result; tools/test/ops.test.mjs pins the other half of this pair. Two repos,
-  // no shared CI, so each side pins the string it names.
   const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
   assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
 
-  const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Url");
+  const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Target");
+  assert.ok(lookup, "the looked-up destination is not named `Url`");
+  // Open URL reads the URL card's own built-in output, which Shortcuts calls
+  // `URL`. A custom name differing from it only in case is one resolver away
+  // from binding the wrong output, and costs nothing to avoid.
+  assert.ok(!choose.actions.some((a) => String(a.p.CustomOutputName || "").toLowerCase() === "url"),
+    "no custom output name collides with the URL card's own, even in case");
   assert.strictEqual(lookup.p.WFDictionaryKey.WFSerializationType, "WFTextTokenString",
     "the chosen row is the key, and a variable key is a token string");
-  assert.strictEqual(lookup.p.WFInput.Value.OutputUUID,
-    choose.actions.find((a) => a.p.CustomOutputName === "Urls").p.UUID);
 
   const i = choose.actions.indexOf(lookup);
-  const [has, url, open, other, run] = choose.actions.slice(i + 1, i + 6);
+  const [has, url, open] = choose.actions.slice(i + 1, i + 4);
   assert.strictEqual(has.p.WFCondition, 100, "has any value");
   assert.strictEqual(has.p.WFInput.Variable.Value.OutputUUID, lookup.p.UUID);
   assert.ok(url.id.endsWith("url") && open.id.endsWith("openurl"), "a hit opens the page");
-  assert.strictEqual(url.p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment",
-    "the URL card takes the looked-up value by attachment, never a string it interpolates itself");
+  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, lookup.p.UUID);
+});
+
+test("a row that is in no map and cannot be a shortcut name is logged, not run", () => {
+  // 2026-09-08: a row absent from `urls` fell straight to Run Shortcut, which
+  // hunted for a shortcut named after a menu row, found none, and stopped with
+  // "Please choose a value for each parameter in this action" against
+  // Run-BackTap, three levels above anything a reader could act on. A SPACE
+  // separates the two kinds of row: a verb is a shortcut name, hyphenated and
+  // space-free; a prose row came from `urls` and should have been found there.
+  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  const space = choose.actions.find((a) => a.p.WFConditionalActionString === " ");
+  assert.ok(space, "the miss arm tests for a space before assuming a shortcut name");
+  assert.strictEqual(space.p.WFCondition, 99, "`contains`");
+  assert.strictEqual(space.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
+
+  const j = choose.actions.indexOf(space);
+  const [miss, log, show, other, run] = choose.actions.slice(j + 1, j + 6);
+  assert.strictEqual(miss.p.CustomOutputName, "Miss");
+  // The payload carries both halves of the comparison, because a miss is only
+  // diagnosable by putting the chosen text beside the keys the op published.
+  const anchors = Object.values(miss.p.WFTextActionText.Value.attachmentsByRange).map((v) => v.OutputUUID);
+  const dest = choose.actions.find((a) => a.p.CustomOutputName === "Destinations").p.UUID;
+  assert.deepStrictEqual(anchors.sort(), [list.p.UUID, dest].sort());
+  assert.strictEqual(log.p.WFWorkflowName, "Log-Repo", "a diagnostic returns itself");
+  assert.ok(show.id.endsWith("showresult"), "and says so on the device, where Log-Repo may not reach the network");
   assert.strictEqual(other.p.WFControlFlowMode, 1);
-  assert.ok(run.id.endsWith("runworkflow"), "a miss runs the row as a shortcut name");
+  assert.ok(run.id.endsWith("runworkflow"), "a space-free row is still run by name");
   assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
 });

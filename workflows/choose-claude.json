@@ -1,6 +1,6 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (17 actions)",
+  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (23 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getclipboard",
@@ -78,7 +78,7 @@
       "id": "is.workflow.actions.getvalueforkey",
       "p": {
         "UUID": "C1A0DE00-0006-4A00-9000-000000000001",
-        "CustomOutputName": "Urls",
+        "CustomOutputName": "Destinations",
         "WFDictionaryKey": "urls",
         "WFInput": {
           "Value": {
@@ -141,7 +141,7 @@
       "id": "is.workflow.actions.getvalueforkey",
       "p": {
         "UUID": "C1A0DE00-0008-4A00-9000-000000000001",
-        "CustomOutputName": "Url",
+        "CustomOutputName": "Target",
         "WFDictionaryKey": {
           "Value": {
             "string": "￼",
@@ -159,7 +159,7 @@
           "Value": {
             "Type": "ActionOutput",
             "OutputUUID": "C1A0DE00-0006-4A00-9000-000000000001",
-            "OutputName": "Urls"
+            "OutputName": "Destinations"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
@@ -177,7 +177,7 @@
             "Value": {
               "Type": "ActionOutput",
               "OutputUUID": "C1A0DE00-0008-4A00-9000-000000000001",
-              "OutputName": "Url"
+              "OutputName": "Target"
             },
             "WFSerializationType": "WFTextTokenAttachment"
           }
@@ -192,7 +192,7 @@
           "Value": {
             "Type": "ActionOutput",
             "OutputUUID": "C1A0DE00-0008-4A00-9000-000000000001",
-            "OutputName": "Url"
+            "OutputName": "Target"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
@@ -216,6 +216,92 @@
       "id": "is.workflow.actions.conditional",
       "p": {
         "GroupingIdentifier": "C1A0DE00-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 0,
+        "WFCondition": 99,
+        "WFConditionalActionString": " ",
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
+              "OutputName": "Chosen Item"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1A0DE00-0012-4A00-9000-000000000001",
+        "CustomOutputName": "Miss",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"menu-miss\",\"name\":\"Choose-Claude\",\"build\":\"#BUILD#\",\"chosen\":\"￼\",\"keys\":\"￼\"}",
+            "attachmentsByRange": {
+              "{69, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
+                "OutputName": "Chosen Item"
+              },
+              "{80, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0006-4A00-9000-000000000001",
+                "OutputName": "Destinations"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "C1A0DE00-0013-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1A0DE00-0012-4A00-9000-000000000001",
+            "OutputName": "Miss"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "UUID": "C1A0DE00-0014-4A00-9000-000000000001",
+        "Text": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0012-4A00-9000-000000000001",
+                "OutputName": "Miss"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9003-4A00-9000-000000009003",
         "WFControlFlowMode": 1
       }
     },
@@ -265,9 +351,17 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
+        "GroupingIdentifier": "C1A0DE00-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 2,
+        "UUID": "C1A0DE00-0015-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
         "GroupingIdentifier": "C1A0DE00-9002-4A00-9000-000000009002",
         "WFControlFlowMode": 2,
-        "UUID": "C1A0DE00-0012-4A00-9000-000000000001"
+        "UUID": "C1A0DE00-0016-4A00-9000-000000000001"
       }
     },
     {
@@ -275,7 +369,7 @@
       "p": {
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 2,
-        "UUID": "C1A0DE00-0013-4A00-9000-000000000001"
+        "UUID": "C1A0DE00-0017-4A00-9000-000000000001"
       }
     }
   ]
