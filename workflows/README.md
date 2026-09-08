@@ -415,6 +415,24 @@ not from importing at all. `CLAUDE.md` carried the correction from 2026-08-26
 and this page kept the old instruction, which is the cost of stating one rule in
 two places.
 
+**Install a chain AFTER the op it reads, never before.** An op is fetched from
+`@main` at run time and a chain is installed from a branch plist, so installing
+first means the new chain runs against the old op. That is not a degraded menu,
+it is a stop: the old op answers without the key the new chain reads, the card
+reading it yields nothing, and the next required parameter is empty, which
+Shortcuts reports as "Please choose a value for each parameter in this action"
+under the name of whatever was launched at top level. Measured 2026-09-08, with
+`Choose-Claude` reading `menu` before web-tools carried it, and the notification
+naming `Run-BackTap` three levels above the failing card.
+
+**And purge the ref path after the merge**, because the merge alone is not
+enough: jsDelivr caches a branch ref for up to twelve hours, and `Run-Op`'s
+`?_=` defeats only the phone's own HTTP cache.
+
+```
+https://purge.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/<op>.js
+```
+
 ## Keeping the corpus current without re-dumping it
 
 **One tap, if you just want the recent work off the phone.** `dump-recent`
