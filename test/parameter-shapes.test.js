@@ -142,32 +142,65 @@ test("Claude-Session's error arm logs with its build id before showing", () => {
   assert.ok(show.id.endsWith("showresult"));
 });
 
-test("Choose-Claude's menu rows and its conditionals name the same strings", () => {
-  // The silent failure this catches: rename a row in the Get Text card and the
-  // conditional still tests the old string, so its arm goes dead and the row
-  // falls through to the run-by-name arm, which looks for a shortcut of that
-  // name and finds none. Nothing errors. The tap just does nothing.
-  const rows = choose.actions[0].p.WFTextActionText.split("\n");
-  for (const a of choose.actions)
-    if (a.id.endsWith("conditional") && a.p.WFConditionalActionString)
-      assert.ok(rows.includes(a.p.WFConditionalActionString),
-        `a conditional tests "${a.p.WFConditionalActionString}", which is not one of the menu rows`);
+test("Choose-Claude is a shell: it asks the op for the whole menu and draws it", () => {
+  // The menu moved into web-tools' lib/ops/session-menu.js on 2026-09-08, so
+  // this chain names no row, no address and no session. That is the point: the
+  // menu's wording, order and verbs are now a commit there rather than an
+  // install here, and shortcut-tools' CLAUDE.md ranks the device as the
+  // expensive resource.
+  //
+  // The two-line input is built with Get Text and handed over by attachment,
+  // which is the 2026-09-03 corrective: a field that interpolates a variable
+  // itself arrives empty on the phone. The format notes carry the measurement.
+  const [clip, text, run] = choose.actions;
+  assert.ok(clip.id.endsWith("getclipboard"), "the clipboard is read by an action, not inlined as a token");
+  assert.ok(text.id.endsWith("gettext"), "the op's input is built as text first");
+  assert.strictEqual(text.p.WFTextActionText.Value.string, "session-menu\n\uFFFC",
+    "Run-Op splits on newlines: the op's name, then one line of input");
+  assert.strictEqual(run.p.WFWorkflowName, "Run-Op");
+  assert.strictEqual(run.p.WFInput.Value.OutputUUID, text.p.UUID);
+
+  // Three reads off one result, and no fourth: anything else the menu needs is
+  // the op's job to put in one of them.
+  const keys = choose.actions.filter((a) => a.id.endsWith("getvalueforkey"))
+    .map((a) => a.p.WFDictionaryKey).filter((k) => typeof k === "string");
+  assert.deepStrictEqual(keys, ["caption", "menu", "urls"]);
+  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  const by = (name) => choose.actions.find((a) => a.p.CustomOutputName === name);
+  assert.strictEqual(list.p.WFChooseFromListActionPrompt.Value.attachmentsByRange["{0, 1}"].OutputUUID,
+    by("Caption").p.UUID, "the caption is the menu's prompt");
+  assert.strictEqual(list.p.WFInput.Value.OutputUUID, by("Menu").p.UUID,
+    "the rows are `menu`, which the op guarantees is never empty, an ERROR included");
 });
 
-test("Choose-Claude builds its direct address with Get Text and hands it over by attachment", () => {
-  // THE 2026-09-03 FAILURE, in the arm that brought this route back. That
-  // attempt built `session.html#branch=` around the clipboard inside the URL
-  // card's own field and the address arrived empty on the phone. The corrective
-  // the format notes give is the shape asserted here: build the text with Get
-  // Text, then hand it over by attachment, which is what Library-Fetch does.
-  const i = choose.actions.findIndex((a) => a.p.WFConditionalActionString === "Session on this branch");
-  assert.ok(i >= 0, "the direct arm is there to guard");
-  const [clip, text, url, open] = choose.actions.slice(i + 1, i + 5);
-  assert.ok(clip.id.endsWith("getclipboard"), "the clipboard is read by an action, not inlined as a token");
-  assert.ok(text.id.endsWith("gettext"), "the address is built as text first");
-  assert.match(text.p.WFTextActionText.Value.string, /^https:\/\/\S+\/session\.html#branch=\uFFFC$/);
+test("Choose-Claude dispatches a row by the map first and by name second, and Out leaves", () => {
+  // The dispatch that lets the op mix sessions and verbs in one list: look the
+  // chosen row up in `urls`; a hit is a page, a miss is a shortcut name. Same
+  // has-value idiom Get-AppRoute uses. Reverse the two arms and every session
+  // row becomes a search for a shortcut named after somebody's ask.
+  const out = choose.actions.find((a) => a.p.WFConditionalActionString === "Out");
+  assert.ok(out, "Out is tested explicitly, not left to fail a name lookup");
+  assert.strictEqual(out.p.WFCondition, 5, "`is not`, so every other row falls through to the dispatch");
+  // "Out" is web-tools' VERBS, the tail lib/ops/session-menu.js appends to every
+  // result; tools/test/ops.test.mjs pins the other half of this pair. Two repos,
+  // no shared CI, so each side pins the string it names.
+  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
+
+  const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Url");
+  assert.strictEqual(lookup.p.WFDictionaryKey.WFSerializationType, "WFTextTokenString",
+    "the chosen row is the key, and a variable key is a token string");
+  assert.strictEqual(lookup.p.WFInput.Value.OutputUUID,
+    choose.actions.find((a) => a.p.CustomOutputName === "Urls").p.UUID);
+
+  const i = choose.actions.indexOf(lookup);
+  const [has, url, open, other, run] = choose.actions.slice(i + 1, i + 6);
+  assert.strictEqual(has.p.WFCondition, 100, "has any value");
+  assert.strictEqual(has.p.WFInput.Variable.Value.OutputUUID, lookup.p.UUID);
+  assert.ok(url.id.endsWith("url") && open.id.endsWith("openurl"), "a hit opens the page");
   assert.strictEqual(url.p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment",
-    "the URL card takes the built text by attachment, never a string it interpolates itself");
-  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, text.p.UUID);
-  assert.ok(open.id.endsWith("openurl"));
+    "the URL card takes the looked-up value by attachment, never a string it interpolates itself");
+  assert.strictEqual(other.p.WFControlFlowMode, 1);
+  assert.ok(run.id.endsWith("runworkflow"), "a miss runs the row as a shortcut name");
+  assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
 });

@@ -55,9 +55,9 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `probe-route` | Asks `get-app-route` about a named app and logs the answer. Three actions. It exists because a `shortcuts://` link makes Shortcuts the current app, so a route keyed on anything else cannot be reached from a tap. |
 | `run-backtap` | `Back-DoubleTap` with its five app branches replaced by one `get-app-route` call: 29 actions against 59. Spliced from a device dump rather than re-authored, so every card kept is the card running today. |
 | `choose-backtap` | The Shortcuts-app menu lifted out whole, still titled with the clipboard's state because the caption block came with it. 17 actions, and the route map points at it. The caption now comes from `describe-input` rather than the five-shortcut chain it used to walk. |
-| `choose-claude` | The Claude-app menu, four rows, 18 actions. **Session on this branch** opens `session.html#branch=<clipboard>` and stops there: the page resolves a branch to its record by walking the store itself, so this arm reaches no op and no cache and is the one route that still answers while the sessions cache is behind. **Pick a session** runs `claude-session` for the list. The rest dispatch by name through the same arm `choose-backtap` uses, so a further option is one line of the Get Text card. The direct arm hardcodes its address, which is the thing `claude-session` is gated against doing: with no op in the arm there is nowhere else for it to live, and the cost is that moving the page means a re-install. Both properties are held by `test/parameter-shapes.test.js`, along with the rule that every string a conditional tests is a menu row, since a renamed row otherwise kills its arm in silence. **Wrong 2026-09-03 → what this row used to say:** it read that "the branch does not need to travel in an address at all," drawn from an earlier first line labelled "Read the session aloud" that built the same address inside a URL card and arrived empty on the phone. The label was wrong and the empty address was real, but the conclusion was too broad: the address route is correct and is back, built with Get Text and handed over by attachment, which is the corrective `docs/shortcuts-format-notes.md` already gave for that failure. |
+| `choose-claude` | The Claude-app menu, 17 actions and no rows of its own. It reads the clipboard, hands `session-menu` and that text to `run-op`, and draws what comes back: `caption` as the prompt, `menu` as the rows. A chosen row is a key into the `urls` map the same call returned, so a hit opens a page and a miss runs the row as a shortcut name, which is the same has-value idiom `get-app-route` uses and what lets one list mix sessions with verbs. `Out` is tested explicitly rather than left to fail a name lookup. **So the menu lives in web-tools now**, in `lib/ops/session-menu.js`: its wording, its order, its verbs and the address each row opens are a commit there and cost no install here, which is the rule at the top of `CLAUDE.md` applied to the menu itself. The header says whether the clipboard held a branch this estate recognises, and the rows change with the answer: a recognised branch leads with its session, an unrecognised one leads with a row that opens `session.html#branch=`, the route that walks the store and reaches no cache. `test/parameter-shapes.test.js` holds the shell's shape; web-tools' `tools/test/ops.test.mjs` holds what the op must always return, including the verbs, so a failed op still draws a working menu. **Wrong 2026-09-08 → the row above:** it described a four-row menu whose first row, **Session on this branch**, was offered whether or not a branch was on the clipboard, and whose prompt was the literal string `Claude`. Both are gone. |
 | `run-op` | Name an op in web-tools, hand it one line of input, get its JSON back. 7 actions, and the layer `docs/idioms.md` predicts: `Get-FromJs` is the one door to JavaScript, and this adds addressing to it. The op's file is fetched from jsDelivr by name inside the expression `Get-JsonFromJs` evaluates, so the code lives in the repo and runs on the phone; the input rides in as base64 so nothing it contains can break the expression, the op address carries a timestamp because jsDelivr's seven-day `max-age` otherwise pins a sync request to the first copy the phone saw, and the token reaches the op as an argument through `Inject-🎟️GitHubToken`, which Run-Op calls itself: `Get-JsonFromJs` calls it only inside its no-input demo, a reading error that cost one device run (2026-09-03, `TypeError at headers`). Every future chain that needs computation is this one action plus what it does with the result. The contract on the other side: web-tools `lib/ops/README.md`. |
-| `claude-session` | The session picker: the menu's data computed on the phone, the menu drawn by Shortcuts, the session shown by Web Tools. 15 actions and no JavaScript of its own. It reads the clipboard, hands `session-menu` and that text to `run-op`, and gets back a caption, the rows, and a map from each row to its page. The caption is the menu's prompt and says which of three cases the clipboard produced; the chosen row is a key into the map, so nothing is parsed. A caption carrying `ERROR` is logged with the build id and shown instead of opening a menu. The logic is web-tools' `lib/ops/session-menu.js`, which the app can run too. |
+| `claude-session` | The session picker as its own shortcut, 15 actions, off the back-tap route since `choose-claude` began drawing the same op's menu inline. Kept because it is installed, still works, and reads only `caption` and `rows`, which the op still returns unchanged: `menu` is the key that carries the verbs, and `rows` is the sessions alone. A caption carrying `ERROR` is logged with the build id and shown instead of opening a menu, which is the half of it `choose-claude` does not reproduce. The logic is web-tools' `lib/ops/session-menu.js`, which the app can run too. |
 | `run-app-determined` | `get-app-route` plus a default plus the running: six actions. The standalone form, for when the app is the only question being asked. |
 | `speak-text` | Reads the input aloud in the back tap's voice. One action, and it fills a name `Show-Loop` has been calling all along that resolved to nothing. |
 | `open-wifi` | Opens the Wi-Fi settings pane, two actions, for when a cast is failing. |
@@ -401,10 +401,37 @@ the shape `Library-Import` splits on. The form was recorded here and in the
 device log and nowhere emitted, so it was reassembled by hand on every install:
 the same failure `--url` already fixed for the paste route, and the same fix.
 
-**Importing never merges by name**, so the new copy becomes `Name 1` and every
-`run-shortcut?name=Name` link keeps resolving to the old one. Delete the existing
-copy first for anything generated from this repo, where the plist is the source
-and a re-import costs nothing.
+**Importing over an existing name puts a choice on screen**, and Apple's own
+sheet offers to save over the existing shortcut. Take the offer. Decline it and
+the new copy becomes `Name 1` while the original keeps the clean name, so every
+`run-shortcut?name=Name` link and every `runworkflow` card naming it still
+resolves to the **old** copy: an import that looks like an upgrade has done the
+opposite. Nothing has to be deleted first.
+
+**Wrong 2026-08-15 → the paragraph above:** this read "importing never merges by
+name" and told you to delete the existing copy first. The duplicate and its
+index consequence are real, but they follow from declining the sheet's offer,
+not from importing at all. `CLAUDE.md` carried the correction from 2026-08-26
+and this page kept the old instruction, which is the cost of stating one rule in
+two places.
+
+**Install a chain AFTER the op it reads, never before.** An op is fetched from
+`@main` at run time and a chain is installed from a branch plist, so installing
+first means the new chain runs against the old op. That is not a degraded menu,
+it is a stop: the old op answers without the key the new chain reads, the card
+reading it yields nothing, and the next required parameter is empty, which
+Shortcuts reports as "Please choose a value for each parameter in this action"
+under the name of whatever was launched at top level. Measured 2026-09-08, with
+`Choose-Claude` reading `menu` before web-tools carried it, and the notification
+naming `Run-BackTap` three levels above the failing card.
+
+**And purge the ref path after the merge**, because the merge alone is not
+enough: jsDelivr caches a branch ref for up to twelve hours, and `Run-Op`'s
+`?_=` defeats only the phone's own HTTP cache.
+
+```
+https://purge.jsdelivr.net/gh/mehrlander/web-tools@main/lib/ops/<op>.js
+```
 
 ## Keeping the corpus current without re-dumping it
 
