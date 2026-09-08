@@ -196,6 +196,30 @@ test("Choose-Claude is a shell: it asks the op for the whole menu and draws it",
     "the rows are `menu`, which the op guarantees is never empty, an ERROR included");
 });
 
+test("Choose-Claude makes the choice text before anything reads it", () => {
+  // 2026-09-08, and the reason all four rows failed at once. The list handed to
+  // Choose from List is a value out of the op's JSON, not a Split Text output,
+  // so the chosen item is not natively a string. The first card after the
+  // selection was a text condition, which is on every path, and every row
+  // stopped with "Please choose a value for each parameter in this action".
+  //
+  // The corpus says how unusual that was. Across 613 workflows and 33,153
+  // actions, a Choose from List fed from a dictionary value is reused exactly
+  // four times, all as a dictionary key, and NOT ONCE in a text condition or as
+  // a Run Shortcut name. Get Text is the idiom the library does have.
+  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  const i = choose.actions.indexOf(list);
+  const choice = choose.actions[i + 1];
+  assert.ok(choice.id.endsWith("gettext"), "the card after the selection makes it text");
+  assert.strictEqual(choice.p.CustomOutputName, "Choice");
+  assert.strictEqual(choice.p.WFTextActionText.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
+  // And nothing downstream may reach past it to the raw item, which is the half
+  // a shape check would miss: one stray reference reopens the whole failure.
+  const after = JSON.stringify(choose.actions.slice(i + 2));
+  assert.ok(!after.includes(list.p.UUID), "no action after the selection reads the raw chosen item");
+});
+
+
 test("Choose-Claude dispatches by the map, then by name, and a row that reaches neither says so", () => {
   // The dispatch that lets the op mix pages and verbs in one list: look the
   // chosen row up in `urls`; a hit is a page, a miss is a shortcut to run by
@@ -204,8 +228,8 @@ test("Choose-Claude dispatches by the map, then by name, and a row that reaches 
   const out = choose.actions.find((a) => a.p.WFConditionalActionString === "Out");
   assert.ok(out, "Out is tested explicitly, not left to fail a name lookup");
   assert.strictEqual(out.p.WFCondition, 5, "`is not`, so every other row falls through to the dispatch");
-  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
-  assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
+  const choice = choose.actions.find((a) => a.p.CustomOutputName === "Choice");
+  assert.strictEqual(out.p.WFInput.Variable.Value.OutputUUID, choice.p.UUID);
 
   const lookup = choose.actions.find((a) => a.p.CustomOutputName === "Target");
   assert.ok(lookup, "the looked-up destination is not named `Url`");
@@ -232,11 +256,11 @@ test("a row that is in no map and cannot be a shortcut name is logged, not run",
   // Run-BackTap, three levels above anything a reader could act on. A SPACE
   // separates the two kinds of row: a verb is a shortcut name, hyphenated and
   // space-free; a prose row came from `urls` and should have been found there.
-  const list = choose.actions.find((a) => a.id.endsWith("choosefromlist"));
+  const choice = choose.actions.find((a) => a.p.CustomOutputName === "Choice");
   const space = choose.actions.find((a) => a.p.WFConditionalActionString === " ");
   assert.ok(space, "the miss arm tests for a space before assuming a shortcut name");
   assert.strictEqual(space.p.WFCondition, 99, "`contains`");
-  assert.strictEqual(space.p.WFInput.Variable.Value.OutputUUID, list.p.UUID);
+  assert.strictEqual(space.p.WFInput.Variable.Value.OutputUUID, choice.p.UUID);
 
   const j = choose.actions.indexOf(space);
   const [miss, log, show, other, run] = choose.actions.slice(j + 1, j + 6);
@@ -245,10 +269,10 @@ test("a row that is in no map and cannot be a shortcut name is logged, not run",
   // diagnosable by putting the chosen text beside the keys the op published.
   const anchors = Object.values(miss.p.WFTextActionText.Value.attachmentsByRange).map((v) => v.OutputUUID);
   const dest = choose.actions.find((a) => a.p.CustomOutputName === "Destinations").p.UUID;
-  assert.deepStrictEqual(anchors.sort(), [list.p.UUID, dest].sort());
+  assert.deepStrictEqual(anchors.sort(), [choice.p.UUID, dest].sort());
   assert.strictEqual(log.p.WFWorkflowName, "Log-Repo", "a diagnostic returns itself");
   assert.ok(show.id.endsWith("showresult"), "and says so on the device, where Log-Repo may not reach the network");
   assert.strictEqual(other.p.WFControlFlowMode, 1);
   assert.ok(run.id.endsWith("runworkflow"), "a space-free row is still run by name");
-  assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, list.p.UUID);
+  assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, choice.p.UUID);
 });

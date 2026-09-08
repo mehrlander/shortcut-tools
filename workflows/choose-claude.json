@@ -1,6 +1,6 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (23 actions)",
+  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (24 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getclipboard",
@@ -118,6 +118,26 @@
       }
     },
     {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1A0DE00-0018-4A00-9000-000000000001",
+        "CustomOutputName": "Choice",
+        "WFTextActionText": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
+                "OutputName": "Chosen Item"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
       "id": "is.workflow.actions.conditional",
       "p": {
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
@@ -129,8 +149,8 @@
           "Variable": {
             "Value": {
               "Type": "ActionOutput",
-              "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
-              "OutputName": "Chosen Item"
+              "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+              "OutputName": "Choice"
             },
             "WFSerializationType": "WFTextTokenAttachment"
           }
@@ -148,8 +168,8 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
-                "OutputName": "Chosen Item"
+                "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+                "OutputName": "Choice"
               }
             }
           },
@@ -231,8 +251,8 @@
           "Variable": {
             "Value": {
               "Type": "ActionOutput",
-              "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
-              "OutputName": "Chosen Item"
+              "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+              "OutputName": "Choice"
             },
             "WFSerializationType": "WFTextTokenAttachment"
           }
@@ -250,8 +270,8 @@
             "attachmentsByRange": {
               "{69, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
-                "OutputName": "Chosen Item"
+                "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+                "OutputName": "Choice"
               },
               "{80, 1}": {
                 "Type": "ActionOutput",
@@ -315,8 +335,8 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "C1A0DE00-0007-4A00-9000-000000000001",
-                "OutputName": "Chosen Item"
+                "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+                "OutputName": "Choice"
               }
             }
           },
