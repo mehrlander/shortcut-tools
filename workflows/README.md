@@ -401,10 +401,19 @@ the shape `Library-Import` splits on. The form was recorded here and in the
 device log and nowhere emitted, so it was reassembled by hand on every install:
 the same failure `--url` already fixed for the paste route, and the same fix.
 
-**Importing never merges by name**, so the new copy becomes `Name 1` and every
-`run-shortcut?name=Name` link keeps resolving to the old one. Delete the existing
-copy first for anything generated from this repo, where the plist is the source
-and a re-import costs nothing.
+**Importing over an existing name puts a choice on screen**, and Apple's own
+sheet offers to save over the existing shortcut. Take the offer. Decline it and
+the new copy becomes `Name 1` while the original keeps the clean name, so every
+`run-shortcut?name=Name` link and every `runworkflow` card naming it still
+resolves to the **old** copy: an import that looks like an upgrade has done the
+opposite. Nothing has to be deleted first.
+
+**Wrong 2026-08-15 → the paragraph above:** this read "importing never merges by
+name" and told you to delete the existing copy first. The duplicate and its
+index consequence are real, but they follow from declining the sheet's offer,
+not from importing at all. `CLAUDE.md` carried the correction from 2026-08-26
+and this page kept the old instruction, which is the cost of stating one rule in
+two places.
 
 ## Keeping the corpus current without re-dumping it
 
