@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Working rules for this repository, on top of the portable conventions in
-[`mehrlander/web-tools`](https://github.com/mehrlander/web-tools/blob/main/docs/CONVENTIONS.md).
-Load those with `/web-tools`. What follows is specific to this repo, and the
+[`mehrlander/web-tools`](https://github.com/mehrlander/web-tools/blob/main/docs/SURFACING.md).
+They arrive with a web-tools checkout; without one, load them with `/web-tools`. What follows is specific to this repo, and the
 first section governs every design decision made here.
 
 ## The device is the expensive resource
