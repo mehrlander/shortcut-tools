@@ -1,0 +1,426 @@
+{
+ "name": "Log-PageRender",
+ "label": "Log-PageRender: render a URL to an image and commit it, no screenshot (21 actions)",
+ "workflow": {
+  "WFWorkflowTypes": [
+   "WFWorkflowTypeShowInSearch"
+  ],
+  "WFWorkflowOutputContentItemClasses": [
+   "WFStringContentItem"
+  ]
+ },
+ "actions": [
+  {
+   "id": "is.workflow.actions.comment",
+   "p": {
+    "WFCommentActionText": "Log-PageRender: a URL in, a rendered image of the page committed to shortcuts/shots/ in web-tools-private. Nothing is displayed and nothing is screenshotted, so there is no delay to race and no way for what is on screen to end up in the capture.\n\nCan run as URL:\nshortcuts://run-shortcut?name=Log-PageRender&input=text&text=<the page URL>\n\nGet Contents of Web Page loads the address, Make PDF renders it, and the first PDF page becomes the image. Whether that render runs the page's own JavaScript is the open question, and the committed image answers it: a page whose script never ran arrives showing its pre-script state. The page count rides in the log row, so a long page reports how much of itself is missing from a first-page-only capture."
+   }
+  },
+  {
+   "id": "is.workflow.actions.conditional",
+   "p": {
+    "GroupingIdentifier": "6ADE9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 0,
+    "WFCondition": 100,
+    "WFInput": {
+     "Type": "Variable",
+     "Variable": {
+      "Value": {
+       "Type": "ExtensionInput"
+      },
+      "WFSerializationType": "WFTextTokenAttachment"
+     }
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "6ADE0003-0000-4A00-9000-000000000001",
+    "WFTextActionText": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "Type": "ExtensionInput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.conditional",
+   "p": {
+    "GroupingIdentifier": "6ADE9000-0000-4A00-9000-000000009000",
+    "WFControlFlowMode": 1
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "6ADE0004-0000-4A00-9000-000000000001",
+    "WFTextActionText": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+   }
+  },
+  {
+   "id": "is.workflow.actions.conditional",
+   "p": {
+    "GroupingIdentifier": "6ADE9000-0000-4A00-9000-000000009000",
+    "UUID": "6ADE0005-0000-4A00-9000-000000000001",
+    "WFControlFlowMode": 2
+   }
+  },
+  {
+   "id": "is.workflow.actions.getwebpagecontents",
+   "p": {
+    "UUID": "6ADE0006-0000-4A00-9000-000000000001",
+    "WFInput": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "If Result",
+        "OutputUUID": "6ADE0005-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.makepdf",
+   "p": {
+    "UUID": "6ADE0007-0000-4A00-9000-000000000001",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Contents of Web Page",
+      "OutputUUID": "6ADE0006-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.splitpdf",
+   "p": {
+    "UUID": "6ADE0008-0000-4A00-9000-000000000001",
+    "WFInput": {
+     "Value": {
+      "OutputName": "PDF",
+      "OutputUUID": "6ADE0007-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.count",
+   "p": {
+    "UUID": "6ADE0009-0000-4A00-9000-000000000001",
+    "WFCountType": "Items",
+    "Input": {
+     "Value": {
+      "OutputName": "PDF Pages",
+      "OutputUUID": "6ADE0008-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.getitemfromlist",
+   "p": {
+    "UUID": "6ADE0010-0000-4A00-9000-000000000001",
+    "WFInput": {
+     "Value": {
+      "OutputName": "PDF Pages",
+      "OutputUUID": "6ADE0008-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.makeimagefrompdfpage",
+   "p": {
+    "UUID": "6ADE0011-0000-4A00-9000-000000000001",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Item from List",
+      "OutputUUID": "6ADE0010-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    },
+    "WFMakeImageFromPDFPageImageFormat": "public.jpeg",
+    "WFMakeImageFromPDFPageResolution": "150"
+   }
+  },
+  {
+   "id": "is.workflow.actions.base64encode",
+   "p": {
+    "UUID": "6ADE0012-0000-4A00-9000-000000000001",
+    "WFBase64LineBreakMode": "None",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Image",
+      "OutputUUID": "6ADE0011-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.date",
+   "p": {
+    "UUID": "6ADE0013-0000-4A00-9000-000000000001"
+   }
+  },
+  {
+   "id": "is.workflow.actions.format.date",
+   "p": {
+    "UUID": "6ADE0014-0000-4A00-9000-000000000001",
+    "WFDate": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Current Date",
+        "OutputUUID": "6ADE0013-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "WFDateFormatStyle": "Custom",
+    "WFDateFormat": "yyyy-MM-dd-HHmmss"
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "6ADE0015-0000-4A00-9000-000000000001",
+    "WFTextActionText": "Bearer 🎟️GitHubToken"
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "UUID": "6ADE0016-0000-4A00-9000-000000000001",
+    "WFWorkflowName": "Inject-🎟️GitHubToken",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Text",
+      "OutputUUID": "6ADE0015-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.downloadurl",
+   "p": {
+    "UUID": "6ADE0017-0000-4A00-9000-000000000001",
+    "ShowHeaders": true,
+    "WFHTTPMethod": "PUT",
+    "WFHTTPBodyType": "JSON",
+    "WFURL": {
+     "Value": {
+      "attachmentsByRange": {
+       "{83, 1}": {
+        "OutputName": "Formatted Date",
+        "OutputUUID": "6ADE0014-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "https://api.github.com/repos/mehrlander/web-tools-private/contents/shortcuts/shots/￼-render.jpg"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "WFHTTPHeaders": {
+     "WFSerializationType": "WFDictionaryFieldValue",
+     "Value": {
+      "WFDictionaryFieldValueItems": [
+       {
+        "WFItemType": 0,
+        "WFKey": {
+         "Value": {
+          "string": "Authorization"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        },
+        "WFValue": {
+         "Value": {
+          "attachmentsByRange": {
+           "{0, 1}": {
+            "OutputName": "Shortcut Result",
+            "OutputUUID": "6ADE0016-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+           }
+          },
+          "string": "￼"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        }
+       },
+       {
+        "WFItemType": 0,
+        "WFKey": {
+         "Value": {
+          "string": "Accept"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        },
+        "WFValue": {
+         "Value": {
+          "string": "application/vnd.github+json"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        }
+       }
+      ]
+     }
+    },
+    "WFJSONValues": {
+     "WFSerializationType": "WFDictionaryFieldValue",
+     "Value": {
+      "WFDictionaryFieldValueItems": [
+       {
+        "WFItemType": 0,
+        "WFKey": {
+         "Value": {
+          "string": "message"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        },
+        "WFValue": {
+         "Value": {
+          "attachmentsByRange": {
+           "{8, 1}": {
+            "OutputName": "Formatted Date",
+            "OutputUUID": "6ADE0014-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+           }
+          },
+          "string": "render: ￼"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        }
+       },
+       {
+        "WFItemType": 0,
+        "WFKey": {
+         "Value": {
+          "string": "content"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        },
+        "WFValue": {
+         "Value": {
+          "attachmentsByRange": {
+           "{0, 1}": {
+            "OutputName": "Base64 Encoded",
+            "OutputUUID": "6ADE0012-0000-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+           }
+          },
+          "string": "￼"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        }
+       },
+       {
+        "WFItemType": 0,
+        "WFKey": {
+         "Value": {
+          "string": "branch"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        },
+        "WFValue": {
+         "Value": {
+          "string": "main"
+         },
+         "WFSerializationType": "WFTextTokenString"
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "6ADE0018-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Report",
+    "WFTextActionText": {
+     "Value": {
+      "attachmentsByRange": {
+       "{69, 1}": {
+        "OutputName": "Formatted Date",
+        "OutputUUID": "6ADE0014-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       },
+       "{92, 1}": {
+        "OutputName": "Count",
+        "OutputUUID": "6ADE0009-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       },
+       "{102, 1}": {
+        "OutputName": "If Result",
+        "OutputUUID": "6ADE0005-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "{\"op\":\"pagerender\",\"name\":\"Log-PageRender\",\"build\":\"#BUILD#\",\"file\":\"￼-render.jpg\",\"pages\":\"￼\",\"url\":\"￼\"}"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "WFWorkflowName": "Log-Repo",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Report",
+      "OutputUUID": "6ADE0018-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.output",
+   "p": {
+    "WFOutput": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Report",
+        "OutputUUID": "6ADE0018-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  }
+ ]
+}

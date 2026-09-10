@@ -374,9 +374,31 @@ Three constraints follow, and the first is the trap:
 `Open URL` on a `data:text/html` URL leaves the app: it is a real Safari
 navigation, measured below. `Show Web View`
 (`is.workflow.actions.showwebpage`, a Safari app action) raises a sheet over
-Shortcuts instead, and the run continues behind it. That difference is the
+Shortcuts instead, and the run survives it. That difference is the
 whole reason to care, since a shortcut that dumps its output into Safari has
 ended its own flow and left a tab behind.
+
+**Wrong 2026-09-09 → the sentence above:** it read "the run continues behind
+it," which is true of the run's *survival* and false of its *execution*. The
+sheet **blocks**. `Probe-SheetBlocks` read the clock either side of
+`showwebpage` and logged `before=23:18:49 after=23:19:22`: a 33-second gap
+across two adjacent cards with nothing between them but the sheet. The next
+action does not run until the sheet is dismissed.
+
+Nothing had measured it. Both `Probe-WebView` and `Probe-WebViewCaps` end *at*
+the sheet, so neither could see past it, and the corpus was already leaning the
+other way unread: of the 17 chains using `showwebpage`, 11 put it last in a
+branch, and the ones that do not follow it with a menu or an exit, which is what
+resuming on dismissal looks like.
+
+**What it costs, and it is not small.** No shortcut can photograph its own
+sheet, because the shutter cannot fire until the sheet is gone. Nothing can
+announce itself from behind one either: an alert, a notification and a
+`Log-Repo` commit are all equally stalled, so there is no gate to hang a capture
+on. A live page under a screenshot has to go through Safari and `Open URL`.
+The sheet stays the right way to *show* a person something, which is what
+`Show-Log` and `Dictate` use it for. It is simply not a place a chain can work
+while.
 
 It is not a fringe action: **32 shortcuts in the library use it**, and one of
 them, `Show-WebView`, is already the generic receiver. Three of its seven

@@ -19,6 +19,16 @@
   "bytes": 22566,
   "signed": "2026-08-31"
  },
+ "Log-PageRender": {
+  "plist_sha256": "09f354e37f46f7cdef147be0deae9e9d7f5e36e75c677ca4d44c606166769343",
+  "bytes": 24293,
+  "signed": "2026-09-10"
+ },
+ "Log-PageShot": {
+  "plist_sha256": "08b55ed7ccd3e0f7fd3bbcf927df69e4c9e342793c439fc576c486fd4e1ae272",
+  "bytes": 24889,
+  "signed": "2026-09-10"
+ },
  "Open-WiFi": {
   "plist_sha256": "1c4af78cfc1efe4e1d09f9ae5e3b2db743806bf95f09116ce321ede8930a1145",
   "bytes": 21748,
@@ -28,6 +38,11 @@
   "plist_sha256": "ce1b1734b962debf581ffb87619b6f872cf73a2fde047edb0bbdf35b42309b11",
   "bytes": 21985,
   "signed": "2026-08-31"
+ },
+ "Probe-SheetBlocks": {
+  "plist_sha256": "558110aba011007725ab08d29eb0d2beba92487fb469ed9a770ecbb8bb1317f2",
+  "bytes": 23176,
+  "signed": "2026-09-10"
  },
  "Probe-Unattended": {
   "plist_sha256": "489838a06f3d24312b58942522590e1555b17a54322a83407cdbd8721cd5de55",
