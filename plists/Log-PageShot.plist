@@ -12,12 +12,14 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>WFCommentActionText</key>
-				<string>Log-PageShot: a URL in, a screenshot of it committed to shortcuts/shots/ in web-tools-private.
+				<string>Log-PageShot: a URL in, a screenshot of it in Safari committed to shortcuts/shots/ in web-tools-private.
 
 Can run as URL:
 shortcuts://run-shortcut?name=Log-PageShot&amp;input=text&amp;text=&lt;the page URL&gt;
 
-Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet over Shortcuts; leg 2 opens the same page in Safari. Whether the run continues behind the sheet or resumes only when the sheet is dismissed is unmeasured (docs/shortcuts-format-notes.md asserts the first), so the second leg is the insurance: the two shots arrive side by side and the image says which route rendered the page.</string>
+The Show Web View sheet is gone from this chain and cannot come back. Probe-SheetBlocks measured a 33-second gap across the sheet on 2026-09-09 (before=23:18:49 after=23:19:22), so the run resumes only when the sheet is dismissed. Nothing can photograph a sheet it is stalled behind, and no alert or notification can gate the shutter from back there either. Safari is the only route to a live page.
+
+Two shots, at 5 and 12 seconds, arriving side by side as one image. A single instant is a bet on how fast the page loads; two cover a fast page and a slow one for one extra card and one commit. The alert says to leave the phone alone and the notification says when it is safe to pick it up again, so the reader is never guessing whether it is still working.</string>
 			</dict>
 		</dict>
 		<dict>
@@ -112,78 +114,19 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.showwebpage</string>
+			<string>is.workflow.actions.alert</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
 				<string>54070006-0000-4A00-9000-000000000001</string>
-				<key>WFURL</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict>
-							<key>{0, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>If Result</string>
-								<key>OutputUUID</key>
-								<string>54070005-0000-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-						</dict>
-						<key>string</key>
-						<string>￼</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.delay</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>WFDelayTime</key>
-				<integer>5</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.takescreenshot</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>54070008-0000-4A00-9000-000000000001</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.image.resize</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>CustomOutputName</key>
-				<string>Sheet</string>
-				<key>UUID</key>
-				<string>54070009-0000-4A00-9000-000000000001</string>
-				<key>WFImage</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>OutputName</key>
-						<string>Screenshot</string>
-						<key>OutputUUID</key>
-						<string>54070008-0000-4A00-9000-000000000001</string>
-						<key>Type</key>
-						<string>ActionOutput</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenAttachment</string>
-				</dict>
-				<key>WFImageResizeWidth</key>
-				<string>1000</string>
+				<key>WFAlertActionCancelButtonShown</key>
+				<false/>
+				<key>WFAlertActionMessage</key>
+				<string>Safari opens next and two shots are taken, at 5 and 12 seconds. Whatever is on screen at those moments is what gets committed, so do not switch apps.
+
+A notification says when the image has landed.</string>
+				<key>WFAlertActionTitle</key>
+				<string>Then leave the phone alone</string>
 			</dict>
 		</dict>
 		<dict>
@@ -192,7 +135,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070010-0000-4A00-9000-000000000001</string>
+				<string>54070007-0000-4A00-9000-000000000001</string>
 				<key>WFURLActionURL</key>
 				<dict>
 					<key>Value</key>
@@ -223,7 +166,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070011-0000-4A00-9000-000000000001</string>
+				<string>54070008-0000-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -231,7 +174,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>URL</string>
 						<key>OutputUUID</key>
-						<string>54070010-0000-4A00-9000-000000000001</string>
+						<string>54070007-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -255,7 +198,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070013-0000-4A00-9000-000000000001</string>
+				<string>54070009-0000-4A00-9000-000000000001</string>
 			</dict>
 		</dict>
 		<dict>
@@ -264,9 +207,9 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>CustomOutputName</key>
-				<string>Safari</string>
+				<string>At 5s</string>
 				<key>UUID</key>
-				<string>54070014-0000-4A00-9000-000000000001</string>
+				<string>54070010-0000-4A00-9000-000000000001</string>
 				<key>WFImage</key>
 				<dict>
 					<key>Value</key>
@@ -274,7 +217,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>Screenshot</string>
 						<key>OutputUUID</key>
-						<string>54070013-0000-4A00-9000-000000000001</string>
+						<string>54070009-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -282,7 +225,52 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>WFImageResizeWidth</key>
-				<string>1000</string>
+				<string>700</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.delay</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>WFDelayTime</key>
+				<integer>7</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.takescreenshot</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>54070012-0000-4A00-9000-000000000001</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.image.resize</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>CustomOutputName</key>
+				<string>At 12s</string>
+				<key>UUID</key>
+				<string>54070013-0000-4A00-9000-000000000001</string>
+				<key>WFImage</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Screenshot</string>
+						<key>OutputUUID</key>
+						<string>54070012-0000-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFImageResizeWidth</key>
+				<string>700</string>
 			</dict>
 		</dict>
 		<dict>
@@ -291,7 +279,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070015-0000-4A00-9000-000000000001</string>
+				<string>54070014-0000-4A00-9000-000000000001</string>
 				<key>WFItems</key>
 				<array>
 					<dict>
@@ -306,9 +294,9 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 									<key>{0, 1}</key>
 									<dict>
 										<key>OutputName</key>
-										<string>Sheet</string>
+										<string>At 5s</string>
 										<key>OutputUUID</key>
-										<string>54070009-0000-4A00-9000-000000000001</string>
+										<string>54070010-0000-4A00-9000-000000000001</string>
 										<key>Type</key>
 										<string>ActionOutput</string>
 									</dict>
@@ -332,9 +320,9 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 									<key>{0, 1}</key>
 									<dict>
 										<key>OutputName</key>
-										<string>Safari</string>
+										<string>At 12s</string>
 										<key>OutputUUID</key>
-										<string>54070014-0000-4A00-9000-000000000001</string>
+										<string>54070013-0000-4A00-9000-000000000001</string>
 										<key>Type</key>
 										<string>ActionOutput</string>
 									</dict>
@@ -355,7 +343,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070016-0000-4A00-9000-000000000001</string>
+				<string>54070015-0000-4A00-9000-000000000001</string>
 				<key>WFImageCombineMode</key>
 				<string>Side-by-Side</string>
 				<key>WFInput</key>
@@ -365,7 +353,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>List</string>
 						<key>OutputUUID</key>
-						<string>54070015-0000-4A00-9000-000000000001</string>
+						<string>54070014-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -380,7 +368,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070017-0000-4A00-9000-000000000001</string>
+				<string>54070016-0000-4A00-9000-000000000001</string>
 				<key>WFBase64LineBreakMode</key>
 				<string>None</string>
 				<key>WFInput</key>
@@ -390,7 +378,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>Combined Image</string>
 						<key>OutputUUID</key>
-						<string>54070016-0000-4A00-9000-000000000001</string>
+						<string>54070015-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -405,7 +393,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070018-0000-4A00-9000-000000000001</string>
+				<string>54070017-0000-4A00-9000-000000000001</string>
 			</dict>
 		</dict>
 		<dict>
@@ -414,7 +402,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070019-0000-4A00-9000-000000000001</string>
+				<string>54070018-0000-4A00-9000-000000000001</string>
 				<key>WFDate</key>
 				<dict>
 					<key>Value</key>
@@ -426,7 +414,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 								<key>OutputName</key>
 								<string>Current Date</string>
 								<key>OutputUUID</key>
-								<string>54070018-0000-4A00-9000-000000000001</string>
+								<string>54070017-0000-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -449,7 +437,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070020-0000-4A00-9000-000000000001</string>
+				<string>54070019-0000-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
 				<string>Bearer 🎟️GitHubToken</string>
 			</dict>
@@ -460,7 +448,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>54070021-0000-4A00-9000-000000000001</string>
+				<string>54070020-0000-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -468,7 +456,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>Text</string>
 						<key>OutputUUID</key>
-						<string>54070020-0000-4A00-9000-000000000001</string>
+						<string>54070019-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -487,7 +475,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 				<key>ShowHeaders</key>
 				<true/>
 				<key>UUID</key>
-				<string>54070022-0000-4A00-9000-000000000001</string>
+				<string>54070021-0000-4A00-9000-000000000001</string>
 				<key>WFHTTPBodyType</key>
 				<string>JSON</string>
 				<key>WFHTTPHeaders</key>
@@ -520,7 +508,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 												<key>OutputName</key>
 												<string>Shortcut Result</string>
 												<key>OutputUUID</key>
-												<string>54070021-0000-4A00-9000-000000000001</string>
+												<string>54070020-0000-4A00-9000-000000000001</string>
 												<key>Type</key>
 												<string>ActionOutput</string>
 											</dict>
@@ -593,7 +581,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 												<key>OutputName</key>
 												<string>Formatted Date</string>
 												<key>OutputUUID</key>
-												<string>54070019-0000-4A00-9000-000000000001</string>
+												<string>54070018-0000-4A00-9000-000000000001</string>
 												<key>Type</key>
 												<string>ActionOutput</string>
 											</dict>
@@ -629,7 +617,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 												<key>OutputName</key>
 												<string>Base64 Encoded</string>
 												<key>OutputUUID</key>
-												<string>54070017-0000-4A00-9000-000000000001</string>
+												<string>54070016-0000-4A00-9000-000000000001</string>
 												<key>Type</key>
 												<string>ActionOutput</string>
 											</dict>
@@ -681,7 +669,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 								<key>OutputName</key>
 								<string>Formatted Date</string>
 								<key>OutputUUID</key>
-								<string>54070019-0000-4A00-9000-000000000001</string>
+								<string>54070018-0000-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -696,13 +684,48 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.notification</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>54070023-0000-4A00-9000-000000000001</string>
+				<key>WFNotificationActionBody</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Formatted Date</string>
+								<key>OutputUUID</key>
+								<string>54070018-0000-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼.png is in the repo.</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFNotificationActionSound</key>
+				<true/>
+				<key>WFNotificationActionTitle</key>
+				<string>Shot committed</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
 			<string>is.workflow.actions.gettext</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>CustomOutputName</key>
 				<string>Report</string>
 				<key>UUID</key>
-				<string>54070023-0000-4A00-9000-000000000001</string>
+				<string>54070022-0000-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
@@ -714,11 +737,11 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 								<key>OutputName</key>
 								<string>Formatted Date</string>
 								<key>OutputUUID</key>
-								<string>54070019-0000-4A00-9000-000000000001</string>
+								<string>54070018-0000-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
-							<key>{79, 1}</key>
+							<key>{96, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>If Result</string>
@@ -729,7 +752,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"pageshot","name":"Log-PageShot","build":"ab47099","file":"￼.png","url":"￼"}</string>
+						<string>{"op":"pageshot","name":"Log-PageShot","build":"4d57161","file":"￼.png","route":"safari","url":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -748,7 +771,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 						<key>OutputName</key>
 						<string>Report</string>
 						<key>OutputUUID</key>
-						<string>54070023-0000-4A00-9000-000000000001</string>
+						<string>54070022-0000-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -775,7 +798,7 @@ Two legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet o
 								<key>OutputName</key>
 								<string>Report</string>
 								<key>OutputUUID</key>
-								<string>54070023-0000-4A00-9000-000000000001</string>
+								<string>54070022-0000-4A00-9000-000000000001</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>

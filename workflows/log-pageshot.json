@@ -1,6 +1,6 @@
 {
  "name": "Log-PageShot",
- "label": "Log-PageShot: render a URL, screenshot it, commit the image (26 actions)",
+ "label": "Log-PageShot: shoot a URL in Safari twice and commit the pair (27 actions)",
  "workflow": {
   "WFWorkflowTypes": [
    "WFWorkflowTypeShowInSearch"
@@ -13,7 +13,7 @@
   {
    "id": "is.workflow.actions.comment",
    "p": {
-    "WFCommentActionText": "Log-PageShot: a URL in, a screenshot of it committed to shortcuts/shots/ in web-tools-private.\n\nCan run as URL:\nshortcuts://run-shortcut?name=Log-PageShot&input=text&text=<the page URL>\n\nTwo legs, one tap, one image. Leg 1 raises the page in the Show Web View sheet over Shortcuts; leg 2 opens the same page in Safari. Whether the run continues behind the sheet or resumes only when the sheet is dismissed is unmeasured (docs/shortcuts-format-notes.md asserts the first), so the second leg is the insurance: the two shots arrive side by side and the image says which route rendered the page."
+    "WFCommentActionText": "Log-PageShot: a URL in, a screenshot of it in Safari committed to shortcuts/shots/ in web-tools-private.\n\nCan run as URL:\nshortcuts://run-shortcut?name=Log-PageShot&input=text&text=<the page URL>\n\nThe Show Web View sheet is gone from this chain and cannot come back. Probe-SheetBlocks measured a 33-second gap across the sheet on 2026-09-09 (before=23:18:49 after=23:19:22), so the run resumes only when the sheet is dismissed. Nothing can photograph a sheet it is stalled behind, and no alert or notification can gate the shutter from back there either. Safari is the only route to a live page.\n\nTwo shots, at 5 and 12 seconds, arriving side by side as one image. A single instant is a bet on how fast the page loads; two cover a fast page and a slow one for one extra card and one commit. The alert says to leave the phone alone and the notification says when it is safe to pick it up again, so the reader is never guessing whether it is still working."
    }
   },
   {
@@ -73,56 +73,18 @@
    }
   },
   {
-   "id": "is.workflow.actions.showwebpage",
+   "id": "is.workflow.actions.alert",
    "p": {
     "UUID": "54070006-0000-4A00-9000-000000000001",
-    "WFURL": {
-     "Value": {
-      "attachmentsByRange": {
-       "{0, 1}": {
-        "OutputName": "If Result",
-        "OutputUUID": "54070005-0000-4A00-9000-000000000001",
-        "Type": "ActionOutput"
-       }
-      },
-      "string": "￼"
-     },
-     "WFSerializationType": "WFTextTokenString"
-    }
-   }
-  },
-  {
-   "id": "is.workflow.actions.delay",
-   "p": {
-    "WFDelayTime": 5
-   }
-  },
-  {
-   "id": "is.workflow.actions.takescreenshot",
-   "p": {
-    "UUID": "54070008-0000-4A00-9000-000000000001"
-   }
-  },
-  {
-   "id": "is.workflow.actions.image.resize",
-   "p": {
-    "UUID": "54070009-0000-4A00-9000-000000000001",
-    "CustomOutputName": "Sheet",
-    "WFImage": {
-     "Value": {
-      "OutputName": "Screenshot",
-      "OutputUUID": "54070008-0000-4A00-9000-000000000001",
-      "Type": "ActionOutput"
-     },
-     "WFSerializationType": "WFTextTokenAttachment"
-    },
-    "WFImageResizeWidth": "1000"
+    "WFAlertActionCancelButtonShown": false,
+    "WFAlertActionTitle": "Then leave the phone alone",
+    "WFAlertActionMessage": "Safari opens next and two shots are taken, at 5 and 12 seconds. Whatever is on screen at those moments is what gets committed, so do not switch apps.\n\nA notification says when the image has landed."
    }
   },
   {
    "id": "is.workflow.actions.url",
    "p": {
-    "UUID": "54070010-0000-4A00-9000-000000000001",
+    "UUID": "54070007-0000-4A00-9000-000000000001",
     "WFURLActionURL": {
      "Value": {
       "attachmentsByRange": {
@@ -141,11 +103,11 @@
   {
    "id": "is.workflow.actions.openurl",
    "p": {
-    "UUID": "54070011-0000-4A00-9000-000000000001",
+    "UUID": "54070008-0000-4A00-9000-000000000001",
     "WFInput": {
      "Value": {
       "OutputName": "URL",
-      "OutputUUID": "54070010-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070007-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
@@ -161,29 +123,57 @@
   {
    "id": "is.workflow.actions.takescreenshot",
    "p": {
-    "UUID": "54070013-0000-4A00-9000-000000000001"
+    "UUID": "54070009-0000-4A00-9000-000000000001"
    }
   },
   {
    "id": "is.workflow.actions.image.resize",
    "p": {
-    "UUID": "54070014-0000-4A00-9000-000000000001",
-    "CustomOutputName": "Safari",
+    "UUID": "54070010-0000-4A00-9000-000000000001",
+    "CustomOutputName": "At 5s",
     "WFImage": {
      "Value": {
       "OutputName": "Screenshot",
-      "OutputUUID": "54070013-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070009-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
     },
-    "WFImageResizeWidth": "1000"
+    "WFImageResizeWidth": "700"
+   }
+  },
+  {
+   "id": "is.workflow.actions.delay",
+   "p": {
+    "WFDelayTime": 7
+   }
+  },
+  {
+   "id": "is.workflow.actions.takescreenshot",
+   "p": {
+    "UUID": "54070012-0000-4A00-9000-000000000001"
+   }
+  },
+  {
+   "id": "is.workflow.actions.image.resize",
+   "p": {
+    "UUID": "54070013-0000-4A00-9000-000000000001",
+    "CustomOutputName": "At 12s",
+    "WFImage": {
+     "Value": {
+      "OutputName": "Screenshot",
+      "OutputUUID": "54070012-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    },
+    "WFImageResizeWidth": "700"
    }
   },
   {
    "id": "is.workflow.actions.list",
    "p": {
-    "UUID": "54070015-0000-4A00-9000-000000000001",
+    "UUID": "54070014-0000-4A00-9000-000000000001",
     "WFItems": [
      {
       "WFItemType": 0,
@@ -191,8 +181,8 @@
        "Value": {
         "attachmentsByRange": {
          "{0, 1}": {
-          "OutputName": "Sheet",
-          "OutputUUID": "54070009-0000-4A00-9000-000000000001",
+          "OutputName": "At 5s",
+          "OutputUUID": "54070010-0000-4A00-9000-000000000001",
           "Type": "ActionOutput"
          }
         },
@@ -207,8 +197,8 @@
        "Value": {
         "attachmentsByRange": {
          "{0, 1}": {
-          "OutputName": "Safari",
-          "OutputUUID": "54070014-0000-4A00-9000-000000000001",
+          "OutputName": "At 12s",
+          "OutputUUID": "54070013-0000-4A00-9000-000000000001",
           "Type": "ActionOutput"
          }
         },
@@ -223,12 +213,12 @@
   {
    "id": "is.workflow.actions.image.combine",
    "p": {
-    "UUID": "54070016-0000-4A00-9000-000000000001",
+    "UUID": "54070015-0000-4A00-9000-000000000001",
     "WFImageCombineMode": "Side-by-Side",
     "WFInput": {
      "Value": {
       "OutputName": "List",
-      "OutputUUID": "54070015-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070014-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
@@ -238,12 +228,12 @@
   {
    "id": "is.workflow.actions.base64encode",
    "p": {
-    "UUID": "54070017-0000-4A00-9000-000000000001",
+    "UUID": "54070016-0000-4A00-9000-000000000001",
     "WFBase64LineBreakMode": "None",
     "WFInput": {
      "Value": {
       "OutputName": "Combined Image",
-      "OutputUUID": "54070016-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070015-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
@@ -253,19 +243,19 @@
   {
    "id": "is.workflow.actions.date",
    "p": {
-    "UUID": "54070018-0000-4A00-9000-000000000001"
+    "UUID": "54070017-0000-4A00-9000-000000000001"
    }
   },
   {
    "id": "is.workflow.actions.format.date",
    "p": {
-    "UUID": "54070019-0000-4A00-9000-000000000001",
+    "UUID": "54070018-0000-4A00-9000-000000000001",
     "WFDate": {
      "Value": {
       "attachmentsByRange": {
        "{0, 1}": {
         "OutputName": "Current Date",
-        "OutputUUID": "54070018-0000-4A00-9000-000000000001",
+        "OutputUUID": "54070017-0000-4A00-9000-000000000001",
         "Type": "ActionOutput"
        }
       },
@@ -280,19 +270,19 @@
   {
    "id": "is.workflow.actions.gettext",
    "p": {
-    "UUID": "54070020-0000-4A00-9000-000000000001",
+    "UUID": "54070019-0000-4A00-9000-000000000001",
     "WFTextActionText": "Bearer 🎟️GitHubToken"
    }
   },
   {
    "id": "is.workflow.actions.runworkflow",
    "p": {
-    "UUID": "54070021-0000-4A00-9000-000000000001",
+    "UUID": "54070020-0000-4A00-9000-000000000001",
     "WFWorkflowName": "Inject-🎟️GitHubToken",
     "WFInput": {
      "Value": {
       "OutputName": "Text",
-      "OutputUUID": "54070020-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070019-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
@@ -302,7 +292,7 @@
   {
    "id": "is.workflow.actions.downloadurl",
    "p": {
-    "UUID": "54070022-0000-4A00-9000-000000000001",
+    "UUID": "54070021-0000-4A00-9000-000000000001",
     "ShowHeaders": true,
     "WFHTTPMethod": "PUT",
     "WFHTTPBodyType": "JSON",
@@ -311,7 +301,7 @@
       "attachmentsByRange": {
        "{83, 1}": {
         "OutputName": "Formatted Date",
-        "OutputUUID": "54070019-0000-4A00-9000-000000000001",
+        "OutputUUID": "54070018-0000-4A00-9000-000000000001",
         "Type": "ActionOutput"
        }
       },
@@ -336,7 +326,7 @@
           "attachmentsByRange": {
            "{0, 1}": {
             "OutputName": "Shortcut Result",
-            "OutputUUID": "54070021-0000-4A00-9000-000000000001",
+            "OutputUUID": "54070020-0000-4A00-9000-000000000001",
             "Type": "ActionOutput"
            }
           },
@@ -380,7 +370,7 @@
           "attachmentsByRange": {
            "{6, 1}": {
             "OutputName": "Formatted Date",
-            "OutputUUID": "54070019-0000-4A00-9000-000000000001",
+            "OutputUUID": "54070018-0000-4A00-9000-000000000001",
             "Type": "ActionOutput"
            }
           },
@@ -402,7 +392,7 @@
           "attachmentsByRange": {
            "{0, 1}": {
             "OutputName": "Base64 Encoded",
-            "OutputUUID": "54070017-0000-4A00-9000-000000000001",
+            "OutputUUID": "54070016-0000-4A00-9000-000000000001",
             "Type": "ActionOutput"
            }
           },
@@ -432,25 +422,46 @@
    }
   },
   {
-   "id": "is.workflow.actions.gettext",
+   "id": "is.workflow.actions.notification",
    "p": {
     "UUID": "54070023-0000-4A00-9000-000000000001",
+    "WFNotificationActionTitle": "Shot committed",
+    "WFNotificationActionSound": true,
+    "WFNotificationActionBody": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Formatted Date",
+        "OutputUUID": "54070018-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼.png is in the repo."
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "54070022-0000-4A00-9000-000000000001",
     "CustomOutputName": "Report",
     "WFTextActionText": {
      "Value": {
       "attachmentsByRange": {
        "{65, 1}": {
         "OutputName": "Formatted Date",
-        "OutputUUID": "54070019-0000-4A00-9000-000000000001",
+        "OutputUUID": "54070018-0000-4A00-9000-000000000001",
         "Type": "ActionOutput"
        },
-       "{79, 1}": {
+       "{96, 1}": {
         "OutputName": "If Result",
         "OutputUUID": "54070005-0000-4A00-9000-000000000001",
         "Type": "ActionOutput"
        }
       },
-      "string": "{\"op\":\"pageshot\",\"name\":\"Log-PageShot\",\"build\":\"#BUILD#\",\"file\":\"￼.png\",\"url\":\"￼\"}"
+      "string": "{\"op\":\"pageshot\",\"name\":\"Log-PageShot\",\"build\":\"#BUILD#\",\"file\":\"￼.png\",\"route\":\"safari\",\"url\":\"￼\"}"
      },
      "WFSerializationType": "WFTextTokenString"
     }
@@ -463,7 +474,7 @@
     "WFInput": {
      "Value": {
       "OutputName": "Report",
-      "OutputUUID": "54070023-0000-4A00-9000-000000000001",
+      "OutputUUID": "54070022-0000-4A00-9000-000000000001",
       "Type": "ActionOutput"
      },
      "WFSerializationType": "WFTextTokenAttachment"
@@ -478,7 +489,7 @@
       "attachmentsByRange": {
        "{0, 1}": {
         "OutputName": "Report",
-        "OutputUUID": "54070023-0000-4A00-9000-000000000001",
+        "OutputUUID": "54070022-0000-4A00-9000-000000000001",
         "Type": "ActionOutput"
        }
       },
