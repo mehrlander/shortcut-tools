@@ -1,0 +1,147 @@
+{
+ "name": "Probe-SheetBlocks",
+ "label": "Probe-SheetBlocks: the clock either side of the Show Web View sheet (10 actions)",
+ "workflow": {
+  "WFWorkflowTypes": [
+   "WFWorkflowTypeShowInSearch"
+  ],
+  "WFWorkflowOutputContentItemClasses": [
+   "WFStringContentItem"
+  ]
+ },
+ "actions": [
+  {
+   "id": "is.workflow.actions.comment",
+   "p": {
+    "WFCommentActionText": "Probe-SheetBlocks: does a shortcut keep running while the Show Web View sheet is up, or does it resume only when the sheet is dismissed?\n\nIt reads the clock either side of the sheet and logs both times in one row. A delta near zero means the run continued behind the sheet. A delta matching how long the sheet was left up means it blocked.\n\nNothing to answer and nothing to watch for. The alert only asks for a deliberate pause, so that the blocking case produces an unmistakable delta rather than an ambiguous second.\n\nThis is the question docs/shortcuts-format-notes.md asserts one way and the corpus leans the other, and every screenshot design branches on it: if the sheet blocks, no single shortcut can photograph its own sheet."
+   }
+  },
+  {
+   "id": "is.workflow.actions.alert",
+   "p": {
+    "UUID": "5BE70001-0000-4A00-9000-000000000001",
+    "WFAlertActionCancelButtonShown": false,
+    "WFAlertActionTitle": "Count to ten on the page",
+    "WFAlertActionMessage": "The log page opens next.\n\nLeave it up for about ten seconds, then dismiss it. Nothing to read and nothing to answer: the clock either side is the whole measurement."
+   }
+  },
+  {
+   "id": "is.workflow.actions.date",
+   "p": {
+    "UUID": "5BE70002-0000-4A00-9000-000000000001"
+   }
+  },
+  {
+   "id": "is.workflow.actions.format.date",
+   "p": {
+    "UUID": "5BE70003-0000-4A00-9000-000000000001",
+    "WFDate": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Current Date",
+        "OutputUUID": "5BE70002-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "WFDateFormatStyle": "Custom",
+    "WFDateFormat": "HH:mm:ss"
+   }
+  },
+  {
+   "id": "is.workflow.actions.showwebpage",
+   "p": {
+    "UUID": "5BE70004-0000-4A00-9000-000000000001",
+    "WFURL": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+   }
+  },
+  {
+   "id": "is.workflow.actions.date",
+   "p": {
+    "UUID": "5BE70005-0000-4A00-9000-000000000001"
+   }
+  },
+  {
+   "id": "is.workflow.actions.format.date",
+   "p": {
+    "UUID": "5BE70006-0000-4A00-9000-000000000001",
+    "WFDate": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Current Date",
+        "OutputUUID": "5BE70005-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    },
+    "WFDateFormatStyle": "Custom",
+    "WFDateFormat": "HH:mm:ss"
+   }
+  },
+  {
+   "id": "is.workflow.actions.gettext",
+   "p": {
+    "UUID": "5BE70007-0000-4A00-9000-000000000001",
+    "CustomOutputName": "Report",
+    "WFTextActionText": {
+     "Value": {
+      "attachmentsByRange": {
+       "{75, 1}": {
+        "OutputName": "Formatted Date",
+        "OutputUUID": "5BE70003-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       },
+       "{87, 1}": {
+        "OutputName": "Formatted Date",
+        "OutputUUID": "5BE70006-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "{\"op\":\"sheetblocks\",\"name\":\"Probe-SheetBlocks\",\"build\":\"#BUILD#\",\"before\":\"￼\",\"after\":\"￼\"}"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.runworkflow",
+   "p": {
+    "WFWorkflowName": "Log-Repo",
+    "WFInput": {
+     "Value": {
+      "OutputName": "Report",
+      "OutputUUID": "5BE70007-0000-4A00-9000-000000000001",
+      "Type": "ActionOutput"
+     },
+     "WFSerializationType": "WFTextTokenAttachment"
+    }
+   }
+  },
+  {
+   "id": "is.workflow.actions.output",
+   "p": {
+    "WFOutput": {
+     "Value": {
+      "attachmentsByRange": {
+       "{0, 1}": {
+        "OutputName": "Report",
+        "OutputUUID": "5BE70007-0000-4A00-9000-000000000001",
+        "Type": "ActionOutput"
+       }
+      },
+      "string": "￼"
+     },
+     "WFSerializationType": "WFTextTokenString"
+    }
+   }
+  }
+ ]
+}
