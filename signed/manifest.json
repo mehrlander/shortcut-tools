@@ -19,6 +19,11 @@
   "bytes": 22566,
   "signed": "2026-08-31"
  },
+ "Log-PageRender": {
+  "plist_sha256": "09f354e37f46f7cdef147be0deae9e9d7f5e36e75c677ca4d44c606166769343",
+  "bytes": 24293,
+  "signed": "2026-09-10"
+ },
  "Log-PageShot": {
   "plist_sha256": "470aa630b94d5234317ed49ea889b449a804506993cd0b153ff31dd3b0b409cf",
   "bytes": 24388,
