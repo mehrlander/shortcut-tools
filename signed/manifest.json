@@ -19,6 +19,11 @@
   "bytes": 22566,
   "signed": "2026-08-31"
  },
+ "Log-PageShot": {
+  "plist_sha256": "470aa630b94d5234317ed49ea889b449a804506993cd0b153ff31dd3b0b409cf",
+  "bytes": 24388,
+  "signed": "2026-09-10"
+ },
  "Open-WiFi": {
   "plist_sha256": "1c4af78cfc1efe4e1d09f9ae5e3b2db743806bf95f09116ce321ede8930a1145",
   "bytes": 21748,
