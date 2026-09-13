@@ -1,9 +1,15 @@
 # CLAUDE.md
 
-Working rules for this repository, on top of the portable conventions in
-[`mehrlander/web-tools`](https://github.com/mehrlander/web-tools/blob/main/docs/SURFACING.md).
-They arrive with a web-tools checkout; without one, load them with `/web-tools`. What follows is specific to this repo, and the
-first section governs every design decision made here.
+Working rules for this repository, on top of the portable conventions from
+`mehrlander/web-tools`: [`docs/SURFACING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/SURFACING.md),
+the surfacing primitives, and
+[`docs/QUALIFIED-WRITING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/QUALIFIED-WRITING.md),
+the prose rules. They arrive through the `portable` plugin, in every session:
+its `conventions-nudge` hook prints one directive at session start and
+**`/portable:default`** loads both. A web-tools checkout is not delivery and has
+not been since 2026-09-12, when that repo cut the `@`-import that used to make
+it one. What follows is specific to this repo, and the first section governs
+every design decision made here.
 
 ## The device is the expensive resource
 
