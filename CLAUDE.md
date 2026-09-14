@@ -5,7 +5,7 @@ Working rules for this repository, on top of the portable conventions from
 the surfacing primitives, and
 [`docs/QUALIFIED-WRITING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/QUALIFIED-WRITING.md),
 the prose rules. They arrive through the `portable` plugin, in every session:
-its `conventions-nudge` hook prints one directive at session start and
+its `invoke-default` hook prints one directive at session start and
 **`/portable:default`** loads both. A web-tools checkout is not delivery and has
 not been since 2026-09-12, when that repo cut the `@`-import that used to make
 it one. What follows is specific to this repo, and the first section governs
