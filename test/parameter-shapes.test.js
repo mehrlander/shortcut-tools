@@ -142,6 +142,34 @@ test("Run-Op fetches the op through the API that needs no purge, evaluates it sy
     "Run-Op neither opens nor coerces: Get-JsonFromJs owns the data: URL");
 });
 
+test("Run-Op's own HTTP-error reply carries every key Choose-Claude draws from", () => {
+  // 2026-09-14. Run-Op answers a non-200 with a dictionary it builds itself,
+  // and that object predates `menu`: it carried caption, rows, urls and error.
+  // Choose-Claude draws `menu`, on the op's guarantee that `menu` is never
+  // empty. The guarantee is the OP's and holds (measured: seven clipboard
+  // shapes, catch path included, all return a menu); Run-Op's own error object
+  // is not the op and was not covered by it. So a 401 from a stale token gave
+  // an empty list, Choose from List returned nothing, and the keyed Get
+  // Dictionary Value below it stopped with "No key was provided for dictionary
+  // action" three shortcuts away from the cause.
+  //
+  // A generic runner spelling one op's schema is the smell, and this gate is
+  // the cheap half of it: whatever keys the caller reads off a success, the
+  // failure has to carry too.
+  const expr = runOp.actions.find((a) => a.id.endsWith("gettext")).p.WFTextActionText.Value.string;
+  // Not [^}]*: the object contains `urls:{}`, so a first-brace match stops
+  // short of every key after it, which is how this gate passed itself once.
+  const fail = expr.match(/if\(x\.status!==200\)return\{.*?\};/);
+  assert.ok(fail, "the non-200 return is one object literal");
+  const read = choose.actions.filter((a) => a.id.endsWith("getvalueforkey"))
+    .map((a) => a.p.WFDictionaryKey).filter((k) => typeof k === "string");
+  assert.deepStrictEqual(read, ["caption", "menu", "urls"], "what the shell reads");
+  for (const key of read)
+    assert.ok(fail[0].includes(key + ":"), `the error reply omits ${key}, which Choose-Claude reads`);
+  assert.ok(/menu:\[[^\]]*'Out'[^\]]*\]/.test(fail[0]),
+    "the error menu offers Out, or the only row out of it is a miss");
+});
+
 test("Claude-Session reads the clipboard as an action, names the op, and opens the op's own URL for the chosen row", () => {
   const ids = claude.actions.map((a) => a.id.split(".").pop());
   assert.strictEqual(ids[0], "getclipboard", "the clipboard is read by an action, not inlined as a token");

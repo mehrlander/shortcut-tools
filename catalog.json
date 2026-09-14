@@ -1,0 +1,846 @@
+{
+ "meta": {
+  "chains": 76,
+  "installable": 53,
+  "external_targets": 16
+ },
+ "external_targets": [
+  "Combine-JsonList",
+  "Copy-ActionFromClaude",
+  "Copy-ActionFromUrl",
+  "Get-FileCaption",
+  "Get-FileContext",
+  "Get-FromJs",
+  "Get-JsonFromJs",
+  "Inject-🎟️GitHubToken",
+  "Run-Html",
+  "Run-List",
+  "Show-Ace",
+  "Show-Html",
+  "Show-Loop",
+  "Show-Repo",
+  "Show-WebView",
+  "Use-Shortcut"
+ ],
+ "rows": [
+  {
+   "file": "ask-report.json",
+   "label": "Ask-Report: walk a list of questions, commit every answer in one trip (10 actions)",
+   "name": "Ask-Report",
+   "actions": 10,
+   "build": "2c77d16",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "back-doubletap.json",
+   "label": "Back-DoubleTap: the double back tap dispatcher (67 actions)",
+   "name": "Back-DoubleTap",
+   "actions": 67,
+   "build": "5630063",
+   "settings": true,
+   "targets": [
+    "Choose-RunLink",
+    "Get-FileCaption",
+    "Show-Ace",
+    "Show-Loop",
+    "Show-Repo",
+    "Show-WebView"
+   ]
+  },
+  {
+   "file": "back-entry.json",
+   "label": "Back-Entry: the shortcut Back Tap is bound to, so the dispatcher can be re-installed (1 action)",
+   "name": "Back-Entry",
+   "actions": 1,
+   "build": "9d7d1a4",
+   "settings": true,
+   "targets": [
+    "Run-BackTap"
+   ]
+  },
+  {
+   "file": "capture-link.json",
+   "label": "Capture-Link: share sheet in, repo log out (2 actions)",
+   "name": "Capture-Link",
+   "actions": 2,
+   "build": "be25494",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "check-api-reply.json",
+   "label": "Check-ApiReply: a GitHub reply in, the same reply out, and a notification if it refused (6 actions)",
+   "name": "Check-ApiReply",
+   "actions": 6,
+   "build": "a1d6820",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "check-github-token.json",
+   "label": "Check-🎟️GitHubToken: is the stored token live, and can it reach the private store (3 actions)",
+   "name": "Check-🎟️GitHubToken",
+   "actions": 3,
+   "build": "d84a5f4",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Show-Html"
+   ]
+  },
+  {
+   "file": "choose-backtap.json",
+   "label": "Choose-BackTap: the Shortcuts-app menu, titled with the clipboard's state (17 actions)",
+   "name": "Choose-BackTap",
+   "actions": 17,
+   "build": "7f64c63",
+   "settings": false,
+   "targets": [
+    "Describe-Input"
+   ]
+  },
+  {
+   "file": "choose-claude.json",
+   "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (30 actions)",
+   "name": "Choose-Claude",
+   "actions": 30,
+   "build": "61fef56",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Run-Op"
+   ]
+  },
+  {
+   "file": "choose-runlink.json",
+   "label": "Choose-RunLink: a copied shortcuts:// link in, checked against the library and offered, or nothing (24 actions)",
+   "name": "Choose-RunLink",
+   "actions": 24,
+   "build": "89fe27a",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "claude-session.json",
+   "label": "Claude-Session: pick a session on the copied branch, open it in Web Tools (16 actions)",
+   "name": "Claude-Session",
+   "actions": 16,
+   "build": "2c999bb",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Run-Op"
+   ]
+  },
+  {
+   "file": "copy-action-from-claude.json",
+   "label": "Copy-ActionFromClaude (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "7d7d405",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "copy-action-from-url.json",
+   "label": "Copy-ActionFromUrl: fetch a packed payload and paste it (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "d94ac94",
+   "settings": false,
+   "targets": [
+    "Copy-ActionFromClaude"
+   ]
+  },
+  {
+   "file": "describe-input.json",
+   "label": "Describe-Input: describe the input, in one shortcut and one text card (17 actions)",
+   "name": "Describe-Input",
+   "actions": 17,
+   "build": "0fa4c6e",
+   "settings": true,
+   "targets": [
+    "￼"
+   ]
+  },
+  {
+   "file": "dictate.json",
+   "label": "Dictate: open the full-page voice capture surface in the sheet (1 action)",
+   "name": "Dictate",
+   "actions": 1,
+   "build": "ca646c0",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "dump-folder-zip.json",
+   "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed (14 actions)",
+   "name": "Dump-FolderZip",
+   "actions": 14,
+   "build": "edc9e16",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "dump-folder.json",
+   "label": "Dump-Folder: one folder's shortcuts as JSON lines, onto the clipboard (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "943db93",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "dump-named.json",
+   "label": "Dump-Named: export just the shortcuts named in the input, back to the repo (20 actions)",
+   "name": "Dump-Named",
+   "actions": 20,
+   "build": "f0304eb",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "dump-recent-zip.json",
+   "label": "Dump-RecentZip: every shortcut modified in the last N days, zipped whole and committed (22 actions)",
+   "name": "Dump-RecentZip",
+   "actions": 22,
+   "build": "c3ef427",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "dump-recent.json",
+   "label": "Dump-Recent: every shortcut modified in the last N days, contents and all, committed to the repo in one tap (25 actions)",
+   "name": "Dump-Recent",
+   "actions": 25,
+   "build": "0fbeca2",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "dump-selected.json",
+   "label": "Dump-Selected: pick shortcuts, copy them as JSON lines (9 actions)",
+   "name": null,
+   "actions": 9,
+   "build": "f31a1c3",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "dump-shortcut.json",
+   "label": "Dump-Shortcut: Get-Shortcut's result, stamped and committed through Log-Repo (5 actions)",
+   "name": "Dump-Shortcut",
+   "actions": 5,
+   "build": "45ca776",
+   "settings": false,
+   "targets": [
+    "Get-ShortcutJson",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "dump-shortcuts.json",
+   "label": "Dump-Shortcuts: every shortcut as combined JSON, onto the clipboard (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "0275eb9",
+   "settings": false,
+   "targets": [
+    "Use-Shortcut"
+   ]
+  },
+  {
+   "file": "find-shortcut.json",
+   "label": "Find-Shortcut: every shortcut whose name contains this one, and the picked copy opened (11 actions)",
+   "name": "Find-Shortcut",
+   "actions": 11,
+   "build": "7d8949e",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "get-app-route.json",
+   "label": "Get-AppRoute: an app name in, the shortcut to run out, or nothing (5 actions)",
+   "name": "Get-AppRoute",
+   "actions": 5,
+   "build": "1dbf5b3",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "get-file-info.json",
+   "label": "Get-FileInfo: describe the input, one item or a list (10 actions)",
+   "name": "Get-FileInfo",
+   "actions": 10,
+   "build": "870c492",
+   "settings": true,
+   "targets": [
+    "Combine-JsonList",
+    "Get-FileContext",
+    "Get-JsonFromJs",
+    "Run-List"
+   ]
+  },
+  {
+   "file": "get-shortcut-json.json",
+   "label": "Get-ShortcutJson: one named shortcut as JSON, name included, returned not sent (7 actions)",
+   "name": "Get-ShortcutJson",
+   "actions": 7,
+   "build": "92c1c3c",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "gh-recent-branches-picker.json",
+   "label": "GitHub: recent branches, as a picker (11 actions)",
+   "name": null,
+   "actions": 11,
+   "build": "50cd98d",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "gh-recent-branches.json",
+   "label": "GitHub: branches I last committed on (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "b4c9741",
+   "settings": false,
+   "targets": [
+    "Show-Html"
+   ]
+  },
+  {
+   "file": "js-data-url.json",
+   "label": "JavaScript via data: URL (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "8f6376a",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "library-fetch.json",
+   "label": "Library-Fetch: install a shortcut signed in the repo, no worker on device (8 actions)",
+   "name": "Library-Fetch",
+   "actions": 8,
+   "build": "16b4f91",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "library-import.json",
+   "label": "Library-Import: fetch a plist, remote-sign it, import it (13 actions)",
+   "name": "Library-Import",
+   "actions": 13,
+   "build": "7faa22b",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "library-install.json",
+   "label": "Library-Install: create the named shortcut and copy its actions (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "686ccf5",
+   "settings": false,
+   "targets": [
+    "Copy-ActionFromUrl",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "library-move.json",
+   "label": "Library-Move: resolve every name, log what resolved, then one Move into a folder you pick at run time (14 actions)",
+   "name": "Library-Move",
+   "actions": 14,
+   "build": "c38e359",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "library-open.json",
+   "label": "Library-Open: open the named shortcut in the editor (3 actions)",
+   "name": "Library-Open",
+   "actions": 3,
+   "build": "b123b16",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "library-replace.json",
+   "label": "Library-Replace: delete by name, then import the new one (16 actions)",
+   "name": "Library-Replace",
+   "actions": 16,
+   "build": "5ef9080",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "library-stage.json",
+   "label": "Library-Stage: move each named shortcut to a folder, and log it (8 actions)",
+   "name": "Library-Stage",
+   "actions": 8,
+   "build": "43be0c3",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "log-pagerender.json",
+   "label": "Log-PageRender: render a URL to an image and commit it, no screenshot (21 actions)",
+   "name": "Log-PageRender",
+   "actions": 21,
+   "build": "f4506e6",
+   "settings": true,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "log-pageshot.json",
+   "label": "Log-PageShot: shoot a URL in Safari twice and commit the pair (27 actions)",
+   "name": "Log-PageShot",
+   "actions": 27,
+   "build": "4d57161",
+   "settings": true,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "log-repo.json",
+   "label": "Log-Repo: commit the input to the repo log, clipboard as fallback (11 actions)",
+   "name": "Log-Repo",
+   "actions": 11,
+   "build": "39d5713",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "manage-library-probe.json",
+   "label": "Probe: the three shape-unknown library actions (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "6f10239",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "menu.json",
+   "label": "Menu, 3 cases (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "41ea0e6",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "open-wifi.json",
+   "label": "Open-WiFi: the Wi-Fi settings pane, for when a cast is failing (2 actions)",
+   "name": "Open-WiFi",
+   "actions": 2,
+   "build": "a980162",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "probe-apps.json",
+   "label": "Probe-Apps: Find Apps over the whole library, name and bundle id per row. Mac-only, established on device 2026-08-30 (11 actions)",
+   "name": null,
+   "actions": 11,
+   "build": "0adb109",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-coercion.json",
+   "label": "Probe-Coercion: which of five inputs the rich-text coercion actually renders (29 actions)",
+   "name": "Probe-Coercion",
+   "actions": 29,
+   "build": "a8406f9",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-list-detail.json",
+   "label": "Probe-ListDetail: does a list input still lose detail.caption (9 actions)",
+   "name": "Probe-ListDetail",
+   "actions": 9,
+   "build": "2c595ed",
+   "settings": false,
+   "targets": [
+    "Get-FileCaption",
+    "Get-FileInfo",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-list-handoff.json",
+   "label": "Probe-ListHandoff: whether a list survives Run Shortcut, by crossing into itself (12 actions)",
+   "name": "Probe-ListHandoff",
+   "actions": 12,
+   "build": "ec08965",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Probe-ListHandoff"
+   ]
+  },
+  {
+   "file": "probe-quicklook.json",
+   "label": "Probe-QuickLook: does Quick Look run a page's script (4 actions)",
+   "name": "Probe-QuickLook",
+   "actions": 4,
+   "build": "5889b96",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "probe-route.json",
+   "label": "Probe-Route: what the app map answers for a named app, logged (3 actions)",
+   "name": "Probe-Route",
+   "actions": 3,
+   "build": "201c340",
+   "settings": false,
+   "targets": [
+    "Get-AppRoute",
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-sheet-blocks.json",
+   "label": "Probe-SheetBlocks: the clock either side of the Show Web View sheet (10 actions)",
+   "name": "Probe-SheetBlocks",
+   "actions": 10,
+   "build": "e002afe",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-step.json",
+   "label": "Probe-Step: ask about the probe you just ran, commit it, then fire the next one (16 actions)",
+   "name": "Probe-Step",
+   "actions": 16,
+   "build": "0a13144",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-tab-js.json",
+   "label": "Probe-TabJs: whether Run JavaScript on Web Page accepts a Safari tab entity (9 actions)",
+   "name": "Probe-TabJs",
+   "actions": 9,
+   "build": "1ae77a7",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-unattended.json",
+   "label": "Probe-Unattended: four legs of bookkeeping, each committed before the next, for a run nobody is holding (19 actions)",
+   "name": "Probe-Unattended",
+   "actions": 19,
+   "build": "2979036",
+   "settings": false,
+   "targets": [
+    "Get-FromJs",
+    "Inject-🎟️GitHubToken",
+    "Log-Repo",
+    "Sync-Manifest"
+   ]
+  },
+  {
+   "file": "probe-watch.json",
+   "label": "Probe-Watch: brief, fire, ask, log (9 actions)",
+   "name": "Probe-Watch",
+   "actions": 9,
+   "build": "63f17a9",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "probe-webview-caps.json",
+   "label": "Probe-WebViewCaps: every remaining sheet capability, returning itself (2 actions)",
+   "name": "Probe-WebViewCaps",
+   "actions": 2,
+   "build": "f86c1d4",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ]
+  },
+  {
+   "file": "probe-webview-net.json",
+   "label": "Probe-WebViewNet: does the sheet reach the network (2 actions)",
+   "name": "Probe-WebViewNet",
+   "actions": 2,
+   "build": "3585180",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ]
+  },
+  {
+   "file": "probe-webview.json",
+   "label": "Probe-WebView: does the Show Web View sheet run a page's script (2 actions)",
+   "name": "Probe-WebView",
+   "actions": 2,
+   "build": "f737485",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ]
+  },
+  {
+   "file": "read-shots.json",
+   "label": "Read-Shots: OCR a set of screenshots and commit the text to the repo log (11 actions)",
+   "name": "Read-Shots",
+   "actions": 11,
+   "build": "f8679fe",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ]
+  },
+  {
+   "file": "run-app-determined.json",
+   "label": "Run-AppDetermined: Get-AppRoute, a default, and the run (6 actions)",
+   "name": "Run-AppDetermined",
+   "actions": 6,
+   "build": "daa0cf2",
+   "settings": false,
+   "targets": [
+    "Get-AppRoute"
+   ]
+  },
+  {
+   "file": "run-backtap.json",
+   "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (37 actions)",
+   "name": "Run-BackTap",
+   "actions": 37,
+   "build": "d5a80b8",
+   "settings": true,
+   "targets": [
+    "Choose-RunLink",
+    "Get-AppRoute",
+    "Show-Ace",
+    "Show-Loop",
+    "Show-WebView"
+   ]
+  },
+  {
+   "file": "run-by-name.json",
+   "label": "Probe: does Run Shortcut resolve by name alone? (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "914a32d",
+   "settings": false,
+   "targets": [
+    "Run-Html"
+   ]
+  },
+  {
+   "file": "run-by-variable.json",
+   "label": "Probe: can Run Shortcut take its target from a variable? (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "3c6248f",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "run-html.json",
+   "label": "Run-Html: render Shortcut Input as a page (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "cbd633e",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "run-op.json",
+   "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (8 actions)",
+   "name": "Run-Op",
+   "actions": 8,
+   "build": "508e4c5",
+   "settings": false,
+   "targets": [
+    "Get-JsonFromJs",
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "run-pick.json",
+   "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, log it and open the log (14 actions)",
+   "name": "Run-Pick",
+   "actions": 14,
+   "build": "ccb6cfc",
+   "settings": true,
+   "targets": [
+    "Log-Repo",
+    "Run-Pick",
+    "Show-Log"
+   ]
+  },
+  {
+   "file": "run-probe-unattended.json",
+   "label": "One Run Shortcut card naming Probe-Unattended, to paste into a blank time-of-day automation instead of searching the action list for it (1 action)",
+   "name": null,
+   "actions": 1,
+   "build": "1c93527",
+   "settings": false,
+   "targets": [
+    "Probe-Unattended"
+   ]
+  },
+  {
+   "file": "run-steps.json",
+   "label": "Run-Steps: run named shortcuts in order, piping each into the next (6 actions)",
+   "name": null,
+   "actions": 6,
+   "build": "4cd9eea",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "self-name.json",
+   "label": "Self-Name: read your own name from config, so a rename cannot break your callers (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "3a78521",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "set-github-token.json",
+   "label": "Set-🎟️GitHubToken: the clipboard becomes the stored token, then the checker says so (8 actions)",
+   "name": "Set-🎟️GitHubToken",
+   "actions": 8,
+   "build": "c34ae44",
+   "settings": false,
+   "targets": [
+    "Check-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "show-html-js.json",
+   "label": "Show-Html (JS): the same job in 9 actions, the text work moved into the page (9 actions)",
+   "name": null,
+   "actions": 9,
+   "build": "01d78a6",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "show-log.json",
+   "label": "Show-Log: the device log as a sheet over Shortcuts (2 actions)",
+   "name": "Show-Log",
+   "actions": 2,
+   "build": "cea85a3",
+   "settings": true,
+   "targets": []
+  },
+  {
+   "file": "show-menu.json",
+   "label": "Show-Menu: run a menu handed to it as text (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "2c901e0",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "speak-text.json",
+   "label": "Speak-Text: read the input aloud, in the back tap's voice (1 actions)",
+   "name": "Speak-Text",
+   "actions": 1,
+   "build": "2dcedbe",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "sync-manifest.json",
+   "label": "Sync-Manifest: the library's shape committed to the repo, one tap (14 actions)",
+   "name": "Sync-Manifest",
+   "actions": 14,
+   "build": "0ebe6ea",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "sync-xhr-probe.json",
+   "label": "Network probe: does the coercion wait? (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "8f2f9a5",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "trace.json",
+   "label": "Trace: one guarded log line, the debug idiom the library lacks (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "f1647cf",
+   "settings": false,
+   "targets": []
+  },
+  {
+   "file": "wiring-test.json",
+   "label": "Wiring test (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "2a42772",
+   "settings": false,
+   "targets": []
+  }
+ ]
+}

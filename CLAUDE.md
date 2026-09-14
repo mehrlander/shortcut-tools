@@ -25,9 +25,55 @@ Rank every delivery route by what it costs the person on the other end:
 | --- | --- |
 | Free | Read the corpus. Some 600 shortcuts and 30,000 actions are on disk, parseable, and answer most questions about how a real library is built; `library.json`'s `meta` block in web-tools-private has the live count, and `tools/freshness.py` says whether it is current. |
 | Free | Read the public record. The format notes cite what exists and, more usefully, where it stops. |
-| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists. |
+| Free | Change an **op**. `lib/ops/` in web-tools is fetched by `Run-Op` at run time, so a diagnostic written as an op reaches the device with nothing installed. |
+| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists, **and five of them is still cheap**. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
-| **Expensive** | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, type an input, or run something more than once. |
+| Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
+| **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing a shortcut bound to Back Tap or AssistiveTouch costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
+
+**Running is cheap and installing is dear, and this table had it the other way
+round until 2026-09-14.** Stated by the owner, after a session diagnosed a
+failure by shipping two installs when one tap on an installed receiver would
+have measured it: *"It's quite simple for me to run a shortcut and see what the
+result is... you could give me a string of five of them to run... installing
+them is much more onerous."* The old row treating "run something more than
+once" as expensive was reading a repeat as tedium; the repeat is fine, and what
+is not fine is a repeat that asks for an **observation** each time, which is
+rule 5 and the diagnostic-returns-itself rule below.
+
+**So the diagnostic ladder starts at the top, not at the bottom.** In order:
+
+0. **Search the corpus for a probe that already answers it**, by what it
+   measures rather than by the name you would have given it. `Check-🎟️GitHubToken`
+   has been installed since before this repo existed: three actions that call
+   `GET api.github.com/user` with the injected token and show `active`, `stale`
+   or `error`. On 2026-09-14 a session reasoned its way to "the token has
+   probably expired" from three silent writers and handed that over as a
+   hypothesis, with this shortcut sitting in the Other folder. Rule 1 above
+   already says to exhaust the free routes; it did not say that a *probe* is one
+   of the things to search for, and now it does.
+1. `python3 tools/run.py <Receiver> --log`, which routes through `Run-Steps` and
+   appends `Log-Repo`, so the answer lands in `shortcuts/log/` and nobody reads
+   a screen. That tool's docstring has said this since it was written.
+2. `python3 tools/run.py --pick <A> <B>`, when the probe should run against
+   whatever is on the clipboard.
+3. A new **op** in web-tools `lib/ops/`, reached by `Run-Op`, when the probe
+   needs real computation. Still no install.
+4. Only then a new or revised receiver, and say what the install buys.
+
+**Rung 1 is the one that fails silently, and it fails hardest exactly when it
+matters.** `Log-Repo`, `Sync-Manifest` and `Run-Op` all build their
+Authorization header through `Inject-🎟️GitHubToken`, so the return channel and
+the credential are one dependency. When that credential goes, every probe that
+would report it stops reporting, and the symptom is not an error but four days
+of silence across three unrelated-looking surfaces. **A diagnostic cannot return
+itself when the return path is the thing under test.** So when the log has gone
+quiet, do not send another logging probe: send one that ends on screen, and say
+what to look at.
+
+A fix is not a measurement, and neither is a chain of plausible inferences.
+Shipping either to settle a question spends the dearest route to learn what the
+cheapest would have told you.
 
 **Rules that follow, and they are not advisory:**
 
@@ -89,6 +135,13 @@ sheet; it is not a prerequisite, and a session should not route a normal
 re-install through it. The cost of that error is not a wasted tap: the link
 names a receiver the device may not have, so it fails at the point of use with
 nothing installed.
+
+**The bound shortcut is `Run-BackTap`**, read off the Settings page 2026-09-14.
+`Back-DoubleTap` is an independent copy of the same dispatcher and is not bound
+to anything, so a change meant for the gesture that lands there reaches nothing.
+Stated here because this file is what every session reads first, and it named
+only the unbound copy until 2026-09-14: three sessions re-derived the binding
+from a screenshot while the answer sat in a table cell in `workflows/README.md`.
 
 **But replacing a shortcut breaks whatever the system had bound to it**
 (reported 2026-08-31). Back Tap holds a reference that a save-over import does
@@ -306,6 +359,16 @@ Four things follow, and none is optional for anything handed over:
 
 **And report it back.** A reply that hands over a link ends by showing the actual
 log rows, so both sides can see what ran rather than inferring it from silence.
+
+## Snags
+
+[`docs/SNAGS.md`](docs/SNAGS.md) is the friction log: one line per trip, a
+`seen:` line of dates, a `→` to the document that holds the fix. Its header
+carries the intake shape and the recurrence rule. A trip goes there rather than
+into a narrative paragraph, and a trip already listed gets another date on its
+entry, never a second entry. The table is generated by
+`python3 tools/snags-index.py --publish` and held by the suite, because a hand
+count is the one number a session gets wrong.
 
 ## A diagnostic returns itself
 

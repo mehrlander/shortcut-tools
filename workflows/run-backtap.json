@@ -1,6 +1,60 @@
 {
   "name": "Run-BackTap",
-  "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (29 actions)",
+  "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (37 actions)",
+  "workflow": {
+    "WFWorkflowNoInputBehavior": {
+      "Name": "WFWorkflowNoInputBehaviorGetClipboard",
+      "Parameters": {}
+    },
+    "WFWorkflowInputContentItemClasses": [
+      "WFAppContentItem",
+      "WFAppStoreAppContentItem",
+      "WFArticleContentItem",
+      "WFContactContentItem",
+      "WFDateContentItem",
+      "WFEmailAddressContentItem",
+      "WFFolderContentItem",
+      "WFGenericFileContentItem",
+      "WFImageContentItem",
+      "WFiTunesProductContentItem",
+      "WFLocationContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFAVAssetContentItem",
+      "WFPDFContentItem",
+      "WFPhoneNumberContentItem",
+      "WFRichTextContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem",
+      "WFURLContentItem"
+    ],
+    "WFWorkflowOutputContentItemClasses": [
+      "WFDateContentItem",
+      "WFAVAssetContentItem",
+      "WFEmailAddressContentItem",
+      "WFImageContentItem",
+      "WFLocationContentItem",
+      "WFContentItem",
+      "WFGenericFileContentItem",
+      "WFPhotoMediaContentItem",
+      "WFPhoneNumberContentItem",
+      "WFStringContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFRichTextContentItem",
+      "WFURLContentItem",
+      "WFAppStoreAppContentItem",
+      "WFPDFContentItem",
+      "WFSafariWebPageContentItem",
+      "WFContactContentItem",
+      "WFFolderContentItem",
+      "WFMKMapItemContentItem",
+      "WFiTunesProductContentItem",
+      "WFAppContentItem",
+      "WFArticleContentItem"
+    ],
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
   "actions": [
     {
       "id": "is.workflow.actions.getcurrentapp",
@@ -96,6 +150,112 @@
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "UUID": "FE24393B-A09B-475E-AE27-E9CFAA5E23D0"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.match",
+      "p": {
+        "UUID": "C1B01000-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Link",
+        "WFMatchTextPattern": "shortcuts://run-shortcut\\?\\S+",
+        "text": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B01000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1B01000-0003-4A00-9000-000000000001",
+              "OutputName": "Link"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "C1B01000-0004-4A00-9000-000000000001",
+        "WFWorkflowName": "Choose-RunLink",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B01000-0003-4A00-9000-000000000001",
+            "OutputName": "Link"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B01000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1B01000-0004-4A00-9000-000000000001",
+              "OutputName": "Shortcut Result"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "WFOutput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B01000-0004-4A00-9000-000000000001",
+                "OutputName": "Shortcut Result"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B01000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B01000-0005-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B01000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B01000-0006-4A00-9000-000000000001"
       }
     },
     {
@@ -319,6 +479,23 @@
       "p": {
         "WFURL": "https://mehrlander.github.io/web-tools/pages/dictate.html",
         "UUID": "D1C7A7E0-0101-4A00-9000-000000000101"
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "C1B02000-0001-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
       }
     },
     {

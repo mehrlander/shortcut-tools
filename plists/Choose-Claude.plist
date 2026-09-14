@@ -237,6 +237,38 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
+				<string>C1A0DE00-9004-4A00-9000-000000009004</string>
+				<key>WFCondition</key>
+				<integer>100</integer>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Type</key>
+					<string>Variable</string>
+					<key>Variable</key>
+					<dict>
+						<key>Value</key>
+						<dict>
+							<key>OutputName</key>
+							<string>Choice</string>
+							<key>OutputUUID</key>
+							<string>C1A0DE00-0018-4A00-9000-000000000001</string>
+							<key>Type</key>
+							<string>ActionOutput</string>
+						</dict>
+						<key>WFSerializationType</key>
+						<string>WFTextTokenAttachment</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
 				<string>C1A0DE00-9001-4A00-9000-000000009001</string>
 				<key>WFCondition</key>
 				<integer>5</integer>
@@ -470,7 +502,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"menu-miss","name":"Choose-Claude","build":"bd93a6e","chosen":"￼","keys":"￼"}</string>
+						<string>{"op":"menu-miss","name":"Choose-Claude","build":"61fef56","chosen":"￼","keys":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -649,6 +681,87 @@
 				<string>C1A0DE00-9001-4A00-9000-000000009001</string>
 				<key>UUID</key>
 				<string>C1A0DE00-0017-4A00-9000-000000000001</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>C1A0DE00-9004-4A00-9000-000000009004</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>CustomOutputName</key>
+				<string>Empty</string>
+				<key>UUID</key>
+				<string>C1A0DE00-0030-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<string>{"op":"menu-empty","name":"Choose-Claude","build":"61fef56"}</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>C1A0DE00-0031-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Empty</string>
+						<key>OutputUUID</key>
+						<string>C1A0DE00-0030-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Log-Repo</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.showresult</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>Text</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict/>
+						<key>string</key>
+						<string>The Claude menu came back with no rows. Logged as menu-empty. The caption above names the cause when Run-Op reached the API.</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>C1A0DE00-9004-4A00-9000-000000009004</string>
+				<key>UUID</key>
+				<string>C1A0DE00-0032-4A00-9000-000000000001</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
