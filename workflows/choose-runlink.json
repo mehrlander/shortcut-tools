@@ -1,0 +1,262 @@
+{
+  "name": "Choose-RunLink",
+  "label": "Choose-RunLink: a copied shortcuts:// link in, the run offered, or nothing (17 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 0,
+        "WFCondition": 101,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "C1B00000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B00000-0002-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.match",
+      "p": {
+        "UUID": "C1B00000-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Link",
+        "WFMatchTextPattern": "shortcuts://run-shortcut\\?\\S+",
+        "text": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0002-4A00-9000-000000000001",
+                "OutputName": "If Result"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1B00000-0003-4A00-9000-000000000001",
+              "OutputName": "Link"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.match",
+      "p": {
+        "UUID": "C1B00000-0005-4A00-9000-000000000001",
+        "CustomOutputName": "Target",
+        "WFMatchTextPattern": "(?<=[?&]name=)[^&]+",
+        "text": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0003-4A00-9000-000000000001",
+                "OutputName": "Link"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.urlencode",
+      "p": {
+        "UUID": "C1B00000-0006-4A00-9000-000000000001",
+        "CustomOutputName": "Name",
+        "WFEncodeMode": "Decode",
+        "WFInput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0005-4A00-9000-000000000001",
+                "OutputName": "Target",
+                "Aggrandizements": [
+                  {
+                    "CoercionItemClass": "WFRichTextContentItem",
+                    "Type": "WFCoercionVariableAggrandizement"
+                  }
+                ]
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1B00000-0007-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "Run ￼\nOut",
+            "attachmentsByRange": {
+              "{4, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0006-4A00-9000-000000000001",
+                "OutputName": "Name"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "C1B00000-0008-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B00000-0007-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "C1B00000-0009-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B00000-0008-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFChooseFromListActionPrompt": "📋 copied shortcut link"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 0,
+        "WFCondition": 5,
+        "WFConditionalActionString": "Out",
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1B00000-0009-4A00-9000-000000000001",
+              "OutputName": "Chosen Item"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "C1B00000-0011-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B00000-0003-4A00-9000-000000000001",
+            "OutputName": "Link"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "C1B00000-0012-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B00000-0011-4A00-9000-000000000001",
+            "OutputName": "URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "WFOutput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0006-4A00-9000-000000000001",
+                "OutputName": "Name"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B00000-0014-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B00000-0015-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.nothing",
+      "p": {
+        "UUID": "C1B00000-0016-4A00-9000-000000000001"
+      }
+    }
+  ]
+}

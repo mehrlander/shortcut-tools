@@ -1758,6 +1758,42 @@ dictionary is a curated list and the corpus is one library's habits; neither is
 a census of what Shortcuts can do.** A search that finds nothing supports "I did
 not find one", never "there is none".
 
+## A splice that keeps the actions still loses the shortcut's settings
+
+*Measured in the repo 2026-09-14, from files rather than from a device.*
+
+A shortcut's behaviour is not all in `WFWorkflowActions`. Four sibling keys sit
+beside it in the workflow file and decide how the shortcut is reached and what
+it receives: `WFWorkflowNoInputBehavior`, `WFWorkflowInputContentItemClasses`,
+`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A chain file
+carries them in its optional `"workflow"` block, and `tools/plist.py` supplies
+its own defaults for every key the block omits.
+
+**So a conversion that copies actions and no block silently changes the
+shortcut.** `run-backtap` was built by splicing `Back-DoubleTap`'s device dump,
+keeping actions 0 to 7 and 43 to 58 verbatim. The actions arrived; the block did
+not. `Back-DoubleTap` declares `WFWorkflowNoInputBehaviorGetClipboard` and
+`Run-BackTap`'s published plist declared nothing, so a bare back tap would have
+reached it with Shortcut Input empty and taken the no-input arm, which opens the
+dictation page, on every single tap.
+
+Two things make this hard to see. The chain file reads as complete, because a
+missing block is indistinguishable from a chain that never wanted one: 33 of the
+45 named chains here declare no block and are correct not to. And the count in
+the label, the action table, and every `--check` in the repo all compare
+actions, so each one passed.
+
+**The corpus says absence is a real state rather than a default spelling.** Of
+605 shortcuts in the dumps, 96 write `WFWorkflowNoInputBehaviorGetClipboard`, 4
+write `AskForInput`, 3 write `ShowError`, and 502 do not write the key at all. The key
+appears when the setting is chosen, so a file without it is not a file that
+chose the clipboard.
+
+**The rule:** when a chain is derived from another shortcut rather than
+authored, diff the top-level keys of the two plists, not the action lists. One
+`plistlib.load` and a set comparison answers it, and nothing else in this repo
+does.
+
 ## Generating the plist
 
 Python's `plistlib` produces guaranteed well-formed output from a plain dict via
