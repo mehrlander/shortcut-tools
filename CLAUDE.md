@@ -25,9 +25,35 @@ Rank every delivery route by what it costs the person on the other end:
 | --- | --- |
 | Free | Read the corpus. Some 600 shortcuts and 30,000 actions are on disk, parseable, and answer most questions about how a real library is built; `library.json`'s `meta` block in web-tools-private has the live count, and `tools/freshness.py` says whether it is current. |
 | Free | Read the public record. The format notes cite what exists and, more usefully, where it stops. |
-| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists. |
+| Free | Change an **op**. `lib/ops/` in web-tools is fetched by `Run-Op` at run time, so a diagnostic written as an op reaches the device with nothing installed. |
+| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists, **and five of them is still cheap**. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
-| **Expensive** | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, type an input, or run something more than once. |
+| Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
+| **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing a shortcut bound to Back Tap or AssistiveTouch costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
+
+**Running is cheap and installing is dear, and this table had it the other way
+round until 2026-09-14.** Stated by the owner, after a session diagnosed a
+failure by shipping two installs when one tap on an installed receiver would
+have measured it: *"It's quite simple for me to run a shortcut and see what the
+result is... you could give me a string of five of them to run... installing
+them is much more onerous."* The old row treating "run something more than
+once" as expensive was reading a repeat as tedium; the repeat is fine, and what
+is not fine is a repeat that asks for an **observation** each time, which is
+rule 5 and the diagnostic-returns-itself rule below.
+
+**So the diagnostic ladder starts at the top, not at the bottom.** In order:
+
+1. `python3 tools/run.py <Receiver> --log`, which routes through `Run-Steps` and
+   appends `Log-Repo`, so the answer lands in `shortcuts/log/` and nobody reads
+   a screen. That tool's docstring has said this since it was written.
+2. `python3 tools/run.py --pick <A> <B>`, when the probe should run against
+   whatever is on the clipboard.
+3. A new **op** in web-tools `lib/ops/`, reached by `Run-Op`, when the probe
+   needs real computation. Still no install.
+4. Only then a new or revised receiver, and say what the install buys.
+
+A fix is not a measurement. Shipping one to test a hypothesis spends the dearest
+route to learn what the cheapest would have told you.
 
 **Rules that follow, and they are not advisory:**
 
