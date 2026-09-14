@@ -1,6 +1,6 @@
 {
   "name": "Choose-RunLink",
-  "label": "Choose-RunLink: a copied shortcuts:// link in, the run offered, or nothing (17 actions)",
+  "label": "Choose-RunLink: a copied shortcuts:// link in, checked against the library and offered, or nothing (24 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
@@ -122,9 +122,133 @@
       }
     },
     {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "C1B00000-0007-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "C1B00000-0008-4A00-9000-000000000001",
+        "WFContentItemInputParameter": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1B00000-0007-4A00-9000-000000000001",
+            "OutputName": "My Shortcuts"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFContentItemLimitEnabled": false,
+        "WFContentItemLimitNumber": 1.0,
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFContentPredicateBoundedDate": false,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 4,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": {
+                    "Value": {
+                      "string": "￼",
+                      "attachmentsByRange": {
+                        "{0, 1}": {
+                          "Type": "ActionOutput",
+                          "OutputUUID": "C1B00000-0006-4A00-9000-000000000001",
+                          "OutputName": "Name"
+                        }
+                      }
+                    },
+                    "WFSerializationType": "WFTextTokenString"
+                  },
+                  "Unit": 4
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1B00000-0008-4A00-9000-000000000001",
+              "OutputName": "Files"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "C1B00000-0007-4A00-9000-000000000001",
+        "UUID": "C1B00000-0010-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "￼ · in your library 📋",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0006-4A00-9000-000000000001",
+                "OutputName": "Name"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1B00000-0012-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "￼ · NOT in your library ⚠️",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0006-4A00-9000-000000000001",
+                "OutputName": "Name"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "WFControlFlowMode": 2,
+        "UUID": "C1B00000-0013-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1B00000-0014-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
             "string": "Run ￼\nOut",
@@ -143,12 +267,12 @@
     {
       "id": "is.workflow.actions.text.split",
       "p": {
-        "UUID": "C1B00000-0008-4A00-9000-000000000001",
+        "UUID": "C1B00000-0015-4A00-9000-000000000001",
         "WFTextSeparator": "New Lines",
         "text": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "C1B00000-0007-4A00-9000-000000000001",
+            "OutputUUID": "C1B00000-0014-4A00-9000-000000000001",
             "OutputName": "Text"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -158,22 +282,34 @@
     {
       "id": "is.workflow.actions.choosefromlist",
       "p": {
-        "UUID": "C1B00000-0009-4A00-9000-000000000001",
+        "UUID": "C1B00000-0016-4A00-9000-000000000001",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "C1B00000-0008-4A00-9000-000000000001",
+            "OutputUUID": "C1B00000-0015-4A00-9000-000000000001",
             "OutputName": "Split Text"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFChooseFromListActionPrompt": "📋 copied shortcut link"
+        "WFChooseFromListActionPrompt": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1B00000-0013-4A00-9000-000000000001",
+                "OutputName": "If Result"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
       }
     },
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "GroupingIdentifier": "C1B00000-9004-4A00-9000-000000009004",
         "WFControlFlowMode": 0,
         "WFCondition": 5,
         "WFConditionalActionString": "Out",
@@ -182,7 +318,7 @@
           "Variable": {
             "Value": {
               "Type": "ActionOutput",
-              "OutputUUID": "C1B00000-0009-4A00-9000-000000000001",
+              "OutputUUID": "C1B00000-0016-4A00-9000-000000000001",
               "OutputName": "Chosen Item"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -193,7 +329,7 @@
     {
       "id": "is.workflow.actions.url",
       "p": {
-        "UUID": "C1B00000-0011-4A00-9000-000000000001",
+        "UUID": "C1B00000-0018-4A00-9000-000000000001",
         "WFURLActionURL": {
           "Value": {
             "Type": "ActionOutput",
@@ -207,11 +343,11 @@
     {
       "id": "is.workflow.actions.openurl",
       "p": {
-        "UUID": "C1B00000-0012-4A00-9000-000000000001",
+        "UUID": "C1B00000-0019-4A00-9000-000000000001",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "C1B00000-0011-4A00-9000-000000000001",
+            "OutputUUID": "C1B00000-0018-4A00-9000-000000000001",
             "OutputName": "URL"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -239,9 +375,9 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "C1B00000-9003-4A00-9000-000000009003",
+        "GroupingIdentifier": "C1B00000-9004-4A00-9000-000000009004",
         "WFControlFlowMode": 2,
-        "UUID": "C1B00000-0014-4A00-9000-000000000001"
+        "UUID": "C1B00000-0021-4A00-9000-000000000001"
       }
     },
     {
@@ -249,13 +385,13 @@
       "p": {
         "GroupingIdentifier": "C1B00000-9002-4A00-9000-000000009002",
         "WFControlFlowMode": 2,
-        "UUID": "C1B00000-0015-4A00-9000-000000000001"
+        "UUID": "C1B00000-0022-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.nothing",
       "p": {
-        "UUID": "C1B00000-0016-4A00-9000-000000000001"
+        "UUID": "C1B00000-0023-4A00-9000-000000000001"
       }
     }
   ]
