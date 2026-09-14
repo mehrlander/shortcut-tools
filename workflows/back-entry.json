@@ -1,6 +1,6 @@
 {
-  "label": "Run-Gesture: the permanent Back Tap binding, so the dispatcher can be re-installed (1 action)",
-  "name": "Run-Gesture",
+  "label": "Back-Entry: the shortcut Back Tap is bound to, so the dispatcher can be re-installed (1 action)",
+  "name": "Back-Entry",
   "workflow": {
     "WFWorkflowNoInputBehavior": {
       "Name": "WFWorkflowNoInputBehaviorGetClipboard",

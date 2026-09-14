@@ -51,6 +51,17 @@
    ]
   },
   {
+   "file": "back-entry.json",
+   "label": "Back-Entry: the shortcut Back Tap is bound to, so the dispatcher can be re-installed (1 action)",
+   "name": "Back-Entry",
+   "actions": 1,
+   "build": "9d7d1a4",
+   "settings": true,
+   "targets": [
+    "Run-BackTap"
+   ]
+  },
+  {
    "file": "capture-link.json",
    "label": "Capture-Link: share sheet in, repo log out (2 actions)",
    "name": "Capture-Link",
@@ -679,17 +690,6 @@
    "build": "3c6248f",
    "settings": false,
    "targets": []
-  },
-  {
-   "file": "run-gesture.json",
-   "label": "Run-Gesture: the permanent Back Tap binding, so the dispatcher can be re-installed (1 action)",
-   "name": "Run-Gesture",
-   "actions": 1,
-   "build": "7fc7101",
-   "settings": true,
-   "targets": [
-    "Run-BackTap"
-   ]
   },
   {
    "file": "run-html.json",
