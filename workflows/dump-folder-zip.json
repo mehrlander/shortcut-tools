@@ -1,5 +1,6 @@
 {
-  "label": "Dump-FolderZip: one folder's shortcuts, zipped, onto the clipboard (4 actions)",
+  "name": "Dump-FolderZip",
+  "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed (14 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getmyworkflows",
@@ -52,6 +53,278 @@
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.date",
+      "p": {
+        "UUID": "D8EC0000-0011-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.format.date",
+      "p": {
+        "UUID": "D8EC0000-0012-4A00-9000-000000000001",
+        "WFDate": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Current Date",
+                "OutputUUID": "D8EC0000-0011-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFDateFormatStyle": "Custom",
+        "WFDateFormat": "yyyy-MM-dd-HHmmss"
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "D8EC0000-0013-4A00-9000-000000000001",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "21990000-0003-4A00-9000-000000000003",
+            "OutputName": "Archive"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "D8EC0000-0014-4A00-9000-000000000001",
+        "WFTextActionText": "Bearer 🎟️GitHubToken"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "D8EC0000-0015-4A00-9000-000000000001",
+        "WFWorkflowName": "Inject-🎟️GitHubToken",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "D8EC0000-0014-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.downloadurl",
+      "p": {
+        "UUID": "D8EC0000-0016-4A00-9000-000000000001",
+        "ShowHeaders": true,
+        "WFHTTPMethod": "PUT",
+        "WFHTTPBodyType": "JSON",
+        "WFURL": {
+          "Value": {
+            "attachmentsByRange": {
+              "{86, 1}": {
+                "OutputName": "Formatted Date",
+                "OutputUUID": "D8EC0000-0012-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "https://api.github.com/repos/mehrlander/web-tools-private/contents/shortcuts/incoming/￼-folder.zip"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFHTTPHeaders": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "Authorization"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "Shortcut Result",
+                        "OutputUUID": "D8EC0000-0015-4A00-9000-000000000001",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "Accept"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "application/vnd.github+json"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        },
+        "WFJSONValues": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "message"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{8, 1}": {
+                        "OutputName": "Formatted Date",
+                        "OutputUUID": "D8EC0000-0012-4A00-9000-000000000001",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "recent: ￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "content"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "Base64 Encoded",
+                        "OutputUUID": "D8EC0000-0013-4A00-9000-000000000001",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "￼"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFItemType": 0,
+                "WFKey": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "branch"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {},
+                    "string": "main"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "D8EC1000-0004-4A00-9000-000000000001",
+        "WFWorkflowName": "Check-ApiReply",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D8EC0000-0016-4A00-9000-000000000001",
+            "OutputName": "Contents of URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "D8EC1000-0005-4A00-9000-000000000001",
+        "WFDictionaryKey": "content",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D8EC0000-0016-4A00-9000-000000000001",
+            "OutputName": "Contents of URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "D8EC1000-0006-4A00-9000-000000000001",
+        "WFDictionaryKey": "name",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "D8EC1000-0005-4A00-9000-000000000001",
+            "OutputName": "Dictionary Value"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "UUID": "D8EC1000-0007-4A00-9000-000000000001",
+        "Text": {
+          "Value": {
+            "string": "Zipped ￼\nConfirmed: ￼",
+            "attachmentsByRange": {
+              "{7, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "D8EC0000-0012-4A00-9000-000000000001",
+                "OutputName": "Formatted Date"
+              },
+              "{20, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "D8EC1000-0006-4A00-9000-000000000001",
+                "OutputName": "Dictionary Value"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
         }
       }
     }
