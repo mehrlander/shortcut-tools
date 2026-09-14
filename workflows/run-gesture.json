@@ -1,0 +1,73 @@
+{
+  "label": "Run-Gesture: the permanent Back Tap binding, so the dispatcher can be re-installed (1 action)",
+  "name": "Run-Gesture",
+  "workflow": {
+    "WFWorkflowNoInputBehavior": {
+      "Name": "WFWorkflowNoInputBehaviorGetClipboard",
+      "Parameters": {}
+    },
+    "WFWorkflowInputContentItemClasses": [
+      "WFAppContentItem",
+      "WFAppStoreAppContentItem",
+      "WFArticleContentItem",
+      "WFContactContentItem",
+      "WFDateContentItem",
+      "WFEmailAddressContentItem",
+      "WFFolderContentItem",
+      "WFGenericFileContentItem",
+      "WFImageContentItem",
+      "WFiTunesProductContentItem",
+      "WFLocationContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFAVAssetContentItem",
+      "WFPDFContentItem",
+      "WFPhoneNumberContentItem",
+      "WFRichTextContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem",
+      "WFURLContentItem"
+    ],
+    "WFWorkflowOutputContentItemClasses": [
+      "WFDateContentItem",
+      "WFAVAssetContentItem",
+      "WFEmailAddressContentItem",
+      "WFImageContentItem",
+      "WFLocationContentItem",
+      "WFContentItem",
+      "WFGenericFileContentItem",
+      "WFPhotoMediaContentItem",
+      "WFPhoneNumberContentItem",
+      "WFStringContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFRichTextContentItem",
+      "WFURLContentItem",
+      "WFAppStoreAppContentItem",
+      "WFPDFContentItem",
+      "WFSafariWebPageContentItem",
+      "WFContactContentItem",
+      "WFFolderContentItem",
+      "WFMKMapItemContentItem",
+      "WFiTunesProductContentItem",
+      "WFAppContentItem",
+      "WFArticleContentItem"
+    ],
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "9E570000-0001-4A00-9000-000000000001",
+        "WFWorkflowName": "Run-BackTap",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

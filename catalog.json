@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 75,
-  "installable": 52,
+  "chains": 76,
+  "installable": 53,
   "external_targets": 16
  },
  "external_targets": [
@@ -679,6 +679,17 @@
    "build": "3c6248f",
    "settings": false,
    "targets": []
+  },
+  {
+   "file": "run-gesture.json",
+   "label": "Run-Gesture: the permanent Back Tap binding, so the dispatcher can be re-installed (1 action)",
+   "name": "Run-Gesture",
+   "actions": 1,
+   "build": "7fc7101",
+   "settings": true,
+   "targets": [
+    "Run-BackTap"
+   ]
   },
   {
    "file": "run-html.json",
