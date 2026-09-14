@@ -1758,6 +1758,31 @@ dictionary is a curated list and the corpus is one library's habits; neither is
 a census of what Shortcuts can do.** A search that finds nothing supports "I did
 not find one", never "there is none".
 
+## An action that moves the app's UI breaks what runs after it
+
+*Measured on device 2026-09-14, from a dialog rather than a log row.*
+
+`Library-Move` resolved 51 names, moved every one, and then stopped with **"This
+action could not be run with the current user interface."** No log row landed,
+even though `Log-Repo` commits before it shows anything, so the failure is
+before that commit and after the last move.
+
+`MoveShortcutToFolderAction` is an App Intent that drives the Shortcuts app
+itself: the screenshot taken at the moment of failure shows the app parked
+inside the destination folder. Whatever the app is doing there, the cards after
+the loop could not run in it.
+
+**So order the chain by what touches the UI.** Resolve first, log second, and
+put anything that moves the app last with nothing behind it. The rebuilt chain
+does the whole resolution pass into a variable, commits the row, and only then
+moves, which means the row survives even when the move does not.
+
+**And the move itself collapses to one card.** `MoveShortcutToFolderAction`'s
+`shortcuts` parameter is plural, and `Library-Stage` already hands it a filter's
+output, so one card takes a list of 51 exactly as it takes a list of one. That
+removes the loop around the UI-driving action, and with it the 51 prompts an
+`Ask` inside that loop would have cost.
+
 ## A Repeat over names stops at the first name that resolves to nothing
 
 *Measured on device 2026-09-14, from a folder zip rather than from an error.*

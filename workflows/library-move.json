@@ -1,11 +1,11 @@
 {
   "name": "Library-Move",
-  "label": "Library-Move: each named shortcut into the folder its Move card names, skipping any name the library does not have (14 actions)",
+  "label": "Library-Move: resolve every name, log what resolved, then one Move into a folder you pick at run time (14 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.text.split",
       "p": {
-        "UUID": "B0BE0000-0501-4A00-9000-000000000001",
+        "UUID": "A6E00000-0001-4A00-9000-000000000001",
         "WFTextSeparator": "New Lines",
         "text": {
           "Value": {
@@ -18,13 +18,13 @@
     {
       "id": "is.workflow.actions.repeat.each",
       "p": {
-        "GroupingIdentifier": "B0BE0000-05FF-4A00-9000-0000000000FF",
+        "GroupingIdentifier": "A6E00000-9002-4A00-9000-000000009002",
         "WFControlFlowMode": 0,
         "WFInput": {
           "Value": {
-            "OutputName": "Split Text",
-            "OutputUUID": "B0BE0000-0501-4A00-9000-000000000001",
-            "Type": "ActionOutput"
+            "Type": "ActionOutput",
+            "OutputUUID": "A6E00000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
@@ -82,7 +82,7 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "A6E00000-9001-4A00-9000-000000009001",
+        "GroupingIdentifier": "A6E00000-9003-4A00-9000-000000009003",
         "WFControlFlowMode": 0,
         "WFCondition": 100,
         "WFInput": {
@@ -94,38 +94,6 @@
               "OutputName": "Files"
             },
             "WFSerializationType": "WFTextTokenAttachment"
-          }
-        }
-      }
-    },
-    {
-      "id": "com.apple.shortcuts.MoveShortcutToFolderAction",
-      "p": {
-        "UUID": "B0BE0000-0505-4A00-9000-000000000001",
-        "AppIntentDescriptor": {
-          "AppIntentIdentifier": "MoveShortcutToFolderAction",
-          "BundleIdentifier": "com.apple.shortcuts",
-          "Name": "Shortcuts",
-          "TeamIdentifier": "0000000000"
-        },
-        "shortcuts": {
-          "Value": {
-            "OutputName": "Shortcuts",
-            "OutputUUID": "B0BE0000-0504-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "folder": {
-          "identifier": "932CAEE1-B337-44FE-A80D-0CD74B4C908C",
-          "subtitle": {
-            "key": "Utilities"
-          },
-          "symbol": {
-            "systemName": "folder"
-          },
-          "title": {
-            "key": "Utilities"
           }
         }
       }
@@ -147,38 +115,23 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
-        "GroupingIdentifier": "A6E00000-9001-4A00-9000-000000009001",
+        "GroupingIdentifier": "A6E00000-9003-4A00-9000-000000009003",
         "WFControlFlowMode": 2,
-        "UUID": "A6E00000-0008-4A00-9000-000000000001"
+        "UUID": "A6E00000-0005-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.repeat.each",
       "p": {
-        "GroupingIdentifier": "B0BE0000-05FF-4A00-9000-0000000000FF",
+        "GroupingIdentifier": "A6E00000-9002-4A00-9000-000000009002",
         "WFControlFlowMode": 2,
-        "UUID": "B0BE0000-0506-4A00-9000-000000000001"
-      }
-    },
-    {
-      "id": "is.workflow.actions.count",
-      "p": {
-        "UUID": "A6E00000-0003-4A00-9000-000000000001",
-        "WFCountType": "Items",
-        "Input": {
-          "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "B0BE0000-0501-4A00-9000-000000000001",
-            "OutputName": "Split Text"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
+        "UUID": "A6E00000-0002-4A00-9000-000000000001"
       }
     },
     {
       "id": "is.workflow.actions.getvariable",
       "p": {
-        "UUID": "A6E00000-0004-4A00-9000-000000000001",
+        "UUID": "A6E00000-0006-4A00-9000-000000000001",
         "WFVariable": {
           "Value": {
             "Type": "Variable",
@@ -191,12 +144,27 @@
     {
       "id": "is.workflow.actions.count",
       "p": {
-        "UUID": "A6E00000-0005-4A00-9000-000000000001",
+        "UUID": "A6E00000-0003-4A00-9000-000000000001",
         "WFCountType": "Items",
         "Input": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "A6E00000-0004-4A00-9000-000000000001",
+            "OutputUUID": "A6E00000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "A6E00000-0004-4A00-9000-000000000001",
+        "WFCountType": "Items",
+        "Input": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "A6E00000-0006-4A00-9000-000000000001",
             "OutputName": "Found"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -206,20 +174,20 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "A6E00000-0006-4A00-9000-000000000001",
+        "UUID": "A6E00000-0007-4A00-9000-000000000001",
         "CustomOutputName": "Moved",
         "WFTextActionText": {
           "Value": {
-            "string": "{\"op\":\"move\",\"name\":\"Library-Move\",\"build\":\"#BUILD#\",\"folder\":\"set-in-editor\",\"asked\":\"￼\",\"found\":\"￼\"}",
+            "string": "{\"op\":\"move\",\"name\":\"Library-Move\",\"build\":\"#BUILD#\",\"asked\":\"￼\",\"found\":\"￼\"}",
             "attachmentsByRange": {
-              "{87, 1}": {
+              "{62, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "A6E00000-0003-4A00-9000-000000000001",
                 "OutputName": "Count"
               },
-              "{99, 1}": {
+              "{74, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "A6E00000-0005-4A00-9000-000000000001",
+                "OutputUUID": "A6E00000-0004-4A00-9000-000000000001",
                 "OutputName": "Count"
               }
             }
@@ -231,13 +199,39 @@
     {
       "id": "is.workflow.actions.runworkflow",
       "p": {
-        "UUID": "A6E00000-0007-4A00-9000-000000000001",
+        "UUID": "A6E00000-0008-4A00-9000-000000000001",
         "WFWorkflowName": "Log-Repo",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "A6E00000-0006-4A00-9000-000000000001",
+            "OutputUUID": "A6E00000-0007-4A00-9000-000000000001",
             "OutputName": "Moved"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.MoveShortcutToFolderAction",
+      "p": {
+        "UUID": "A6E00000-0009-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "MoveShortcutToFolderAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "shortcuts": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "A6E00000-0006-4A00-9000-000000000001",
+            "OutputName": "Found"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "folder": {
+          "Value": {
+            "Type": "Ask"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
