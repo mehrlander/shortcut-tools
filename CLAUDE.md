@@ -43,6 +43,15 @@ rule 5 and the diagnostic-returns-itself rule below.
 
 **So the diagnostic ladder starts at the top, not at the bottom.** In order:
 
+0. **Search the corpus for a probe that already answers it**, by what it
+   measures rather than by the name you would have given it. `Check-🎟️GitHubToken`
+   has been installed since before this repo existed: three actions that call
+   `GET api.github.com/user` with the injected token and show `active`, `stale`
+   or `error`. On 2026-09-14 a session reasoned its way to "the token has
+   probably expired" from three silent writers and handed that over as a
+   hypothesis, with this shortcut sitting in the Other folder. Rule 1 above
+   already says to exhaust the free routes; it did not say that a *probe* is one
+   of the things to search for, and now it does.
 1. `python3 tools/run.py <Receiver> --log`, which routes through `Run-Steps` and
    appends `Log-Repo`, so the answer lands in `shortcuts/log/` and nobody reads
    a screen. That tool's docstring has said this since it was written.
@@ -52,8 +61,19 @@ rule 5 and the diagnostic-returns-itself rule below.
    needs real computation. Still no install.
 4. Only then a new or revised receiver, and say what the install buys.
 
-A fix is not a measurement. Shipping one to test a hypothesis spends the dearest
-route to learn what the cheapest would have told you.
+**Rung 1 is the one that fails silently, and it fails hardest exactly when it
+matters.** `Log-Repo`, `Sync-Manifest` and `Run-Op` all build their
+Authorization header through `Inject-🎟️GitHubToken`, so the return channel and
+the credential are one dependency. When that credential goes, every probe that
+would report it stops reporting, and the symptom is not an error but four days
+of silence across three unrelated-looking surfaces. **A diagnostic cannot return
+itself when the return path is the thing under test.** So when the log has gone
+quiet, do not send another logging probe: send one that ends on screen, and say
+what to look at.
+
+A fix is not a measurement, and neither is a chain of plausible inferences.
+Shipping either to settle a question spends the dearest route to learn what the
+cheapest would have told you.
 
 **Rules that follow, and they are not advisory:**
 
