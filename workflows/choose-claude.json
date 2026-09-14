@@ -446,7 +446,7 @@
       "p": {
         "Text": {
           "Value": {
-            "string": "Run-Op answered nothing, so the Claude menu has no rows. Logged as menu-empty. Check the token and the network.",
+            "string": "The Claude menu came back with no rows. Logged as menu-empty. The caption above names the cause when Run-Op reached the API.",
             "attachmentsByRange": {}
           },
           "WFSerializationType": "WFTextTokenString"

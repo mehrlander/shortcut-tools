@@ -502,7 +502,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"menu-miss","name":"Choose-Claude","build":"4dd582b","chosen":"￼","keys":"￼"}</string>
+						<string>{"op":"menu-miss","name":"Choose-Claude","build":"61fef56","chosen":"￼","keys":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -706,7 +706,7 @@
 				<key>UUID</key>
 				<string>C1A0DE00-0030-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>{"op":"menu-empty","name":"Choose-Claude","build":"4dd582b"}</string>
+				<string>{"op":"menu-empty","name":"Choose-Claude","build":"61fef56"}</string>
 			</dict>
 		</dict>
 		<dict>
@@ -746,7 +746,7 @@
 						<key>attachmentsByRange</key>
 						<dict/>
 						<key>string</key>
-						<string>Run-Op answered nothing, so the Claude menu has no rows. Logged as menu-empty. Check the token and the network.</string>
+						<string>The Claude menu came back with no rows. Logged as menu-empty. The caption above names the cause when Run-Op reached the API.</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
