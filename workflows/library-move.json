@@ -16,6 +16,12 @@
       }
     },
     {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "B0BE0000-0503-4A00-9000-000000000001"
+      }
+    },
+    {
       "id": "is.workflow.actions.repeat.each",
       "p": {
         "GroupingIdentifier": "A6E00000-9002-4A00-9000-000000009002",
@@ -28,12 +34,6 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
-      }
-    },
-    {
-      "id": "is.workflow.actions.getmyworkflows",
-      "p": {
-        "UUID": "B0BE0000-0503-4A00-9000-000000000001"
       }
     },
     {
@@ -231,7 +231,8 @@
         },
         "folder": {
           "Value": {
-            "Type": "Ask"
+            "Type": "Ask",
+            "Prompt": "Pick the folder these shortcuts move into (Agentic)"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
