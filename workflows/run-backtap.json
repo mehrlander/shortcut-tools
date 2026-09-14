@@ -1,6 +1,6 @@
 {
   "name": "Run-BackTap",
-  "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (33 actions)",
+  "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (34 actions)",
   "workflow": {
     "WFWorkflowNoInputBehavior": {
       "Name": "WFWorkflowNoInputBehaviorGetClipboard",
@@ -431,6 +431,23 @@
       "p": {
         "WFURL": "https://mehrlander.github.io/web-tools/pages/dictate.html",
         "UUID": "D1C7A7E0-0101-4A00-9000-000000000101"
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "C1B02000-0001-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
       }
     },
     {

@@ -1773,9 +1773,17 @@ its own defaults for every key the block omits.
 shortcut.** `run-backtap` was built by splicing `Back-DoubleTap`'s device dump,
 keeping actions 0 to 7 and 43 to 58 verbatim. The actions arrived; the block did
 not. `Back-DoubleTap` declares `WFWorkflowNoInputBehaviorGetClipboard` and
-`Run-BackTap`'s published plist declared nothing, so a bare back tap would have
-reached it with Shortcut Input empty and taken the no-input arm, which opens the
-dictation page, on every single tap.
+`Run-BackTap`'s published plist declared nothing, so every back tap reached it
+with Shortcut Input empty and took the no-input arm, which opens the dictation
+page. It was the bound shortcut for a fortnight while this was true.
+
+**What hid it is the more useful half.** The app routes never noticed, because
+none of them reads Shortcut Input: `Choose-Claude` opens with a `Get Clipboard`
+action and `Choose-BackTap` reads the `Clipboard` variable directly, so Claude,
+Audible, Music, Roku and Shortcuts all behaved exactly as before. Only the
+unmapped apps, which fall past the lookup to the type tests, saw the empty
+input. A file-level setting that half the paths route around does not fail
+loudly; it fails in the corner nobody is looking at.
 
 Two things make this hard to see. The chain file reads as complete, because a
 missing block is indistinguishable from a chain that never wanted one: 33 of the
