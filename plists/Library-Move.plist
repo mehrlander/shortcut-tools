@@ -156,6 +156,38 @@
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>A6E00000-9001-4A00-9000-000000009001</string>
+				<key>WFCondition</key>
+				<integer>100</integer>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Type</key>
+					<string>Variable</string>
+					<key>Variable</key>
+					<dict>
+						<key>Value</key>
+						<dict>
+							<key>OutputName</key>
+							<string>Files</string>
+							<key>OutputUUID</key>
+							<string>B0BE0000-0504-4A00-9000-000000000001</string>
+							<key>Type</key>
+							<string>ActionOutput</string>
+						</dict>
+						<key>WFSerializationType</key>
+						<string>WFTextTokenAttachment</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
 			<string>com.apple.shortcuts.MoveShortcutToFolderAction</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
@@ -221,6 +253,19 @@
 				</dict>
 				<key>WFVariableName</key>
 				<string>Found</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>A6E00000-9001-4A00-9000-000000009001</string>
+				<key>UUID</key>
+				<string>A6E00000-0008-4A00-9000-000000000001</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
 			</dict>
 		</dict>
 		<dict>
@@ -342,7 +387,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"move","name":"Library-Move","build":"092713f","folder":"Agentic","asked":"￼","found":"￼"}</string>
+						<string>{"op":"move","name":"Library-Move","build":"cf52f6a","folder":"Agentic","asked":"￼","found":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

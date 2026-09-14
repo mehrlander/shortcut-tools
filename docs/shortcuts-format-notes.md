@@ -1758,6 +1758,37 @@ dictionary is a curated list and the corpus is one library's habits; neither is
 a census of what Shortcuts can do.** A search that finds nothing supports "I did
 not find one", never "there is none".
 
+## A Repeat over names stops at the first name that resolves to nothing
+
+*Measured on device 2026-09-14, from a folder zip rather than from an error.*
+
+`Library-Move` was handed 51 shortcut names in sorted order and asked to move
+each into a folder. Twenty-three landed. Zipping the folder and reading the
+entries settled why in one look: **the twenty-three are the first twenty-three
+names of the list, in order, and the twenty-fourth is the first name the device
+does not have.** `Library-Replace` is not installed, its `Name is` filter
+returned an empty list, and the Repeat ended there. Every name after it was
+untouched.
+
+Nothing said so. The chain logs through `Log-Repo` as its last action, so a
+Repeat that dies never reaches the log, and the person running it saw churn and
+then nothing. The fix is an `If` on the filter result around the body, so a miss
+is skipped rather than fatal.
+
+**The same run settled a shape this repo could not otherwise prove.**
+`com.apple.shortcuts.CreateFolderAction` takes a plain text name, and the corpus
+holds one instance of it whose output nothing consumes, so whether that output
+satisfies `MoveShortcutToFolderAction`'s `folder` slot was unknown. Twenty-three
+shortcuts in a folder created by name is the proof. **A folder no longer has to
+be addressed by its device-local UUID**, which was the blocker on every
+folder-scoped idea here.
+
+**And the reader mattered more than either finding.** `Sync-Manifest` carries no
+`folder` column, deliberately, so folder membership had no reader at all until
+`dump-folder-zip` gained a commit tail the same day. Without it the answer would
+have been "23 of 51 and we do not know which", which is indistinguishable from a
+partial failure with a different cause.
+
 ## An installed copy can carry one action the published plist does not
 
 *Measured 2026-09-14, from the first zip dump that put the device's own copies
