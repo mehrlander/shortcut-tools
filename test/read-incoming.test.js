@@ -43,6 +43,10 @@ const entries = (zip) => execFileSync("python3", ["-c",
 
 const PLIST = path.join(ROOT, "plists", "Sync-Manifest.plist");
 const JSON_BODY = asJson(PLIST);
+// Derived, not pinned. The fixture is a live chain, so a hard-coded count
+// fails this file whenever Sync-Manifest gains an action, which says nothing
+// about the pipeline this file exists to test (2026-09-14, +3 actions).
+const ACTIONS = JSON.parse(JSON_BODY).WFWorkflowActions.length;
 
 test("a dumped shortcut re-indexes to the record the pipeline expects", () => {
   const r = run(record("Sync-Manifest", JSON_BODY, "2026-08-18T19:49:20-07:00"), "out.zip");
@@ -52,7 +56,7 @@ test("a dumped shortcut re-indexes to the record the pipeline expects", () => {
     { cwd: ROOT, stdio: "ignore" });
   const rec = JSON.parse(fs.readFileSync(idx, "utf8"))[0];
   assert.equal(rec.name, "Sync-Manifest", "the name rides in the zip entry, not the plist");
-  assert.equal(rec.actions, 11);
+  assert.equal(rec.actions, ACTIONS);
   assert.ok(rec.kinds.some((k) => k[0] === "getmyworkflows"));
   fs.rmSync(r.dir, { recursive: true, force: true });
 });
@@ -74,8 +78,8 @@ test("both dumpers' formats read the same, with or without a modified field", ()
   const without = run(record("Sync-Manifest", JSON_BODY));
   assert.equal(withDate.status, 0);
   assert.equal(without.status, 0);
-  assert.match(withDate.stdout, /11 actions/);
-  assert.match(without.stdout, /11 actions/);
+  assert.match(withDate.stdout, new RegExp(`${ACTIONS} actions`));
+  assert.match(without.stdout, new RegExp(`${ACTIONS} actions`));
 });
 
 test("an unreadable record is named and blocks the zip rather than being dropped", () => {

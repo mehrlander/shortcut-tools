@@ -2,6 +2,7 @@
  "Ask-Report": "2c77d16",
  "Back-DoubleTap": "5630063",
  "Capture-Link": "be25494",
+ "Check-ApiReply": "a1d6820",
  "Check-\ud83c\udf9f\ufe0fGitHubToken": "d84a5f4",
  "Choose-BackTap": "7f64c63",
  "Choose-Claude": "61fef56",
@@ -22,7 +23,7 @@
  "Library-Stage": "43be0c3",
  "Log-PageRender": "f4506e6",
  "Log-PageShot": "4d57161",
- "Log-Repo": "55f7d80",
+ "Log-Repo": "39d5713",
  "Open-WiFi": "a980162",
  "Probe-Coercion": "a8406f9",
  "Probe-ListDetail": "2c595ed",
@@ -45,5 +46,5 @@
  "Set-\ud83c\udf9f\ufe0fGitHubToken": "c34ae44",
  "Show-Log": "cea85a3",
  "Speak-Text": "2dcedbe",
- "Sync-Manifest": "12c521e"
+ "Sync-Manifest": "0ebe6ea"
 }

@@ -1,6 +1,6 @@
 {
   "name": "Sync-Manifest",
-  "label": "Sync-Manifest: the library's shape committed to the repo, one tap (11 actions)",
+  "label": "Sync-Manifest: the library's shape committed to the repo, one tap (14 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getmyworkflows",
@@ -289,19 +289,69 @@
       }
     },
     {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "5C110000-0420-4A00-9000-000000000001",
+        "WFWorkflowName": "Check-ApiReply",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5C110000-0010-4A00-9000-000000000001",
+            "OutputName": "Contents of URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "5C110000-0012-4A00-9000-000000000001",
+        "WFDictionaryKey": "content",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5C110000-0010-4A00-9000-000000000001",
+            "OutputName": "Contents of URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "5C110000-0013-4A00-9000-000000000001",
+        "WFDictionaryKey": "name",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5C110000-0012-4A00-9000-000000000001",
+            "OutputName": "Dictionary Value"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
       "id": "is.workflow.actions.showresult",
       "p": {
         "UUID": "5C110000-0011-4A00-9000-000000000001",
         "Text": {
           "Value": {
+            "string": "Synced ￼\nConfirmed: ￼",
             "attachmentsByRange": {
-              "{8, 1}": {
-                "OutputName": "Contents of URL",
-                "OutputUUID": "5C110000-0010-4A00-9000-000000000001",
-                "Type": "ActionOutput"
+              "{7, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "5C110000-0006-4A00-9000-000000000001",
+                "OutputName": "Formatted Date"
+              },
+              "{20, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "5C110000-0013-4A00-9000-000000000001",
+                "OutputName": "Dictionary Value"
               }
-            },
-            "string": "Synced. ￼"
+            }
           },
           "WFSerializationType": "WFTextTokenString"
         }
