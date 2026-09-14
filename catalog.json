@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 76,
-  "installable": 53,
+  "chains": 77,
+  "installable": 54,
   "external_targets": 16
  },
  "external_targets": [
@@ -48,17 +48,6 @@
     "Show-Loop",
     "Show-Repo",
     "Show-WebView"
-   ]
-  },
-  {
-   "file": "back-entry.json",
-   "label": "Back-Entry: the shortcut Back Tap is bound to, so the dispatcher can be re-installed (1 action)",
-   "name": "Back-Entry",
-   "actions": 1,
-   "build": "9d7d1a4",
-   "settings": true,
-   "targets": [
-    "Run-BackTap"
    ]
   },
   {
@@ -274,13 +263,29 @@
    "targets": []
   },
   {
+   "file": "gesture-backtap2.json",
+   "label": "Gesture-BackTap2: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Gesture-BackTap2",
+   "actions": 2,
+   "build": "58d1e58",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ]
+  },
+  {
    "file": "get-app-route.json",
    "label": "Get-AppRoute: an app name in, the shortcut to run out, or nothing (5 actions)",
    "name": "Get-AppRoute",
    "actions": 5,
    "build": "1dbf5b3",
    "settings": false,
-   "targets": []
+   "targets": [
+    "Choose-BackTap",
+    "Choose-Claude",
+    "Open-WiFi",
+    "Speak-Text"
+   ]
   },
   {
    "file": "get-file-info.json",
@@ -643,6 +648,17 @@
    "settings": false,
    "targets": [
     "Log-Repo"
+   ]
+  },
+  {
+   "file": "route-gesture.json",
+   "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
+   "name": "Route-Gesture",
+   "actions": 10,
+   "build": "f94d230",
+   "settings": false,
+   "targets": [
+    "Run-BackTap"
    ]
   },
   {

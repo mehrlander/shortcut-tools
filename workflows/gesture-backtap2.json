@@ -1,0 +1,33 @@
+{
+  "label": "Gesture-BackTap2: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
+  "name": "Gesture-BackTap2",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "6B720000-0001-4A00-9000-000000000001",
+        "WFTextActionText": "back2"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "6B720000-0002-4A00-9000-000000000001",
+        "WFWorkflowName": "Route-Gesture",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "6B720000-0001-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
