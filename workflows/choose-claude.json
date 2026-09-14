@@ -1,6 +1,6 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (24 actions)",
+  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (30 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getclipboard",
@@ -134,6 +134,25 @@
             }
           },
           "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9004-4A00-9000-000000009004",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ActionOutput",
+              "OutputUUID": "C1A0DE00-0018-4A00-9000-000000000001",
+              "OutputName": "Choice"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
         }
       }
     },
@@ -390,6 +409,56 @@
         "GroupingIdentifier": "C1A0DE00-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 2,
         "UUID": "C1A0DE00-0017-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9004-4A00-9000-000000009004",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1A0DE00-0030-4A00-9000-000000000001",
+        "CustomOutputName": "Empty",
+        "WFTextActionText": "{\"op\":\"menu-empty\",\"name\":\"Choose-Claude\",\"build\":\"#BUILD#\"}"
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "C1A0DE00-0031-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1A0DE00-0030-4A00-9000-000000000001",
+            "OutputName": "Empty"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showresult",
+      "p": {
+        "Text": {
+          "Value": {
+            "string": "Run-Op answered nothing, so the Claude menu has no rows. Logged as menu-empty. Check the token and the network.",
+            "attachmentsByRange": {}
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "C1A0DE00-9004-4A00-9000-000000009004",
+        "WFControlFlowMode": 2,
+        "UUID": "C1A0DE00-0032-4A00-9000-000000000001"
       }
     }
   ]
