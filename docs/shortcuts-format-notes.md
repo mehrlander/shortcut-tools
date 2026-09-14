@@ -1758,6 +1758,41 @@ dictionary is a curated list and the corpus is one library's habits; neither is
 a census of what Shortcuts can do.** A search that finds nothing supports "I did
 not find one", never "there is none".
 
+## An installed copy can carry one action the published plist does not
+
+*Measured 2026-09-14, from the first zip dump that put the device's own copies
+beside the plists they came from.*
+
+Eleven chains installed that day were compared with `plists/` action by action.
+Six are byte-identical. **Five carry exactly one extra action, always the same
+one: a trailing Stop and Output.**
+
+| Chain | Published | Installed | Last action published |
+| --- | --- | --- | --- |
+| `Library-Import` | 13 | 14 | Run Shortcut |
+| `Get-ShortcutJson` | 7 | 8 | Get Text |
+| `Dump-Shortcut` | 5 | 6 | Run Shortcut |
+| `Set-🎟️GitHubToken` | 8 | 9 | Run Shortcut |
+| `Check-🎟️GitHubToken` | 3 | 4 | Run Shortcut |
+
+The six that gained nothing end in a control-flow closer (`Run-BackTap`,
+`Choose-Claude`), a Show Result (`Log-Repo`, `Sync-Manifest`), a Nothing
+(`Choose-RunLink`), or an explicit Stop and Output (`Check-ApiReply`,
+`Find-Shortcut`). So the pattern is that a chain whose last action **produces a
+value** arrives with a Stop and Output appended, and one that already terminates
+does not. Consistent across all eleven, and an inference about the importer
+rather than something isolated on its own: neither the signing worker nor
+Shortcuts' import sheet has been tested separately.
+
+**Why it matters more than it sounds.** Action count is the only currency signal
+the manifest carries, so those five chains read as one behind forever and a naive
+comparison calls them stale when they are current. The `#BUILD#` stamp is the
+answer where a chain has one, and the zip dump is the answer where it does not.
+
+**And it is the second place this session where a count proved nothing.** The
+same day, `Run-Op` read 8 against 8 while the question was whether a string
+inside one of those 8 had changed. Only the dumped copy settled it.
+
 ## A splice that keeps the actions still loses the shortcut's settings
 
 *Measured in the repo 2026-09-14, from files rather than from a device.*
