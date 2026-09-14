@@ -2,6 +2,7 @@
  "Ask-Report": "2c77d16",
  "Back-DoubleTap": "5630063",
  "Capture-Link": "be25494",
+ "Check-\ud83c\udf9f\ufe0fGitHubToken": "d84a5f4",
  "Choose-BackTap": "7f64c63",
  "Choose-Claude": "61fef56",
  "Choose-RunLink": "89fe27a",
@@ -41,6 +42,7 @@
  "Run-BackTap": "d5a80b8",
  "Run-Op": "508e4c5",
  "Run-Pick": "ccb6cfc",
+ "Set-\ud83c\udf9f\ufe0fGitHubToken": "c34ae44",
  "Show-Log": "cea85a3",
  "Speak-Text": "2dcedbe",
  "Sync-Manifest": "12c521e"

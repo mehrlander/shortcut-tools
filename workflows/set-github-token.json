@@ -1,0 +1,133 @@
+{
+  "name": "Set-🎟️GitHubToken",
+  "label": "Set-🎟️GitHubToken: the clipboard becomes the stored token, then the checker says so (8 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "5E7C0000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 0,
+        "WFCondition": 101,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "5E7C0000-0001-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "5E7C0000-9001-4A00-9000-000000009001",
+        "WFControlFlowMode": 2,
+        "UUID": "5E7C0000-0002-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.documentpicker.open",
+      "p": {
+        "UUID": "5E7C0000-0003-4A00-9000-000000000001",
+        "WFGetFilePath": "config.json",
+        "WFFile": {
+          "displayName": "Managed",
+          "fileLocation": {
+            "WFFileLocationType": "Shortcuts",
+            "relativeSubpath": "Snippets/Managed"
+          },
+          "filename": "Managed"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvalueforkey",
+      "p": {
+        "UUID": "5E7C0000-0004-4A00-9000-000000000001",
+        "WFDictionaryKey": "🎟️GitHubToken",
+        "WFDictionary": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5E7C0000-0003-4A00-9000-000000000001",
+            "OutputName": "File",
+            "Aggrandizements": [
+              {
+                "CoercionItemClass": "WFDictionaryContentItem",
+                "Type": "WFCoercionVariableAggrandizement"
+              }
+            ]
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFDictionaryValue": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "5E7C0000-0002-4A00-9000-000000000001",
+                "OutputName": "If Result"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setitemname",
+      "p": {
+        "UUID": "5E7C0000-0005-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5E7C0000-0004-4A00-9000-000000000001",
+            "OutputName": "Dictionary"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFName": "config.json"
+      }
+    },
+    {
+      "id": "is.workflow.actions.documentpicker.save",
+      "p": {
+        "UUID": "5E7C0000-0006-4A00-9000-000000000001",
+        "WFAskWhereToSave": false,
+        "WFSaveFileOverwrite": true,
+        "WFFileDestinationPath": "",
+        "WFFolder": {
+          "displayName": "Managed",
+          "fileLocation": {
+            "WFFileLocationType": "Shortcuts",
+            "relativeSubpath": "Snippets/Managed"
+          },
+          "filename": "Managed"
+        },
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5E7C0000-0005-4A00-9000-000000000001",
+            "OutputName": "Renamed Item"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "5E7C0000-0007-4A00-9000-000000000001",
+        "WFWorkflowName": "Check-🎟️GitHubToken"
+      }
+    }
+  ]
+}
