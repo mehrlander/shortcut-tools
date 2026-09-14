@@ -136,6 +136,13 @@ re-install through it. The cost of that error is not a wasted tap: the link
 names a receiver the device may not have, so it fails at the point of use with
 nothing installed.
 
+**The bound shortcut is `Run-BackTap`**, read off the Settings page 2026-09-14.
+`Back-DoubleTap` is an independent copy of the same dispatcher and is not bound
+to anything, so a change meant for the gesture that lands there reaches nothing.
+Stated here because this file is what every session reads first, and it named
+only the unbound copy until 2026-09-14: three sessions re-derived the binding
+from a screenshot while the answer sat in a table cell in `workflows/README.md`.
+
 **But replacing a shortcut breaks whatever the system had bound to it**
 (reported 2026-08-31). Back Tap holds a reference that a save-over import does
 not preserve, so a re-installed shortcut has to be re-selected in Settings
