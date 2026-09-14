@@ -1775,6 +1775,15 @@ Repeat that dies never reaches the log, and the person running it saw churn and
 then nothing. The fix is an `If` on the filter result around the body, so a miss
 is skipped rather than fatal.
 
+**`CreateFolderAction` refuses a folder that already exists**, reported from
+the device the next day, which makes a create-then-move chain single-use: it
+works once and fails at its first action forever after. So the folder cannot be
+created in the chain that needs it, and it cannot be omitted either, which
+leaves one shape that works: a folder entity present in the card, pointing at a
+real folder, which a person re-points once in the editor. That is how
+`Library-Stage` came to carry `Stage`, and it is the only route the two
+measurements leave open.
+
 **The same run settled a shape this repo could not otherwise prove.**
 `com.apple.shortcuts.CreateFolderAction` takes a plain text name, and the corpus
 holds one instance of it whose output nothing consumes, so whether that output

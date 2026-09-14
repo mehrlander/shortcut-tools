@@ -1,20 +1,7 @@
 {
   "name": "Library-Move",
-  "label": "Library-Move: each named shortcut into a folder created by name, skipping any name the library does not have (15 actions)",
+  "label": "Library-Move: each named shortcut into the folder its Move card names, skipping any name the library does not have (14 actions)",
   "actions": [
-    {
-      "id": "com.apple.shortcuts.CreateFolderAction",
-      "p": {
-        "UUID": "A6E00000-0000-4A00-9000-000000000001",
-        "AppIntentDescriptor": {
-          "AppIntentIdentifier": "CreateFolderAction",
-          "BundleIdentifier": "com.apple.shortcuts",
-          "Name": "Shortcuts",
-          "TeamIdentifier": "0000000000"
-        },
-        "name": "Agentic"
-      }
-    },
     {
       "id": "is.workflow.actions.text.split",
       "p": {
@@ -130,11 +117,16 @@
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "folder": {
-          "Value": {
-            "Type": "ActionOutput",
-            "OutputUUID": "A6E00000-0000-4A00-9000-000000000001"
+          "identifier": "932CAEE1-B337-44FE-A80D-0CD74B4C908C",
+          "subtitle": {
+            "key": "Utilities"
           },
-          "WFSerializationType": "WFTextTokenAttachment"
+          "symbol": {
+            "systemName": "folder"
+          },
+          "title": {
+            "key": "Utilities"
+          }
         }
       }
     },
@@ -218,14 +210,14 @@
         "CustomOutputName": "Moved",
         "WFTextActionText": {
           "Value": {
-            "string": "{\"op\":\"move\",\"name\":\"Library-Move\",\"build\":\"#BUILD#\",\"folder\":\"Agentic\",\"asked\":\"￼\",\"found\":\"￼\"}",
+            "string": "{\"op\":\"move\",\"name\":\"Library-Move\",\"build\":\"#BUILD#\",\"folder\":\"set-in-editor\",\"asked\":\"￼\",\"found\":\"￼\"}",
             "attachmentsByRange": {
-              "{81, 1}": {
+              "{87, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "A6E00000-0003-4A00-9000-000000000001",
                 "OutputName": "Count"
               },
-              "{93, 1}": {
+              "{99, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "A6E00000-0005-4A00-9000-000000000001",
                 "OutputName": "Count"
