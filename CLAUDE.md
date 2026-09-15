@@ -310,6 +310,15 @@ A hit is not automatically wrong. It means the install will offer to save over
 something, and the question of whether that something is wanted has to be
 answered before the link goes out rather than after.
 
+**A route block is a third carrier, and it hid four names until 2026-09-14.**
+`Get-AppRoute` stores its table as a Text action of `[key]=Shortcut-Name` lines
+and reads a value back with a lookbehind match, so the target name is a
+substring of a literal: `WFWorkflowName` does not hold it, no dictionary value
+holds it, and the `Run Shortcut` card that consumes it carries a computed name
+the audit deliberately drops. Four live targets were therefore invisible to
+every check here. `tools/catalog.py` reads the block now, and `catalog.json` is
+where all three carriers meet.
+
 **A dictionary value is a shortcut name that no field name marks as one**, which
 is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
 cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is

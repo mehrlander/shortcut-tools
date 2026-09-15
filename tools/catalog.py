@@ -29,7 +29,7 @@ which build is on the phone, and when it last ran are facts about a device and
 live in `shortcuts/log/` in web-tools-private. Joining the two is the page's job,
 and keeping the join out of here is what lets this file be deterministic.
 """
-import argparse, json, sys
+import argparse, json, re, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -40,8 +40,11 @@ WORKFLOWS = ROOT / "workflows"
 OUT = ROOT / "catalog.json"
 
 
+ROUTE_LINE = re.compile(r"^\[[^\]\n]+\]=(.+)$", re.M)
+
+
 def targets(chain):
-    """Every shortcut this chain calls by name, both carriers, sorted."""
+    """Every shortcut this chain calls by name, all three carriers, sorted."""
     found = set()
     for a in chain.get("actions", []):
         p = a.get("p", {})
@@ -63,6 +66,17 @@ def targets(chain):
             v = v.get("string") if isinstance(v, dict) else None
             if isinstance(v, str):
                 found.add(v)
+        # THIRD CARRIER. A route block is a Text action of `[key]=Shortcut-Name`
+        # lines, read back with a lookbehind match: Get-AppRoute has done this
+        # since before the audit existed, and Route-Gesture does it now. The name
+        # is a substring of a literal, so neither WFWorkflowName nor a dictionary
+        # value sees it, and the Run Shortcut card that consumes it carries a
+        # computed name this audit deliberately drops. Without this, the five
+        # shortcuts Get-AppRoute dispatches to were invisible to every check here.
+        text = p.get("WFTextActionText")
+        if isinstance(text, str):
+            for m in ROUTE_LINE.finditer(text):
+                found.add(m.group(1).strip())
     return sorted(found)
 
 
