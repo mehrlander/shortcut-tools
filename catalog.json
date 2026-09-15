@@ -167,6 +167,17 @@
    "targets": []
   },
   {
+   "file": "double-backtap.json",
+   "label": "Double-BackTap: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Double-BackTap",
+   "actions": 2,
+   "build": "6db2b74",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ]
+  },
+  {
    "file": "dump-folder-zip.json",
    "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed (14 actions)",
    "name": "Dump-FolderZip",
@@ -261,17 +272,6 @@
    "build": "7d8949e",
    "settings": false,
    "targets": []
-  },
-  {
-   "file": "gesture-backtap2.json",
-   "label": "Gesture-BackTap2: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
-   "name": "Gesture-BackTap2",
-   "actions": 2,
-   "build": "58d1e58",
-   "settings": true,
-   "targets": [
-    "Route-Gesture"
-   ]
   },
   {
    "file": "get-app-route.json",
@@ -655,7 +655,7 @@
    "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
    "name": "Route-Gesture",
    "actions": 10,
-   "build": "f94d230",
+   "build": "c7ac9ec",
    "settings": false,
    "targets": [
     "Run-BackTap"

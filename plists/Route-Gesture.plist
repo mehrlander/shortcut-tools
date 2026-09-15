@@ -42,7 +42,7 @@
 				<key>UUID</key>
 				<string>60E50000-0002-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>back2</string>
+				<string>double-back</string>
 			</dict>
 		</dict>
 		<dict>
@@ -68,7 +68,7 @@
 				<key>UUID</key>
 				<string>60E50000-0004-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>[back2]=Run-BackTap</string>
+				<string>[double-back]=Run-BackTap</string>
 			</dict>
 		</dict>
 		<dict>

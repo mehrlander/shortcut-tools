@@ -23,7 +23,7 @@
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "60E50000-0002-4A00-9000-000000000001",
-        "WFTextActionText": "back2"
+        "WFTextActionText": "double-back"
       }
     },
     {
@@ -39,7 +39,7 @@
       "p": {
         "UUID": "60E50000-0004-4A00-9000-000000000001",
         "CustomOutputName": "Routes",
-        "WFTextActionText": "[back2]=Run-BackTap"
+        "WFTextActionText": "[double-back]=Run-BackTap"
       }
     },
     {

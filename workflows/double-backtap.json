@@ -1,6 +1,6 @@
 {
-  "label": "Gesture-BackTap2: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
-  "name": "Gesture-BackTap2",
+  "label": "Double-BackTap: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
+  "name": "Double-BackTap",
   "workflow": {
     "WFWorkflowTypes": [
       "WFWorkflowTypeShowInSearch"
@@ -11,7 +11,7 @@
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "6B720000-0001-4A00-9000-000000000001",
-        "WFTextActionText": "back2"
+        "WFTextActionText": "double-back"
       }
     },
     {
