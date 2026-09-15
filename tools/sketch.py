@@ -203,6 +203,29 @@ def clip(s, limit):
     return s if len(s) <= limit else "%s… (%d chars)" % (s[:limit], len(s))
 
 
+def table(doc, name=None):
+    """The same sketch as a markdown table, for handing a chain over in chat.
+
+    A chat renderer gives every list item paragraph-level margin, so a ten-line
+    bullet listing is most of a phone screen; a table row is tight. The catch a
+    table brings is that a cell trims leading whitespace, ASCII space, nbsp and
+    tab alike, so the nesting sketch() carries in indentation would collapse.
+    An inline code span preserves its spacing exactly and renders monospace, so
+    each action line goes inside one and the depth survives. Both findings are
+    web-tools docs/markdown-in-chat.md, measured by screenshot.
+
+    A code span cannot hold a link, which costs nothing here: an action row has
+    nothing to link to. The link is the handover above the table.
+    """
+    lines = sketch(doc, None).split("\n")
+    rows = ["| # | Action |", "| ---: | --- |"]
+    for line in lines:
+        i, rest = line[:3].strip(), line[4:]
+        rows.append("| %s | `%s` |" % (i, rest.replace("`", "'")))
+    head = "**%s** (%d actions)\n\n" % (name, len(doc.get("WFWorkflowActions", []))) if name else ""
+    return head + "\n".join(rows)
+
+
 def sketch(doc, name=None):
     actions = doc.get("WFWorkflowActions", [])
     produced = {a["WFWorkflowActionParameters"]["UUID"]: i
@@ -321,6 +344,8 @@ def main():
     ap.add_argument("--name", help="one shortcut out of the dumps")
     ap.add_argument("--all", action="store_true", help="every shortcut, one after another")
     ap.add_argument("--dir", help="write one <Name>.txt per shortcut here, instead of stdout")
+    ap.add_argument("--table", action="store_true",
+                    help="markdown table instead of pseudocode, for handing over in chat")
     args = ap.parse_args()
 
     found = load(args.path)
@@ -343,7 +368,8 @@ def main():
     wrote = failed = 0
     for i, (name, blob) in enumerate(sorted(found.items())):
         try:
-            text = sketch(plistlib.loads(blob), name)
+            render = table if args.table else sketch
+            text = render(plistlib.loads(blob), name)
         except Exception as err:
             print("%s  UNREADABLE: %s" % (name, err), file=sys.stderr)
             failed += 1
