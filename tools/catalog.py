@@ -34,6 +34,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pack import build_id                      # one hash, shared with both mirrors
+from plist import build as plist_build         # the chain as the document it installs as
+import plistlib
+from sketch import sketch as sketch_lines
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / "workflows"
@@ -80,6 +83,23 @@ def targets(chain):
     return sorted(found)
 
 
+def listing(chain, path):
+    """The chain as readable lines, so a page can render it without a plist parser.
+
+    The page that reads this catalog wants to show what a shortcut contains, and
+    the only other route is parsing an XML plist in the browser. This is the
+    repo's usual answer instead: land the mechanical extraction in committed
+    structured data and let the display read rows. Rendered through the same
+    plist the installer sends and the same sketch the handover card prints, so
+    the page cannot disagree with either.
+    """
+    try:
+        doc = plistlib.loads(plistlib.dumps(plist_build(chain, str(path))))
+    except Exception:
+        return []
+    return sketch_lines(doc, None, annotate=True).split("\n")
+
+
 def row(path):
     chain = json.loads(path.read_text())
     return {
@@ -90,6 +110,7 @@ def row(path):
         "build": build_id(chain),
         "settings": bool(chain.get("workflow")),
         "targets": targets(chain),
+        "sketch": listing(chain, path),
     }
 
 
