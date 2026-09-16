@@ -129,3 +129,54 @@ test("--unchecked sends an unaudited name, and says so", () => {
   assert.match(link, /name=Run-Pick/);
   assert.match(decodeURIComponent(link.split("&text=")[1]), /Describe-Input/);
 });
+
+// ── the handover card ──────────────────────────────────────────────────────
+// The card is the format the reader actually meets, so its shape is emitted
+// rather than typed. Every element below was settled by screenshot against the
+// reader's own client; web-tools skills/shortcut-links holds the argument.
+
+test("a sequence card names the receiver and unpacks its payload", () => {
+  const c = handover("Check-🎟️GitHubToken", "--log", "--card");
+  assert.match(c, /^\| 📲 \[Run-Steps\]\(shortcuts:\/\/run-shortcut\?name=Run-Steps/m);
+  assert.match(c, /^\| --- \|$/m);
+  // Every step prints, the logger included: a display of a payload that omits
+  // part of the payload is the failure the format exists to prevent.
+  assert.ok(c.includes("Check-🎟️GitHubToken"));
+  assert.ok(c.includes("Log-Repo"));
+});
+
+test("the first step is marked as the start and the rest as running on it", () => {
+  const c = handover("Check-🎟️GitHubToken", "--log", "--card");
+  const body = c.split("\n").at(-1);
+  assert.ok(body.startsWith("| `▸ `"), body.slice(0, 20));
+  assert.ok(body.includes("<br>`↳ `"), body);
+  // No index anywhere: in a step list nothing refers back, so a number would be
+  // decoration shaped exactly like the listing's addresses, which are not.
+  assert.ok(!/[⁰¹²³]/.test(body), body);
+});
+
+test("a step we hold a chain for carries its page, and one we do not stays bare", () => {
+  const c = handover("Open-URL", "Log-Repo", "--card");
+  assert.match(c, /`↳ `\[Log-Repo\]\(https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcuts\.html\?name=Log-Repo\)/);
+  // Open-URL is on the device and in no chain file here, so there is no page
+  // to link and the card says the name rather than pointing somewhere else.
+  assert.ok(c.includes("`▸ `Open-URL"), c);
+});
+
+test("a plain run is one row, since a data payload has nothing to unpack", () => {
+  const c = handover("Speak-Text", "--text", "hello", "--card");
+  assert.strictEqual(c, "| 📲 [Speak-Text: hello](shortcuts://run-shortcut?name=Speak-Text&input=text&text=hello) |");
+});
+
+test("a menu refuses a card rather than inventing notation for one", () => {
+  const out = fails("Describe-Input", "Show-Table", "--pick", "--card");
+  assert.match(out, /no shape for a Run-Pick menu/);
+});
+
+test("every link is audited, not only a --pick one", () => {
+  // Repo-Viewer is the name this repo actually lost a fortnight to. The audit
+  // lived inside the --pick branch while CLAUDE.md claimed it ran on every
+  // link, so this is the gate catching up with its own statement.
+  assert.match(fails("Repo-Viewer"), /not in the library index: Repo-Viewer/);
+  assert.match(handover("Repo-Viewer", "--unchecked"), /names not audited/);
+});
