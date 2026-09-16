@@ -203,7 +203,53 @@ def clip(s, limit):
     return s if len(s) <= limit else "%s… (%d chars)" % (s[:limit], len(s))
 
 
-def sketch(doc, name=None):
+SUP = str.maketrans("0123456789", "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079")
+
+
+def card(doc, name=None):
+    """The listing as one markdown table cell, for a handover card in chat.
+
+    Settled by screenshot against the reader's own client, 2026-09-15:
+
+      - A chat renderer gives every list item paragraph-level margin, so a
+        bullet listing is most of a phone screen. A table row is tight.
+      - A fenced block is tighter still and wrong anyway: this client wraps one
+        in a Code bar with copy and expand buttons, which is dead space between
+        the card and its listing.
+      - A table cell trims leading whitespace, so the nesting has to ride inside
+        an inline code span, which preserves spacing exactly and renders
+        monospace.
+      - `<br>` DOES survive a cell, so the whole listing is one cell and the
+        card stays a single table.
+      - Superscript indices keep their small raised shape outside a code span
+        and lose it inside one, so the index sits outside and the rest inside.
+
+    The full record is web-tools docs/markdown-in-chat.md.
+    """
+    rows = []
+    lines = sketch(doc, None, annotate=True).split("\n")
+    # The index goes INSIDE the span with the gutter, not outside it. Outside,
+    # the digit is proportional body type and the space before the backtick is a
+    # proportional space, so the gutter column drifts row to row and steps
+    # sideways the moment an index needs two characters. Inside, both are
+    # monospace and right-aligning the index holds the column at any width.
+    width = max(len(str(len(lines) - 1)), 1)
+    for line in lines:
+        i, rest = line[:3].strip(), line[4:]
+        rows.append("`%s \u2502 %s`" % (i.translate(SUP).rjust(width),
+                                        rest.replace("`", "'")))
+    return "<br>".join(rows)
+
+
+# Verbs whose printed parameter is a REFERENCE to another shortcut rather than
+# data. Both are plain strings in the plist, so nothing in the file distinguishes
+# them, and the reader of a listing cannot tell a payload from a target. That
+# matters here more than it looks: a by-name target is a string nothing
+# validates, which this repo has already lost a fortnight to twice.
+REFERENCE = {"runworkflow"}
+
+
+def sketch(doc, name=None, annotate=False):
     actions = doc.get("WFWorkflowActions", [])
     produced = {a["WFWorkflowActionParameters"]["UUID"]: i
                 for i, a in enumerate(actions)
@@ -232,6 +278,16 @@ def sketch(doc, name=None):
 
         word, param = VERB.get(key, (key if ident.startswith(PREFIX) else ident, None))
         arg = short(p.get(param), produced) if param and param in p else ""
+        # Quote a literal, leave a reference bare, and name the line an action
+        # takes its input from. sketch() itself stays byte-identical without
+        # annotate, because web-tools-private commits its output and
+        # freshness.py compares it.
+        if annotate and arg:
+            if isinstance(p.get(param), str) and key not in REFERENCE:
+                arg = '"%s"' % arg
+            feed = ref(p["WFInput"], produced) if isinstance(p.get("WFInput"), dict) else ""
+            if feed.startswith("\u00ab") and feed not in arg:
+                arg += " \u2190 " + feed
         lines.append("%3d %s%s%s" % (i, "  " * depth, word, (" " + arg) if arg else ""))
     return "\n".join(lines)
 
@@ -321,6 +377,8 @@ def main():
     ap.add_argument("--name", help="one shortcut out of the dumps")
     ap.add_argument("--all", action="store_true", help="every shortcut, one after another")
     ap.add_argument("--dir", help="write one <Name>.txt per shortcut here, instead of stdout")
+    ap.add_argument("--card", action="store_true",
+                    help="the listing as one markdown table cell, for a handover card")
     args = ap.parse_args()
 
     found = load(args.path)
@@ -343,7 +401,8 @@ def main():
     wrote = failed = 0
     for i, (name, blob) in enumerate(sorted(found.items())):
         try:
-            text = sketch(plistlib.loads(blob), name)
+            render = card if args.card else sketch
+            text = render(plistlib.loads(blob), name)
         except Exception as err:
             print("%s  UNREADABLE: %s" % (name, err), file=sys.stderr)
             failed += 1
