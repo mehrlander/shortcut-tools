@@ -203,30 +203,45 @@ def clip(s, limit):
     return s if len(s) <= limit else "%s… (%d chars)" % (s[:limit], len(s))
 
 
-def table(doc, name=None):
-    """The same sketch as a markdown table, for handing a chain over in chat.
+SUP = str.maketrans("0123456789", "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079")
 
-    A chat renderer gives every list item paragraph-level margin, so a ten-line
-    bullet listing is most of a phone screen; a table row is tight. The catch a
-    table brings is that a cell trims leading whitespace, ASCII space, nbsp and
-    tab alike, so the nesting sketch() carries in indentation would collapse.
-    An inline code span preserves its spacing exactly and renders monospace, so
-    each action line goes inside one and the depth survives. Both findings are
-    web-tools docs/markdown-in-chat.md, measured by screenshot.
 
-    A code span cannot hold a link, which costs nothing here: an action row has
-    nothing to link to. The link is the handover above the table.
+def card(doc, name=None):
+    """The listing as one markdown table cell, for a handover card in chat.
+
+    Settled by screenshot against the reader's own client, 2026-09-15:
+
+      - A chat renderer gives every list item paragraph-level margin, so a
+        bullet listing is most of a phone screen. A table row is tight.
+      - A fenced block is tighter still and wrong anyway: this client wraps one
+        in a Code bar with copy and expand buttons, which is dead space between
+        the card and its listing.
+      - A table cell trims leading whitespace, so the nesting has to ride inside
+        an inline code span, which preserves spacing exactly and renders
+        monospace.
+      - `<br>` DOES survive a cell, so the whole listing is one cell and the
+        card stays a single table.
+      - Superscript indices keep their small raised shape outside a code span
+        and lose it inside one, so the index sits outside and the rest inside.
+
+    The full record is web-tools docs/markdown-in-chat.md.
     """
-    lines = sketch(doc, None).split("\n")
-    rows = ["| # | Action |", "| ---: | --- |"]
-    for line in lines:
+    rows = []
+    for line in sketch(doc, None, annotate=True).split("\n"):
         i, rest = line[:3].strip(), line[4:]
-        rows.append("| %s | `%s` |" % (i, rest.replace("`", "'")))
-    head = "**%s** (%d actions)\n\n" % (name, len(doc.get("WFWorkflowActions", []))) if name else ""
-    return head + "\n".join(rows)
+        rows.append("%s `\u2502 %s`" % (i.translate(SUP), rest.replace("`", "'")))
+    return "<br>".join(rows)
 
 
-def sketch(doc, name=None):
+# Verbs whose printed parameter is a REFERENCE to another shortcut rather than
+# data. Both are plain strings in the plist, so nothing in the file distinguishes
+# them, and the reader of a listing cannot tell a payload from a target. That
+# matters here more than it looks: a by-name target is a string nothing
+# validates, which this repo has already lost a fortnight to twice.
+REFERENCE = {"runworkflow"}
+
+
+def sketch(doc, name=None, annotate=False):
     actions = doc.get("WFWorkflowActions", [])
     produced = {a["WFWorkflowActionParameters"]["UUID"]: i
                 for i, a in enumerate(actions)
@@ -255,6 +270,16 @@ def sketch(doc, name=None):
 
         word, param = VERB.get(key, (key if ident.startswith(PREFIX) else ident, None))
         arg = short(p.get(param), produced) if param and param in p else ""
+        # Quote a literal, leave a reference bare, and name the line an action
+        # takes its input from. sketch() itself stays byte-identical without
+        # annotate, because web-tools-private commits its output and
+        # freshness.py compares it.
+        if annotate and arg:
+            if isinstance(p.get(param), str) and key not in REFERENCE:
+                arg = '"%s"' % arg
+            feed = ref(p["WFInput"], produced) if isinstance(p.get("WFInput"), dict) else ""
+            if feed.startswith("\u00ab") and feed not in arg:
+                arg += " \u2190 " + feed
         lines.append("%3d %s%s%s" % (i, "  " * depth, word, (" " + arg) if arg else ""))
     return "\n".join(lines)
 
@@ -344,8 +369,8 @@ def main():
     ap.add_argument("--name", help="one shortcut out of the dumps")
     ap.add_argument("--all", action="store_true", help="every shortcut, one after another")
     ap.add_argument("--dir", help="write one <Name>.txt per shortcut here, instead of stdout")
-    ap.add_argument("--table", action="store_true",
-                    help="markdown table instead of pseudocode, for handing over in chat")
+    ap.add_argument("--card", action="store_true",
+                    help="the listing as one markdown table cell, for a handover card")
     args = ap.parse_args()
 
     found = load(args.path)
@@ -368,7 +393,7 @@ def main():
     wrote = failed = 0
     for i, (name, blob) in enumerate(sorted(found.items())):
         try:
-            render = table if args.table else sketch
+            render = card if args.card else sketch
             text = render(plistlib.loads(blob), name)
         except Exception as err:
             print("%s  UNREADABLE: %s" % (name, err), file=sys.stderr)
