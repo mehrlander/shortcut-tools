@@ -227,9 +227,17 @@ def card(doc, name=None):
     The full record is web-tools docs/markdown-in-chat.md.
     """
     rows = []
-    for line in sketch(doc, None, annotate=True).split("\n"):
+    lines = sketch(doc, None, annotate=True).split("\n")
+    # The index goes INSIDE the span with the gutter, not outside it. Outside,
+    # the digit is proportional body type and the space before the backtick is a
+    # proportional space, so the gutter column drifts row to row and steps
+    # sideways the moment an index needs two characters. Inside, both are
+    # monospace and right-aligning the index holds the column at any width.
+    width = max(len(str(len(lines) - 1)), 1)
+    for line in lines:
         i, rest = line[:3].strip(), line[4:]
-        rows.append("%s `\u2502 %s`" % (i.translate(SUP), rest.replace("`", "'")))
+        rows.append("`%s \u2502 %s`" % (i.translate(SUP).rjust(width),
+                                        rest.replace("`", "'")))
     return "<br>".join(rows)
 
 
