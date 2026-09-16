@@ -445,6 +445,12 @@ The rule above still governs what the question may be: ask only what the repo
 cannot answer, which is what the screen did, what the dialog rendered, what
 Apple's own UI decided.
 
+**Send the instruction with the destination.** Every handover, probe or not.
+
+- Open the target: `run.py Library-Open --text '<Name>'`.
+- Alert first; the UI move ends the chain (`ui-action-breaks-what-follows`).
+- Needed: a receiver taking a message and a URL, since `Open-URL` takes only the URL.
+
 ## Handing over a link
 
 **Emit both forms, never type either**, which
