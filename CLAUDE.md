@@ -456,3 +456,10 @@ round trip here.
 
 Use 📋 when the payoff is content on the clipboard, which every packed link is.
 📲 is for a link whose payoff is anything else.
+
+**And the card around the link is emitted too.** `python3 tools/run.py <names>
+--card` prints the whole handover table: the header is the receiver, the body is
+its payload unpacked. Its three shapes, and the reasoning behind each element,
+are owned upstream by web-tools' `shortcut-links` skill, not restated here. What
+is local is why it exists: the shape was typed by hand every time and drifted
+from the tool printing half of it, twice in two days.
