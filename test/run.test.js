@@ -148,19 +148,21 @@ test("a sequence card names the receiver and unpacks its payload", () => {
 test("the first step is marked as the start and the rest as running on it", () => {
   const c = handover("Check-🎟️GitHubToken", "--log", "--card");
   const body = c.split("\n").at(-1);
-  assert.ok(body.startsWith("| `▸ `"), body.slice(0, 20));
-  assert.ok(body.includes("<br>`↳ `"), body);
+  assert.ok(body.startsWith("| `▸ "), body.slice(0, 20));
+  assert.ok(body.includes("<br>`↳ "), body);
   // No index anywhere: in a step list nothing refers back, so a number would be
   // decoration shaped exactly like the listing's addresses, which are not.
   assert.ok(!/[⁰¹²³]/.test(body), body);
 });
 
-test("a step we hold a chain for carries its page, and one we do not stays bare", () => {
+test("a step is a plain name, since the chain page belongs to the install card", () => {
   const c = handover("Open-URL", "Log-Repo", "--card");
-  assert.match(c, /`↳ `\[Log-Repo\]\(https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcuts\.html\?name=Log-Repo\)/);
-  // Open-URL is on the device and in no chain file here, so there is no page
-  // to link and the card says the name rather than pointing somewhere else.
-  assert.ok(c.includes("`▸ `Open-URL"), c);
+  assert.ok(c.includes("`▸ Open-URL`"), c);
+  assert.ok(c.includes("`↳ Log-Repo`"), c);
+  // A step is already on the phone, so a link invites reading where the card
+  // exists to remove it, and half of these names could not carry one: Open-URL
+  // is on the device and in no chain file here.
+  assert.ok(!c.includes("shortcuts.html"), c);
 });
 
 test("a plain run is one row, since a data payload has nothing to unpack", () => {

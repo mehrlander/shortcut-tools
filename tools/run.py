@@ -52,8 +52,6 @@ from pathlib import Path
 ICON = "📲"   # the surfacing mark for "run a shortcut"
 PICKER = "Run-Pick"
 INDEX = Path(__file__).resolve().parent.parent.parent / "web-tools-private" / "shortcuts" / "index.json"
-CATALOG = Path(__file__).resolve().parent.parent / "catalog.json"
-PAGE = "https://mehrlander.github.io/web-tools/pages/shortcuts.html?name=%s"
 CHAIN = "Run-Steps"
 LOGGER = "Log-Repo"
 SCHEME = "shortcuts://run-shortcut?name=%s&input=text&text=%s"
@@ -176,38 +174,22 @@ def markdown(link, targets, log=False, label=None):
     return "%s [%s](%s)" % (ICON, name, link)
 
 
-_HELD = None
-
-
-def held(catalog=CATALOG):
-    """Every name this repo holds a chain for, so a chain page exists for it.
-
-    Sixteen names the chains here call are held nowhere here, `Show-Ace` and
-    `Show-Repo` among them, and the receivers a link addresses directly can be
-    device-only too (`Open-URL`, `Fav-Settings`). Those have no page, so a card
-    prints the bare name rather than linking something else.
-    """
-    global _HELD
-    if _HELD is None:
-        try:
-            _HELD = {r["name"] for r in json.loads(catalog.read_text())["rows"]
-                     if r.get("name")}
-        except (OSError, ValueError, KeyError, TypeError):
-            _HELD = set()
-    return _HELD
-
-
 def step_row(name, first):
-    """One step of a sequence card: the mark, then the name, linked where we can.
+    """One step of a sequence card: the mark, then the name, all in one span.
 
-    The mark is the whole notation: a step after the first runs on the one above
+    The mark is the whole notation. A step after the first runs on the one above
     it, which is exactly what Run-Steps does, and no index appears because
-    nothing in a step list refers back. The space sits INSIDE the code span, so
-    every row starts with an identical monospace cell and the names line up.
+    nothing in a step list refers back.
+
+    No chain page here. A step is a shortcut already on the phone, so a link
+    invites reading where the card exists to remove it, and half of these names
+    could not carry one anyway: sixteen names the chains here call are held in no
+    chain file, and a directly addressed receiver can be device-only (`Open-URL`,
+    `Fav-Settings`). A list where some names are tappable and some are not reads
+    as an error. The page belongs to the install card, which is the one tap that
+    leaves something behind.
     """
-    label = name if name not in held() else "[%s](%s)" % (
-        name, PAGE % urllib.parse.quote(name, safe=""))
-    return "`%s `%s" % ("\u25b8" if first else "\u21b3", label)
+    return "`%s %s`" % ("\u25b8" if first else "\u21b3", name)
 
 
 def card(link, steps, receiver, label=None):
