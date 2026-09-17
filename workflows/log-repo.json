@@ -1,6 +1,6 @@
 {
   "name": "Log-Repo",
-  "label": "Log-Repo: commit the input to the repo log, clipboard as fallback (11 actions)",
+  "label": "Log-Repo: commit the input to the repo log, clipboard as fallback, input back out (12 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.setclipboard",
@@ -274,6 +274,23 @@
               }
             },
             "string": "Logged ￼\nConfirmed: ￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "B0BE0000-0421-4A00-9000-000000000001",
+        "WFOutput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            },
+            "string": "￼"
           },
           "WFSerializationType": "WFTextTokenString"
         }
