@@ -1,6 +1,6 @@
 {
   "name": "Library-Open",
-  "label": "Library-Open: open the named shortcut in the editor (3 actions)",
+  "label": "Library-Open: log the name, then open that shortcut in the editor (5 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getmyworkflows",
@@ -47,6 +47,38 @@
             "WFContentPredicateBoundedDate": false
           },
           "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-0204-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "attachmentsByRange": {
+              "{10, 1}": {
+                "Type": "ExtensionInput"
+              }
+            },
+            "string": "open name=￼ build=#BUILD#"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-0205-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-0204-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     },

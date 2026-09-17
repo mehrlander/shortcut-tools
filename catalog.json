@@ -856,16 +856,20 @@
   },
   {
    "file": "library-open.json",
-   "label": "Library-Open: open the named shortcut in the editor (3 actions)",
+   "label": "Library-Open: log the name, then open that shortcut in the editor (5 actions)",
    "name": "Library-Open",
-   "actions": 3,
-   "build": "b123b16",
+   "actions": 5,
+   "build": "d2be68e",
    "settings": false,
-   "targets": [],
+   "targets": [
+    "Log-Repo"
+   ],
    "sketch": [
     "  0 my shortcuts",
     "  1 filter",
-    "  2 com.apple.shortcuts.OpenWorkflowAction"
+    "  2 text open name=$input build=d2be68e",
+    "  3 run Log-Repo ← «2»",
+    "  4 com.apple.shortcuts.OpenWorkflowAction"
    ]
   },
   {
@@ -996,10 +1000,10 @@
   },
   {
    "file": "log-repo.json",
-   "label": "Log-Repo: commit the input to the repo log, clipboard as fallback (11 actions)",
+   "label": "Log-Repo: commit the input to the repo log, clipboard as fallback, input back out (12 actions)",
    "name": "Log-Repo",
-   "actions": 11,
-   "build": "39d5713",
+   "actions": 12,
+   "build": "a2ba3e9",
    "settings": false,
    "targets": [
     "Check-ApiReply",
@@ -1016,7 +1020,8 @@
     "  7 run Check-ApiReply ← «6»",
     "  8 value for \"content\" ← «6»",
     "  9 value for \"name\" ← «8»",
-    " 10 show Logged «2» Confirmed: «9»"
+    " 10 show Logged «2» Confirmed: «9»",
+    " 11 output $input"
    ]
   },
   {
