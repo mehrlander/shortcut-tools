@@ -856,20 +856,26 @@
   },
   {
    "file": "library-open.json",
-   "label": "Library-Open: log the name, then open that shortcut in the editor (5 actions)",
+   "label": "Library-Open: note, then open that shortcut in the editor (11 actions)",
    "name": "Library-Open",
-   "actions": 5,
-   "build": "d2be68e",
+   "actions": 11,
+   "build": "a0c7c42",
    "settings": false,
    "targets": [
     "Log-Repo"
    ],
    "sketch": [
-    "  0 my shortcuts",
-    "  1 filter",
-    "  2 text open name=$input build=d2be68e",
-    "  3 run Log-Repo ← «2»",
-    "  4 com.apple.shortcuts.OpenWorkflowAction"
+    "  0 split \"New Lines\"",
+    "  1 item \"1\" ← «0»",
+    "  2 item \"2\" ← «0»",
+    "  3 if «2» has value",
+    "  4   alert «2»",
+    "  5 end if",
+    "  6 my shortcuts",
+    "  7 filter",
+    "  8 text open name=«1» build=a0c7c42",
+    "  9 run Log-Repo ← «8»",
+    " 10 com.apple.shortcuts.OpenWorkflowAction"
    ]
   },
   {
