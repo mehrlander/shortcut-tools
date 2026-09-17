@@ -114,27 +114,28 @@ axis, and it is the only route that can deliver **file-level** settings, since
 file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And importing over a name that already
-exists puts a choice on screen: **Apple's own sheet offers to save over the
-existing shortcut**, and taking that offer is all a re-install needs (reported
-2026-08-26). Nothing has to be deleted first.
+only because nothing here holds a secret. And **importing over a name the
+library already holds leaves both copies.** The owner has deleted the older one
+by hand after every import, across a day of them (2026-09-16).
 
-**Take the offer, because keeping both is a correctness problem rather than an
-untidiness one.** A second copy takes the index: the original keeps the clean
-name and the newcomer becomes `Name 1`, so every
+A duplicate takes the index: the original keeps the name, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
-it, still resolves to the **old** copy. An import that looks like an upgrade has
-then done the opposite.
+it, resolves to the copy that was there first. An import that looks like an
+upgrade has done the opposite.
 
-**Wrong 2026-08-15 → the paragraph above:** this read "import never merges by
-name" and called clearing the name first "mandatory, not stylistic." The
-duplicate and its index consequence are real, but they follow from declining the
-sheet's offer, not from importing at all. `Library-Replace` deletes by name
-before importing and is worth having where no one is present to answer the
-sheet; it is not a prerequisite, and a session should not route a normal
-re-install through it. The cost of that error is not a wasted tap: the link
-names a receiver the device may not have, so it fails at the point of use with
-nothing installed.
+**So a replace goes through `Library-Replace`**, which deletes by name, imports,
+and logs: one tap, no cleanup. `Library-Import` is for a name the library does
+not hold. Proven 2026-09-16 on `Probe-Route`, and the manifest taken after it
+showed one copy.
+
+**Wrong 2026-08-26 → the paragraph above:** this read "taking that offer is all
+a re-install needs" and "nothing has to be deleted first", and it sent a session
+into routing every re-install through `Library-Import` and telling the owner the
+duplicate was theirs to prevent. The 2026-08-15 entry it replaced had the
+behaviour right and the remedy wrong; this one had both backwards. What settled
+it is first-hand observation, not a measurement: no manifest was ever taken
+between an import and a cleanup, so every one of them records the tidying rather
+than the import.
 
 **The bound shortcut is `Run-BackTap`**, read off the Settings page 2026-09-14.
 `Back-DoubleTap` is an independent copy of the same dispatcher and is not bound
