@@ -122,10 +122,12 @@
 											<dict>
 												<key>{0, 1}</key>
 												<dict>
-													<key>Type</key>
-													<string>Variable</string>
-													<key>VariableName</key>
+													<key>OutputName</key>
 													<string>Shortcut name</string>
+													<key>OutputUUID</key>
+													<string>B0BE0000-0902-4A00-9000-000000000001</string>
+													<key>Type</key>
+													<string>ActionOutput</string>
 												</dict>
 											</dict>
 											<key>string</key>
