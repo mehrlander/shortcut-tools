@@ -1,7 +1,102 @@
 {
   "name": "Library-Open",
-  "label": "Library-Open: log the name, then open that shortcut in the editor (5 actions)",
+  "label": "Library-Open: note, then open that shortcut in the editor (11 actions)",
   "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "B0BE0000-0210-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "B0BE0000-0211-4A00-9000-000000000001",
+        "CustomOutputName": "Name",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "1",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-0210-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "B0BE0000-0212-4A00-9000-000000000001",
+        "CustomOutputName": "Note",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-0210-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Note",
+              "OutputUUID": "B0BE0000-0212-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "B0BE0000-0213-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionTitle": "Before the app opens",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Note",
+                "OutputUUID": "B0BE0000-0212-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-9002-4A00-9000-000000009002",
+        "WFControlFlowMode": 2,
+        "UUID": "B0BE0000-0214-4A00-9000-000000000001"
+      }
+    },
     {
       "id": "is.workflow.actions.getmyworkflows",
       "p": {
@@ -31,12 +126,14 @@
                 "Values": {
                   "String": {
                     "Value": {
+                      "string": "￼",
                       "attachmentsByRange": {
                         "{0, 1}": {
-                          "Type": "ExtensionInput"
+                          "OutputName": "Name",
+                          "OutputUUID": "B0BE0000-0211-4A00-9000-000000000001",
+                          "Type": "ActionOutput"
                         }
-                      },
-                      "string": "￼"
+                      }
                     },
                     "WFSerializationType": "WFTextTokenString"
                   },
@@ -56,12 +153,14 @@
         "UUID": "B0BE0000-0204-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
+            "string": "open name=￼ build=#BUILD#",
             "attachmentsByRange": {
               "{10, 1}": {
-                "Type": "ExtensionInput"
+                "OutputName": "Name",
+                "OutputUUID": "B0BE0000-0211-4A00-9000-000000000001",
+                "Type": "ActionOutput"
               }
-            },
-            "string": "open name=￼ build=#BUILD#"
+            }
           },
           "WFSerializationType": "WFTextTokenString"
         }
