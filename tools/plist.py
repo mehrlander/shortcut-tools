@@ -32,11 +32,29 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "plists"
 RAW = "https://raw.githubusercontent.com/mehrlander/shortcut-tools"
 IMPORT_TARGET = "Library-Import"
-# `Library-Replace` deletes by name, then imports. Reach for it only where no
-# one is present to answer Apple's import sheet, which otherwise offers to save
-# over a name that already exists: --link defaults to Library-Import because
-# that is the route a person actually taps, and because a link naming a
-# receiver the device lacks fails at the point of use with nothing installed.
+# `Library-Replace` deletes by name, then imports. Both receivers read the same
+# two-line payload, so `--replace` changes the receiver and nothing else.
+#
+# **Reach for it whenever the name is already on the device.** Importing over a
+# name the library holds leaves BOTH copies and the older one keeps the index,
+# so every `run-shortcut?name=` link and every runworkflow card naming it goes
+# on resolving to the copy being replaced: an install that looks like an upgrade
+# has done the opposite.
+#
+# Wrong until 2026-09-19 → the paragraph above: this comment read "reach for it
+# only where no one is present to answer Apple's import sheet, which otherwise
+# offers to save over a name that already exists", which is the save-over
+# reading CLAUDE.md retracted on 2026-09-16, and "a link naming a receiver the
+# device lacks fails at the point of use", which stopped being true the same
+# week, since `Library-Replace` reached the device on 2026-09-16 and has been in
+# every manifest since.
+#
+# `--link` still defaults to Import, and for a reason that survives both: **this
+# tool has no device read.** Which receiver is correct is a fact about the
+# phone, not about the chain, so the only caller that can decide it is one
+# holding a manifest. pages/shortcuts.html is that caller and picks per chain;
+# here Import is the honest default, because Replace on a guess deletes on the
+# strength of an assumption. Pass `--replace` when you know the name is there.
 REPLACE_TARGET = "Library-Replace"
 # Signed here, fetched there: Library-Fetch takes the same two-line payload
 # and just names the bytes and opens them, so no device ever calls the worker.
@@ -331,7 +349,9 @@ def main():
     ap.add_argument("--link", action="store_true", help="emit the Library-Import link")
     ap.add_argument("--ref", default="main", help="the ref --link points at")
     ap.add_argument("--replace", action="store_true",
-                    help="--link through Library-Replace: delete by name, then import")
+                    help="--link through Library-Replace: delete by name, then import. "
+                         "Use it whenever the device already holds the name, since an "
+                         "import leaves both copies and the older one keeps the index")
     ap.add_argument("--sign", action="store_true",
                     help="pre-flight: check the worker will sign it, retrying an outage")
     ap.add_argument("--write-signed", action="store_true",
