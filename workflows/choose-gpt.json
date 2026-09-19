@@ -1,13 +1,13 @@
 {
   "name": "Choose-GPT",
-  "label": "Choose-GPT: the ChatGPT-app menu, one table, no network until a row asks for it (14 actions)",
+  "label": "Choose-GPT: the ChatGPT-app menu, one table of destinations (9 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "C6B70000-0001-4A00-9000-000000000001",
         "CustomOutputName": "Menu",
-        "WFTextActionText": "⌨️ Codex\n💬 New chat\n🕘 Recent sessions\n🗂️ All sessions\nOut"
+        "WFTextActionText": "⌨️ Codex\n💬 New chat\n🕘 Sessions\nOut"
       }
     },
     {
@@ -73,18 +73,7 @@
               {
                 "WFItemType": 0,
                 "WFKey": {
-                  "Value": { "string": "🕘 Recent sessions" },
-                  "WFSerializationType": "WFTextTokenString"
-                },
-                "WFValue": {
-                  "Value": { "string": "Claude-Session" },
-                  "WFSerializationType": "WFTextTokenString"
-                }
-              },
-              {
-                "WFItemType": 0,
-                "WFKey": {
-                  "Value": { "string": "🗂️ All sessions" },
+                  "Value": { "string": "🕘 Sessions" },
                   "WFSerializationType": "WFTextTokenString"
                 },
                 "WFValue": {
@@ -131,21 +120,14 @@
       "p": {
         "GroupingIdentifier": "C6B70000-9001-4A00-9000-000000009001",
         "WFControlFlowMode": 0,
-        "WFCondition": 99,
-        "WFConditionalActionString": "://",
+        "WFCondition": 100,
         "WFInput": {
           "Type": "Variable",
           "Variable": {
             "Value": {
               "Type": "ActionOutput",
               "OutputUUID": "C6B70000-0005-4A00-9000-000000000001",
-              "OutputName": "Target",
-              "Aggrandizements": [
-                {
-                  "Type": "WFCoercionVariableAggrandizement",
-                  "CoercionItemClass": "WFStringContentItem"
-                }
-              ]
+              "OutputName": "Target"
             },
             "WFSerializationType": "WFTextTokenAttachment"
           }
@@ -184,85 +166,8 @@
       "id": "is.workflow.actions.conditional",
       "p": {
         "GroupingIdentifier": "C6B70000-9001-4A00-9000-000000009001",
-        "WFControlFlowMode": 1
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "C6B70000-9002-4A00-9000-000000009002",
-        "WFControlFlowMode": 0,
-        "WFCondition": 100,
-        "WFInput": {
-          "Type": "Variable",
-          "Variable": {
-            "Value": {
-              "Type": "ActionOutput",
-              "OutputUUID": "C6B70000-0005-4A00-9000-000000000001",
-              "OutputName": "Target"
-            },
-            "WFSerializationType": "WFTextTokenAttachment"
-          }
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.runworkflow",
-      "p": {
-        "UUID": "C6B70000-0008-4A00-9000-000000000001",
-        "WFWorkflowName": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "Type": "ActionOutput",
-                "OutputUUID": "C6B70000-0005-4A00-9000-000000000001",
-                "OutputName": "Target"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        },
-        "WFInput": {
-          "Value": {
-            "Type": "Clipboard"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.output",
-      "p": {
-        "WFOutput": {
-          "Value": {
-            "string": "￼",
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "Type": "ActionOutput",
-                "OutputUUID": "C6B70000-0008-4A00-9000-000000000001",
-                "OutputName": "Shortcut Result"
-              }
-            }
-          },
-          "WFSerializationType": "WFTextTokenString"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "C6B70000-9002-4A00-9000-000000009002",
         "WFControlFlowMode": 2,
-        "UUID": "C6B70000-0009-4A00-9000-000000000001"
-      }
-    },
-    {
-      "id": "is.workflow.actions.conditional",
-      "p": {
-        "GroupingIdentifier": "C6B70000-9001-4A00-9000-000000009001",
-        "WFControlFlowMode": 2,
-        "UUID": "C6B70000-0010-4A00-9000-000000000001"
+        "UUID": "C6B70000-0008-4A00-9000-000000000001"
       }
     }
   ]
