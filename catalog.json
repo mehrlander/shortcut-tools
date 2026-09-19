@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 77,
-  "installable": 54,
+  "chains": 78,
+  "installable": 55,
   "external_targets": 16
  },
  "external_targets": [
@@ -348,6 +348,25 @@
    "sketch": [
     "  0 fetch $input",
     "  1 run Copy-ActionFromClaude ← «0» as String"
+   ]
+  },
+  {
+   "file": "copy-github-token.json",
+   "label": "Copy-GitHubToken: the stored token onto the clipboard, and a log row saying it went (5 actions)",
+   "name": "Copy-GitHubToken",
+   "actions": 5,
+   "build": "8dd7a14",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 text \"{\"op\":\"web-fab\",\"name\":\"Copy-GitHubToken\",\"build… (60 chars)\"",
+    "  1 run Log-Repo ← «0»",
+    "  2 text \"🎟️GitHubToken\"",
+    "  3 run Inject-🎟️GitHubToken ← «2»",
+    "  4 clipboard <-"
    ]
   },
   {
@@ -1427,19 +1446,20 @@
   },
   {
    "file": "route-gesture.json",
-   "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
+   "label": "Route-Gesture: a gesture or caller label in, that label's shortcut run, on the clipboard (10 actions)",
    "name": "Route-Gesture",
    "actions": 10,
-   "build": "c7ac9ec",
+   "build": "2b74b4f",
    "settings": false,
    "targets": [
+    "Copy-GitHubToken",
     "Run-BackTap"
    ],
    "sketch": [
     "  0 if $input no value",
     "  1   text \"double-back\"",
     "  2 end if",
-    "  3 text \"[double-back]=Run-BackTap\"",
+    "  3 text \"[double-back]=Run-BackTap [web-token]=Copy-GitHu… (54 chars)\"",
     "  4 match (?<=\\[«2»\\]=).+",
     "  5 if «4» no value",
     "  6   text \"Run-BackTap\"",
