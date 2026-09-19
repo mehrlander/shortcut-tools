@@ -68,7 +68,8 @@
 				<key>UUID</key>
 				<string>60E50000-0004-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>[double-back]=Run-BackTap</string>
+				<string>[double-back]=Run-BackTap
+[web-token]=Copy-GitHubToken</string>
 			</dict>
 		</dict>
 		<dict>
