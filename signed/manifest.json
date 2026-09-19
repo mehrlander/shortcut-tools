@@ -9,6 +9,11 @@
   "bytes": 22638,
   "signed": "2026-09-01"
  },
+ "Choose-GPT": {
+  "plist_sha256": "e5ed308b3483af8d112e6309dba56cd8dfe9ddf1f6f93a4525a1cb986926ea54",
+  "bytes": 22678,
+  "signed": "2026-09-19"
+ },
  "Get-AppRoute": {
   "plist_sha256": "ad5829330b5d80e544c8b92d08f95c3a78c0c82a26b87dfc99c1541c69ba03fc",
   "bytes": 22191,
