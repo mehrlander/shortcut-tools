@@ -1,6 +1,6 @@
 {
   "name": "Run-BackTap",
-  "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (37 actions)",
+  "label": "Run-BackTap: the back-tap dispatcher, app ladder collapsed to one lookup (37 actions)",
   "workflow": {
     "WFWorkflowNoInputBehavior": {
       "Name": "WFWorkflowNoInputBehaviorGetClipboard",

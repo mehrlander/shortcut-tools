@@ -9,6 +9,11 @@
   "bytes": 22638,
   "signed": "2026-09-01"
  },
+ "Choose-GPT": {
+  "plist_sha256": "e5ed308b3483af8d112e6309dba56cd8dfe9ddf1f6f93a4525a1cb986926ea54",
+  "bytes": 22678,
+  "signed": "2026-09-19"
+ },
  "Get-AppRoute": {
   "plist_sha256": "ad5829330b5d80e544c8b92d08f95c3a78c0c82a26b87dfc99c1541c69ba03fc",
   "bytes": 22191,
@@ -63,5 +68,10 @@
   "plist_sha256": "bd5d94071599f0b0cd91967e0a49550d6cdcf061ddf142dd87463ae842a718f5",
   "bytes": 21833,
   "signed": "2026-08-31"
+ },
+ "Triple-BackTap": {
+  "plist_sha256": "94a57a55834b7024d27ea027a90c5e3569c220ec9c4e3fee389a05f871e2beab",
+  "bytes": 21789,
+  "signed": "2026-09-20"
  }
 }
