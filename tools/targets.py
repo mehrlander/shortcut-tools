@@ -113,6 +113,16 @@ def main():
                 computed.setdefault(who, 0)
                 computed[who] += 1
                 continue
+            # A URL IS NOT A SHORTCUT NAME EITHER. catalog.py reads dictionary
+            # values as targets because a router keeps its shortcut names
+            # there, and a menu like Choose-GPT keeps its destinations there
+            # too, so the catalog carries both and cannot tell them apart. This
+            # can: nothing on the phone is called https://anything, so a target
+            # with a scheme is an address the chain opens, not a name it runs.
+            # Three such rows arrived with Choose-GPT on 2026-09-20 and read as
+            # three absent shortcuts until this line.
+            if "://" in t:
+                continue
             callers.setdefault(t, []).append(who)
 
     absent = []
