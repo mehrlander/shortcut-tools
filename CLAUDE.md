@@ -126,7 +126,8 @@ upgrade has done the opposite.
 **So a replace goes through `Library-Replace`**, which deletes by name, imports,
 and logs: one tap, no cleanup. `Library-Import` is for a name the library does
 not hold. Proven 2026-09-16 on `Probe-Route`, and the manifest taken after it
-showed one copy.
+showed one copy. The Chains view picks between them from the manifest; hand over
+`?name=<Chain>` rather than building the link.
 
 **Wrong 2026-08-26 → the paragraph above:** this read "taking that offer is all
 a re-install needs" and "nothing has to be deleted first", and it sent a session

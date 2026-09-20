@@ -1,0 +1,85 @@
+{
+  "label": "Choose-Manage: a menu of every shortcut whose name contains Manage, and the pick runs (4 actions)",
+  "name": "Choose-Manage",
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  },
+  "actions": [
+    {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "964EF208-58AA-440E-8E68-A00D617DB8FD"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "2AC9E147-8420-4ECC-A0BC-4253B6A2D360",
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 99,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": "Manage",
+                  "Unit": 4
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        },
+        "WFContentItemInputParameter": {
+          "Value": {
+            "OutputName": "My Shortcuts",
+            "OutputUUID": "964EF208-58AA-440E-8E68-A00D617DB8FD",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.choosefromlist",
+      "p": {
+        "UUID": "56EC709A-3F4A-4C47-85E7-47DB03412086",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Files",
+            "OutputUUID": "2AC9E147-8420-4ECC-A0BC-4253B6A2D360",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "7B9D3F7A-C0DB-43FF-9E20-015AAE29FCBC",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Selected Item",
+            "OutputUUID": "56EC709A-3F4A-4C47-85E7-47DB03412086",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFWorkflowName": {
+          "Value": {
+            "OutputName": "Selected Item",
+            "OutputUUID": "56EC709A-3F4A-4C47-85E7-47DB03412086",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}

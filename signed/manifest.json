@@ -68,5 +68,10 @@
   "plist_sha256": "bd5d94071599f0b0cd91967e0a49550d6cdcf061ddf142dd87463ae842a718f5",
   "bytes": 21833,
   "signed": "2026-08-31"
+ },
+ "Triple-BackTap": {
+  "plist_sha256": "94a57a55834b7024d27ea027a90c5e3569c220ec9c4e3fee389a05f871e2beab",
+  "bytes": 21789,
+  "signed": "2026-09-20"
  }
 }

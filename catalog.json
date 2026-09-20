@@ -1,8 +1,8 @@
 {
  "meta": {
-  "chains": 78,
-  "installable": 55,
-  "external_targets": 19
+  "chains": 79,
+  "installable": 56,
+  "external_targets": 18
  },
  "external_targets": [
   "Combine-JsonList",
@@ -18,7 +18,6 @@
   "Show-Ace",
   "Show-Html",
   "Show-Loop",
-  "Show-Repo",
   "Show-WebView",
   "Use-Shortcut",
   "https://chatgpt.com/",
@@ -47,91 +46,6 @@
     "  7 join \"New Lines\"",
     "  8 run Log-Repo ← «7»",
     "  9 output «7»"
-   ]
-  },
-  {
-   "file": "back-doubletap.json",
-   "label": "Back-DoubleTap: the double back tap dispatcher (67 actions)",
-   "name": "Back-DoubleTap",
-   "actions": 67,
-   "build": "5630063",
-   "settings": true,
-   "targets": [
-    "Choose-RunLink",
-    "Get-FileCaption",
-    "Show-Ace",
-    "Show-Loop",
-    "Show-Repo",
-    "Show-WebView"
-   ],
-   "sketch": [
-    "  0 getcurrentapp",
-    "  1 if «0» as GenericFile no value",
-    "  2   notify \"No app: Show-Ace\"",
-    "  3   wait 1",
-    "  4   run Show-Ace",
-    "  5   output «4»",
-    "  6 end if",
-    "  7 type of",
-    "  8 match \"shortcuts://run-shortcut\\?\\S+\"",
-    "  9 if «8» has value",
-    " 10   run Choose-RunLink ← «8»",
-    " 11   if «10» has value",
-    " 12     output «10»",
-    " 13   end if",
-    " 14 end if",
-    " 15 if «0» is",
-    " 16   if «7» is URL",
-    " 17     open $input",
-    " 18   else",
-    " 19     run Show-Repo",
-    " 20   end if",
-    " 21   output «19»",
-    " 22 end if",
-    " 23 if «0» is",
-    " 24   speak",
-    " 25   output $input",
-    " 26 end if",
-    " 27 if «0» is or «0» is",
-    " 28   url \"prefs:root=WIFI\"",
-    " 29   open «28»",
-    " 30   output «28»",
-    " 31 end if",
-    " 32 if $clipboard has value",
-    " 33   if $clipboard as GenericFile.File Size >= 1 MB",
-    " 34     text \"- 📋 𝙘𝙡𝙞𝙥𝙗𝙤𝙖𝙧𝙙 𝙞𝙨 𝙡𝙖𝙧𝙜𝙚 -\"",
-    " 35   else",
-    " 36     run Get-FileCaption",
-    " 37   end if",
-    " 38 else",
-    " 39   text \"- 📋 𝙘𝙡𝙞𝙥𝙗𝙤𝙖𝙧𝙙 𝙞𝙨 𝙚𝙢𝙥𝙩𝙮 -\"",
-    " 40 end if",
-    " 41 if «0» is",
-    " 42   text \"Open-RecentShortcut Show-ShortcutsInfo Copy-Temp… (90 chars)\"",
-    " 43   split \"New Lines\"",
-    " 44   choose from «40» ← «43»",
-    " 45   if «44» is not Out",
-    " 46     run «44»",
-    " 47     output «46»",
-    " 48   end if",
-    " 49 end if",
-    " 50 if «7» is Image",
-    " 51   preview",
-    " 52   output $input",
-    " 53 end if",
-    " 54 if «7» is URL",
-    " 55   open $input",
-    " 56   output $input",
-    " 57 end if",
-    " 58 if $input no value",
-    " 59   show page \"https://mehrlander.github.io/web-tools/pages/dic… (57 chars)\"",
-    " 60   output $input",
-    " 61 end if",
-    " 62 if $input as String starts with < or $input as String starts with ```",
-    " 63   run Show-WebView",
-    " 64 else",
-    " 65   run Show-Loop",
-    " 66 end if"
    ]
   },
   {
@@ -279,6 +193,21 @@
     "  6   url «4»",
     "  7   open «6»",
     "  8 end if"
+   ]
+  },
+  {
+   "file": "choose-manage.json",
+   "label": "Choose-Manage: a menu of every shortcut whose name contains Manage, and the pick runs (4 actions)",
+   "name": "Choose-Manage",
+   "actions": 4,
+   "build": "1eedbbf",
+   "settings": true,
+   "targets": [],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 filter",
+    "  2 choose from",
+    "  3 run «2»"
    ]
   },
   {
@@ -1458,16 +1387,17 @@
    "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
    "name": "Route-Gesture",
    "actions": 10,
-   "build": "c7ac9ec",
+   "build": "945f3f9",
    "settings": false,
    "targets": [
+    "Choose-Manage",
     "Run-BackTap"
    ],
    "sketch": [
     "  0 if $input no value",
     "  1   text \"double-back\"",
     "  2 end if",
-    "  3 text \"[double-back]=Run-BackTap\"",
+    "  3 text \"[double-back]=Run-BackTap [triple-back]=Choose-M… (53 chars)\"",
     "  4 match (?<=\\[«2»\\]=).+",
     "  5 if «4» no value",
     "  6   text \"Run-BackTap\"",
@@ -1497,10 +1427,10 @@
   },
   {
    "file": "run-backtap.json",
-   "label": "Run-BackTap: Back-DoubleTap with the app ladder as one lookup (37 actions)",
+   "label": "Run-BackTap: the back-tap dispatcher, app ladder collapsed to one lookup (37 actions)",
    "name": "Run-BackTap",
    "actions": 37,
-   "build": "d5a80b8",
+   "build": "736f6d3",
    "settings": true,
    "targets": [
     "Choose-RunLink",
@@ -1830,6 +1760,21 @@
     "  1   date",
     "  2   text «1» $input",
     "  3 end if"
+   ]
+  },
+  {
+   "file": "triple-backtap.json",
+   "label": "Triple-BackTap: what Back Tap triple is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Triple-BackTap",
+   "actions": 2,
+   "build": "2b155e9",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ],
+   "sketch": [
+    "  0 text \"triple-back\"",
+    "  1 run Route-Gesture ← «0»"
    ]
   },
   {

@@ -39,7 +39,7 @@
       "p": {
         "UUID": "60E50000-0004-4A00-9000-000000000001",
         "CustomOutputName": "Routes",
-        "WFTextActionText": "[double-back]=Run-BackTap"
+        "WFTextActionText": "[double-back]=Run-BackTap\n[triple-back]=Choose-Manage"
       }
     },
     {

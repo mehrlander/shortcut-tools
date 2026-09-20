@@ -25,13 +25,23 @@
       "slug": "shortcuts"
     },
     {
+      "path": "mehrlander/web-tools:pages/shortcuts.html",
+      "title": "Chains",
+      "note": "The chains this repo authors, each scored against the device: what it calls, what calls it, and a one-tap install that picks Import or Replace from what the phone already holds.",
+      "appView": true,
+      "viewLabel": "Chains",
+      "icon": "ph-link",
+      "order": 31,
+      "slug": "chains"
+    },
+    {
       "path": "mehrlander/web-tools:pages/shortcut-log.html",
       "title": "Shortcut log",
       "note": "The return channel: every Log-Repo entry from the phone, each install scored current or stale against plists/builds.json.",
       "appView": true,
       "viewLabel": "Shortcut log",
       "icon": "ph-list-checks",
-      "order": 31,
+      "order": 32,
       "slug": "shortcut-log"
     },
     {
