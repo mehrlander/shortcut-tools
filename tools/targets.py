@@ -134,10 +134,31 @@ def main():
         print("every target resolves on the device")
         return 0
 
+    # WHETHER ANYTHING CALLS THE CALLER, which is the difference between a
+    # broken feature and dead code, and this tool did not say it. On 2026-09-19
+    # it reported `Show-Repo` absent and named `Back-DoubleTap` as the caller,
+    # and that read as a live breakage. `Back-DoubleTap` was an uncalled,
+    # unbound predecessor, so the call was dead either way. One line of context
+    # would have stopped an hour of chasing it.
+    #
+    # Reachability here is only what the catalog can see: a chain nothing in
+    # `workflows/` calls may still be launched by a gesture, a share sheet or a
+    # tap, so this says "nothing here calls it" and never "nothing runs it".
+    called_here = {t for row in catalog["rows"] for t in (row.get("targets") or [])}
+
     for target, kind in absent:
-        who = ", ".join(sorted(callers[target]))
+        who = sorted(callers[target])
         print("\nABSENT  %s (%s)" % (target, kind))
-        print("        called by: %s" % who)
+        for name in who:
+            # A self-call is its own answer, so it is named as one rather than
+            # reported as a chain that calls itself and is not called.
+            if [name] == who and name == target:
+                note = "calls itself"
+            elif name not in called_here:
+                note = "nothing in workflows/ calls this one"
+            else:
+                note = ""
+            print("        called by: %s%s" % (name, "  (%s)" % note if note else ""))
         if kind == "chain":
             print("        fix: install it, `python3 tools/plist.py workflows/… --link`")
         else:
