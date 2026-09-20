@@ -370,6 +370,13 @@ def main():
     if args.link:
         if not args.chain:
             raise SystemExit("give a chain to link")
+        # The two flags name receivers on different axes: --fetch is pre-signed
+        # and never deletes, --replace deletes and signs through the worker. No
+        # receiver does both, so a link can carry only one, and until 2026-09-20
+        # passing both silently gave --fetch, which is a replace that does not.
+        if args.fetch and args.replace:
+            raise SystemExit("--fetch and --replace name different receivers and "
+                             "no receiver does both; pass one")
         target = (FETCH_TARGET if args.fetch else
                   REPLACE_TARGET if args.replace else IMPORT_TARGET)
         print(link(args.chain, args.ref, target))

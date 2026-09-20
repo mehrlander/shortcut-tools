@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 76,
-  "installable": 53,
+  "chains": 78,
+  "installable": 55,
   "external_targets": 15
  },
  "external_targets": [
@@ -166,6 +166,21 @@
     " 27   run Log-Repo ← «26»",
     " 28   show The Claude menu came back with no rows. Logged a… (124 chars)",
     " 29 end if"
+   ]
+  },
+  {
+   "file": "choose-manage.json",
+   "label": "Choose-Manage: a menu of every shortcut whose name contains Manage, and the pick runs (4 actions)",
+   "name": "Choose-Manage",
+   "actions": 4,
+   "build": "1eedbbf",
+   "settings": true,
+   "targets": [],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 filter",
+    "  2 choose from",
+    "  3 run «2»"
    ]
   },
   {
@@ -1344,16 +1359,17 @@
    "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
    "name": "Route-Gesture",
    "actions": 10,
-   "build": "c7ac9ec",
+   "build": "945f3f9",
    "settings": false,
    "targets": [
+    "Choose-Manage",
     "Run-BackTap"
    ],
    "sketch": [
     "  0 if $input no value",
     "  1   text \"double-back\"",
     "  2 end if",
-    "  3 text \"[double-back]=Run-BackTap\"",
+    "  3 text \"[double-back]=Run-BackTap [triple-back]=Choose-M… (53 chars)\"",
     "  4 match (?<=\\[«2»\\]=).+",
     "  5 if «4» no value",
     "  6   text \"Run-BackTap\"",
@@ -1716,6 +1732,21 @@
     "  1   date",
     "  2   text «1» $input",
     "  3 end if"
+   ]
+  },
+  {
+   "file": "triple-backtap.json",
+   "label": "Triple-BackTap: what Back Tap triple is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Triple-BackTap",
+   "actions": 2,
+   "build": "2b155e9",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ],
+   "sketch": [
+    "  0 text \"triple-back\"",
+    "  1 run Route-Gesture ← «0»"
    ]
   },
   {
