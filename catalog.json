@@ -352,21 +352,18 @@
   },
   {
    "file": "copy-github-token.json",
-   "label": "Copy-GitHubToken: the stored token onto the clipboard, and a log row saying it went (5 actions)",
+   "label": "Copy-GitHubToken: the stored token onto the clipboard, and nothing else (3 actions)",
    "name": "Copy-GitHubToken",
-   "actions": 5,
-   "build": "8dd7a14",
+   "actions": 3,
+   "build": "6875e17",
    "settings": false,
    "targets": [
-    "Inject-🎟️GitHubToken",
-    "Log-Repo"
+    "Inject-🎟️GitHubToken"
    ],
    "sketch": [
-    "  0 text \"{\"op\":\"web-fab\",\"name\":\"Copy-GitHubToken\",\"build… (60 chars)\"",
-    "  1 run Log-Repo ← «0»",
-    "  2 text \"🎟️GitHubToken\"",
-    "  3 run Inject-🎟️GitHubToken ← «2»",
-    "  4 clipboard <-"
+    "  0 text \"🎟️GitHubToken\"",
+    "  1 run Inject-🎟️GitHubToken ← «0»",
+    "  2 clipboard <-"
    ]
   },
   {
