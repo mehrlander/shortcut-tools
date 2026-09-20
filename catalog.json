@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 79,
-  "installable": 56,
+  "chains": 80,
+  "installable": 57,
   "external_targets": 18
  },
  "external_targets": [
@@ -304,6 +304,22 @@
    "sketch": [
     "  0 fetch $input",
     "  1 run Copy-ActionFromClaude ← «0» as String"
+   ]
+  },
+  {
+   "file": "copy-github-token.json",
+   "label": "Copy-GitHubToken: the stored token onto the clipboard, and nothing else (3 actions)",
+   "name": "Copy-GitHubToken",
+   "actions": 3,
+   "build": "6875e17",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 text \"🎟️GitHubToken\"",
+    "  1 run Inject-🎟️GitHubToken ← «0»",
+    "  2 clipboard <-"
    ]
   },
   {
@@ -1387,17 +1403,18 @@
    "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
    "name": "Route-Gesture",
    "actions": 10,
-   "build": "945f3f9",
+   "build": "1646ecd",
    "settings": false,
    "targets": [
     "Choose-Manage",
+    "Copy-GitHubToken",
     "Run-BackTap"
    ],
    "sketch": [
     "  0 if $input no value",
     "  1   text \"double-back\"",
     "  2 end if",
-    "  3 text \"[double-back]=Run-BackTap [triple-back]=Choose-M… (53 chars)\"",
+    "  3 text \"[double-back]=Run-BackTap [triple-back]=Choose-M… (82 chars)\"",
     "  4 match (?<=\\[«2»\\]=).+",
     "  5 if «4» no value",
     "  6   text \"Run-BackTap\"",
