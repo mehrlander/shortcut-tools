@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 82,
-  "installable": 58,
+  "chains": 83,
+  "installable": 59,
   "external_targets": 18
  },
  "external_targets": [
@@ -849,6 +849,33 @@
     "  8 text open name=«1» build=a0c7c42",
     "  9 run Log-Repo ← «8»",
     " 10 com.apple.shortcuts.OpenWorkflowAction"
+   ]
+  },
+  {
+   "file": "library-paste.json",
+   "label": "Library-Paste: install by paste, replacing any copy by that name (13 actions)",
+   "name": "Library-Paste",
+   "actions": 13,
+   "build": "79e02cd",
+   "settings": true,
+   "targets": [
+    "Copy-ActionFromUrl",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 text {\"op\":\"paste\",\"name\":\"«1»\",\"from\":\"«2»\",\"build\":… (58 chars)",
+    "  4 run Log-Repo ← «3»",
+    "  5 my shortcuts",
+    "  6 filter",
+    "  7 if «6» has value",
+    "  8   com.apple.shortcuts.DeleteWorkflowAction",
+    "  9 end if",
+    " 10 run Copy-ActionFromUrl ← «2»",
+    " 11 com.apple.shortcuts.CreateWorkflowAction",
+    " 12 com.apple.shortcuts.OpenWorkflowAction"
    ]
   },
   {

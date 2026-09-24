@@ -3,6 +3,7 @@
 
     python3 tools/pack.py workflows/<chain>.json [--target NAME]
     python3 tools/pack.py workflows/<chain>.json --url [--ref BRANCH]
+    python3 tools/pack.py workflows/<chain>.json --install [--via NAME] [--ref SHA]
 
 A chain file is {"label": str, "actions": [{"id": str, "p": {...}}, ...]}.
 Each action becomes a plist document, whitespace-compacted, base64-encoded, and
@@ -129,6 +130,38 @@ def address(chain_path, ref):
         URL_TARGET, urllib.parse.quote("%s/%s/packed/%s" % (RAW, ref, name), safe=""))
 
 
+INSTALL_VIA = "Library-Paste"
+
+# File-level settings a paste cannot reach, named as the toggle a person sets.
+TOGGLES = {"ActionExtension": "Show in Share Sheet", "Watch": "Show on Apple Watch",
+           "NCWidget": "Show in Widgets", "MenuBar": "Pin in Menu Bar",
+           "QuickActions": "Use as Quick Action"}
+
+
+def install(chain_path, ref, via=INSTALL_VIA):
+    """The install that needs no signing: create the named shortcut, paste.
+
+    The receiver (`Library-Paste`) deletes any shortcut already holding the
+    name, puts the packed actions on the clipboard, creates the empty
+    shortcut and opens it; the person pastes. `--via Library-Install` is the
+    same without the delete, for bootstrapping `Library-Paste` itself.
+
+    What no paste reaches is the workflow file's own settings, so the toggles
+    the chain declares are printed beside the link rather than lost.
+    """
+    chain = json.load(open(chain_path))
+    name = chain.get("name")
+    if not name:
+        raise SystemExit("%s declares no name, so there is nothing to install" % chain_path)
+    url = address(chain_path, ref).split("text=", 1)[1]
+    text = name + "\n" + urllib.parse.unquote(url)
+    link = "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
+        via, urllib.parse.quote(text, safe=""))
+    types = (chain.get("workflow") or {}).get("WFWorkflowTypes") or []
+    toggles = [TOGGLES[t] for t in types if t in TOGGLES]
+    return link, toggles
+
+
 def verify(link):
     """Read a link back. Use this on the exact text about to be sent.
 
@@ -220,6 +253,9 @@ def main():
                                   "--workflows, since only a matched pair is pruned")
     ap.add_argument("--url", action="store_true",
                     help="emit a link addressing packed/ instead of carrying the payload")
+    ap.add_argument("--install", action="store_true",
+                    help="emit a Library-Paste link that creates the named shortcut for a paste")
+    ap.add_argument("--via", default=INSTALL_VIA, help="the receiver --install runs")
     ap.add_argument("--ref", default="main", help="branch or SHA the --url link reads from")
     args = ap.parse_args()
     if args.publish or args.check:
@@ -232,6 +268,12 @@ def main():
         return verify(args.chain)
     if args.url:
         return print(address(args.chain, args.ref))
+    if args.install:
+        link, toggles = install(args.chain, args.ref, args.via)
+        print(link)
+        if toggles:
+            print("after pasting, set by hand: " + ", ".join(toggles), file=sys.stderr)
+        return
     chain = json.load(open(args.chain))
     link = build(chain, args.target)
     print(link)
