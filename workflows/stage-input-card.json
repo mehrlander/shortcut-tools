@@ -1,5 +1,5 @@
 {
-  "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input (1 action)",
+  "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input, then stop (2 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.runworkflow",
@@ -12,6 +12,12 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
+      }
+    },
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "57A6E000-0901-4A00-9000-000000000001"
       }
     }
   ]

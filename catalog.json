@@ -1722,16 +1722,17 @@
   },
   {
    "file": "stage-input-card.json",
-   "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input (1 action)",
+   "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input, then stop (2 actions)",
    "name": null,
-   "actions": 1,
-   "build": "7213c92",
+   "actions": 2,
+   "build": "25f356c",
    "settings": false,
    "targets": [
     "Stage-Input"
    ],
    "sketch": [
-    "  0 run Stage-Input"
+    "  0 run Stage-Input",
+    "  1 output"
    ]
   },
   {
