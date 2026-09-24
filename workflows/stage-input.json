@@ -1,6 +1,6 @@
 {
   "name": "Stage-Input",
-  "label": "Stage-Input: send what was shared to the Web Tools stage (27 actions)",
+  "label": "Stage-Input: send what was shared to the Web Tools stage (35 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
@@ -84,7 +84,7 @@
       "p": {
         "GroupingIdentifier": "57A6E000-0300-4A00-9000-000000000001",
         "WFCondition": 4,
-        "WFConditionalActionString": "Safari web page",
+        "WFConditionalActionString": "Safari Web Page",
         "WFControlFlowMode": 0,
         "WFInput": {
           "Type": "Variable",
@@ -100,20 +100,44 @@
       }
     },
     {
-      "id": "is.workflow.actions.detect.link",
+      "id": "is.workflow.actions.runjavascriptonwebpage",
       "p": {
-        "UUID": "57A6E000-0022-4A00-9000-000000000001",
+        "UUID": "57A6E000-0040-4A00-9000-000000000001",
         "WFInput": {
           "Value": {
-            "attachmentsByRange": {
-              "{0, 1}": {
-                "Type": "Variable",
-                "VariableName": "Item"
-              }
-            },
-            "string": "￼"
+            "Type": "ExtensionInput"
           },
-          "WFSerializationType": "WFTextTokenString"
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFJavaScript": "completion(JSON.stringify({url: location.href, html: '<!DOCTYPE html>\\n' + document.documentElement.outerHTML}));"
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.dictionary",
+      "p": {
+        "UUID": "57A6E000-0041-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "JavaScript Result",
+            "OutputUUID": "57A6E000-0040-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "57A6E000-0042-4A00-9000-000000000001",
+        "WFDictionaryKey": "url",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary",
+            "OutputUUID": "57A6E000-0041-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     },
@@ -122,13 +146,42 @@
       "p": {
         "WFInput": {
           "Value": {
-            "OutputName": "URLs",
-            "OutputUUID": "57A6E000-0022-4A00-9000-000000000001",
+            "OutputName": "Dictionary Value",
+            "OutputUUID": "57A6E000-0042-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
         "WFVariableName": "Payload"
+      }
+    },
+    {
+      "id": "is.workflow.actions.getvalueforkey",
+      "p": {
+        "UUID": "57A6E000-0044-4A00-9000-000000000001",
+        "WFDictionaryKey": "html",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary",
+            "OutputUUID": "57A6E000-0041-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary Value",
+            "OutputUUID": "57A6E000-0044-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "Html"
       }
     },
     {
@@ -202,12 +255,26 @@
       }
     },
     {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "57A6E000-0045-4A00-9000-000000000001",
+        "Input": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Html"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFCountType": "Characters"
+      }
+    },
+    {
       "id": "is.workflow.actions.gettext",
       "p": {
         "UUID": "57A6E000-0030-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
-            "string": "{\"op\":\"stage\",\"type\":\"￼\",\"chars\":\"￼\",\"build\":\"#BUILD#\"}",
+            "string": "{\"op\":\"stage\",\"type\":\"￼\",\"chars\":\"￼\",\"html\":\"￼\",\"build\":\"#BUILD#\"}",
             "attachmentsByRange": {
               "{22, 1}": {
                 "OutputName": "Type",
@@ -217,6 +284,11 @@
               "{34, 1}": {
                 "OutputName": "Count",
                 "OutputUUID": "57A6E000-0008-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{45, 1}": {
+                "OutputName": "Count",
+                "OutputUUID": "57A6E000-0045-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             }
@@ -297,6 +369,45 @@
           },
           "WFSerializationType": "WFTextTokenString"
         }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0400-4A00-9000-000000000001",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "Variable",
+              "VariableName": "Html"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "57A6E000-0047-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Html"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0400-4A00-9000-000000000001",
+        "UUID": "57A6E000-0048-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
       }
     },
     {
