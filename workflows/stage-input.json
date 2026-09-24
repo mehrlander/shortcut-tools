@@ -1,0 +1,252 @@
+{
+  "name": "Stage-Input",
+  "label": "Stage-Input: send what was shared to the Web Tools stage (17 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0100-4A00-9000-000000000001",
+        "WFCondition": 101,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "ExtensionInput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getclipboard",
+      "p": {
+        "UUID": "57A6E000-0002-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Clipboard",
+            "OutputUUID": "57A6E000-0002-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "Item"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0100-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "Item"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0100-4A00-9000-000000000001",
+        "UUID": "57A6E000-0006-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "57A6E000-0007-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Item"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "57A6E000-0008-4A00-9000-000000000001",
+        "Input": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "57A6E000-0007-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFCountType": "Characters"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0200-4A00-9000-000000000001",
+        "WFCondition": 1003,
+        "WFControlFlowMode": 0,
+        "WFNumberValue": "1",
+        "WFAnotherNumber": "4000",
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Count",
+              "OutputUUID": "57A6E000-0008-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.urlencode",
+      "p": {
+        "UUID": "57A6E000-0010-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Text",
+                "OutputUUID": "57A6E000-0007-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "57A6E000-0011-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "string": "https://mehrlander.github.io/web-tools/app/#take=￼",
+            "attachmentsByRange": {
+              "{49, 1}": {
+                "OutputName": "URL Encoded Text",
+                "OutputUUID": "57A6E000-0010-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "57A6E000-0012-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "57A6E000-0011-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0200-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.setclipboard",
+      "p": {
+        "UUID": "57A6E000-0014-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Item"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "57A6E000-0015-4A00-9000-000000000001",
+        "WFURLActionURL": {
+          "Value": {
+            "string": "https://mehrlander.github.io/web-tools/app/?view=stage"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "57A6E000-0016-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "URL",
+            "OutputUUID": "57A6E000-0015-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0200-4A00-9000-000000000001",
+        "UUID": "57A6E000-0017-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    }
+  ],
+  "workflow": {
+    "WFWorkflowTypes": [
+      "ActionExtension",
+      "WFWorkflowTypeShowInSearch"
+    ],
+    "WFWorkflowInputContentItemClasses": [
+      "WFAppContentItem",
+      "WFAppStoreAppContentItem",
+      "WFArticleContentItem",
+      "WFContactContentItem",
+      "WFDateContentItem",
+      "WFEmailAddressContentItem",
+      "WFFolderContentItem",
+      "WFGenericFileContentItem",
+      "WFImageContentItem",
+      "WFiTunesProductContentItem",
+      "WFLocationContentItem",
+      "WFDCMapsLinkContentItem",
+      "WFAVAssetContentItem",
+      "WFPDFContentItem",
+      "WFPhoneNumberContentItem",
+      "WFRichTextContentItem",
+      "WFSafariWebPageContentItem",
+      "WFStringContentItem",
+      "WFURLContentItem"
+    ]
+  }
+}

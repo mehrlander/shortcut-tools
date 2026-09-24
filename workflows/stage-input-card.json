@@ -1,0 +1,18 @@
+{
+  "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input (1 action)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "57A6E000-0900-4A00-9000-000000000001",
+        "WFWorkflowName": "Stage-Input",
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
