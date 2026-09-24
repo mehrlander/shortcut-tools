@@ -1,6 +1,6 @@
 {
   "name": "Stage-Input",
-  "label": "Stage-Input: send what was shared to the Web Tools stage (17 actions)",
+  "label": "Stage-Input: send what was shared to the Web Tools stage (27 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
@@ -67,6 +67,78 @@
       }
     },
     {
+      "id": "is.workflow.actions.getitemtype",
+      "p": {
+        "UUID": "57A6E000-0020-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Item"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0300-4A00-9000-000000000001",
+        "WFCondition": 4,
+        "WFConditionalActionString": "Safari web page",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Type",
+              "OutputUUID": "57A6E000-0020-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.link",
+      "p": {
+        "UUID": "57A6E000-0022-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "Item"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.setvariable",
+      "p": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "URLs",
+            "OutputUUID": "57A6E000-0022-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFVariableName": "Payload"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0300-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
       "id": "is.workflow.actions.detect.text",
       "p": {
         "UUID": "57A6E000-0007-4A00-9000-000000000001",
@@ -80,10 +152,9 @@
       }
     },
     {
-      "id": "is.workflow.actions.count",
+      "id": "is.workflow.actions.setvariable",
       "p": {
-        "UUID": "57A6E000-0008-4A00-9000-000000000001",
-        "Input": {
+        "WFInput": {
           "Value": {
             "OutputName": "Text",
             "OutputUUID": "57A6E000-0007-4A00-9000-000000000001",
@@ -91,7 +162,82 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
+        "WFVariableName": "Payload"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "57A6E000-0300-4A00-9000-000000000001",
+        "UUID": "57A6E000-0027-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "57A6E000-0028-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "Payload"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "57A6E000-0008-4A00-9000-000000000001",
+        "Input": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "57A6E000-0028-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
         "WFCountType": "Characters"
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "57A6E000-0030-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"stage\",\"type\":\"￼\",\"chars\":\"￼\",\"build\":\"#BUILD#\"}",
+            "attachmentsByRange": {
+              "{22, 1}": {
+                "OutputName": "Type",
+                "OutputUUID": "57A6E000-0020-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{34, 1}": {
+                "OutputName": "Count",
+                "OutputUUID": "57A6E000-0008-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "57A6E000-0031-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "57A6E000-0030-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
       }
     },
     {
@@ -124,7 +270,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "OutputName": "Text",
-                "OutputUUID": "57A6E000-0007-4A00-9000-000000000001",
+                "OutputUUID": "57A6E000-0028-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             },
