@@ -1,6 +1,6 @@
 {
   "name": "Dump-FolderZip",
-  "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed (14 actions)",
+  "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed, ending on the log page (20 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getmyworkflows",
@@ -305,6 +305,73 @@
       }
     },
     {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D8EC1000-F900-4A00-9000-000000000001",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Dictionary Value",
+              "OutputUUID": "D8EC1000-0006-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "D8EC1000-F001-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"dump\",\"name\":\"Dump-FolderZip\",\"file\":\"￼\",\"build\":\"#BUILD#\"}",
+            "attachmentsByRange": {
+              "{45, 1}": {
+                "OutputName": "Dictionary Value",
+                "OutputUUID": "D8EC1000-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "D8EC1000-F002-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "D8EC1000-F001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.showwebpage",
+      "p": {
+        "UUID": "D8EC1000-F003-4A00-9000-000000000001",
+        "WFURL": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D8EC1000-F900-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
       "id": "is.workflow.actions.showresult",
       "p": {
         "UUID": "D8EC1000-0007-4A00-9000-000000000001",
@@ -326,6 +393,14 @@
           },
           "WFSerializationType": "WFTextTokenString"
         }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "D8EC1000-F900-4A00-9000-000000000001",
+        "UUID": "D8EC1000-F004-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
       }
     }
   ]

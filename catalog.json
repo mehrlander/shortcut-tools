@@ -381,14 +381,15 @@
   },
   {
    "file": "dump-folder-zip.json",
-   "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed (14 actions)",
+   "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed, ending on the log page (20 actions)",
    "name": "Dump-FolderZip",
-   "actions": 14,
-   "build": "edc9e16",
+   "actions": 20,
+   "build": "c0f1d0c",
    "settings": false,
    "targets": [
     "Check-ApiReply",
-    "Inject-🎟️GitHubToken"
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
    ],
    "sketch": [
     "  0 my shortcuts $ask",
@@ -404,7 +405,13 @@
     " 10 run Check-ApiReply ← «9»",
     " 11 value for \"content\" ← «9»",
     " 12 value for \"name\" ← «11»",
-    " 13 show Zipped «5» Confirmed: «12»"
+    " 13 if «12» has value",
+    " 14   text {\"op\":\"dump\",\"name\":\"Dump-FolderZip\",\"file\":\"«12… (69 chars)",
+    " 15   run Log-Repo ← «14»",
+    " 16   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 17 else",
+    " 18   show Zipped «5» Confirmed: «12»",
+    " 19 end if"
    ]
   },
   {
@@ -428,14 +435,15 @@
   },
   {
    "file": "dump-named.json",
-   "label": "Dump-Named: the named shortcuts, zipped and committed in one request (22 actions)",
+   "label": "Dump-Named: the named shortcuts, zipped and committed in one request, ending on the log page (28 actions)",
    "name": "Dump-Named",
-   "actions": 22,
-   "build": "3595cce",
+   "actions": 28,
+   "build": "c4fd8aa",
    "settings": false,
    "targets": [
     "Check-ApiReply",
-    "Inject-🎟️GitHubToken"
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
    ],
    "sketch": [
     "  0 replace \"[⟦⟧]+\"",
@@ -459,19 +467,26 @@
     " 18 run Check-ApiReply ← «17»",
     " 19 value for \"content\" ← «17»",
     " 20 value for \"name\" ← «19»",
-    " 21 show Zipped «13» Confirmed: «20»"
+    " 21 if «20» has value",
+    " 22   text {\"op\":\"dump\",\"name\":\"Dump-Named\",\"file\":\"«20»\",\"… (65 chars)",
+    " 23   run Log-Repo ← «22»",
+    " 24   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 25 else",
+    " 26   show Zipped «13» Confirmed: «20»",
+    " 27 end if"
    ]
   },
   {
    "file": "dump-recent-zip.json",
-   "label": "Dump-RecentZip: every shortcut modified in the last N days, zipped whole and committed (22 actions)",
+   "label": "Dump-RecentZip: every shortcut modified in the last N days, zipped whole and committed, ending on the log page (28 actions)",
    "name": "Dump-RecentZip",
-   "actions": 22,
-   "build": "c3ef427",
+   "actions": 28,
+   "build": "f4081c5",
    "settings": false,
    "targets": [
     "Check-ApiReply",
-    "Inject-🎟️GitHubToken"
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
    ],
    "sketch": [
     "  0 number \"7\"",
@@ -495,7 +510,13 @@
     " 18 run Check-ApiReply ← «17»",
     " 19 value for \"content\" ← «17»",
     " 20 value for \"name\" ← «19»",
-    " 21 show Zipped «13» Confirmed: «20»"
+    " 21 if «20» has value",
+    " 22   text {\"op\":\"dump\",\"name\":\"Dump-RecentZip\",\"file\":\"«20… (69 chars)",
+    " 23   run Log-Repo ← «22»",
+    " 24   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 25 else",
+    " 26   show Zipped «13» Confirmed: «20»",
+    " 27 end if"
    ]
   },
   {
@@ -1019,27 +1040,27 @@
   },
   {
    "file": "log-repo.json",
-   "label": "Log-Repo: commit the input to the repo log, clipboard as fallback, input back out (12 actions)",
+   "label": "Log-Repo: commit the input to shortcuts/log/, silently (12 actions)",
    "name": "Log-Repo",
    "actions": 12,
-   "build": "a2ba3e9",
+   "build": "2e9a1f2",
    "settings": false,
    "targets": [
     "Check-ApiReply",
     "Inject-🎟️GitHubToken"
    ],
    "sketch": [
-    "  0 clipboard <-",
-    "  1 date",
-    "  2 format date \"Custom\"",
-    "  3 base64",
-    "  4 text \"Bearer 🎟️GitHubToken\"",
-    "  5 run Inject-🎟️GitHubToken ← «4»",
-    "  6 fetch https://api.github.com/repos/mehrlander/web-tool… (89 chars)",
-    "  7 run Check-ApiReply ← «6»",
-    "  8 value for \"content\" ← «6»",
-    "  9 value for \"name\" ← «8»",
-    " 10 show Logged «2» Confirmed: «9»",
+    "  0 # \"Log-Repo build 2e9a1f2. Silent on success since … (188 chars)\"",
+    "  1 clipboard <-",
+    "  2 date",
+    "  3 format date \"Custom\"",
+    "  4 base64",
+    "  5 text \"Bearer 🎟️GitHubToken\"",
+    "  6 run Inject-🎟️GitHubToken ← «5»",
+    "  7 fetch https://api.github.com/repos/mehrlander/web-tool… (89 chars)",
+    "  8 run Check-ApiReply ← «7»",
+    "  9 value for \"content\" ← «7»",
+    " 10 value for \"name\" ← «9»",
     " 11 output $input"
    ]
   },
