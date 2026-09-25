@@ -1,6 +1,6 @@
 {
   "name": "Stage-Input",
-  "label": "Stage-Input: send what was shared to the Web Tools stage (33 actions)",
+  "label": "Stage-Input: send what was shared to the Web Tools stage (29 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.conditional",
@@ -109,67 +109,7 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFJavaScript": "const h = location.hostname || 'page';\ncompletion(JSON.stringify([\n  { name: h + '-link.txt', text: location.href },\n  { name: h + '.html', text: '<!DOCTYPE html>\\n' + document.documentElement.outerHTML }\n]));"
-      }
-    },
-    {
-      "id": "is.workflow.actions.setitemname",
-      "p": {
-        "UUID": "57A6E000-0041-4A00-9000-000000000001",
-        "WFInput": {
-          "Value": {
-            "OutputName": "JavaScript Result",
-            "OutputUUID": "57A6E000-0040-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFName": "stage.json"
-      }
-    },
-    {
-      "id": "is.workflow.actions.detect.text",
-      "p": {
-        "UUID": "57A6E000-0042-4A00-9000-000000000001",
-        "WFInput": {
-          "Value": {
-            "OutputName": "Renamed Item",
-            "OutputUUID": "57A6E000-0041-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.makezip",
-      "p": {
-        "UUID": "57A6E000-0043-4A00-9000-000000000001",
-        "WFArchiveFormat": "gz",
-        "WFInput": {
-          "Value": {
-            "OutputName": "Text",
-            "OutputUUID": "57A6E000-0042-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        },
-        "WFZIPName": ""
-      }
-    },
-    {
-      "id": "is.workflow.actions.base64encode",
-      "p": {
-        "UUID": "57A6E000-0044-4A00-9000-000000000001",
-        "WFBase64LineBreakMode": "None",
-        "WFInput": {
-          "Value": {
-            "OutputName": "Archive",
-            "OutputUUID": "57A6E000-0043-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
+        "WFJavaScript": "(async () => {\n  const h = location.hostname || 'page';\n  const items = [\n    { name: h + '-link.txt', text: location.href },\n    { name: h + '.html', text: '<!DOCTYPE html>\\n' + document.documentElement.outerHTML }\n  ];\n  const gz = await new Response(new Blob([JSON.stringify(items)]).stream()\n    .pipeThrough(new CompressionStream('gzip'))).arrayBuffer();\n  const u = new Uint8Array(gz);\n  let s = '';\n  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));\n  completion(btoa(s));\n})().catch(e => completion('ERROR ' + e));"
       }
     },
     {
@@ -178,8 +118,8 @@
         "UUID": "57A6E000-0045-4A00-9000-000000000001",
         "Input": {
           "Value": {
-            "OutputName": "Base64 Encoded",
-            "OutputUUID": "57A6E000-0044-4A00-9000-000000000001",
+            "OutputName": "JavaScript Result",
+            "OutputUUID": "57A6E000-0040-4A00-9000-000000000001",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -235,8 +175,8 @@
             "string": "https://mehrlander.github.io/web-tools/app/#gz=￼",
             "attachmentsByRange": {
               "{47, 1}": {
-                "OutputName": "Base64 Encoded",
-                "OutputUUID": "57A6E000-0044-4A00-9000-000000000001",
+                "OutputName": "JavaScript Result",
+                "OutputUUID": "57A6E000-0040-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             }
