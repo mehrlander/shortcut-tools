@@ -183,18 +183,37 @@
 				</dict>
 				<key>WFJavaScript</key>
 				<string>(async () =&gt; {
+  let step = 'read';
+  try {
   const h = location.hostname || 'page';
-  const items = [
+  const json = JSON.stringify([
     { name: h + '-link.txt', text: location.href },
     { name: h + '.html', text: '&lt;!DOCTYPE html&gt;\n' + document.documentElement.outerHTML }
-  ];
-  const gz = await new Response(new Blob([JSON.stringify(items)]).stream()
-    .pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
-  const u = new Uint8Array(gz);
+  ]);
+  const bytes = new TextEncoder().encode(json);
+  // Safari's CompressionStream refused a Blob stream's chunks ("Invalid type
+  // should be ArrayBuffer"), so hand it an ArrayBuffer, then a view if that fails.
+  const gzip = async (chunk) =&gt; {
+    const cs = new CompressionStream('gzip');
+    const w = cs.writable.getWriter();
+    w.write(chunk); w.close();
+    const r = cs.readable.getReader(), parts = [];
+    let n = 0;
+    for (;;) { const { done, value } = await r.read(); if (done) break; parts.push(value); n += value.byteLength; }
+    const out = new Uint8Array(n); let o = 0;
+    for (const p of parts) { out.set(new Uint8Array(p.buffer || p, p.byteOffset || 0, p.byteLength), o); o += p.byteLength; }
+    return out;
+  };
+  step = 'gzip';
+  let gz;
+  try { gz = await gzip(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)); }
+  catch (e) { step = 'gzip-view'; gz = await gzip(bytes); }
+  step = 'base64';
   let s = '';
-  for (let i = 0; i &lt; u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  for (let i = 0; i &lt; gz.length; i += 0x8000) s += String.fromCharCode.apply(null, gz.subarray(i, i + 0x8000));
   completion(btoa(s));
-})().catch(e =&gt; completion('ERROR ' + e));</string>
+  } catch (e) { completion('ERROR ' + step + ': ' + e); }
+})();</string>
 			</dict>
 		</dict>
 		<dict>
@@ -255,7 +274,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"stage","type":"￼","gz":"￼","build":"0f86c00"}</string>
+						<string>{"op":"stage","type":"￼","gz":"￼","build":"9ac9e06"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -442,7 +461,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"stage","type":"￼","chars":"￼","build":"0f86c00"}</string>
+						<string>{"op":"stage","type":"￼","chars":"￼","build":"9ac9e06"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

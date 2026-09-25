@@ -1767,7 +1767,7 @@
    "label": "Stage-Input: send what was shared to the Web Tools stage (29 actions)",
    "name": "Stage-Input",
    "actions": 29,
-   "build": "0f86c00",
+   "build": "9ac9e06",
    "settings": true,
    "targets": [
     "Log-Repo"
@@ -1783,7 +1783,7 @@
     "  7 if «6» is Safari Web Page",
     "  8   js on page",
     "  9   count",
-    " 10   text {\"op\":\"stage\",\"type\":\"«6»\",\"gz\":\"«9»\",\"build\":\"0… (56 chars)",
+    " 10   text {\"op\":\"stage\",\"type\":\"«6»\",\"gz\":\"«9»\",\"build\":\"9… (56 chars)",
     " 11   run Log-Repo ← «10»",
     " 12   url https://mehrlander.github.io/web-tools/app/#gz=«… (50 chars)",
     " 13   open «12»",
