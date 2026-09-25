@@ -132,8 +132,10 @@ test("--install hands the name and the payload address to Library-Paste", () => 
     "--install", "--ref", "abc123"], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   const link = out.trim();
   assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Library-Paste&input=text&text=/);
-  const [name, url] = decodeURIComponent(link.split("&text=")[1]).split("\n");
+  const [name, url, build] = decodeURIComponent(link.split("&text=")[1]).split("\n");
   assert.strictEqual(name, "Stage-Input");
+  const builds = JSON.parse(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"));
+  assert.strictEqual(build, builds["Stage-Input"], "the third line is the build the installed copy carries");
   assert.strictEqual(url, "https://raw.githubusercontent.com/mehrlander/shortcut-tools/abc123/packed/stage-input.json");
   const via = pack("workflows/library-paste.json", "--install", "--via", "Library-Install").trim();
   assert.match(via, /name=Library-Install&/, "--via bootstraps the receiver through the older one");

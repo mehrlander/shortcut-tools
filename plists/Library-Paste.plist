@@ -83,67 +83,31 @@
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.gettext</string>
+			<string>is.workflow.actions.getitemfromlist</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
+				<key>CustomOutputName</key>
+				<string>Build</string>
 				<key>UUID</key>
-				<string>B0BE0000-1310-4A00-9000-000000000001</string>
-				<key>WFTextActionText</key>
-				<dict>
-					<key>Value</key>
-					<dict>
-						<key>attachmentsByRange</key>
-						<dict>
-							<key>{22, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Shortcut name</string>
-								<key>OutputUUID</key>
-								<string>B0BE0000-1302-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-							<key>{33, 1}</key>
-							<dict>
-								<key>OutputName</key>
-								<string>Payload URL</string>
-								<key>OutputUUID</key>
-								<string>B0BE0000-1303-4A00-9000-000000000001</string>
-								<key>Type</key>
-								<string>ActionOutput</string>
-							</dict>
-						</dict>
-						<key>string</key>
-						<string>{"op":"paste","name":"￼","from":"￼","build":"79e02cd"}</string>
-					</dict>
-					<key>WFSerializationType</key>
-					<string>WFTextTokenString</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.runworkflow</string>
-			<key>WFWorkflowActionParameters</key>
-			<dict>
-				<key>UUID</key>
-				<string>B0BE0000-1311-4A00-9000-000000000001</string>
+				<string>B0BE0000-1320-4A00-9000-000000000001</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>OutputName</key>
-						<string>Text</string>
+						<string>Split Text</string>
 						<key>OutputUUID</key>
-						<string>B0BE0000-1310-4A00-9000-000000000001</string>
+						<string>B0BE0000-1301-4A00-9000-000000000001</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenAttachment</string>
 				</dict>
-				<key>WFWorkflowName</key>
-				<string>Log-Repo</string>
+				<key>WFItemIndex</key>
+				<string>3</string>
+				<key>WFItemSpecifier</key>
+				<string>Item At Index</string>
 			</dict>
 		</dict>
 		<dict>
@@ -234,7 +198,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>B0BE0000-1399-4A00-9000-000000000001</string>
+				<string>B0BE0000-1398-4A00-9000-000000000001</string>
 				<key>WFCondition</key>
 				<integer>100</integer>
 				<key>WFControlFlowMode</key>
@@ -258,6 +222,224 @@
 						<string>WFTextTokenAttachment</string>
 					</dict>
 				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettypeaction</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1321-4A00-9000-000000000001</string>
+				<key>WFFileType</key>
+				<string>public.json</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Shortcuts</string>
+						<key>OutputUUID</key>
+						<string>B0BE0000-1305-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.detect.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1322-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>File of Type</string>
+						<key>OutputUUID</key>
+						<string>B0BE0000-1321-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>B0BE0000-1397-4A00-9000-000000000001</string>
+				<key>WFCondition</key>
+				<integer>99</integer>
+				<key>WFConditionalActionString</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Build</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1320-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFControlFlowMode</key>
+				<integer>0</integer>
+				<key>WFInput</key>
+				<dict>
+					<key>Type</key>
+					<string>Variable</string>
+					<key>Variable</key>
+					<dict>
+						<key>Value</key>
+						<dict>
+							<key>OutputName</key>
+							<string>Text</string>
+							<key>OutputUUID</key>
+							<string>B0BE0000-1322-4A00-9000-000000000001</string>
+							<key>Type</key>
+							<string>ActionOutput</string>
+						</dict>
+						<key>WFSerializationType</key>
+						<string>WFTextTokenAttachment</string>
+					</dict>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.alert</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1323-4A00-9000-000000000001</string>
+				<key>WFAlertActionCancelButtonShown</key>
+				<true/>
+				<key>WFAlertActionMessage</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut name</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1302-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{19, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Build</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1320-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼ is already build ￼.
+
+OK installs it again anyway. Cancel stops here.</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFAlertActionTitle</key>
+				<string>Already installed</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>B0BE0000-1397-4A00-9000-000000000001</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.alert</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1324-4A00-9000-000000000001</string>
+				<key>WFAlertActionCancelButtonShown</key>
+				<true/>
+				<key>WFAlertActionMessage</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut name</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1302-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{30, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Build</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1320-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼ will be replaced with build ￼.
+
+When the editor opens, paste.</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFAlertActionTitle</key>
+				<string>Replacing</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>B0BE0000-1397-4A00-9000-000000000001</string>
+				<key>UUID</key>
+				<string>B0BE0000-1325-4A00-9000-000000000001</string>
+				<key>WFControlFlowMode</key>
+				<integer>2</integer>
 			</dict>
 		</dict>
 		<dict>
@@ -300,11 +482,142 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>GroupingIdentifier</key>
-				<string>B0BE0000-1399-4A00-9000-000000000001</string>
+				<string>B0BE0000-1398-4A00-9000-000000000001</string>
+				<key>WFControlFlowMode</key>
+				<integer>1</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.alert</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1326-4A00-9000-000000000001</string>
+				<key>WFAlertActionCancelButtonShown</key>
+				<true/>
+				<key>WFAlertActionMessage</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut name</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1302-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{16, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Build</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1320-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>￼ is new: build ￼.
+
+When the editor opens, paste.</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFAlertActionTitle</key>
+				<string>Installing</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.conditional</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>GroupingIdentifier</key>
+				<string>B0BE0000-1398-4A00-9000-000000000001</string>
 				<key>UUID</key>
 				<string>B0BE0000-1308-4A00-9000-000000000001</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1310-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{22, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Shortcut name</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1302-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{33, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Payload URL</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1303-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+							<key>{46, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Build</string>
+								<key>OutputUUID</key>
+								<string>B0BE0000-1320-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>{"op":"paste","name":"￼","from":"￼","target":"￼","build":"57dfe00"}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0BE0000-1311-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>B0BE0000-1310-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Log-Repo</string>
 			</dict>
 		</dict>
 		<dict>

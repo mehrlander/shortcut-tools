@@ -154,11 +154,16 @@ def install(chain_path, ref, via=INSTALL_VIA):
     if not name:
         raise SystemExit("%s declares no name, so there is nothing to install" % chain_path)
     url = address(chain_path, ref).split("text=", 1)[1]
-    text = name + "\n" + urllib.parse.unquote(url)
+    # The third line is the build Library-Paste looks for in the installed copy,
+    # so a second tap on the same link says "already installed" before changing
+    # anything. Only a chain that stamps #BUILD# somewhere can be recognised.
+    text = name + "\n" + urllib.parse.unquote(url) + "\n" + build_id(chain)
     link = "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (
         via, urllib.parse.quote(text, safe=""))
     types = (chain.get("workflow") or {}).get("WFWorkflowTypes") or []
     toggles = [TOGGLES[t] for t in types if t in TOGGLES]
+    if "#BUILD#" not in json.dumps(chain, ensure_ascii=False):
+        toggles.append("(no #BUILD# in this chain, so the up-front check cannot recognise it)")
     return link, toggles
 
 
