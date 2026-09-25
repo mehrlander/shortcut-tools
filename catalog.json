@@ -877,10 +877,10 @@
   },
   {
    "file": "library-paste.json",
-   "label": "Library-Paste: install by paste, saying first whether that build is already installed (23 actions)",
+   "label": "Library-Paste: install by paste, saying first whether that build is already installed (25 actions)",
    "name": "Library-Paste",
-   "actions": 23,
-   "build": "57dfe00",
+   "actions": 25,
+   "build": "f18efdb",
    "settings": true,
    "targets": [
     "Copy-ActionFromUrl",
@@ -901,15 +901,17 @@
     " 11   else",
     " 12     alert «1» will be replaced with build «3». When the ed… (66 chars)",
     " 13   end if",
-    " 14   com.apple.shortcuts.DeleteWorkflowAction",
-    " 15 else",
-    " 16   alert «1» is new: build «3». When the editor opens, pa… (52 chars)",
-    " 17 end if",
-    " 18 text {\"op\":\"paste\",\"name\":\"«1»\",\"from\":\"«2»\",\"target\"… (73 chars)",
-    " 19 run Log-Repo ← «18»",
-    " 20 run Copy-ActionFromUrl ← «2»",
-    " 21 com.apple.shortcuts.CreateWorkflowAction",
-    " 22 com.apple.shortcuts.OpenWorkflowAction"
+    " 14 else",
+    " 15   alert «1» is new: build «3». When the editor opens, pa… (52 chars)",
+    " 16 end if",
+    " 17 text {\"op\":\"paste\",\"name\":\"«1»\",\"from\":\"«2»\",\"target\"… (73 chars)",
+    " 18 run Log-Repo ← «17»",
+    " 19 if «5» has value",
+    " 20   com.apple.shortcuts.DeleteWorkflowAction",
+    " 21 end if",
+    " 22 run Copy-ActionFromUrl ← «2»",
+    " 23 com.apple.shortcuts.CreateWorkflowAction",
+    " 24 com.apple.shortcuts.OpenWorkflowAction"
    ]
   },
   {

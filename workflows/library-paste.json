@@ -1,6 +1,6 @@
 {
   "name": "Library-Paste",
-  "label": "Library-Paste: install by paste, saying first whether that build is already installed (23 actions)",
+  "label": "Library-Paste: install by paste, saying first whether that build is already installed (25 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.text.split",
@@ -262,26 +262,6 @@
       }
     },
     {
-      "id": "com.apple.shortcuts.DeleteWorkflowAction",
-      "p": {
-        "UUID": "B0BE0000-1307-4A00-9000-000000000001",
-        "AppIntentDescriptor": {
-          "AppIntentIdentifier": "DeleteWorkflowAction",
-          "BundleIdentifier": "com.apple.shortcuts",
-          "Name": "Shortcuts",
-          "TeamIdentifier": "0000000000"
-        },
-        "entities": {
-          "Value": {
-            "OutputName": "Shortcuts",
-            "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
-            "Type": "ActionOutput"
-          },
-          "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
       "id": "is.workflow.actions.conditional",
       "p": {
         "GroupingIdentifier": "B0BE0000-1398-4A00-9000-000000000001",
@@ -364,6 +344,53 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1396-4A00-9000-000000000001",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Shortcuts",
+              "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.DeleteWorkflowAction",
+      "p": {
+        "UUID": "B0BE0000-1307-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "DeleteWorkflowAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "entities": {
+          "Value": {
+            "OutputName": "Shortcuts",
+            "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1396-4A00-9000-000000000001",
+        "UUID": "B0BE0000-1330-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
       }
     },
     {
