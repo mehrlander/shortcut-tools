@@ -75,3 +75,18 @@ test("an incoming zip is waiting, and one with an unreadable entry is refused wh
   assert.match(f.stderr, /unreadable.*Bad\.wflow/);
   assert.deepStrictEqual(fs.readdirSync(path.join(dir, "shortcuts", "dumps")), [], "nothing written");
 });
+
+test("--accept-unreadable folds a zip past the one entry it names, and only that one", () => {
+  const dir = fakePrivate([]);
+  const zipPath = path.join(dir, "shortcuts", "incoming", "2026-09-25-120000.zip");
+  const py = `import zipfile,plistlib\nz=zipfile.ZipFile(${JSON.stringify(zipPath)},"w")\n`
+    + `z.writestr("Good.wflow", plistlib.dumps({"WFWorkflowActions": []}))\nz.writestr("Bad.wflow", b"not a plist")\nz.close()`;
+  assert.strictEqual(spawnSync("python3", ["-c", py]).status, 0);
+  fs.mkdirSync(path.join(dir, "shortcuts", "dumps"));
+  const other = tool("--private", dir, "--accept-unreadable", "Other");
+  assert.notStrictEqual(other.status, 0);
+  assert.deepStrictEqual(fs.readdirSync(path.join(dir, "shortcuts", "dumps")), [], "a different name accepts nothing");
+  const f = tool("--private", dir, "--accept-unreadable", "Bad");
+  assert.match(f.stderr, /accepted unreadable: Bad\.wflow/);
+  assert.deepStrictEqual(fs.readdirSync(path.join(dir, "shortcuts", "dumps")), ["2026-09-25-120000-dump.zip"]);
+});

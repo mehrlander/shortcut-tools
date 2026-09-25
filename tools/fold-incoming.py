@@ -78,6 +78,12 @@ def waiting(sc):
     return sorted([*inc.glob("*.txt"), *inc.glob("*.zip")])
 
 
+# Shortcut names whose export is known not to parse, accepted by name with
+# --accept-unreadable. The device itself writes them that way, so no re-export
+# fixes it, and refusing the whole zip for one would keep 689 others out.
+ACCEPT = set()
+
+
 def fold_zip(path, sc):
     """A zip the device already packaged: check every entry, then move it into dumps/."""
     import plistlib
@@ -92,6 +98,10 @@ def fold_zip(path, sc):
                 plistlib.loads(z.read(n))
             except Exception:
                 bad.append(n)
+    known = [n for n in bad if n.rsplit(".", 1)[0] in ACCEPT]
+    for n in known:
+        print("  accepted unreadable: %s" % n, file=sys.stderr)
+    bad = [n for n in bad if n not in known]
     if bad:
         raise SystemExit("%s has %d unreadable entr(ies), nothing written: %s"
                          % (path.name, len(bad), ", ".join(bad)))
@@ -173,7 +183,10 @@ def main():
     ap.add_argument("--private", help="path to a web-tools-private checkout")
     ap.add_argument("--check", action="store_true", help="report what is waiting; exit 1 if anything is")
     ap.add_argument("--regen", action="store_true", help="regenerate derivatives only; fold nothing")
+    ap.add_argument("--accept-unreadable", action="append", default=[], metavar="NAME",
+                    help="fold a zip even though this shortcut's entry does not parse; repeatable")
     args = ap.parse_args()
+    ACCEPT.update(args.accept_unreadable)
 
     private = find_private(args.private)
     if not private:

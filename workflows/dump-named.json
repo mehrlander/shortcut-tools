@@ -60,6 +60,24 @@
       }
     },
     {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "A6E00000-9004-4A00-9000-000000009004",
+        "WFControlFlowMode": 0,
+        "WFCondition": 100,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "Variable",
+              "VariableName": "Repeat Item"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
       "id": "is.workflow.actions.filter.files",
       "p": {
         "UUID": "B0BE0000-0504-4A00-9000-000000000001",
@@ -144,6 +162,14 @@
       }
     },
     {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "A6E00000-9004-4A00-9000-000000009004",
+        "WFControlFlowMode": 2,
+        "UUID": "A6E00000-0007-4A00-9000-000000000001"
+      }
+    },
+    {
       "id": "is.workflow.actions.repeat.each",
       "p": {
         "GroupingIdentifier": "A6E00000-9002-4A00-9000-000000009002",
@@ -159,6 +185,36 @@
           "Value": {
             "Type": "Variable",
             "VariableName": "Found"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "A6E00000-0008-4A00-9000-000000000001",
+        "WFCountType": "Items",
+        "Input": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "A6E00000-0001-4A00-9000-000000000001",
+            "OutputName": "Split Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.count",
+      "p": {
+        "UUID": "A6E00000-0009-4A00-9000-000000000001",
+        "WFCountType": "Items",
+        "Input": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "A6E00000-0006-4A00-9000-000000000001",
+            "OutputName": "Found"
           },
           "WFSerializationType": "WFTextTokenAttachment"
         }
@@ -465,11 +521,21 @@
         "UUID": "D8EC1000-F001-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
-            "string": "{\"op\":\"dump\",\"name\":\"Dump-Named\",\"file\":\"￼\",\"build\":\"#BUILD#\"}",
+            "string": "{\"op\":\"dump\",\"name\":\"Dump-Named\",\"file\":\"￼\",\"names\":￼,\"found\":￼,\"build\":\"#BUILD#\"}",
             "attachmentsByRange": {
               "{41, 1}": {
                 "OutputName": "Dictionary Value",
                 "OutputUUID": "D8EC1000-0006-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{52, 1}": {
+                "OutputName": "Count",
+                "OutputUUID": "A6E00000-0008-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{62, 1}": {
+                "OutputName": "Count",
+                "OutputUUID": "A6E00000-0009-4A00-9000-000000000001",
                 "Type": "ActionOutput"
               }
             }
