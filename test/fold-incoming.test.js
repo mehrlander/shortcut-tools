@@ -57,3 +57,21 @@ test("harvest --config reproduces the same chains as the flags", () => {
   assert.deepStrictEqual(la, lb);
   for (const f of la) assert.strictEqual(fs.readFileSync(path.join(a, f), "utf8"), fs.readFileSync(path.join(b, f), "utf8"), f);
 });
+
+// Dump-RecentZip and Dump-Named commit a zip the device already packaged. It
+// waits in incoming/ like a .txt, and folds only if every entry is a plist.
+test("an incoming zip is waiting, and one with an unreadable entry is refused whole", () => {
+  const dir = fakePrivate(["2026-09-25-120000.zip"]);
+  const r = tool("--check", "--private", dir);
+  assert.strictEqual(r.status, 1);
+  assert.match(r.stderr, /2026-09-25-120000\.zip/);
+  const zipPath = path.join(dir, "shortcuts", "incoming", "2026-09-25-120000.zip");
+  const py = `import zipfile,plistlib\nz=zipfile.ZipFile(${JSON.stringify(zipPath)},"w")\n`
+    + `z.writestr("Good.wflow", plistlib.dumps({"WFWorkflowActions": []}))\nz.writestr("Bad.wflow", b"not a plist")\nz.close()`;
+  assert.strictEqual(spawnSync("python3", ["-c", py]).status, 0);
+  fs.mkdirSync(path.join(dir, "shortcuts", "dumps"));
+  const f = tool("--private", dir);
+  assert.notStrictEqual(f.status, 0);
+  assert.match(f.stderr, /unreadable.*Bad\.wflow/);
+  assert.deepStrictEqual(fs.readdirSync(path.join(dir, "shortcuts", "dumps")), [], "nothing written");
+});

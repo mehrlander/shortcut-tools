@@ -20,7 +20,10 @@ web-tools-private (or `--private PATH`, or `$WEB_TOOLS_PRIVATE`):
 
 1. Each `incoming/<stamp>.txt` becomes `dumps/<stamp>-named.zip`, the shape
    `dump-folder-zip` produces, through `read-incoming.py`. A file that parses to
-   an unreadable record stops the run before anything is written.
+   an unreadable record stops the run before anything is written. Each
+   `incoming/<stamp>.zip`, which `Dump-RecentZip` and `Dump-Named` commit since
+   2026-09-25, is already that shape: every entry is checked to parse as a
+   plist, then the zip moves to `dumps/<stamp>-dump.zip` unchanged.
 2. The derivatives regenerate from `dumps/*.zip`, oldest first so a later copy
    of a shortcut wins: `index.json`, then `library.json` and `library.html`
    from it, `sketches/` from the dumps, and `core/` from the dumps through the
@@ -71,11 +74,39 @@ def run(*cmd):
 
 
 def waiting(sc):
-    return sorted((sc / "incoming").glob("*.txt"))
+    inc = sc / "incoming"
+    return sorted([*inc.glob("*.txt"), *inc.glob("*.zip")])
+
+
+def fold_zip(path, sc):
+    """A zip the device already packaged: check every entry, then move it into dumps/."""
+    import plistlib
+    import zipfile
+    with zipfile.ZipFile(path) as z:
+        entries = [n for n in z.namelist() if not n.endswith("/")]
+        if not entries:
+            raise SystemExit("%s holds no shortcuts" % path.name)
+        bad = []
+        for n in entries:
+            try:
+                plistlib.loads(z.read(n))
+            except Exception:
+                bad.append(n)
+    if bad:
+        raise SystemExit("%s has %d unreadable entr(ies), nothing written: %s"
+                         % (path.name, len(bad), ", ".join(bad)))
+    out = sc / "dumps" / (path.stem + "-dump.zip")
+    if out.exists():
+        raise SystemExit("%s already exists; was this file folded and not deleted?" % out.name)
+    shutil.copyfile(path, out)
+    print("folded %s -> %s (%d shortcuts)" % (path.name, out.name, len(entries)), file=sys.stderr)
+    return out
 
 
 def fold_one(path, sc):
     """One incoming file to one dump zip. Returns the zip path."""
+    if path.suffix == ".zip":
+        return fold_zip(path, sc)
     ri = load("read-incoming")
     records = ri.parse_dump(path.read_text())
     if not records:

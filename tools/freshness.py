@@ -119,7 +119,7 @@ def main():
             if tree(out) != have:
                 stale.append("shortcuts/core/ (from dumps via core/harvest.json)")
 
-    waiting = sorted(p.name for p in sc.glob("incoming/*.txt"))
+    waiting = sorted(p.name for p in [*sc.glob("incoming/*.txt"), *sc.glob("incoming/*.zip")])
     if waiting:
         stale.append("shortcuts/incoming/ holds %d unfolded export(s): %s"
                      % (len(waiting), ", ".join(waiting)))
