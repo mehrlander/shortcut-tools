@@ -104,7 +104,7 @@ seen: 2026-09-14
 
 `CLAUDE.md` named `Back-DoubleTap`, which is bound to nothing, and never named `Run-BackTap`, which the gesture runs, so the binding was re-derived from a screenshot. The fact a session needs first belongs in the file every session reads.
 seen: 2026-09-14
-→ `CLAUDE.md`, "The bound shortcut is `Run-BackTap`".
+→ `CLAUDE.md`, "Settings binds only `Double-BackTap` and `Triple-BackTap`".
 
 ## new-receiver-on-the-bound-gesture
 
