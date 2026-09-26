@@ -1,7 +1,13 @@
 {
   "name": "Log-Repo",
-  "label": "Log-Repo: commit the input to the repo log, clipboard as fallback, input back out (12 actions)",
+  "label": "Log-Repo: commit the input to shortcuts/log/, silently (12 actions)",
   "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Log-Repo build #BUILD#. Silent on success since 2026-09-25: it runs in the middle of other shortcuts, so a box here interrupts them. A refused write still notifies, through Check-ApiReply."
+      }
+    },
     {
       "id": "is.workflow.actions.setclipboard",
       "p": {
@@ -252,30 +258,6 @@
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
-        }
-      }
-    },
-    {
-      "id": "is.workflow.actions.showresult",
-      "p": {
-        "UUID": "B0BE0000-0408-4A00-9000-000000000001",
-        "Text": {
-          "Value": {
-            "attachmentsByRange": {
-              "{7, 1}": {
-                "OutputName": "Formatted Date",
-                "OutputUUID": "B0BE0000-0403-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              },
-              "{20, 1}": {
-                "OutputName": "Dictionary Value",
-                "OutputUUID": "B0BE0000-0410-4A00-9000-000000000001",
-                "Type": "ActionOutput"
-              }
-            },
-            "string": "Logged ￼\nConfirmed: ￼"
-          },
-          "WFSerializationType": "WFTextTokenString"
         }
       }
     },

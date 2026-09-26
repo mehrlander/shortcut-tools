@@ -29,7 +29,7 @@ Rank every delivery route by what it costs the person on the other end:
 | One tap | A `shortcuts://run-shortcut` link to a receiver that already exists, **and five of them is still cheap**. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
 | Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
-| **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing a shortcut bound to Back Tap or AssistiveTouch costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
+| **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing one of the two Back Tap stubs or an AssistiveTouch target costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
 
 **Running is cheap and installing is dear, and this table had it the other way
 round until 2026-09-14.** Stated by the owner, after a session diagnosed a
@@ -129,6 +129,12 @@ not hold. Proven 2026-09-16 on `Probe-Route`, and the manifest taken after it
 showed one copy. The Chains view picks between them from the manifest; hand over
 `?name=<Chain>` rather than building the link.
 
+When the signing worker is down, install by paste: `python3 tools/pack.py
+<chain> --install --ref <sha>` emits a `Library-Paste` link, which says whether
+that build is already installed, deletes any copy by that name, creates the
+empty shortcut, opens it, and leaves the actions on the clipboard. A paste
+cannot set file-level settings, so the tool prints the toggles to set by hand.
+
 **Wrong 2026-08-26 → the paragraph above:** this read "taking that offer is all
 a re-install needs" and "nothing has to be deleted first", and it sent a session
 into routing every re-install through `Library-Import` and telling the owner the
@@ -138,19 +144,18 @@ it is first-hand observation, not a measurement: no manifest was ever taken
 between an import and a cleanup, so every one of them records the tidying rather
 than the import.
 
-**The bound shortcut is `Run-BackTap`**, read off the Settings page 2026-09-14.
-`Back-DoubleTap` is an independent copy of the same dispatcher and is not bound
-to anything, so a change meant for the gesture that lands there reaches nothing.
-Stated here because this file is what every session reads first, and it named
-only the unbound copy until 2026-09-14: three sessions re-derived the binding
-from a screenshot while the answer sat in a table cell in `workflows/README.md`.
+**Settings binds only `Double-BackTap` and `Triple-BackTap`**, two stubs that
+pass a label to `Route-Gesture` and never change. Anything behind the router is
+called by name, so replacing it costs no Settings visit. The caveat below now
+applies only to the stubs and to whatever AssistiveTouch is bound to, which is
+not yet recorded. A double back tap still reaches `Run-BackTap`, through the
+router's `[double-back]` line; this paragraph named it as the bound shortcut
+until 2026-09-25.
 
-**But replacing a shortcut breaks whatever the system had bound to it**
-(reported 2026-08-31). Back Tap holds a reference that a save-over import does
-not preserve, so a re-installed shortcut has to be re-selected in Settings
-before the gesture works again. The name survives and the binding does not,
-which is the opposite of the failure the save-over offer prevents, and it is
-silent: the gesture simply stops doing anything.
+**Replacing a bound shortcut breaks the binding** (reported 2026-08-31). Back
+Tap holds a reference that a re-install does not preserve, so the replacement
+has to be re-selected in Settings before the gesture works again. The failure
+is silent: the gesture simply stops doing anything.
 
 So **a handover that re-installs a bound shortcut owes the settings link too**,
 in the same message. The same holds for the AssistiveTouch button's actions.

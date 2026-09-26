@@ -267,35 +267,20 @@ test("an unpaired publish leaves the real builds.json alone", () => {
   }
 });
 
-// THE NOTICE IS THE THING EVERY CHAIN SHOWS. Log-Repo ended in a Show Result of
-// the GitHub API's whole PUT response, which Shortcuts clips to a few lines and
-// will not scroll, so the one screen a run always produces said nothing a person
-// could read. It now names the entry it wrote and the name the server confirmed,
-// which is short enough to fit and specific enough to check against Show-Log.
-test("Log-Repo's notice reads the entry, not the API response", () => {
+// LOG-REPO IS SILENT ON SUCCESS (2026-09-25). It ended on a Show Result, first
+// of the whole PUT response and then of "Logged <stem> / Confirmed: <name>",
+// and it runs in the middle of other chains, so the box interrupted them and
+// told the owner nothing they used. A shortcut that wants to report now ends on
+// the log page itself. What must survive is the failure signal: a refused write
+// still passes through Check-ApiReply, which notifies.
+test("Log-Repo shows no result, and a refused write still reaches Check-ApiReply", () => {
   const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
-  const uuid = (id) => chain.actions.find(a => a.id.endsWith(id)).p.UUID;
-  const put = uuid("downloadurl");
-  const notice = chain.actions.find(a => a.id.endsWith("showresult"));
-
-  const refs = Object.values(notice.p.Text.Value.attachmentsByRange).map(a => a.OutputUUID);
-  assert.ok(!refs.includes(put),
-    "the raw PUT response is what made this notice unreadable");
-  assert.equal(refs.length, 2, "what was written, and what the server confirmed");
-  assert.ok(refs.includes(uuid("format.date")), "the stem is known before the PUT");
-
-  // Absence has to be legible: on a failed PUT there is no content.name, so the
-  // confirmation renders empty beside a stem that is always present. A notice
-  // that claimed success either way would be worse than the wall of JSON.
-  assert.match(notice.p.Text.Value.string, /^Logged ￼\nConfirmed: ￼$/);
-
-  // Every anchor offset must land on its own U+FFFC, or the attachments bind to
-  // the wrong characters and the notice silently renders the wrong values.
-  for (const [range, a] of Object.entries(notice.p.Text.Value.attachmentsByRange)) {
-    const i = Number(range.match(/^\{(\d+), 1\}$/)[1]);
-    assert.equal(notice.p.Text.Value.string[i], "￼",
-      `${a.OutputName} anchors at ${i}, which is not a placeholder`);
-  }
+  assert.ok(!chain.actions.some(a => a.id.endsWith("showresult")), "no box on success");
+  const put = chain.actions.find(a => a.id.endsWith("downloadurl")).p.UUID;
+  const check = chain.actions.find(a => a.id.endsWith("runworkflow") && a.p.WFWorkflowName === "Check-ApiReply");
+  assert.ok(check, "the refusal channel is still in the chain");
+  assert.equal(check.p.WFInput.Value.OutputUUID, put, "and it judges the PUT's own reply");
+  assert.ok(chain.actions[chain.actions.length - 1].id.endsWith("output"), "the input still passes through");
 });
 
 // The viewer cannot live inside Log-Repo: probe-coercion calls it five times, so
