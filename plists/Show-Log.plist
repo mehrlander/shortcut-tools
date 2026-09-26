@@ -23,7 +23,7 @@
 				<key>UUID</key>
 				<string>5109F000-0001-4A00-9000-000000000001</string>
 				<key>WFURL</key>
-				<string>https://mehrlander.github.io/web-tools/pages/shortcut-log.html</string>
+				<string>https://mehrlander.github.io/web-tools/app/?app=shortcut-log&amp;shell=full</string>
 			</dict>
 		</dict>
 	</array>

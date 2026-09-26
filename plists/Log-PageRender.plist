@@ -94,7 +94,7 @@ Get Contents of Web Page loads the address, Make PDF renders it, and the first P
 				<key>UUID</key>
 				<string>6ADE0004-0000-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>https://mehrlander.github.io/web-tools/pages/shortcut-log.html</string>
+				<string>https://mehrlander.github.io/web-tools/app/?app=shortcut-log&amp;shell=full</string>
 			</dict>
 		</dict>
 		<dict>
@@ -626,7 +626,7 @@ Get Contents of Web Page loads the address, Make PDF renders it, and the first P
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"pagerender","name":"Log-PageRender","build":"f4506e6","file":"￼-render.jpg","pages":"￼","url":"￼"}</string>
+						<string>{"op":"pagerender","name":"Log-PageRender","build":"94267fb","file":"￼-render.jpg","pages":"￼","url":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>

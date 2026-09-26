@@ -61,7 +61,7 @@
    "id": "is.workflow.actions.gettext",
    "p": {
     "UUID": "54070004-0000-4A00-9000-000000000001",
-    "WFTextActionText": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+    "WFTextActionText": "https://mehrlander.github.io/web-tools/app/?app=shortcut-log&shell=full"
    }
   },
   {
