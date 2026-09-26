@@ -45,16 +45,7 @@
 -->
 <style>[x-cloak]{display:none!important}</style>
 <script type="module">
-  const ref = new URLSearchParams(location.search).get('use');
-  if (ref) {
-    window.__ghBlobBoot = { repo: 'mehrlander/web-tools', ref };
-    const r = await fetch(`https://raw.githubusercontent.com/mehrlander/web-tools/${ref}/lib/gh-api.js`, { cache: 'no-store' });
-    if (!r.ok) throw new Error(`?use=${ref}: could not fetch gh-api.js (HTTP ${r.status})`);
-    const u = URL.createObjectURL(new Blob([await r.text()], { type: 'text/javascript' }));
-    try { await import(u); } finally { URL.revokeObjectURL(u); }
-  } else {
-    await import('https://cdn.jsdelivr.net/gh/mehrlander/web-tools@main/lib/gh-api.js');
-  }
+  await import('https://mehrlander.github.io/web-tools/lib/entry.js');
   await gh.load('gh-auth.js');    // token prompt on 401 for the private read
   await gh.load('gh-store.js');   // GH.prototype.save — the ledger's write path
 
