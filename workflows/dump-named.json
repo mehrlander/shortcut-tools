@@ -5,7 +5,7 @@
     {
       "id": "is.workflow.actions.text.replace",
       "p": {
-        "UUID": "D8ED0000-0001-4A00-9000-000000000001",
+        "UUID": "D8ED0000-0000-4A00-9000-000000000001",
         "WFInput": {
           "Value": {
             "attachmentsByRange": {
@@ -14,6 +14,29 @@
               }
             },
             "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextFind": "^[⟦⟧\\s]+|[⟦⟧\\s]+$",
+        "WFReplaceTextReplace": "",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextCaseSensitive": false
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "D8ED0000-0001-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "D8ED0000-0000-4A00-9000-000000000001",
+                "OutputName": "Updated Text"
+              }
+            }
           },
           "WFSerializationType": "WFTextTokenString"
         },
