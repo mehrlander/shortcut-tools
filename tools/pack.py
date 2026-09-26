@@ -19,7 +19,7 @@ that file's text instead. Paths are relative to the repository root, so a chain
 carrying an HTML payload references the real file rather than a pasted copy of
 it that drifts. Resolved before packing, so the plist sees only the text.
 """
-import argparse, base64, hashlib, json, plistlib, re, sys, urllib.parse
+import argparse, base64, hashlib, json, os, plistlib, re, subprocess, sys, urllib.parse
 from pathlib import Path
 
 TARGET = "Copy-ActionFromClaude"
@@ -138,6 +138,23 @@ TOGGLES = {"ActionExtension": "Show in Share Sheet", "Watch": "Show on Apple Wat
            "QuickActions": "Use as Quick Action"}
 
 
+def chain_at(chain_path, ref):
+    """The chain as the link will deliver it: at `ref` when git knows that ref.
+
+    The build line is a hash of the chain, and the link fetches the chain at
+    `ref`. Hashing the working tree instead stamps the wrong build whenever the
+    checkout is not at `ref`, and Library-Paste then reports a stale copy as
+    already installed and changes nothing.
+    """
+    if ref:
+        rel = os.path.relpath(os.path.abspath(chain_path), ROOT)
+        r = subprocess.run(["git", "-C", ROOT, "show", "%s:%s" % (ref, rel)],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+    return json.load(open(chain_path))
+
+
 def install(chain_path, ref, via=INSTALL_VIA):
     """The install that needs no signing: create the named shortcut, paste.
 
@@ -149,7 +166,7 @@ def install(chain_path, ref, via=INSTALL_VIA):
     What no paste reaches is the workflow file's own settings, so the toggles
     the chain declares are printed beside the link rather than lost.
     """
-    chain = json.load(open(chain_path))
+    chain = chain_at(chain_path, ref)
     name = chain.get("name")
     if not name:
         raise SystemExit("%s declares no name, so there is nothing to install" % chain_path)
