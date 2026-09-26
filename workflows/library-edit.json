@@ -1,0 +1,220 @@
+{
+  "name": "Library-Edit",
+  "label": "Library-Edit: cards on the clipboard, a note saying exactly where to paste them, then that shortcut open in the editor (11 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "ED170000-0001-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "ED170000-0002-4A00-9000-000000000001",
+        "CustomOutputName": "Name",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "1",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "ED170000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "ED170000-0003-4A00-9000-000000000001",
+        "CustomOutputName": "Payload URL",
+        "WFItemSpecifier": "Item At Index",
+        "WFItemIndex": "2",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "ED170000-0001-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.text.replace",
+      "p": {
+        "UUID": "ED170000-0004-4A00-9000-000000000001",
+        "CustomOutputName": "Where",
+        "WFInput": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "ExtensionInput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextFind": "^[^\\n]*\\n[^\\n]*\\n",
+        "WFReplaceTextReplace": "",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextCaseSensitive": false
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "ED170000-0005-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"edit\",\"name\":\"￼\",\"from\":\"￼\",\"build\":\"#BUILD#\"}",
+            "attachmentsByRange": {
+              "{21, 1}": {
+                "OutputName": "Name",
+                "OutputUUID": "ED170000-0002-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{32, 1}": {
+                "OutputName": "Payload URL",
+                "OutputUUID": "ED170000-0003-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "ED170000-0006-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "ED170000-0005-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "ED170000-0007-4A00-9000-000000000001",
+        "WFWorkflowName": "Copy-ActionFromUrl",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Payload URL",
+            "OutputUUID": "ED170000-0003-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "ED170000-0008-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionTitle": "Where to paste",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Where",
+                "OutputUUID": "ED170000-0004-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "ED170000-0009-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "ED170000-0010-4A00-9000-000000000001",
+        "WFContentItemInputParameter": {
+          "Value": {
+            "OutputName": "My Shortcuts",
+            "OutputUUID": "ED170000-0009-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 4,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": {
+                    "Value": {
+                      "string": "￼",
+                      "attachmentsByRange": {
+                        "{0, 1}": {
+                          "OutputName": "Name",
+                          "OutputUUID": "ED170000-0002-4A00-9000-000000000001",
+                          "Type": "ActionOutput"
+                        }
+                      }
+                    },
+                    "WFSerializationType": "WFTextTokenString"
+                  },
+                  "Unit": 4
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.OpenWorkflowAction",
+      "p": {
+        "UUID": "ED170000-0011-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "OpenWorkflowAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "target": {
+          "Value": {
+            "OutputName": "Shortcuts",
+            "OutputUUID": "ED170000-0010-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
