@@ -559,7 +559,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"dump","name":"Dump-FolderZip","file":"￼","build":"c0f1d0c"}</string>
+						<string>{"op":"dump","name":"Dump-FolderZip","file":"￼","build":"58a9e34"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -599,7 +599,7 @@
 				<key>UUID</key>
 				<string>D8EC1000-F003-4A00-9000-000000000001</string>
 				<key>WFURL</key>
-				<string>https://mehrlander.github.io/web-tools/pages/shortcut-log.html</string>
+				<string>https://mehrlander.github.io/web-tools/app/?app=shortcut-log&amp;shell=full</string>
 			</dict>
 		</dict>
 		<dict>

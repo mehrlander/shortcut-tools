@@ -384,7 +384,7 @@
    "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed, ending on the log page (20 actions)",
    "name": "Dump-FolderZip",
    "actions": 20,
-   "build": "c0f1d0c",
+   "build": "58a9e34",
    "settings": false,
    "targets": [
     "Check-ApiReply",
@@ -408,7 +408,7 @@
     " 13 if «12» has value",
     " 14   text {\"op\":\"dump\",\"name\":\"Dump-FolderZip\",\"file\":\"«12… (69 chars)",
     " 15   run Log-Repo ← «14»",
-    " 16   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 16   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     " 17 else",
     " 18   show Zipped «5» Confirmed: «12»",
     " 19 end if"
@@ -438,7 +438,7 @@
    "label": "Dump-Named: the named shortcuts, zipped and committed in one request, ending on the log page (28 actions)",
    "name": "Dump-Named",
    "actions": 33,
-   "build": "a96f772",
+   "build": "0fdb8cd",
    "settings": false,
    "targets": [
     "Check-ApiReply",
@@ -475,7 +475,7 @@
     " 26 if «25» has value",
     " 27   text {\"op\":\"dump\",\"name\":\"Dump-Named\",\"file\":\"«25»\",\"… (91 chars)",
     " 28   run Log-Repo ← «27»",
-    " 29   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 29   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     " 30 else",
     " 31   show Zipped «18» Confirmed: «25»",
     " 32 end if"
@@ -486,7 +486,7 @@
    "label": "Dump-RecentZip: every shortcut modified in the last N days, zipped whole and committed, ending on the log page (28 actions)",
    "name": "Dump-RecentZip",
    "actions": 28,
-   "build": "f4081c5",
+   "build": "d153cc5",
    "settings": false,
    "targets": [
     "Check-ApiReply",
@@ -518,7 +518,7 @@
     " 21 if «20» has value",
     " 22   text {\"op\":\"dump\",\"name\":\"Dump-RecentZip\",\"file\":\"«20… (69 chars)",
     " 23   run Log-Repo ← «22»",
-    " 24   show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    " 24   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     " 25 else",
     " 26   show Zipped «13» Confirmed: «20»",
     " 27 end if"
