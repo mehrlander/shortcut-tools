@@ -1,0 +1,11 @@
+{
+  "label": "Stop and Output, to paste after Show-Loop's Run Stage-Input card (1 action)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.output",
+      "p": {
+        "UUID": "57A6E000-0902-4A00-9000-000000000001"
+      }
+    }
+  ]
+}

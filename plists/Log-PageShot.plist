@@ -96,7 +96,7 @@ Two shots, at 5 and 12 seconds, arriving side by side as one image. A single ins
 				<key>UUID</key>
 				<string>54070004-0000-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>https://mehrlander.github.io/web-tools/pages/shortcut-log.html</string>
+				<string>https://mehrlander.github.io/web-tools/app/?app=shortcut-log&amp;shell=full</string>
 			</dict>
 		</dict>
 		<dict>
@@ -752,7 +752,7 @@ A notification says when the image has landed.</string>
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"pageshot","name":"Log-PageShot","build":"4d57161","file":"￼.png","route":"safari","url":"￼"}</string>
+						<string>{"op":"pageshot","name":"Log-PageShot","build":"658f61c","file":"￼.png","route":"safari","url":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
