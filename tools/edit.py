@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A proposed hand edit to a device-only shortcut, as a page that shows where it goes.
 
-    python3 tools/edit.py <Name> --after <index> <chain.json> [--ref <sha>]
+    python3 tools/edit.py <Name> --after <index> <chain.json> [--why "<reason>"] [--ref <sha>]
 
 A shortcut that exists only on the device cannot be replaced by paste
 without losing its file settings (share sheet, input types, icon), so a
@@ -41,6 +41,7 @@ def main():
     ap.add_argument("chain", help="a workflows/ chain holding the cards to paste")
     ap.add_argument("--after", type=int, required=True, help="the sketch index the cards go after")
     ap.add_argument("--ref", default="main", help="the shortcut-tools ref the cards are fetched at")
+    ap.add_argument("--why", default="", help="one or two sentences on why, shown under the added cards")
     ap.add_argument("--payload", action="store_true")
     a = ap.parse_args()
 
@@ -64,6 +65,8 @@ def main():
         "after": S.sketch(edited, annotate=True),
         "cards": RAW % (a.ref, Path(a.chain).name),
     }
+    if a.why:
+        body["why"] = a.why
     if a.payload:
         print(json.dumps(body, ensure_ascii=False, indent=1))
         return
