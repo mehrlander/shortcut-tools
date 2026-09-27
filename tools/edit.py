@@ -15,8 +15,15 @@ cards on the clipboard, and open the shortcut.
 
 The page needs no token and no network beyond itself, so it works in Safari
 beside the Shortcuts editor. Prints the page link; --payload prints the JSON.
+
+--save writes the proposal to proposals/<Name>-<date>.json instead, and prints
+the short link to it. A saved proposal is what the app's Edits view lists,
+and it carries two action-type sequences, `base` (the shortcut as exported)
+and `expect` (with the cards in place), so the page can tell from the next
+export whether the edit has been made: that export matches `expect`, still
+matches `base`, or differs from both at a line it names.
 """
-import argparse, base64, gzip, json, os, sys, urllib.parse
+import argparse, base64, datetime, gzip, json, os, sys, urllib.parse
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -43,6 +50,8 @@ def main():
     ap.add_argument("--ref", default="main", help="the shortcut-tools ref the cards are fetched at")
     ap.add_argument("--why", default="", help="one or two sentences on why, shown under the added cards")
     ap.add_argument("--payload", action="store_true")
+    ap.add_argument("--save", action="store_true", help="write proposals/<Name>-<date>.json and print its link")
+    ap.add_argument("--dir", default=str(HERE.parent / "proposals"), help="where --save writes")
     a = ap.parse_args()
 
     dumps = sorted(str(p) for p in (private() / "shortcuts" / "dumps").glob("*.zip"))
@@ -67,6 +76,18 @@ def main():
     }
     if a.why:
         body["why"] = a.why
+    ids = lambda xs: [x["WFWorkflowActionIdentifier"] for x in xs]
+    body["base"] = ids(acts)
+    body["expect"] = ids(edited["WFWorkflowActions"])
+    if a.save:
+        day = datetime.date.today().isoformat()
+        body["created"] = day
+        name = "%s-%s.json" % (a.name.replace("/", ":").replace(" ", "-"), day)
+        out = Path(a.dir) / name
+        out.parent.mkdir(exist_ok=True)
+        out.write_text(json.dumps(body, ensure_ascii=False, indent=1) + "\n")
+        print(PAGE + "?proposal=" + urllib.parse.quote(name))
+        return
     if a.payload:
         print(json.dumps(body, ensure_ascii=False, indent=1))
         return

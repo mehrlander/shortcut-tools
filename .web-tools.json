@@ -45,6 +45,16 @@
       "slug": "shortcut-log"
     },
     {
+      "path": "mehrlander/web-tools:pages/shortcut-edit.html",
+      "title": "Edits",
+      "note": "Hand edits proposed for shortcuts that live only on the phone: each shown where it goes in the shortcut's folding listing, and marked applied once the next export matches.",
+      "appView": true,
+      "viewLabel": "Edits",
+      "icon": "ph-pencil-simple-line",
+      "order": 33,
+      "slug": "shortcut-edit"
+    },
+    {
       "path": "pages/gh-recent-branches.html",
       "title": "Recent branches",
       "note": "The page Show-Html opens: branches whose latest commit is yours, each a link. Token injected on the way through.",
