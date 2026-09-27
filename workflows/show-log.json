@@ -17,7 +17,7 @@
       "id": "is.workflow.actions.showwebpage",
       "p": {
         "UUID": "5109F000-0001-4A00-9000-000000000001",
-        "WFURL": "https://mehrlander.github.io/web-tools/pages/shortcut-log.html"
+        "WFURL": "https://mehrlander.github.io/web-tools/app/?app=shortcut-log&shell=full"
       }
     }
   ]

@@ -221,7 +221,9 @@ test("show-log takes a hosted URL, never HTML text", () => {
   const web = chain.actions.find(a => a.id === "is.workflow.actions.showwebpage");
   assert.ok(web, "it shows a web page");
   assert.strictEqual(typeof web.p.WFURL, "string", "a plain https string, not a rich-text payload");
-  assert.match(web.p.WFURL, /^https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcut-log\.html$/);
+  // The log inside the app, as the dumpers open it (#51): the same origin, so the
+  // same stored token.
+  assert.match(web.p.WFURL, /^https:\/\/mehrlander\.github\.io\/web-tools\/app\/\?app=shortcut-log&shell=full$/);
 });
 
 // WHAT THE MANIFEST IS FOR. A chain stamps its own build id and a run logs it,

@@ -1,6 +1,6 @@
 {
  "meta": {
-  "chains": 83,
+  "chains": 84,
   "installable": 59,
   "external_targets": 18
  },
@@ -974,7 +974,7 @@
    "label": "Log-PageRender: render a URL to an image and commit it, no screenshot (21 actions)",
    "name": "Log-PageRender",
    "actions": 21,
-   "build": "f4506e6",
+   "build": "94267fb",
    "settings": true,
    "targets": [
     "Inject-🎟️GitHubToken",
@@ -985,7 +985,7 @@
     "  1 if $input has value",
     "  2   text $input",
     "  3 else",
-    "  4   text \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    "  4   text \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     "  5 end if",
     "  6 page contents",
     "  7 makepdf",
@@ -1009,7 +1009,7 @@
    "label": "Log-PageShot: shoot a URL in Safari twice and commit the pair (27 actions)",
    "name": "Log-PageShot",
    "actions": 27,
-   "build": "4d57161",
+   "build": "658f61c",
    "settings": true,
    "targets": [
     "Inject-🎟️GitHubToken",
@@ -1020,7 +1020,7 @@
     "  1 if $input has value",
     "  2   text $input",
     "  3 else",
-    "  4   text \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    "  4   text \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     "  5 end if",
     "  6 alert \"Safari opens next and two shots are taken, at 5 … (196 chars)\"",
     "  7 url «5»",
@@ -1271,7 +1271,7 @@
    "label": "Probe-SheetBlocks: the clock either side of the Show Web View sheet (10 actions)",
    "name": "Probe-SheetBlocks",
    "actions": 10,
-   "build": "e002afe",
+   "build": "dddb0a2",
    "settings": true,
    "targets": [
     "Log-Repo"
@@ -1281,7 +1281,7 @@
     "  1 alert \"The log page opens next. Leave it up for about t… (163 chars)\"",
     "  2 date",
     "  3 format date \"Custom\"",
-    "  4 show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\"",
+    "  4 show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
     "  5 date",
     "  6 format date \"Custom\"",
     "  7 text {\"op\":\"sheetblocks\",\"name\":\"Probe-SheetBlocks\",\"… (94 chars)",
@@ -1753,12 +1753,12 @@
    "label": "Show-Log: the device log as a sheet over Shortcuts (2 actions)",
    "name": "Show-Log",
    "actions": 2,
-   "build": "cea85a3",
+   "build": "0e42e17",
    "settings": true,
    "targets": [],
    "sketch": [
     "  0 # \"A hosted https URL, not HTML text, and the diffe… (428 chars)\"",
-    "  1 show page \"https://mehrlander.github.io/web-tools/pages/sho… (62 chars)\""
+    "  1 show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\""
    ]
   },
   {
@@ -1843,6 +1843,18 @@
     " 26   url https://mehrlander.github.io/web-tools/app/?view… (54 chars)",
     " 27   open «26»",
     " 28 end if"
+   ]
+  },
+  {
+   "file": "stop-output-card.json",
+   "label": "Stop and Output, to paste after Show-Loop's Run Stage-Input card (1 action)",
+   "name": null,
+   "actions": 1,
+   "build": "7bb6d6b",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 output"
    ]
   },
   {
