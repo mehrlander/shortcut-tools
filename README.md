@@ -221,7 +221,7 @@ cannot see.
 
 [`pages/library.html`](pages/library.html) is the browsable form of all of the
 above, and an **app view**: any repo promotes a page to an estate-level entry in
-show-repo by flagging a `pages` catalog entry `appView: true` in its own
+the Web Tools app by flagging a `pages` catalog entry `appView: true` in its own
 `.web-tools.json`, which is the whole integration. The renderer lives here,
 public, beside the tools that generate what it reads; the library it reads lives
 in a private repository, through the viewer's token.
