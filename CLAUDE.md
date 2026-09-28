@@ -161,12 +161,8 @@ So **a handover that re-installs a bound shortcut owes the settings link too**,
 in the same message. The same holds for the AssistiveTouch button's actions.
 Delivery is through `Open-URL`, which already exists, because a bare `prefs:`
 link tapped in a chat client is swallowed and one run from inside Shortcuts is
-not:
-
-| Setting | Key |
-| --- | --- |
-| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
-| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+not. The two `prefs:` URLs are in web-tools' `shortcut-links` skill,
+[Replacing a shortcut assigned to a gesture](https://github.com/mehrlander/web-tools/blob/main/skills/shortcut-links/SKILL.md#replacing-a-shortcut-assigned-to-a-gesture).
 
 Both come from `Fav-Settings`, which has carried a 14-page settings menu all
 along; the second lands on the AssistiveTouch page, and the long-press

@@ -1386,8 +1386,8 @@ level with no key recorded yet.
 **Why these two matter operationally rather than as trivia:** re-installing a
 shortcut breaks whatever Back Tap or the AssistiveTouch button had bound to it,
 so a handover that replaces a bound shortcut has to carry the settings link
-beside the install link. That rule lives in `CLAUDE.md`, next to the save-over
-offer it qualifies.
+beside the install link. That rule lives in `CLAUDE.md`, under "Replacing a
+bound shortcut breaks the binding".
 
 **The rule this earns:** a corpus search for a URL, an identifier or a name must
 allow for escaping, because a payload built as text can carry any of them in a
@@ -1722,8 +1722,8 @@ shortcoming of the design, it is the boundary of what Shortcuts exposes.
 device (patched in iOS 15 beta 1). It needs a Mac or a remote signing service.
 `Shortcut Source Helper` in this estate's corpus already does the second: gzip
 the plist, POST to `shortcuts.gluebyte.workers.dev`, unzip, write a `.shortcut`,
-open it. Untested here, and the only thing that would turn a generated shortcut
-into a real one-tap install.
+open it. `Library-Import` has installed this way since 2026-08-15, and it is
+what turns a generated shortcut into a real one-tap install.
 
 ### The four sources checked before it, none of them enough
 
@@ -1801,8 +1801,10 @@ dictionary and false about Shortcuts:
 
 `CreateFolderAction` exists, and unlike every other action in this family **its
 `name` takes plain text**, so a folder can be made from a string. Whether its
-output is a folder entity the Move card will accept is untested; if it is,
-create-then-move removes the last configuration step from a fresh install.
+output is a folder entity the Move card will accept was measured on 2026-09-14:
+it is. The next day showed the create refuses a folder that already exists, so
+create-then-move works once and then fails at the create. The `library-move` row
+in `workflows/README.md` has both runs.
 
 **Why no search found it.** It is absent from `actions.json`, which knows only
 nine `com.apple.shortcuts.*` entries, and absent from the corpus, which never
