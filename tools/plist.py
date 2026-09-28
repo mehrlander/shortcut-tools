@@ -41,15 +41,7 @@ IMPORT_TARGET = "Library-Import"
 # on resolving to the copy being replaced: an install that looks like an upgrade
 # has done the opposite.
 #
-# Wrong until 2026-09-19 → the paragraph above: this comment read "reach for it
-# only where no one is present to answer Apple's import sheet, which otherwise
-# offers to save over a name that already exists", which is the save-over
-# reading CLAUDE.md retracted on 2026-09-16, and "a link naming a receiver the
-# device lacks fails at the point of use", which stopped being true the same
-# week, since `Library-Replace` reached the device on 2026-09-16 and has been in
-# every manifest since.
-#
-# `--link` still defaults to Import, and for a reason that survives both: **this
+# `--link` defaults to Import because **this
 # tool has no device read.** Which receiver is correct is a fact about the
 # phone, not about the chain, so the only caller that can decide it is one
 # holding a manifest. pages/shortcuts.html is that caller and picks per chain;

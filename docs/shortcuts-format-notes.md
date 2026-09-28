@@ -433,12 +433,11 @@ Shortcuts instead, and the run survives it. That difference is the
 whole reason to care, since a shortcut that dumps its output into Safari has
 ended its own flow and left a tab behind.
 
-**Wrong 2026-09-09 → the sentence above:** it read "the run continues behind
-it," which is true of the run's *survival* and false of its *execution*. The
-sheet **blocks**. `Probe-SheetBlocks` read the clock either side of
-`showwebpage` and logged `before=23:18:49 after=23:19:22`: a 33-second gap
-across two adjacent cards with nothing between them but the sheet. The next
-action does not run until the sheet is dismissed.
+The run survives the sheet but does not execute behind it: the sheet
+**blocks**, and the next action does not run until the sheet is dismissed.
+`Probe-SheetBlocks` read the clock either side of `showwebpage` and logged
+`before=23:18:49 after=23:19:22`: a 33-second gap across two adjacent cards
+with nothing between them but the sheet.
 
 Nothing had measured it. Both `Probe-WebView` and `Probe-WebViewCaps` end *at*
 the sheet, so neither could see past it, and the corpus was already leaning the
@@ -531,14 +530,11 @@ while a sheet is gone when it is dismissed.
 **A hosted page skips the whole `file://` problem, and costs one action.**
 `showwebpage` takes a plain `https` string in `WFURL` with no wrapper at all,
 which the corpus already showed in `Auto Message` and `Routine search`. The
-sheet then loads that address directly, so the page keeps its own origin and
-with it the localStorage partition the stored GitHub token lives in.
-
-**Wrong 2026-08-29 → the sentence above:** keeping the origin is right; keeping
-the *token* is not, and the two were conflated. A storage partition is keyed by
+sheet then loads that address directly, so the page keeps its own origin. It
+does not keep Safari's stored GitHub token. A storage partition is keyed by
 origin **within a data store**, and the data store is per-app: the sheet is a
 `WKWebView` inside Shortcuts, with its own store, so a token saved in Safari is
-not there however correct the origin is. Reported from the device on 2026-08-29,
+not there however correct the origin is. The device showed this on 2026-08-29,
 when a hosted page opened in the sheet and asked for a token.
 
 So the hosted route fixes what `file://` broke, which is the origin, and does
@@ -1250,15 +1246,14 @@ than a local file, because the origin differs:
   does not block it. Sending credentials as an `Authorization` header is fine;
   `credentials: 'include'` would not be.
 
-  **Stale 2026-08-29 (Chromium half only) → the device result below:** this no
-  longer reproduces in the sandbox's Chromium, where a `data:` URL document gets
-  no network at all. Against a local server sending
+  The Chromium half of this result stopped reproducing on 2026-08-29: in the
+  sandbox's Chromium, a `data:` URL document now gets no network at all. Against a local server sending
   `Access-Control-Allow-Origin: *`, synchronous XHR, asynchronous XHR and `fetch`
   all failed from a `data:` origin, while the same page on an `http` origin got
   all three. So it is the opaque origin rather than CORS or the endpoint, and it
   is not specific to the synchronous form. Whether Chromium changed or the
-  original measurement differed in setup is not established. **The device half is
-  untouched:** WebKit ran both requests on 2026-08-11 and returned real bytes, so
+  original measurement differed in setup is not established. The device half still
+  holds: WebKit ran both requests on 2026-08-11 and returned real bytes, so
   the split is browser-to-browser and the device is the authority for this route.
 - **A synchronous `XMLHttpRequest` blocks the load**, so the response is in the
   DOM before anything downstream can read the page. This is the reason to prefer
@@ -1604,13 +1599,11 @@ uninstalled app is outside it.
 *Established 2026-08-30 by searching all three ToolKit catalogs and the 636-file
 corpus, before anything was sent to the device.*
 
-> [!WARNING]
-> **Wrong 2026-08-30 (same day) → the iOS claim below:** the device says
-> `Find Apps` is **Mac-only**. Imported and opened on the phone, the card
-> renders and its body reads *"This action can only run on Mac."* Everything
-> here about the catalog is accurate; the inference drawn from it was not, and
-> what the catalog cannot answer is stated under *The `platforms` field is not a
-> runtime claim* below. **There is no route to the installed-app list on iOS.**
+The iOS claim in this section proved wrong the same day, 2026-08-30: imported
+and opened on the phone, `Find Apps` renders and its body reads *"This action
+can only run on Mac."* The catalog facts below are accurate and the inference
+drawn from them is not; the successor is *The `platforms` field is not a
+runtime claim* below, and there is no route to the installed-app list on iOS.
 
 **Apps: `is.workflow.actions.filter.apps`, "Find Apps".** An ordinary content-item
 filter, so the whole `Find X` grammar applies: omit `WFContentItemInputParameter`

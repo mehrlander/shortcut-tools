@@ -154,11 +154,10 @@ needs a third-party app where the `data:` route needs nothing.
 
 ## 5. A menu is the API surface
 
-**Wrong 2026-08-13:** the first draft read the raw count, 1,961 uses across 79
-files, as evidence that the menu is this library's API surface. It is not.
-**54 of those 79 files are imported shortcuts**, and only 8 are in the core. A
-menu is overwhelmingly how third-party authors present a shortcut, and the raw
-frequency measures their habit, not this one.
+The raw count, 1,961 uses across 79 files, does not make the menu this
+library's API surface. **54 of those 79 files are imported shortcuts**, and only
+8 are in the core. A menu is overwhelmingly how third-party authors present a
+shortcut, and the raw frequency measures their habit, not this one.
 
 What survives is narrower and still worth keeping. Two core shortcuts,
 `Show-Convert` and `Get-Text`, are built as menus, and they are the two with the
