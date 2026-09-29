@@ -40,8 +40,13 @@
   library.json. That keeps one owner for the tiering: change a rule there and it
   shows up as a changed file, rather than as two surfaces quietly disagreeing.
 
-  ?data=<ref> pins which ref of web-tools-private is read (defaults to main).
-  ?use=<ref> pins this page's own lib chain, the repo's standard preview form.
+  ?data=<ref> pins which ref of web-tools-private is read and written (the
+  curated files and the prune ledger). Without it, the curated read-only files
+  follow a link's selection (refs=mehrlander/web-tools-private@<ref>), else main;
+  the ledger stays on main, since it is written back.
+  The Web Tools lib chain is the version entry.js picks: a renderer's
+  window.__lib, else a link's selection for mehrlander/web-tools, else ?use=,
+  else main.
 -->
 <style>[x-cloak]{display:none!important}</style>
 <script type="module">
@@ -53,11 +58,20 @@
     Alpine.data('library', () => ({
       // ── data contract ────────────────────────────────────────────────────
       REPO: 'mehrlander/web-tools-private',
-      DATA_REF: new URLSearchParams(location.search).get('data') || 'main',
+      // `?data=` as asked, '' when absent. It is the one parameter that moves
+      // read and write together.
+      DATA_ASK: new URLSearchParams(location.search).get('data') || '',
+      // The ref the curated read-only files are read at, for labels: ?data=,
+      // else what a link's selection names for this repo, else main.
+      DATA_REF: new URLSearchParams(location.search).get('data')
+        || (window.__refFor && window.__refFor('mehrlander/web-tools-private', '')) || 'main',
       // **The device always writes to main, so its directories are always read
       // from main.** `?data=` pins which ref the CURATED derivatives come from
       // (library.json, the sketches, the prune ledger) so a branch can be
-      // reviewed before it merges. The device channel is not curated and has no
+      // reviewed before it merges. A link's selection moves only the read-only
+      // ones: the ledger is read-modify-write, so it is read where it will be
+      // written (?data=, else main), and a preview can never feed a branch's
+      // ledger into a save on main. The device channel is not curated and has no
       // branch: Log-Repo, Sync-Manifest, Dump-Recent and Dump-Named all carry a
       // literal "branch": "main" in their commit, because a shortcut has no way
       // to know which ref a page happens to be previewing.
@@ -82,6 +96,7 @@
       // ── state ────────────────────────────────────────────────────────────
       gh: null,
       ghDevice: null,           // the same repo pinned to main; see DEVICE_REF
+      ghLedger: null,           // pinned to ?data= or main: the ledger's read and write
       meta: null,
       rows: [],
       dangling: [],
@@ -147,14 +162,21 @@
 
       async init() {
         try {
-          const g = this.gh = new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DATA_REF });
+          // The curated reader. With no ?data= the `ref` key is left out, not
+          // set to main, so the client follows the link's selection for reads.
+          const g = this.gh = new window.GH({ token: window.TOKEN || '', repo: this.REPO,
+            ...(this.DATA_ASK ? { ref: this.DATA_ASK } : {}) });
           // A second reader pinned to main, for the directories the device
           // writes. Same repo and token, different ref; see DEVICE_REF above.
           // It is a separate instance rather than a ref argument on each call
           // because the distinction is about which KIND of data is being read,
           // and naming it once is what stops the next reader getting it wrong.
-          this.ghDevice = this.DATA_REF === this.DEVICE_REF ? g
-            : new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DEVICE_REF });
+          this.ghDevice = new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: this.DEVICE_REF });
+          // The ledger's own client, pinned for the same reason: what it reads
+          // is what it saves back, so both happen on one explicit ref.
+          const ledgerRef = this.DATA_ASK || 'main';
+          this.ghLedger = ledgerRef === this.DEVICE_REF ? this.ghDevice
+            : new window.GH({ token: window.TOKEN || '', repo: this.REPO, ref: ledgerRef });
           const lib = JSON.parse((await g.get('shortcuts/library.json')).text);
           this.meta = lib.meta;
           this.rows = lib.rows;
@@ -162,7 +184,7 @@
           // The ledger is optional: a library that has never been pruned has no
           // file, and an absent one is an empty one rather than an error.
           try {
-            this.ledger = JSON.parse((await g.get(this.LEDGER)).text);
+            this.ledger = JSON.parse((await this.ghLedger.get(this.LEDGER)).text);
           } catch { this.ledger = { folder: 'Stage', entries: [] }; }
         } catch (e) {
           this.error = String(e.message || e);
@@ -356,7 +378,7 @@
       async writeLedger(message) {
         this.saving = true; this.saveError = '';
         try {
-          await this.gh.save(this.LEDGER, this.ledger, message);
+          await this.ghLedger.save(this.LEDGER, this.ledger, message);
         } catch (e) {
           this.saveError = String(e.message || e);
         }
@@ -551,7 +573,8 @@
               s.onload = res; s.onerror = rej; document.head.appendChild(s);
             });
           }
-          const d = new window.GH({ token: window.TOKEN || '', repo: this.DOCS_REPO, ref: 'main' });
+          // No ref: the docs follow the link's selection, else main.
+          const d = new window.GH({ token: window.TOKEN || '', repo: this.DOCS_REPO });
           this.docHtml = window.marked.parse((await d.get(path)).text);
         } catch (e) {
           this.docHtml = '<p class="text-error">Could not load ' + path + '.</p>';
