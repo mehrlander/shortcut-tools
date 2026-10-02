@@ -304,3 +304,38 @@ test("a row that is in no map and cannot be a shortcut name is logged, not run",
   assert.ok(run.id.endsWith("runworkflow"), "a space-free row is still run by name");
   assert.strictEqual(run.p.WFWorkflowName.Value.attachmentsByRange["{0, 1}"].OutputUUID, choice.p.UUID);
 });
+
+test("Run-BackTap opens a link copied as text, not only a URL-typed item", () => {
+  // 2026-10-02: the only arm that navigated tested Get Type for "URL". A link
+  // selected out of a PR body or a chat reply most likely reaches it typed as
+  // Text and fell to Show-Loop, whose menu has no Open row. Show-Html, the
+  // owner's own, already tests "type is URL or text begins with http", which is
+  // the shape someone writes after a text-typed link has caught them out.
+  const back = chains.find(([f]) => f === "run-backtap.json")[1];
+  const ids = back.actions.map((a) => a.id.replace("is.workflow.actions.", ""));
+  const typeArm = back.actions.findIndex((a) => a.p.WFConditionalActionString === "URL");
+  const match = back.actions.findIndex((a) => a.p.CustomOutputName === "Address");
+  const emptyArm = back.actions.findIndex((a, i) => i > typeArm && a.p.WFCondition === 101);
+  assert.ok(typeArm > 0 && typeArm < match && match < emptyArm,
+    "after the URL-typed arm, so that arm keeps every scheme; before the empty arm and Show-Loop");
+
+  // The WHOLE clipboard is one address, or nothing opens. \A and \z hold that
+  // whatever line mode Match Text runs in; the lookahead leaves trailing
+  // whitespace out of what is opened. JavaScript spells the anchors ^ and $.
+  const pattern = back.actions[match].p.WFMatchTextPattern;
+  assert.strictEqual(pattern, "\\Ahttps?://\\S+(?=\\s*\\z)");
+  const js = new RegExp(pattern.replace("\\A", "^").replace("\\z", "$"));
+  const opens = (s) => (s.match(js) || [""])[0];
+  assert.strictEqual(opens("https://claude.ai/code/session_01ABC\n"), "https://claude.ai/code/session_01ABC");
+  assert.strictEqual(opens("https://example.com/a\nnotes about it"), "", "a link with notes after it is not opened");
+  assert.strictEqual(opens("see https://example.com/a"), "", "a link inside prose is not opened");
+
+  assert.deepStrictEqual(ids.slice(match, match + 6),
+    ["text.match", "conditional", "url", "openurl", "output", "conditional"]);
+  const [, has, url, open] = back.actions.slice(match, match + 4);
+  const uuid = back.actions[match].p.UUID;
+  assert.strictEqual(has.p.WFCondition, 100, "has any value");
+  assert.strictEqual(has.p.WFInput.Variable.Value.OutputUUID, uuid);
+  assert.strictEqual(url.p.WFURLActionURL.Value.OutputUUID, uuid, "opens the match, not the raw clipboard");
+  assert.strictEqual(open.p.WFInput.Value.OutputUUID, url.p.UUID);
+});
