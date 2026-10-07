@@ -22,8 +22,8 @@ punctuation-insensitive because a Home Screen label and a `WFSelectedApp`
 ampersands and the leading LTR mark WhatsApp carries.
 
 It writes `device/apps.json` in web-tools-private, beside the captures it is
-built from; the placement decision and its revisit trigger are that repo's
-`DESIGN.md`. Why a registry rather than one read of the screenshots:
+built from; the placement decision and its revisit trigger are in that repo's
+`device/README.md`. Why a registry rather than one read of the screenshots:
 `is.workflow.actions.filter.apps`
 is Mac-only (established on device 2026-08-30, see docs/shortcuts-format-notes.md),
 so nothing on iOS can regenerate the installed column. It has to be captured and

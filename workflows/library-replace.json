@@ -78,8 +78,9 @@
                     "Value": {
                       "attachmentsByRange": {
                         "{0, 1}": {
-                          "Type": "Variable",
-                          "VariableName": "Shortcut name"
+                          "Type": "ActionOutput",
+                          "OutputName": "Shortcut name",
+                          "OutputUUID": "B0BE0000-0902-4A00-9000-000000000001"
                         }
                       },
                       "string": "￼"

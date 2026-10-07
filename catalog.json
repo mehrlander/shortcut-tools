@@ -1,0 +1,1970 @@
+{
+ "meta": {
+  "chains": 85,
+  "installable": 60,
+  "external_targets": 18
+ },
+ "external_targets": [
+  "Combine-JsonList",
+  "Copy-ActionFromClaude",
+  "Copy-ActionFromUrl",
+  "Get-FileCaption",
+  "Get-FileContext",
+  "Get-FromJs",
+  "Get-JsonFromJs",
+  "Inject-🎟️GitHubToken",
+  "Run-Html",
+  "Run-List",
+  "Show-Ace",
+  "Show-Html",
+  "Show-Loop",
+  "Show-WebView",
+  "Use-Shortcut",
+  "https://chatgpt.com/",
+  "https://chatgpt.com/codex",
+  "https://mehrlander.github.io/web-tools/app/?view=sessions"
+ ],
+ "rows": [
+  {
+   "file": "ask-report.json",
+   "label": "Ask-Report: walk a list of questions, commit every answer in one trip (10 actions)",
+   "name": "Ask-Report",
+   "actions": 10,
+   "build": "2c77d16",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 for each «0»",
+    "  2   ask $Repeat Item",
+    "  3   text Q: $Repeat Item A: «2»",
+    "  4   append to \"Transcript\" ← «3»",
+    "  5 end for each",
+    "  6 get $Transcript",
+    "  7 join \"New Lines\"",
+    "  8 run Log-Repo ← «7»",
+    "  9 output «7»"
+   ]
+  },
+  {
+   "file": "capture-link.json",
+   "label": "Capture-Link: share sheet in, repo log out (2 actions)",
+   "name": "Capture-Link",
+   "actions": 2,
+   "build": "be25494",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 text {\"op\":\"capture\",\"url\":\"$input as String\"}",
+    "  1 run Log-Repo ← «0»"
+   ]
+  },
+  {
+   "file": "check-api-reply.json",
+   "label": "Check-ApiReply: a GitHub reply in, the same reply out, and a notification if it refused (6 actions)",
+   "name": "Check-ApiReply",
+   "actions": 6,
+   "build": "a1d6820",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 value for \"message\"",
+    "  1 if «0» has value",
+    "  2   notify GitHub refused: «0» · run Check-🎟️GitHubToken",
+    "  3   show GitHub refused the write: «0» Nothing reached th… (80 chars)",
+    "  4 end if",
+    "  5 output $input"
+   ]
+  },
+  {
+   "file": "check-github-token.json",
+   "label": "Check-🎟️GitHubToken: is the stored token live, and can it reach the private store (3 actions)",
+   "name": "Check-🎟️GitHubToken",
+   "actions": 3,
+   "build": "d84a5f4",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Show-Html"
+   ],
+   "sketch": [
+    "  0 text \"<!DOCTYPE html> <html lang=\"en\" class=\"bg-base-2… (3231 chars)\"",
+    "  1 run Inject-🎟️GitHubToken ← «0»",
+    "  2 run Show-Html ← «1»"
+   ]
+  },
+  {
+   "file": "choose-backtap.json",
+   "label": "Choose-BackTap: the Shortcuts-app menu, titled with the clipboard's state (17 actions)",
+   "name": "Choose-BackTap",
+   "actions": 17,
+   "build": "7f64c63",
+   "settings": false,
+   "targets": [
+    "Describe-Input"
+   ],
+   "sketch": [
+    "  0 if $clipboard has value",
+    "  1   if $clipboard as GenericFile.File Size >= 1 MB",
+    "  2     text \"- 📋 𝙘𝙡𝙞𝙥𝙗𝙤𝙖𝙧𝙙 𝙞𝙨 𝙡𝙖𝙧𝙜𝙚 -\"",
+    "  3   else",
+    "  4     run Describe-Input",
+    "  5     value for \"detail.caption\" ← «4»",
+    "  6   end if",
+    "  7 else",
+    "  8   text \"- 📋 𝙘𝙡𝙞𝙥𝙗𝙤𝙖𝙧𝙙 𝙞𝙨 𝙚𝙢𝙥𝙩𝙮 -\"",
+    "  9 end if",
+    " 10 text \"Open-RecentShortcut Show-ShortcutsInfo Copy-Temp… (90 chars)\"",
+    " 11 split \"New Lines\"",
+    " 12 choose from «9» ← «11»",
+    " 13 if «12» is not Out",
+    " 14   run «12»",
+    " 15   output «14»",
+    " 16 end if"
+   ]
+  },
+  {
+   "file": "choose-claude.json",
+   "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (30 actions)",
+   "name": "Choose-Claude",
+   "actions": 30,
+   "build": "61fef56",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Run-Op"
+   ],
+   "sketch": [
+    "  0 clipboard",
+    "  1 text session-menu «0»",
+    "  2 run Run-Op ← «1»",
+    "  3 value for \"caption\" ← «2»",
+    "  4 value for \"menu\" ← «2»",
+    "  5 value for \"urls\" ← «2»",
+    "  6 choose from «3» ← «4»",
+    "  7 text «6»",
+    "  8 if «7» has value",
+    "  9   if «7» is not Out",
+    " 10     value for «7» ← «5»",
+    " 11     if «10» has value",
+    " 12       url «10»",
+    " 13       open «12»",
+    " 14     else",
+    " 15       if «7» contains",
+    " 16         text {\"op\":\"menu-miss\",\"name\":\"Choose-Claude\",\"build\"… (87 chars)",
+    " 17         run Log-Repo ← «16»",
+    " 18         show «16»",
+    " 19       else",
+    " 20         run «7»",
+    " 21         output «20»",
+    " 22       end if",
+    " 23     end if",
+    " 24   end if",
+    " 25 else",
+    " 26   text \"{\"op\":\"menu-empty\",\"name\":\"Choose-Claude\",\"build… (60 chars)\"",
+    " 27   run Log-Repo ← «26»",
+    " 28   show The Claude menu came back with no rows. Logged a… (124 chars)",
+    " 29 end if"
+   ]
+  },
+  {
+   "file": "choose-gpt.json",
+   "label": "Choose-GPT: the ChatGPT-app menu, one table of destinations (9 actions)",
+   "name": "Choose-GPT",
+   "actions": 9,
+   "build": "f090946",
+   "settings": false,
+   "targets": [
+    "https://chatgpt.com/",
+    "https://chatgpt.com/codex",
+    "https://mehrlander.github.io/web-tools/app/?view=sessions"
+   ],
+   "sketch": [
+    "  0 text \"⌨️ Codex 💬 New chat 🕘 Sessions Out\"",
+    "  1 split \"New Lines\"",
+    "  2 choose from \"ChatGPT\" ← «1»",
+    "  3 dict",
+    "  4 value for «2» ← «3»",
+    "  5 if «4» has value",
+    "  6   url «4»",
+    "  7   open «6»",
+    "  8 end if"
+   ]
+  },
+  {
+   "file": "choose-manage.json",
+   "label": "Choose-Manage: a menu of every shortcut whose name contains Manage, and the pick runs (4 actions)",
+   "name": "Choose-Manage",
+   "actions": 4,
+   "build": "1eedbbf",
+   "settings": true,
+   "targets": [],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 filter",
+    "  2 choose from",
+    "  3 run «2»"
+   ]
+  },
+  {
+   "file": "choose-runlink.json",
+   "label": "Choose-RunLink: a copied shortcuts:// link in, checked against the library and offered, or nothing (24 actions)",
+   "name": "Choose-RunLink",
+   "actions": 24,
+   "build": "89fe27a",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   clipboard",
+    "  2 end if",
+    "  3 match \"shortcuts://run-shortcut\\?\\S+\"",
+    "  4 if «3» has value",
+    "  5   match \"(?<=[?&]name=)[^&]+\"",
+    "  6   urlencode \"Decode\"",
+    "  7   my shortcuts",
+    "  8   filter",
+    "  9   if «8» has value",
+    " 10     text «6» · in your library 📋",
+    " 11   else",
+    " 12     text «6» · NOT in your library ⚠️",
+    " 13   end if",
+    " 14   text Run «6» Out",
+    " 15   split \"New Lines\"",
+    " 16   choose from «13» ← «15»",
+    " 17   if «16» is not Out",
+    " 18     url «3»",
+    " 19     open «18»",
+    " 20     output «6»",
+    " 21   end if",
+    " 22 end if",
+    " 23 nothing"
+   ]
+  },
+  {
+   "file": "claude-session.json",
+   "label": "Claude-Session: pick a session on the copied branch, open it in Web Tools (16 actions)",
+   "name": "Claude-Session",
+   "actions": 16,
+   "build": "2c999bb",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Run-Op"
+   ],
+   "sketch": [
+    "  0 clipboard",
+    "  1 text session-menu «0»",
+    "  2 run Run-Op ← «1»",
+    "  3 value for \"caption\" ← «2»",
+    "  4 if «3» as String contains ERROR",
+    "  5   text {\"op\":\"session-pick\",\"name\":\"Claude-Session\",\"bu… (76 chars)",
+    "  6   run Log-Repo ← «5»",
+    "  7   show «3»",
+    "  8 else",
+    "  9   value for \"rows\" ← «2»",
+    " 10   choose from «3» ← «9»",
+    " 11   value for \"urls\" ← «2»",
+    " 12   value for «10» ← «11»",
+    " 13   url «12»",
+    " 14   open «13»",
+    " 15 end if"
+   ]
+  },
+  {
+   "file": "copy-action-from-claude.json",
+   "label": "Copy-ActionFromClaude (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "7d7d405",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 as dict",
+    "  1 base64 \"Decode\" ← «0»[actions]",
+    "  2 com.sindresorhus.Actions.SetUniformTypeIdentifier",
+    "  3 clipboard <-",
+    "  4 notify «0»[report]"
+   ]
+  },
+  {
+   "file": "copy-action-from-url.json",
+   "label": "Copy-ActionFromUrl: fetch a packed payload and paste it (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "d94ac94",
+   "settings": false,
+   "targets": [
+    "Copy-ActionFromClaude"
+   ],
+   "sketch": [
+    "  0 fetch $input",
+    "  1 run Copy-ActionFromClaude ← «0» as String"
+   ]
+  },
+  {
+   "file": "copy-github-token.json",
+   "label": "Copy-GitHubToken: the stored token onto the clipboard, and nothing else (3 actions)",
+   "name": "Copy-GitHubToken",
+   "actions": 3,
+   "build": "6875e17",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 text \"🎟️GitHubToken\"",
+    "  1 run Inject-🎟️GitHubToken ← «0»",
+    "  2 clipboard <-"
+   ]
+  },
+  {
+   "file": "describe-input.json",
+   "label": "Describe-Input: describe the input, in one shortcut and one text card (17 actions)",
+   "name": "Describe-Input",
+   "actions": 17,
+   "build": "0fa4c6e",
+   "settings": true,
+   "targets": [
+    "￼"
+   ],
+   "sketch": [
+    "  0 for each $input",
+    "  1   type of",
+    "  2   set \"Item\"",
+    "  3   as text",
+    "  4   if «3» starts with shortcuts://",
+    "  5   else",
+    "  6     base64",
+    "  7   end if",
+    "  8   getitemname",
+    "  9   dict",
+    " 10 end for each",
+    " 11 join \"Custom\"",
+    " 12 text <pre id=\"out\"></pre><script>document.getElementB… (5691 chars)",
+    " 13 base64 \"Encode\" ← «12»",
+    " 14 url data:text/html;charset=utf-8;base64,«13»",
+    " 15 as text",
+    " 16 as dict"
+   ]
+  },
+  {
+   "file": "dictate.json",
+   "label": "Dictate: open the full-page voice capture surface in the sheet (1 action)",
+   "name": "Dictate",
+   "actions": 1,
+   "build": "ca646c0",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 show page \"https://mehrlander.github.io/web-tools/pages/dic… (57 chars)\""
+   ]
+  },
+  {
+   "file": "double-backtap.json",
+   "label": "Double-BackTap: what Back Tap double is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Double-BackTap",
+   "actions": 2,
+   "build": "6db2b74",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ],
+   "sketch": [
+    "  0 text \"double-back\"",
+    "  1 run Route-Gesture ← «0»"
+   ]
+  },
+  {
+   "file": "dump-folder-zip.json",
+   "label": "Dump-FolderZip: one folder's shortcuts, zipped whole and committed, ending on the log page (20 actions)",
+   "name": "Dump-FolderZip",
+   "actions": 20,
+   "build": "58a9e34",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 my shortcuts $ask",
+    "  1 as dict",
+    "  2 archive",
+    "  3 clipboard <-",
+    "  4 date",
+    "  5 format date \"Custom\"",
+    "  6 base64",
+    "  7 text \"Bearer 🎟️GitHubToken\"",
+    "  8 run Inject-🎟️GitHubToken ← «7»",
+    "  9 fetch https://api.github.com/repos/mehrlander/web-tool… (100 chars)",
+    " 10 run Check-ApiReply ← «9»",
+    " 11 value for \"content\" ← «9»",
+    " 12 value for \"name\" ← «11»",
+    " 13 if «12» has value",
+    " 14   text {\"op\":\"dump\",\"name\":\"Dump-FolderZip\",\"file\":\"«12… (69 chars)",
+    " 15   run Log-Repo ← «14»",
+    " 16   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    " 17 else",
+    " 18   show Zipped «5» Confirmed: «12»",
+    " 19 end if"
+   ]
+  },
+  {
+   "file": "dump-folder.json",
+   "label": "Dump-Folder: one folder's shortcuts as JSON lines, onto the clipboard (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "943db93",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 my shortcuts $ask",
+    "  1 for each «0»",
+    "  2   getitemname",
+    "  3   as file \"public.json\"",
+    "  4   text {\"name\":\"«2»\",\"shortcut\":«3»}",
+    "  5 end for each",
+    "  6 join \"New Lines\"",
+    "  7 clipboard <-"
+   ]
+  },
+  {
+   "file": "dump-named.json",
+   "label": "Dump-Named: the named shortcuts, zipped and committed in one request, ending on the log page (28 actions)",
+   "name": "Dump-Named",
+   "actions": 33,
+   "build": "0fdb8cd",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 replace \"^[⟦⟧\\s]+|[⟦⟧\\s]+$\"",
+    "  1 replace \"[⟦⟧]+\"",
+    "  2 split \"New Lines\"",
+    "  3 my shortcuts",
+    "  4 for each «2»",
+    "  5   if $Repeat Item has value",
+    "  6     filter",
+    "  7     if «6» has value",
+    "  8       append to \"Found\" ← «6»",
+    "  9     end if",
+    " 10   end if",
+    " 11 end for each",
+    " 12 get $Found",
+    " 13 count",
+    " 14 count",
+    " 15 as dict",
+    " 16 archive",
+    " 17 date",
+    " 18 format date \"Custom\"",
+    " 19 base64",
+    " 20 text \"Bearer 🎟️GitHubToken\"",
+    " 21 run Inject-🎟️GitHubToken ← «20»",
+    " 22 fetch https://api.github.com/repos/mehrlander/web-tool… (94 chars)",
+    " 23 run Check-ApiReply ← «22»",
+    " 24 value for \"content\" ← «22»",
+    " 25 value for \"name\" ← «24»",
+    " 26 if «25» has value",
+    " 27   text {\"op\":\"dump\",\"name\":\"Dump-Named\",\"file\":\"«25»\",\"… (91 chars)",
+    " 28   run Log-Repo ← «27»",
+    " 29   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    " 30 else",
+    " 31   show Zipped «18» Confirmed: «25»",
+    " 32 end if"
+   ]
+  },
+  {
+   "file": "dump-recent-zip.json",
+   "label": "Dump-RecentZip: every shortcut modified in the last N days, zipped whole and committed, ending on the log page (28 actions)",
+   "name": "Dump-RecentZip",
+   "actions": 28,
+   "build": "d153cc5",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 number \"7\"",
+    "  1 set \"Days\" ← «0»",
+    "  2 if $input has value",
+    "  3   set \"Days\"",
+    "  4 end if",
+    "  5 get $Days",
+    "  6 math \"×\" ← «5»",
+    "  7 set \"Span\" ← «6»",
+    "  8 my shortcuts",
+    "  9 filter",
+    " 10 as dict",
+    " 11 archive",
+    " 12 date",
+    " 13 format date \"Custom\"",
+    " 14 base64",
+    " 15 text \"Bearer 🎟️GitHubToken\"",
+    " 16 run Inject-🎟️GitHubToken ← «15»",
+    " 17 fetch https://api.github.com/repos/mehrlander/web-tool… (94 chars)",
+    " 18 run Check-ApiReply ← «17»",
+    " 19 value for \"content\" ← «17»",
+    " 20 value for \"name\" ← «19»",
+    " 21 if «20» has value",
+    " 22   text {\"op\":\"dump\",\"name\":\"Dump-RecentZip\",\"file\":\"«20… (69 chars)",
+    " 23   run Log-Repo ← «22»",
+    " 24   show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    " 25 else",
+    " 26   show Zipped «13» Confirmed: «20»",
+    " 27 end if"
+   ]
+  },
+  {
+   "file": "dump-recent.json",
+   "label": "Dump-Recent: every shortcut modified in the last N days, contents and all, committed to the repo in one tap (25 actions)",
+   "name": "Dump-Recent",
+   "actions": 25,
+   "build": "0fbeca2",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 number \"7\"",
+    "  1 set \"Days\" ← «0»",
+    "  2 if $input has value",
+    "  3   set \"Days\"",
+    "  4 end if",
+    "  5 get $Days",
+    "  6 math \"×\" ← «5»",
+    "  7 set \"Span\" ← «6»",
+    "  8 my shortcuts",
+    "  9 filter",
+    " 10 for each «9»",
+    " 11   as file \"public.json\"",
+    " 12   text ==shortcut== $Repeat Item.Name ==modified== $Rep… (89 chars)",
+    " 13   append to \"Picked\" ← «12»",
+    " 14 end for each",
+    " 15 get $Picked",
+    " 16 join \"New Lines\"",
+    " 17 clipboard <-",
+    " 18 date",
+    " 19 format date \"Custom\"",
+    " 20 base64",
+    " 21 text \"Bearer 🎟️GitHubToken\"",
+    " 22 run Inject-🎟️GitHubToken ← «21»",
+    " 23 fetch https://api.github.com/repos/mehrlander/web-tool… (94 chars)",
+    " 24 show Dumped. «23»"
+   ]
+  },
+  {
+   "file": "dump-selected.json",
+   "label": "Dump-Selected: pick shortcuts, copy them as JSON lines (9 actions)",
+   "name": null,
+   "actions": 9,
+   "build": "f31a1c3",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 choose from \"Dump which shortcuts?\" ← «0»",
+    "  2 for each «1»",
+    "  3   getitemname",
+    "  4   as file \"public.json\"",
+    "  5   text {\"name\":\"«3»\",\"shortcut\":«4»}",
+    "  6 end for each",
+    "  7 join \"New Lines\"",
+    "  8 clipboard <-"
+   ]
+  },
+  {
+   "file": "dump-shortcut.json",
+   "label": "Dump-Shortcut: Get-Shortcut's result, stamped and committed through Log-Repo (5 actions)",
+   "name": "Dump-Shortcut",
+   "actions": 5,
+   "build": "45ca776",
+   "settings": false,
+   "targets": [
+    "Get-ShortcutJson",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 run Get-ShortcutJson",
+    "  1 as dict",
+    "  2 set key \"op\"",
+    "  3 set key \"build\"",
+    "  4 run Log-Repo ← «3» as String"
+   ]
+  },
+  {
+   "file": "dump-shortcuts.json",
+   "label": "Dump-Shortcuts: every shortcut as combined JSON, onto the clipboard (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "0275eb9",
+   "settings": false,
+   "targets": [
+    "Use-Shortcut"
+   ],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 run Use-Shortcut ← «0»",
+    "  2 clipboard <-"
+   ]
+  },
+  {
+   "file": "find-shortcut.json",
+   "label": "Find-Shortcut: every shortcut whose name contains this one, and the picked copy opened (11 actions)",
+   "name": "Find-Shortcut",
+   "actions": 11,
+   "build": "7d8949e",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   clipboard",
+    "  2 end if",
+    "  3 my shortcuts",
+    "  4 filter",
+    "  5 count",
+    "  6 if «5» > 1",
+    "  7   choose from «5» named like «2» ← «4»",
+    "  8   com.apple.shortcuts.OpenWorkflowAction",
+    "  9 end if",
+    " 10 output «5»"
+   ]
+  },
+  {
+   "file": "get-app-route.json",
+   "label": "Get-AppRoute: an app name in, the shortcut to run out, or nothing (5 actions)",
+   "name": "Get-AppRoute",
+   "actions": 5,
+   "build": "717b0d4",
+   "settings": false,
+   "targets": [
+    "Choose-BackTap",
+    "Choose-Claude",
+    "Choose-GPT",
+    "Open-WiFi",
+    "Speak-Text"
+   ],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   getcurrentapp",
+    "  2 end if",
+    "  3 text \"[Audible]=Speak-Text [ChatGPT]=Choose-GPT [Claud… (126 chars)\"",
+    "  4 match (?<=\\[«2»\\]=).+"
+   ]
+  },
+  {
+   "file": "get-file-info.json",
+   "label": "Get-FileInfo: describe the input, one item or a list (10 actions)",
+   "name": "Get-FileInfo",
+   "actions": 10,
+   "build": "870c492",
+   "settings": true,
+   "targets": [
+    "Combine-JsonList",
+    "Get-FileContext",
+    "Get-JsonFromJs",
+    "Run-List"
+   ],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   list",
+    "  2   run Run-List ← «1»",
+    "  3   output «2»",
+    "  4 end if",
+    "  5 run Get-FileContext",
+    "  6 run Combine-JsonList ← «5»",
+    "  7 text \"((input) => { const cap = 32 const clipEnd = s =… (4690 chars)\"",
+    "  8 text («7»)(«6»)",
+    "  9 run Get-JsonFromJs ← «8»"
+   ]
+  },
+  {
+   "file": "get-shortcut-json.json",
+   "label": "Get-ShortcutJson: one named shortcut as JSON, name included, returned not sent (7 actions)",
+   "name": "Get-ShortcutJson",
+   "actions": 7,
+   "build": "92c1c3c",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   text \"Choose-Sample\"",
+    "  2 end if",
+    "  3 my shortcuts",
+    "  4 filter",
+    "  5 as file \"public.json\" ← «4»",
+    "  6 text {\"name\":\"«2»\",\"shortcut\":«5»}"
+   ]
+  },
+  {
+   "file": "gh-recent-branches-picker.json",
+   "label": "GitHub: recent branches, as a picker (11 actions)",
+   "name": null,
+   "actions": 11,
+   "build": "50cd98d",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 text \"<!doctype html> <meta charset=\"utf-8\"> <meta nam… (8184 chars)\"",
+    "  1 run Inject-🎟️GitHubToken ← «0»",
+    "  2 base64 \"Encode\" ← «1»",
+    "  3 url data:text/html;charset=utf-8;base64,«2»",
+    "  4 as text",
+    "  5 split \"New Lines\"",
+    "  6 choose from \"Recent branches\" ← «5»",
+    "  7 replace \"· .*$\"",
+    "  8 text https://mehrlander.github.io/web-tools/pages/bra… (63 chars)",
+    "  9 url «8»",
+    " 10 open «9»"
+   ]
+  },
+  {
+   "file": "gh-recent-branches.json",
+   "label": "GitHub: branches I last committed on (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "b4c9741",
+   "settings": false,
+   "targets": [
+    "Show-Html"
+   ],
+   "sketch": [
+    "  0 text \"<!doctype html> <meta charset=\"utf-8\"> <meta nam… (8184 chars)\"",
+    "  1 run Show-Html ← «0»"
+   ]
+  },
+  {
+   "file": "js-data-url.json",
+   "label": "JavaScript via data: URL (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "8f6376a",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 text \"<pre id=\"out\"></pre> <script> var d = new Date()… (356 chars)\"",
+    "  1 base64 \"Encode\" ← «0»",
+    "  2 url data:text/html;charset=utf-8;base64,«1»",
+    "  3 as text",
+    "  4 show «3»"
+   ]
+  },
+  {
+   "file": "library-fetch.json",
+   "label": "Library-Fetch: install a shortcut signed in the repo, no worker on device (8 actions)",
+   "name": "Library-Fetch",
+   "actions": 8,
+   "build": "16b4f91",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 fetch «2»",
+    "  4 name it «1».shortcut ← «3»",
+    "  5 openin",
+    "  6 text {\"op\":\"fetch\",\"name\":\"«1»\",\"build\":\"16b4f91\",\"fr… (58 chars)",
+    "  7 run Log-Repo ← «6»"
+   ]
+  },
+  {
+   "file": "library-import.json",
+   "label": "Library-Import: fetch a plist, remote-sign it, import it (13 actions)",
+   "name": "Library-Import",
+   "actions": 13,
+   "build": "7faa22b",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 fetch «2»",
+    "  4 as file \"com.apple.property-list\" ← «3»",
+    "  5 name it «1».plist ← «4»",
+    "  6 archive \"gz\" ← «5»",
+    "  7 fetch \"http://shortcuts.gluebyte.workers.dev/\"",
+    "  8 unzip",
+    "  9 name it «1».shortcut ← «8»",
+    " 10 openin",
+    " 11 text {\"op\":\"import\",\"name\":\"«1»\",\"from\":\"«2»\"}",
+    " 12 run Log-Repo ← «11»"
+   ]
+  },
+  {
+   "file": "library-install.json",
+   "label": "Library-Install: create the named shortcut and copy its actions (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "686ccf5",
+   "settings": false,
+   "targets": [
+    "Copy-ActionFromUrl",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 run Copy-ActionFromUrl ← «2»",
+    "  4 com.apple.shortcuts.CreateWorkflowAction",
+    "  5 com.apple.shortcuts.OpenWorkflowAction",
+    "  6 text {\"op\":\"install\",\"name\":\"«1»\",\"from\":\"«2»\"}",
+    "  7 run Log-Repo ← «6»"
+   ]
+  },
+  {
+   "file": "library-move.json",
+   "label": "Library-Move: resolve every name, log what resolved, then one Move into a folder you pick at run time (14 actions)",
+   "name": "Library-Move",
+   "actions": 14,
+   "build": "c38e359",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 my shortcuts",
+    "  2 for each «0»",
+    "  3   filter",
+    "  4   if «3» has value",
+    "  5     append to \"Found\" ← «3»",
+    "  6   end if",
+    "  7 end for each",
+    "  8 get $Found",
+    "  9 count",
+    " 10 count",
+    " 11 text {\"op\":\"move\",\"name\":\"Library-Move\",\"build\":\"c38e… (82 chars)",
+    " 12 run Log-Repo ← «11»",
+    " 13 com.apple.shortcuts.MoveShortcutToFolderAction"
+   ]
+  },
+  {
+   "file": "library-open.json",
+   "label": "Library-Open: note, then open that shortcut in the editor (11 actions)",
+   "name": "Library-Open",
+   "actions": 11,
+   "build": "a0c7c42",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item \"1\" ← «0»",
+    "  2 item \"2\" ← «0»",
+    "  3 if «2» has value",
+    "  4   alert «2»",
+    "  5 end if",
+    "  6 my shortcuts",
+    "  7 filter",
+    "  8 text open name=«1» build=a0c7c42",
+    "  9 run Log-Repo ← «8»",
+    " 10 com.apple.shortcuts.OpenWorkflowAction"
+   ]
+  },
+  {
+   "file": "library-paste.json",
+   "label": "Library-Paste: install by paste, saying first whether that build is already installed (25 actions)",
+   "name": "Library-Paste",
+   "actions": 25,
+   "build": "f18efdb",
+   "settings": true,
+   "targets": [
+    "Copy-ActionFromUrl",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 item \"3\" ← «0»",
+    "  4 my shortcuts",
+    "  5 filter",
+    "  6 if «5» has value",
+    "  7   as file \"public.json\" ← «5»",
+    "  8   as text",
+    "  9   if «8» contains «3»",
+    " 10     alert «1» is already build «3». OK installs it again a… (73 chars)",
+    " 11   else",
+    " 12     alert «1» will be replaced with build «3». When the ed… (66 chars)",
+    " 13   end if",
+    " 14 else",
+    " 15   alert «1» is new: build «3». When the editor opens, pa… (52 chars)",
+    " 16 end if",
+    " 17 text {\"op\":\"paste\",\"name\":\"«1»\",\"from\":\"«2»\",\"target\"… (73 chars)",
+    " 18 run Log-Repo ← «17»",
+    " 19 if «5» has value",
+    " 20   com.apple.shortcuts.DeleteWorkflowAction",
+    " 21 end if",
+    " 22 run Copy-ActionFromUrl ← «2»",
+    " 23 com.apple.shortcuts.CreateWorkflowAction",
+    " 24 com.apple.shortcuts.OpenWorkflowAction"
+   ]
+  },
+  {
+   "file": "library-replace.json",
+   "label": "Library-Replace: delete by name, then import the new one (16 actions)",
+   "name": "Library-Replace",
+   "actions": 16,
+   "build": "ec68fe9",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 my shortcuts",
+    "  4 filter",
+    "  5 com.apple.shortcuts.DeleteWorkflowAction",
+    "  6 fetch «2»",
+    "  7 as file \"com.apple.property-list\" ← «6»",
+    "  8 name it «1».plist ← «7»",
+    "  9 archive \"gz\" ← «8»",
+    " 10 fetch \"http://shortcuts.gluebyte.workers.dev/\"",
+    " 11 unzip",
+    " 12 name it «1».shortcut ← «11»",
+    " 13 openin",
+    " 14 text {\"op\":\"replace\",\"name\":\"«1»\",\"from\":\"«2»\"}",
+    " 15 run Log-Repo ← «14»"
+   ]
+  },
+  {
+   "file": "library-stage.json",
+   "label": "Library-Stage: move each named shortcut to a folder, and log it (8 actions)",
+   "name": "Library-Stage",
+   "actions": 8,
+   "build": "43be0c3",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 for each «0»",
+    "  2   my shortcuts",
+    "  3   filter",
+    "  4   com.apple.shortcuts.MoveShortcutToFolderAction",
+    "  5 end for each",
+    "  6 text {\"op\":\"stage\",\"names\":\"«0»\"}",
+    "  7 run Log-Repo ← «6»"
+   ]
+  },
+  {
+   "file": "local-open.json",
+   "label": "Local-Open: reopen a copied loopback URL against the PC's LAN address (3 actions)",
+   "name": "Local-Open",
+   "actions": 3,
+   "build": "8c7a90e",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 clipboard",
+    "  1 replace \"127\\.0\\.0\\.1|localhost|\\[::1\\]|0\\.0\\.0\\.0\"",
+    "  2 open «1»"
+   ]
+  },
+  {
+   "file": "log-pagerender.json",
+   "label": "Log-PageRender: render a URL to an image and commit it, no screenshot (21 actions)",
+   "name": "Log-PageRender",
+   "actions": 21,
+   "build": "94267fb",
+   "settings": true,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 # \"Log-PageRender: a URL in, a rendered image of th… (743 chars)\"",
+    "  1 if $input has value",
+    "  2   text $input",
+    "  3 else",
+    "  4   text \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    "  5 end if",
+    "  6 page contents",
+    "  7 makepdf",
+    "  8 splitpdf",
+    "  9 count",
+    " 10 item",
+    " 11 makeimagefrompdfpage",
+    " 12 base64",
+    " 13 date",
+    " 14 format date \"Custom\"",
+    " 15 text \"Bearer 🎟️GitHubToken\"",
+    " 16 run Inject-🎟️GitHubToken ← «15»",
+    " 17 fetch https://api.github.com/repos/mehrlander/web-tool… (98 chars)",
+    " 18 text {\"op\":\"pagerender\",\"name\":\"Log-PageRender\",\"buil… (112 chars)",
+    " 19 run Log-Repo ← «18»",
+    " 20 output «18»"
+   ]
+  },
+  {
+   "file": "log-pageshot.json",
+   "label": "Log-PageShot: shoot a URL in Safari twice and commit the pair (27 actions)",
+   "name": "Log-PageShot",
+   "actions": 27,
+   "build": "658f61c",
+   "settings": true,
+   "targets": [
+    "Inject-🎟️GitHubToken",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 # \"Log-PageShot: a URL in, a screenshot of it in Sa… (951 chars)\"",
+    "  1 if $input has value",
+    "  2   text $input",
+    "  3 else",
+    "  4   text \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    "  5 end if",
+    "  6 alert \"Safari opens next and two shots are taken, at 5 … (196 chars)\"",
+    "  7 url «5»",
+    "  8 open «7»",
+    "  9 wait 5",
+    " 10 takescreenshot",
+    " 11 resize \"700\"",
+    " 12 wait 7",
+    " 13 takescreenshot",
+    " 14 resize \"700\"",
+    " 15 list",
+    " 16 image.combine",
+    " 17 base64",
+    " 18 date",
+    " 19 format date \"Custom\"",
+    " 20 text \"Bearer 🎟️GitHubToken\"",
+    " 21 run Inject-🎟️GitHubToken ← «20»",
+    " 22 fetch https://api.github.com/repos/mehrlander/web-tool… (91 chars)",
+    " 23 notify «19».png is in the repo.",
+    " 24 text {\"op\":\"pageshot\",\"name\":\"Log-PageShot\",\"build\":\"… (104 chars)",
+    " 25 run Log-Repo ← «24»",
+    " 26 output «24»"
+   ]
+  },
+  {
+   "file": "log-repo.json",
+   "label": "Log-Repo: commit the input to shortcuts/log/, silently (12 actions)",
+   "name": "Log-Repo",
+   "actions": 12,
+   "build": "2e9a1f2",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 # \"Log-Repo build 2e9a1f2. Silent on success since … (188 chars)\"",
+    "  1 clipboard <-",
+    "  2 date",
+    "  3 format date \"Custom\"",
+    "  4 base64",
+    "  5 text \"Bearer 🎟️GitHubToken\"",
+    "  6 run Inject-🎟️GitHubToken ← «5»",
+    "  7 fetch https://api.github.com/repos/mehrlander/web-tool… (89 chars)",
+    "  8 run Check-ApiReply ← «7»",
+    "  9 value for \"content\" ← «7»",
+    " 10 value for \"name\" ← «9»",
+    " 11 output $input"
+   ]
+  },
+  {
+   "file": "manage-library-probe.json",
+   "label": "Probe: the three shape-unknown library actions (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "6f10239",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 # \"PROBE, not a working shortcut. actions.json carr… (768 chars)\"",
+    "  1 com.apple.shortcuts.OpenWorkflowAction",
+    "  2 com.apple.shortcuts.MoveShortcutToFolderAction",
+    "  3 com.apple.shortcuts.DeleteWorkflowAction"
+   ]
+  },
+  {
+   "file": "menu.json",
+   "label": "Menu, 3 cases (8 actions)",
+   "name": null,
+   "actions": 8,
+   "build": "41ea0e6",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 menu Pick one:",
+    "  1 case One",
+    "  2   show \"You picked One.\"",
+    "  3 case Two",
+    "  4   show \"You picked Two.\"",
+    "  5 case Three",
+    "  6   show \"You picked Three.\"",
+    "  7 end menu"
+   ]
+  },
+  {
+   "file": "open-wifi.json",
+   "label": "Open-WiFi: the Wi-Fi settings pane, for when a cast is failing (2 actions)",
+   "name": "Open-WiFi",
+   "actions": 2,
+   "build": "a980162",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 url \"prefs:root=WIFI\"",
+    "  1 open «0»"
+   ]
+  },
+  {
+   "file": "probe-apps.json",
+   "label": "Probe-Apps: Find Apps over the whole library, name and bundle id per row. Mac-only, established on device 2026-08-30 (11 actions)",
+   "name": null,
+   "actions": 11,
+   "build": "0adb109",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 filter.apps",
+    "  1 count",
+    "  2 for each «0»",
+    "  3   text $Repeat Item.Name $Repeat Item.Bundle Identifier",
+    "  4   append to \"Rows\" ← «3»",
+    "  5 end for each",
+    "  6 get $Rows",
+    "  7 join \"New Lines\"",
+    "  8 text apps name=Probe-Apps build=0adb109 count=«1» «7»",
+    "  9 run Log-Repo ← «8»",
+    " 10 output «8»"
+   ]
+  },
+  {
+   "file": "probe-coercion.json",
+   "label": "Probe-Coercion: which of five inputs the rich-text coercion actually renders (29 actions)",
+   "name": "Probe-Coercion",
+   "actions": 29,
+   "build": "a8406f9",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 # \"Four legs, each logging before the next runs, be… (716 chars)\"",
+    "  1 text \"<!doctype html><meta charset=\"utf-8\"><pre style=… (81 chars)\"",
+    "  2 base64 \"Encode\" ← «1»",
+    "  3 url data:text/html;charset=utf-8;base64,«2»",
+    "  4 as text",
+    "  5 text a=«4»",
+    "  6 run Log-Repo ← «5»",
+    "  7 text \"<!doctype html><meta charset=\"utf-8\"><pre id=\"o\"… (167 chars)\"",
+    "  8 base64 \"Encode\" ← «7»",
+    "  9 url data:text/html;charset=utf-8;base64,«8»",
+    " 10 as text",
+    " 11 text b=«10»",
+    " 12 run Log-Repo ← «11»",
+    " 13 url \"https://api.github.com/zen\"",
+    " 14 as text",
+    " 15 text c=«14»",
+    " 16 run Log-Repo ← «15»",
+    " 17 text \"<!doctype html> <meta charset=\"utf-8\"> <title>Ne… (1225 chars)\"",
+    " 18 base64 \"Encode\" ← «17»",
+    " 19 url data:text/html;charset=utf-8;base64,«18»",
+    " 20 as text",
+    " 21 text d=«20»",
+    " 22 run Log-Repo ← «21»",
+    " 23 text \"<!doctype html> <meta charset=\"utf-8\"> <title>In… (2434 chars)\"",
+    " 24 base64 \"Encode\" ← «23»",
+    " 25 url data:text/html;charset=utf-8;base64,«24»",
+    " 26 as text",
+    " 27 text e=«26»",
+    " 28 run Log-Repo ← «27»"
+   ]
+  },
+  {
+   "file": "probe-list-detail.json",
+   "label": "Probe-ListDetail: does a list input still lose detail.caption (9 actions)",
+   "name": "Probe-ListDetail",
+   "actions": 9,
+   "build": "2c595ed",
+   "settings": false,
+   "targets": [
+    "Get-FileCaption",
+    "Get-FileInfo",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 text \"alpha\"",
+    "  1 text \"bravo\"",
+    "  2 list",
+    "  3 run Get-FileInfo ← «2»",
+    "  4 text 1/2 Get-FileInfo on a 2-item list: «3»",
+    "  5 run Log-Repo ← «4»",
+    "  6 run Get-FileCaption ← «2»",
+    "  7 text 2/2 Get-FileCaption on the same list: «6»",
+    "  8 run Log-Repo ← «7»"
+   ]
+  },
+  {
+   "file": "probe-list-handoff.json",
+   "label": "Probe-ListHandoff: whether a list survives Run Shortcut, by crossing into itself (12 actions)",
+   "name": "Probe-ListHandoff",
+   "actions": 12,
+   "build": "ec08965",
+   "settings": false,
+   "targets": [
+    "Log-Repo",
+    "Probe-ListHandoff"
+   ],
+   "sketch": [
+    "  0 # \"Does a list survive Run Shortcut? Run-Pick's two… (555 chars)\"",
+    "  1 if $input no value",
+    "  2   text \"AAA\"",
+    "  3   text \"BBB\"",
+    "  4   list",
+    "  5   run Probe-ListHandoff ← «4»",
+    "  6   output «5»",
+    "  7 end if",
+    "  8 count",
+    "  9 item \"1\"",
+    " 10 text handoff count=«8» first=«9»",
+    " 11 run Log-Repo ← «10»"
+   ]
+  },
+  {
+   "file": "probe-quicklook.json",
+   "label": "Probe-QuickLook: does Quick Look run a page's script (4 actions)",
+   "name": "Probe-QuickLook",
+   "actions": 4,
+   "build": "5889b96",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 text \"<html><body style=\"font:28px -apple-system;paddi… (160 chars)\"",
+    "  1 as file \"public.html\" ← «0»",
+    "  2 name it \"probe.html\" ← «1»",
+    "  3 preview"
+   ]
+  },
+  {
+   "file": "probe-route.json",
+   "label": "Probe-Route: what the app map answers for a named app, logged (3 actions)",
+   "name": "Probe-Route",
+   "actions": 3,
+   "build": "201c340",
+   "settings": false,
+   "targets": [
+    "Get-AppRoute",
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 run Get-AppRoute",
+    "  1 text {\"op\":\"route\",\"name\":\"$input\",\"build\":\"201c340\",… (62 chars)",
+    "  2 run Log-Repo ← «1»"
+   ]
+  },
+  {
+   "file": "probe-sheet-blocks.json",
+   "label": "Probe-SheetBlocks: the clock either side of the Show Web View sheet (10 actions)",
+   "name": "Probe-SheetBlocks",
+   "actions": 10,
+   "build": "dddb0a2",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 # \"Probe-SheetBlocks: does a shortcut keep running … (730 chars)\"",
+    "  1 alert \"The log page opens next. Leave it up for about t… (163 chars)\"",
+    "  2 date",
+    "  3 format date \"Custom\"",
+    "  4 show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\"",
+    "  5 date",
+    "  6 format date \"Custom\"",
+    "  7 text {\"op\":\"sheetblocks\",\"name\":\"Probe-SheetBlocks\",\"… (94 chars)",
+    "  8 run Log-Repo ← «7»",
+    "  9 output «7»"
+   ]
+  },
+  {
+   "file": "probe-step.json",
+   "label": "Probe-Step: ask about the probe you just ran, commit it, then fire the next one (16 actions)",
+   "name": "Probe-Step",
+   "actions": 16,
+   "build": "0a13144",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item \"1\" ← «0»",
+    "  2 item \"2\" ← «0»",
+    "  3 item \"3\" ← «0»",
+    "  4 if «1» is not -",
+    "  5   ask «1»",
+    "  6   text Q: «1» A: «5»",
+    "  7   run Log-Repo ← «6»",
+    "  8 end if",
+    "  9 if «2» is not -",
+    " 10   if «3» is -",
+    " 11     run «2»",
+    " 12   else",
+    " 13     run «2» ← «3»",
+    " 14   end if",
+    " 15 end if"
+   ]
+  },
+  {
+   "file": "probe-tab-js.json",
+   "label": "Probe-TabJs: whether Run JavaScript on Web Page accepts a Safari tab entity (9 actions)",
+   "name": "Probe-TabJs",
+   "actions": 9,
+   "build": "1ae77a7",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 # \"Two logs, in this order on purpose. The first la… (232 chars)\"",
+    "  1 com.apple.mobilesafari.TabEntity",
+    "  2 count",
+    "  3 text tabs=«2»",
+    "  4 run Log-Repo ← «3»",
+    "  5 item",
+    "  6 js on page",
+    "  7 text tabjs=«6»",
+    "  8 run Log-Repo ← «7»"
+   ]
+  },
+  {
+   "file": "probe-unattended.json",
+   "label": "Probe-Unattended: four legs of bookkeeping, each committed before the next, for a run nobody is holding (19 actions)",
+   "name": "Probe-Unattended",
+   "actions": 19,
+   "build": "2979036",
+   "settings": false,
+   "targets": [
+    "Get-FromJs",
+    "Inject-🎟️GitHubToken",
+    "Log-Repo",
+    "Sync-Manifest"
+   ],
+   "sketch": [
+    "  0 # \"Probe-Unattended: does the phone do its bookkeep… (631 chars)\"",
+    "  1 text \"Bearer 🎟️GitHubToken\"",
+    "  2 run Inject-🎟️GitHubToken ← «1»",
+    "  3 text \"{\"op\":\"probe-unattended\",\"name\":\"Probe-Unattende… (85 chars)\"",
+    "  4 date",
+    "  5 format date \"Custom\"",
+    "  6 base64 \"Encode\" ← «3»",
+    "  7 fetch https://api.github.com/repos/mehrlander/web-tool… (89 chars)",
+    "  8 text \"(()=>1+1)()\"",
+    "  9 run Get-FromJs ← «8»",
+    " 10 wait 1",
+    " 11 text {\"op\":\"probe-unattended\",\"name\":\"Probe-Unattende… (93 chars)",
+    " 12 date",
+    " 13 format date \"Custom\"",
+    " 14 base64 \"Encode\" ← «11»",
+    " 15 fetch https://api.github.com/repos/mehrlander/web-tool… (90 chars)",
+    " 16 run Sync-Manifest",
+    " 17 text \"{\"op\":\"probe-unattended\",\"name\":\"Probe-Unattende… (86 chars)\"",
+    " 18 run Log-Repo ← «17»"
+   ]
+  },
+  {
+   "file": "probe-watch.json",
+   "label": "Probe-Watch: brief, fire, ask, log (9 actions)",
+   "name": "Probe-Watch",
+   "actions": 9,
+   "build": "63f17a9",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item \"1\" ← «0»",
+    "  2 item \"2\" ← «0»",
+    "  3 item \"3\" ← «0»",
+    "  4 alert 👀 Watch what happens next «1»",
+    "  5 run «2»",
+    "  6 ask «3»",
+    "  7 text Ran: «2» Q: «3» A: «6»",
+    "  8 run Log-Repo ← «7»"
+   ]
+  },
+  {
+   "file": "probe-webview-caps.json",
+   "label": "Probe-WebViewCaps: every remaining sheet capability, returning itself (2 actions)",
+   "name": "Probe-WebViewCaps",
+   "actions": 2,
+   "build": "f86c1d4",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ],
+   "sketch": [
+    "  0 text \"<html><head><meta name=\"viewport\" content=\"width… (2681 chars)\"",
+    "  1 run Show-WebView ← «0»"
+   ]
+  },
+  {
+   "file": "probe-webview-net.json",
+   "label": "Probe-WebViewNet: does the sheet reach the network (2 actions)",
+   "name": "Probe-WebViewNet",
+   "actions": 2,
+   "build": "3585180",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ],
+   "sketch": [
+    "  0 text \"<html><body style=\"font:24px -apple-system;paddi… (312 chars)\"",
+    "  1 run Show-WebView ← «0»"
+   ]
+  },
+  {
+   "file": "probe-webview.json",
+   "label": "Probe-WebView: does the Show Web View sheet run a page's script (2 actions)",
+   "name": "Probe-WebView",
+   "actions": 2,
+   "build": "f737485",
+   "settings": false,
+   "targets": [
+    "Show-WebView"
+   ],
+   "sketch": [
+    "  0 text \"<html><body style=\"font:28px -apple-system;paddi… (160 chars)\"",
+    "  1 run Show-WebView ← «0»"
+   ]
+  },
+  {
+   "file": "read-shots.json",
+   "label": "Read-Shots: OCR a set of screenshots and commit the text to the repo log (11 actions)",
+   "name": "Read-Shots",
+   "actions": 11,
+   "build": "f8679fe",
+   "settings": false,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 pick photo",
+    "  1 count",
+    "  2 for each «0»",
+    "  3   extracttextfromimage",
+    "  4   append to \"Chunks\" ← «3»",
+    "  5 end for each",
+    "  6 get $Chunks",
+    "  7 join \"New Lines\"",
+    "  8 text shots name=Read-Shots build=f8679fe count=«1» «7… (49 chars)",
+    "  9 run Log-Repo ← «8»",
+    " 10 output «8»"
+   ]
+  },
+  {
+   "file": "route-gesture.json",
+   "label": "Route-Gesture: a gesture label in, the shortcut for that gesture run, on the clipboard (10 actions)",
+   "name": "Route-Gesture",
+   "actions": 10,
+   "build": "1646ecd",
+   "settings": false,
+   "targets": [
+    "Choose-Manage",
+    "Copy-GitHubToken",
+    "Run-BackTap"
+   ],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   text \"double-back\"",
+    "  2 end if",
+    "  3 text \"[double-back]=Run-BackTap [triple-back]=Choose-M… (82 chars)\"",
+    "  4 match (?<=\\[«2»\\]=).+",
+    "  5 if «4» no value",
+    "  6   text \"Run-BackTap\"",
+    "  7 end if",
+    "  8 clipboard",
+    "  9 run «7» ← «8»"
+   ]
+  },
+  {
+   "file": "run-app-determined.json",
+   "label": "Run-AppDetermined: Get-AppRoute, a default, and the run (6 actions)",
+   "name": "Run-AppDetermined",
+   "actions": 6,
+   "build": "daa0cf2",
+   "settings": false,
+   "targets": [
+    "Get-AppRoute"
+   ],
+   "sketch": [
+    "  0 getcurrentapp",
+    "  1 run Get-AppRoute ← «0»",
+    "  2 if «1» no value",
+    "  3   text \"Show-Loop\"",
+    "  4 end if",
+    "  5 run «4»"
+   ]
+  },
+  {
+   "file": "run-backtap.json",
+   "label": "Run-BackTap: the back-tap dispatcher, app ladder collapsed to one lookup (43 actions)",
+   "name": "Run-BackTap",
+   "actions": 43,
+   "build": "ca97583",
+   "settings": true,
+   "targets": [
+    "Choose-RunLink",
+    "Get-AppRoute",
+    "Show-Ace",
+    "Show-Loop",
+    "Show-WebView"
+   ],
+   "sketch": [
+    "  0 getcurrentapp",
+    "  1 if «0» as GenericFile no value",
+    "  2   notify \"No app: Show-Ace\"",
+    "  3   wait 1",
+    "  4   run Show-Ace",
+    "  5   output «4»",
+    "  6 end if",
+    "  7 type of",
+    "  8 match \"shortcuts://run-shortcut\\?\\S+\"",
+    "  9 if «8» has value",
+    " 10   run Choose-RunLink ← «8»",
+    " 11   if «10» has value",
+    " 12     output «10»",
+    " 13   end if",
+    " 14 end if",
+    " 15 run Get-AppRoute ← «0»",
+    " 16 if «15» has value",
+    " 17   run «15»",
+    " 18   output «17»",
+    " 19 end if",
+    " 20 if «7» is Image",
+    " 21   preview",
+    " 22   output $input",
+    " 23 end if",
+    " 24 if «7» is URL",
+    " 25   open $input",
+    " 26   output $input",
+    " 27 end if",
+    " 28 match \"\\Ahttps?://\\S+(?=\\s*\\z)\"",
+    " 29 if «28» has value",
+    " 30   url «28»",
+    " 31   open «30»",
+    " 32   output «28»",
+    " 33 end if",
+    " 34 if $input no value",
+    " 35   show page \"https://mehrlander.github.io/web-tools/pages/dic… (57 chars)\"",
+    " 36   output $input",
+    " 37 end if",
+    " 38 if $input as String starts with < or $input as String starts with ```",
+    " 39   run Show-WebView",
+    " 40 else",
+    " 41   run Show-Loop",
+    " 42 end if"
+   ]
+  },
+  {
+   "file": "run-by-name.json",
+   "label": "Probe: does Run Shortcut resolve by name alone? (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "914a32d",
+   "settings": false,
+   "targets": [
+    "Run-Html"
+   ],
+   "sketch": [
+    "  0 text \"<!doctype html><meta charset=utf-8><meta name=vi… (359 chars)\"",
+    "  1 run Run-Html ← «0»"
+   ]
+  },
+  {
+   "file": "run-by-variable.json",
+   "label": "Probe: can Run Shortcut take its target from a variable? (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "3c6248f",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 text \"Run-Html\"",
+    "  1 text \"<!doctype html><meta charset=utf-8><meta name=vi… (276 chars)\"",
+    "  2 run «0» ← «1»"
+   ]
+  },
+  {
+   "file": "run-html.json",
+   "label": "Run-Html: render Shortcut Input as a page (3 actions)",
+   "name": null,
+   "actions": 3,
+   "build": "cbd633e",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 base64 \"Encode\"",
+    "  1 url data:text/html;charset=utf-8;base64,«0»",
+    "  2 open «1»"
+   ]
+  },
+  {
+   "file": "run-op.json",
+   "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (8 actions)",
+   "name": "Run-Op",
+   "actions": 8,
+   "build": "508e4c5",
+   "settings": false,
+   "targets": [
+    "Get-JsonFromJs",
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 item",
+    "  2 item \"2\" ← «0»",
+    "  3 base64 \"Encode\" ← «2»",
+    "  4 text (function(){var n='«1»';var i='«3»';var t='🎟️Git… (601 chars)",
+    "  5 run Inject-🎟️GitHubToken ← «4»",
+    "  6 run Get-JsonFromJs ← «5»",
+    "  7 output «6»"
+   ]
+  },
+  {
+   "file": "run-pick.json",
+   "label": "Run-Pick: pick a verb from the input list, run it on the clipboard, log it and open the log (14 actions)",
+   "name": "Run-Pick",
+   "actions": 14,
+   "build": "ccb6cfc",
+   "settings": true,
+   "targets": [
+    "Log-Repo",
+    "Run-Pick",
+    "Show-Log"
+   ],
+   "sketch": [
+    "  0 # \"Verb list in, one name per line; the clipboard i… (1440 chars)\"",
+    "  1 if $input no value",
+    "  2   text \"Get-FileInfo Show-Table Log-Repo\"",
+    "  3   run Run-Pick ← «2»",
+    "  4   output «3»",
+    "  5 end if",
+    "  6 clipboard",
+    "  7 split \"New Lines\"",
+    "  8 choose from \"Run which one on the clipboard?\" ← «7»",
+    "  9 run «8» ← «6»",
+    " 10 text run name=Run-Pick build=ccb6cfc chose=«8» «9»",
+    " 11 run Log-Repo ← «10»",
+    " 12 clipboard <-",
+    " 13 run Show-Log"
+   ]
+  },
+  {
+   "file": "run-probe-unattended.json",
+   "label": "One Run Shortcut card naming Probe-Unattended, to paste into a blank time-of-day automation instead of searching the action list for it (1 action)",
+   "name": null,
+   "actions": 1,
+   "build": "1c93527",
+   "settings": false,
+   "targets": [
+    "Probe-Unattended"
+   ],
+   "sketch": [
+    "  0 run Probe-Unattended"
+   ]
+  },
+  {
+   "file": "run-steps.json",
+   "label": "Run-Steps: run named shortcuts in order, piping each into the next (6 actions)",
+   "name": null,
+   "actions": 6,
+   "build": "4cd9eea",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 split \"New Lines\"",
+    "  1 for each «0»",
+    "  2   run $Repeat Item",
+    "  3   set \"Carry\" ← «2»",
+    "  4 end for each",
+    "  5 get $Carry"
+   ]
+  },
+  {
+   "file": "self-name.json",
+   "label": "Self-Name: read your own name from config, so a rename cannot break your callers (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "3a78521",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 get file \"config.json\"",
+    "  1 set \"Settings\" ← «0» as Dictionary",
+    "  2 text $Settings[SelfName]",
+    "  3 set \"SelfName\" ← «2»",
+    "  4 run $SelfName"
+   ]
+  },
+  {
+   "file": "set-github-token.json",
+   "label": "Set-🎟️GitHubToken: the clipboard becomes the stored token, then the checker says so (8 actions)",
+   "name": "Set-🎟️GitHubToken",
+   "actions": 8,
+   "build": "c34ae44",
+   "settings": false,
+   "targets": [
+    "Check-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   clipboard",
+    "  2 end if",
+    "  3 get file \"config.json\"",
+    "  4 set key \"🎟️GitHubToken\"",
+    "  5 name it \"config.json\" ← «4»",
+    "  6 save file",
+    "  7 run Check-🎟️GitHubToken"
+   ]
+  },
+  {
+   "file": "show-html-js.json",
+   "label": "Show-Html (JS): the same job in 9 actions, the text work moved into the page (9 actions)",
+   "name": null,
+   "actions": 9,
+   "build": "01d78a6",
+   "settings": false,
+   "targets": [
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 base64 \"Encode\"",
+    "  1 base64 \"Encode\"",
+    "  2 text \"<!doctype html> <meta charset=\"utf-8\"> <title>Sh… (2497 chars)\"",
+    "  3 replace \"📄PageBase64\"",
+    "  4 replace \"📋ClipboardBase64\"",
+    "  5 run Inject-🎟️GitHubToken ← «4»",
+    "  6 base64 \"Encode\" ← «5»",
+    "  7 url data:text/html;charset=utf-8;base64,«6»",
+    "  8 open «7»"
+   ]
+  },
+  {
+   "file": "show-log.json",
+   "label": "Show-Log: the device log as a sheet over Shortcuts (2 actions)",
+   "name": "Show-Log",
+   "actions": 2,
+   "build": "0e42e17",
+   "settings": true,
+   "targets": [],
+   "sketch": [
+    "  0 # \"A hosted https URL, not HTML text, and the diffe… (428 chars)\"",
+    "  1 show page \"https://mehrlander.github.io/web-tools/app/?app=… (71 chars)\""
+   ]
+  },
+  {
+   "file": "show-menu.json",
+   "label": "Show-Menu: run a menu handed to it as text (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "2c901e0",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 name it \"Menu.vcf\"",
+    "  1 choose from",
+    "  2 url «1».Notes",
+    "  3 open «2»"
+   ]
+  },
+  {
+   "file": "speak-text.json",
+   "label": "Speak-Text: read the input aloud, in the back tap's voice (1 actions)",
+   "name": "Speak-Text",
+   "actions": 1,
+   "build": "2dcedbe",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 speak"
+   ]
+  },
+  {
+   "file": "stage-input-card.json",
+   "label": "Show-Loop Stage case: run Stage-Input on this shortcut's input, then stop (2 actions)",
+   "name": null,
+   "actions": 2,
+   "build": "25f356c",
+   "settings": false,
+   "targets": [
+    "Stage-Input"
+   ],
+   "sketch": [
+    "  0 run Stage-Input",
+    "  1 output"
+   ]
+  },
+  {
+   "file": "stage-input.json",
+   "label": "Stage-Input: send what was shared to the Web Tools stage (29 actions)",
+   "name": "Stage-Input",
+   "actions": 29,
+   "build": "9ac9e06",
+   "settings": true,
+   "targets": [
+    "Log-Repo"
+   ],
+   "sketch": [
+    "  0 if $input no value",
+    "  1   clipboard",
+    "  2   set \"Item\" ← «1»",
+    "  3 else",
+    "  4   set \"Item\"",
+    "  5 end if",
+    "  6 type of",
+    "  7 if «6» is Safari Web Page",
+    "  8   js on page",
+    "  9   count",
+    " 10   text {\"op\":\"stage\",\"type\":\"«6»\",\"gz\":\"«9»\",\"build\":\"9… (56 chars)",
+    " 11   run Log-Repo ← «10»",
+    " 12   url https://mehrlander.github.io/web-tools/app/#gz=«… (50 chars)",
+    " 13   open «12»",
+    " 14   output",
+    " 15 end if",
+    " 16 as text",
+    " 17 count",
+    " 18 text {\"op\":\"stage\",\"type\":\"«6»\",\"chars\":\"«17»\",\"build… (60 chars)",
+    " 19 run Log-Repo ← «18»",
+    " 20 if «17» 1003 1",
+    " 21   urlencode",
+    " 22   url https://mehrlander.github.io/web-tools/app/#take… (53 chars)",
+    " 23   open «22»",
+    " 24 else",
+    " 25   clipboard <-",
+    " 26   url https://mehrlander.github.io/web-tools/app/?view… (54 chars)",
+    " 27   open «26»",
+    " 28 end if"
+   ]
+  },
+  {
+   "file": "stop-output-card.json",
+   "label": "Stop and Output, to paste after Show-Loop's Run Stage-Input card (1 action)",
+   "name": null,
+   "actions": 1,
+   "build": "7bb6d6b",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 output"
+   ]
+  },
+  {
+   "file": "sync-manifest.json",
+   "label": "Sync-Manifest: the library's shape committed to the repo, one tap (14 actions)",
+   "name": "Sync-Manifest",
+   "actions": 14,
+   "build": "0ebe6ea",
+   "settings": false,
+   "targets": [
+    "Check-ApiReply",
+    "Inject-🎟️GitHubToken"
+   ],
+   "sketch": [
+    "  0 my shortcuts",
+    "  1 text ==name== «0» ==actions== «0».Action Count ==last… (81 chars)",
+    "  2 join \"New Lines\"",
+    "  3 clipboard <-",
+    "  4 date",
+    "  5 format date \"Custom\"",
+    "  6 base64",
+    "  7 text \"Bearer 🎟️GitHubToken\"",
+    "  8 run Inject-🎟️GitHubToken ← «7»",
+    "  9 fetch https://api.github.com/repos/mehrlander/web-tool… (94 chars)",
+    " 10 run Check-ApiReply ← «9»",
+    " 11 value for \"content\" ← «9»",
+    " 12 value for \"name\" ← «11»",
+    " 13 show Synced «5» Confirmed: «12»"
+   ]
+  },
+  {
+   "file": "sync-xhr-probe.json",
+   "label": "Network probe: does the coercion wait? (5 actions)",
+   "name": null,
+   "actions": 5,
+   "build": "8f2f9a5",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 text \"<!doctype html> <meta charset=\"utf-8\"> <title>Ne… (1225 chars)\"",
+    "  1 base64 \"Encode\" ← «0»",
+    "  2 url data:text/html;charset=utf-8;base64,«1»",
+    "  3 as text",
+    "  4 show «3»"
+   ]
+  },
+  {
+   "file": "trace.json",
+   "label": "Trace: one guarded log line, the debug idiom the library lacks (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "f1647cf",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 if $Trace is 1",
+    "  1   date",
+    "  2   text «1» $input",
+    "  3 end if"
+   ]
+  },
+  {
+   "file": "triple-backtap.json",
+   "label": "Triple-BackTap: what Back Tap triple is bound to, and all it says is which gesture fired (2 actions)",
+   "name": "Triple-BackTap",
+   "actions": 2,
+   "build": "2b155e9",
+   "settings": true,
+   "targets": [
+    "Route-Gesture"
+   ],
+   "sketch": [
+    "  0 text \"triple-back\"",
+    "  1 run Route-Gesture ← «0»"
+   ]
+  },
+  {
+   "file": "wiring-test.json",
+   "label": "Wiring test (4 actions)",
+   "name": null,
+   "actions": 4,
+   "build": "2a42772",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 # \"Anchors at offset 0 and 15, fan-out from one pro… (54 chars)\"",
+    "  1 text \"Hello from shortcut-tools\"",
+    "  2 show «1»",
+    "  3 show The text said: «1»"
+   ]
+  }
+ ]
+}

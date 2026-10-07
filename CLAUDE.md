@@ -1,9 +1,15 @@
 # CLAUDE.md
 
-Working rules for this repository, on top of the portable conventions in
-[`mehrlander/web-tools`](https://github.com/mehrlander/web-tools/blob/main/docs/CONVENTIONS.md).
-Load those with `/web-tools`. What follows is specific to this repo, and the
-first section governs every design decision made here.
+Working rules for this repository, on top of the portable conventions from
+`mehrlander/web-tools`: [`docs/SURFACING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/SURFACING.md),
+the surfacing primitives, and
+[`docs/QUALIFIED-WRITING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/QUALIFIED-WRITING.md),
+the prose rules. They arrive through the `portable` plugin, in every session:
+its `invoke-default` hook prints one directive at session start and
+**`/portable:default`** loads both. A web-tools checkout is not delivery and has
+not been since 2026-09-12, when that repo cut the `@`-import that used to make
+it one. What follows is specific to this repo, and the first section governs
+every design decision made here.
 
 ## The device is the expensive resource
 
@@ -19,9 +25,55 @@ Rank every delivery route by what it costs the person on the other end:
 | --- | --- |
 | Free | Read the corpus. Some 600 shortcuts and 30,000 actions are on disk, parseable, and answer most questions about how a real library is built; `library.json`'s `meta` block in web-tools-private has the live count, and `tools/freshness.py` says whether it is current. |
 | Free | Read the public record. The format notes cite what exists and, more usefully, where it stops. |
-| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists. |
+| Free | Change an **op**. `lib/ops/` in web-tools is fetched by `Run-Op` at run time, so a diagnostic written as an op reaches the device with nothing installed. |
+| One tap | A `shortcuts://run-shortcut` link to a receiver that already exists, **and five of them is still cheap**. |
 | One tap, then a paste | A packed link that drops cards on the clipboard. |
-| **Expensive** | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, type an input, or run something more than once. |
+| Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
+| **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing one of the two Back Tap stubs or an AssistiveTouch target costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
+
+**Running is cheap and installing is dear, and this table had it the other way
+round until 2026-09-14.** Stated by the owner, after a session diagnosed a
+failure by shipping two installs when one tap on an installed receiver would
+have measured it: *"It's quite simple for me to run a shortcut and see what the
+result is... you could give me a string of five of them to run... installing
+them is much more onerous."* The old row treating "run something more than
+once" as expensive was reading a repeat as tedium; the repeat is fine, and what
+is not fine is a repeat that asks for an **observation** each time, which is
+rule 5 and the diagnostic-returns-itself rule below.
+
+**So the diagnostic ladder starts at the top, not at the bottom.** In order:
+
+0. **Search the corpus for a probe that already answers it**, by what it
+   measures rather than by the name you would have given it. `Check-🎟️GitHubToken`
+   has been installed since before this repo existed: three actions that call
+   `GET api.github.com/user` with the injected token and show `active`, `stale`
+   or `error`. On 2026-09-14 a session reasoned its way to "the token has
+   probably expired" from three silent writers and handed that over as a
+   hypothesis, with this shortcut sitting in the Other folder. Rule 1 above
+   already says to exhaust the free routes; it did not say that a *probe* is one
+   of the things to search for, and now it does.
+1. `python3 tools/run.py <Receiver> --log`, which routes through `Run-Steps` and
+   appends `Log-Repo`, so the answer lands in `shortcuts/log/` and nobody reads
+   a screen. That tool's docstring has said this since it was written.
+2. `python3 tools/run.py --pick <A> <B>`, when the probe should run against
+   whatever is on the clipboard.
+3. A new **op** in web-tools `lib/ops/`, reached by `Run-Op`, when the probe
+   needs real computation. Still no install.
+4. Only then a new or revised receiver, and say what the install buys.
+
+**Rung 1 is the one that fails silently, and it fails hardest exactly when it
+matters.** `Log-Repo`, `Sync-Manifest` and `Run-Op` all build their
+Authorization header through `Inject-🎟️GitHubToken`, so the return channel and
+the credential are one dependency. When that credential goes, every probe that
+would report it stops reporting, and the symptom is not an error but four days
+of silence across three unrelated-looking surfaces. **A diagnostic cannot return
+itself when the return path is the thing under test.** So when the log has gone
+quiet, do not send another logging probe: send one that ends on screen, and say
+what to look at.
+
+A fix is not a measurement, and neither is a chain of plausible inferences.
+Shipping either to settle a question spends the dearest route to learn what the
+cheapest would have told you.
 
 **Rules that follow, and they are not advisory:**
 
@@ -62,45 +114,45 @@ axis, and it is the only route that can deliver **file-level** settings, since
 file and no paste reaches them. Generate a full plist for anything new.
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And importing over a name that already
-exists puts a choice on screen: **Apple's own sheet offers to save over the
-existing shortcut**, and taking that offer is all a re-install needs (reported
-2026-08-26). Nothing has to be deleted first.
+only because nothing here holds a secret. And **importing over a name the
+library already holds leaves both copies.** The owner has deleted the older one
+by hand after every import, across a day of them (2026-09-16).
 
-**Take the offer, because keeping both is a correctness problem rather than an
-untidiness one.** A second copy takes the index: the original keeps the clean
-name and the newcomer becomes `Name 1`, so every
+A duplicate takes the index: the original keeps the name, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
-it, still resolves to the **old** copy. An import that looks like an upgrade has
-then done the opposite.
+it, resolves to the copy that was there first. An import that looks like an
+upgrade has done the opposite.
 
-**Wrong 2026-08-15 → the paragraph above:** this read "import never merges by
-name" and called clearing the name first "mandatory, not stylistic." The
-duplicate and its index consequence are real, but they follow from declining the
-sheet's offer, not from importing at all. `Library-Replace` deletes by name
-before importing and is worth having where no one is present to answer the
-sheet; it is not a prerequisite, and a session should not route a normal
-re-install through it. The cost of that error is not a wasted tap: the link
-names a receiver the device may not have, so it fails at the point of use with
-nothing installed.
+**So a replace goes through `Library-Replace`**, which deletes by name, imports,
+and logs: one tap, no cleanup. `Library-Import` is for a name the library does
+not hold. Proven 2026-09-16 on `Probe-Route`, and the manifest taken after it
+showed one copy. The Chains view picks between them from the manifest; hand over
+`?name=<Chain>` rather than building the link.
 
-**But replacing a shortcut breaks whatever the system had bound to it**
-(reported 2026-08-31). Back Tap holds a reference that a save-over import does
-not preserve, so a re-installed shortcut has to be re-selected in Settings
-before the gesture works again. The name survives and the binding does not,
-which is the opposite of the failure the save-over offer prevents, and it is
-silent: the gesture simply stops doing anything.
+When the signing worker is down, install by paste: `python3 tools/pack.py
+<chain> --install --ref <sha>` emits a `Library-Paste` link, which says whether
+that build is already installed, deletes any copy by that name, creates the
+empty shortcut, opens it, and leaves the actions on the clipboard. A paste
+cannot set file-level settings, so the tool prints the toggles to set by hand.
+
+**Settings binds only `Double-BackTap` and `Triple-BackTap`**, two stubs that
+pass a label to `Route-Gesture` and never change. Anything behind the router is
+called by name, so replacing it costs no Settings visit. The caveat below now
+applies only to the stubs and to whatever AssistiveTouch is bound to, which is
+not yet recorded. A double back tap reaches `Run-BackTap` through the router's
+`[double-back]` line.
+
+**Replacing a bound shortcut breaks the binding** (reported 2026-08-31). Back
+Tap holds a reference that a re-install does not preserve, so the replacement
+has to be re-selected in Settings before the gesture works again. The failure
+is silent: the gesture simply stops doing anything.
 
 So **a handover that re-installs a bound shortcut owes the settings link too**,
 in the same message. The same holds for the AssistiveTouch button's actions.
 Delivery is through `Open-URL`, which already exists, because a bare `prefs:`
 link tapped in a chat client is swallowed and one run from inside Shortcuts is
-not:
-
-| Setting | Key |
-| --- | --- |
-| Back Tap | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/BackTap` |
-| AssistiveTouch | `prefs:root=ACCESSIBILITY&path=TOUCH_REACHABILITY_TITLE/AIR_TOUCH_TITLE` |
+not. The two `prefs:` URLs are in web-tools' `shortcut-links` skill,
+[Replacing a shortcut assigned to a gesture](https://github.com/mehrlander/web-tools/blob/main/skills/shortcut-links/SKILL.md#replacing-a-shortcut-assigned-to-a-gesture).
 
 Both come from `Fav-Settings`, which has carried a 14-page settings menu all
 along; the second lands on the AssistiveTouch page, and the long-press
@@ -251,6 +303,15 @@ A hit is not automatically wrong. It means the install will offer to save over
 something, and the question of whether that something is wanted has to be
 answered before the link goes out rather than after.
 
+**A route block is a third carrier, and it hid four names until 2026-09-14.**
+`Get-AppRoute` stores its table as a Text action of `[key]=Shortcut-Name` lines
+and reads a value back with a lookbehind match, so the target name is a
+substring of a literal: `WFWorkflowName` does not hold it, no dictionary value
+holds it, and the `Run Shortcut` card that consumes it carries a computed name
+the audit deliberately drops. Four live targets were therefore invisible to
+every check here. `tools/catalog.py` reads the block now, and `catalog.json` is
+where all three carriers meet.
+
 **A dictionary value is a shortcut name that no field name marks as one**, which
 is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
 cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is
@@ -300,6 +361,20 @@ Four things follow, and none is optional for anything handed over:
 
 **And report it back.** A reply that hands over a link ends by showing the actual
 log rows, so both sides can see what ran rather than inferring it from silence.
+
+## Snags
+
+[`docs/SNAGS.md`](docs/SNAGS.md) is the friction log: one line per trip, a
+`seen:` line of dates, a `→` to the document that holds the fix. Its header
+carries the intake shape and the recurrence rule. A trip goes there rather than
+into a narrative paragraph, and a trip already listed gets another date on its
+entry, never a second entry. The table is generated by
+`python3 tools/snags-index.py --publish` and held by the suite, because a hand
+count is the one number a session gets wrong.
+
+A claim found wrong is fixed in place; a dated record says so in an ordinary
+sentence with the date and a link to the successor, per web-tools
+[`skills/doc-craft/SKILL.md`](https://github.com/mehrlander/web-tools/blob/main/skills/doc-craft/SKILL.md).
 
 ## A diagnostic returns itself
 
@@ -367,6 +442,12 @@ The rule above still governs what the question may be: ask only what the repo
 cannot answer, which is what the screen did, what the dialog rendered, what
 Apple's own UI decided.
 
+**Send the instruction with the destination.** Every handover, probe or not.
+
+- Open the target: `run.py Library-Open --text '<Name>'`.
+- Alert first; the UI move ends the chain (`ui-action-breaks-what-follows`).
+- Needed: a receiver taking a message and a URL, since `Open-URL` takes only the URL.
+
 ## Handing over a link
 
 **Emit both forms, never type either**, which
@@ -378,3 +459,10 @@ round trip here.
 
 Use 📋 when the payoff is content on the clipboard, which every packed link is.
 📲 is for a link whose payoff is anything else.
+
+**And the card around the link is emitted too.** `python3 tools/run.py <names>
+--card` prints the whole handover table: the header is the receiver, the body is
+its payload unpacked. Its three shapes, and the reasoning behind each element,
+are owned upstream by web-tools' `shortcut-links` skill, not restated here. What
+is local is why it exists: the shape was typed by hand every time and drifted
+from the tool printing half of it, twice in two days.

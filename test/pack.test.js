@@ -127,6 +127,27 @@ test("--ref addresses a branch, since a chain is testable before it merges", () 
   assert.match(url, /shortcut-tools\/claude\/x\/packed\/show-html-js\.json$/);
 });
 
+test("--install hands the name and the payload address to Library-Paste", () => {
+  const out = execFileSync("python3", [path.join("tools", "pack.py"), "workflows/stage-input.json",
+    "--install", "--ref", "abc123"], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const link = out.trim();
+  assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Library-Paste&input=text&text=/);
+  const [name, url, build] = decodeURIComponent(link.split("&text=")[1]).split("\n");
+  assert.strictEqual(name, "Stage-Input");
+  const builds = JSON.parse(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"));
+  assert.strictEqual(build, builds["Stage-Input"], "the third line is the build the installed copy carries");
+  assert.strictEqual(url, "https://raw.githubusercontent.com/mehrlander/shortcut-tools/abc123/packed/stage-input.json");
+  const via = pack("workflows/library-paste.json", "--install", "--via", "Library-Install").trim();
+  assert.match(via, /name=Library-Install&/, "--via bootstraps the receiver through the older one");
+});
+
+test("--install names the toggles a paste cannot set, and refuses a chain with no name", () => {
+  const r = require("node:child_process").spawnSync("python3",
+    [path.join("tools", "pack.py"), "workflows/stage-input.json", "--install"], { cwd: ROOT, encoding: "utf8" });
+  assert.match(r.stderr, /Show in Share Sheet/);
+  assert.throws(() => pack("workflows/stage-input-card.json", "--install"), /Command failed/);
+});
+
 test("--url refuses a chain that is not published, rather than minting a 404", () => {
   assert.throws(() => pack("workflows/nonesuch.json", "--url"), /Command failed/);
 });

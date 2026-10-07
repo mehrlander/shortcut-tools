@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>WFQuickActionSurfaces</key>
+	<array/>
+	<key>WFWorkflowActions</key>
+	<array>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E7C1000-0001-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<string>&lt;!DOCTYPE html&gt;
+&lt;html lang="en" class="bg-base-200"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;title&gt;GitHub token&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"&gt;&lt;/script&gt;
+  &lt;link href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/themes.css,npm/daisyui@5" rel="stylesheet"&gt;
+  &lt;script defer src="https://unpkg.com/alpinejs"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body class="min-h-dvh bg-base-200"
+      x-data="{
+        state: 'checking',
+        login: '',
+        detail: 'contacting github',
+        NEW: 'https://github.com/settings/tokens/new?scopes=repo&amp;description=shortcuts%20estate',
+        SET: 'shortcuts://run-shortcut?name=Set-%F0%9F%8E%9F%EF%B8%8FGitHubToken',
+        get badge() {
+          return { checking: 'badge-ghost', active: 'badge-success',
+                   limited: 'badge-warning', stale: 'badge-error',
+                   error: 'badge-warning' }[this.state];
+        },
+        get done() { return this.state !== 'checking' &amp;&amp; this.state !== 'active'; },
+        async check() {
+          this.state = 'checking'; this.login = ''; this.detail = 'contacting github';
+          const auth = { Authorization: 'Bearer 🎟️GitHubToken' };
+          let me;
+          try {
+            const r = await fetch('https://api.github.com/user', { headers: auth });
+            me = await r.json();
+            if (!r.ok) {
+              this.state = 'stale';
+              this.detail = (me.message || 'token rejected') + ' · HTTP ' + r.status;
+              return;
+            }
+          } catch (e) { this.state = 'error'; this.detail = e.message; return; }
+          this.login = me.login || '';
+          // The credential that matters is the one Log-Repo writes with, so the
+          // check that matters is whether the private store is reachable. A
+          // token with no repo scope authenticates and still cannot log.
+          try {
+            const w = await fetch('https://api.github.com/repos/mehrlander/web-tools-private',
+                                  { headers: auth });
+            if (w.ok) { this.state = 'active'; this.detail = 'web-tools-private reachable'; }
+            else { this.state = 'limited'; this.detail = 'web-tools-private unreachable · HTTP ' + w.status + ' · needs the repo scope'; }
+          } catch (e) { this.state = 'error'; this.detail = e.message; }
+        }
+      }"
+      x-init="check()"&gt;
+
+  &lt;header class="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-base-300 bg-base-100"&gt;
+    &lt;i class="ph ph-ticket text-2xl opacity-60"&gt;&lt;/i&gt;
+    &lt;span class="font-semibold"&gt;GitHub token&lt;/span&gt;
+    &lt;div :class="'badge badge-lg ' + badge" x-text="state"&gt;&lt;/div&gt;
+    &lt;span class="font-mono opacity-70" x-text="login"&gt;&lt;/span&gt;
+    &lt;button class="btn btn-sm btn-ghost ml-auto" @click="check()"&gt;
+      &lt;i class="ph ph-arrows-clockwise"&gt;&lt;/i&gt;Re-check
+    &lt;/button&gt;
+  &lt;/header&gt;
+
+  &lt;main class="p-5 grid gap-5"&gt;
+    &lt;p class="text-pretty opacity-80" x-text="detail"&gt;&lt;/p&gt;
+
+    &lt;div class="grid gap-3 sm:grid-cols-2" x-show="done" x-cloak&gt;
+      &lt;a :href="NEW" class="btn btn-primary btn-lg justify-start gap-3"&gt;
+        &lt;i class="ph ph-github-logo text-xl"&gt;&lt;/i&gt;
+        &lt;span class="text-left leading-tight"&gt;New token&lt;br&gt;
+          &lt;span class="text-xs font-normal opacity-70"&gt;github.com · repo scope&lt;/span&gt;&lt;/span&gt;
+      &lt;/a&gt;
+      &lt;a :href="SET" class="btn btn-lg justify-start gap-3"&gt;
+        &lt;i class="ph ph-clipboard-text text-xl"&gt;&lt;/i&gt;
+        &lt;span class="text-left leading-tight"&gt;Set from clipboard&lt;br&gt;
+          &lt;span class="text-xs font-normal opacity-70"&gt;writes Managed/config.json&lt;/span&gt;&lt;/span&gt;
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/main&gt;
+
+  &lt;style type="text/tailwindcss"&gt;[x-cloak]{display:none}&lt;/style&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E7C1000-0002-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>5E7C1000-0001-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Inject-🎟️GitHubToken</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.runworkflow</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5E7C1000-0003-4A00-9000-000000000001</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Shortcut Result</string>
+						<key>OutputUUID</key>
+						<string>5E7C1000-0002-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFWorkflowName</key>
+				<string>Show-Html</string>
+			</dict>
+		</dict>
+	</array>
+	<key>WFWorkflowClientVersion</key>
+	<string>4711</string>
+	<key>WFWorkflowHasOutputFallback</key>
+	<false/>
+	<key>WFWorkflowHasShortcutInputVariables</key>
+	<false/>
+	<key>WFWorkflowIcon</key>
+	<dict>
+		<key>WFWorkflowIconGlyphNumber</key>
+		<integer>61440</integer>
+		<key>WFWorkflowIconStartColor</key>
+		<integer>-314141441</integer>
+	</dict>
+	<key>WFWorkflowImportQuestions</key>
+	<array/>
+	<key>WFWorkflowInputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowMinimumClientVersion</key>
+	<integer>900</integer>
+	<key>WFWorkflowMinimumClientVersionString</key>
+	<string>900</string>
+	<key>WFWorkflowOutputContentItemClasses</key>
+	<array/>
+	<key>WFWorkflowTypes</key>
+	<array/>
+</dict>
+</plist>

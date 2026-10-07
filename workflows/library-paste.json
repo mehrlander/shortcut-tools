@@ -1,0 +1,462 @@
+{
+  "name": "Library-Paste",
+  "label": "Library-Paste: install by paste, saying first whether that build is already installed (25 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.text.split",
+      "p": {
+        "UUID": "B0BE0000-1301-4A00-9000-000000000001",
+        "WFTextSeparator": "New Lines",
+        "text": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "B0BE0000-1302-4A00-9000-000000000001",
+        "CustomOutputName": "Shortcut name",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-1301-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "B0BE0000-1303-4A00-9000-000000000001",
+        "CustomOutputName": "Payload URL",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-1301-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFItemIndex": "2",
+        "WFItemSpecifier": "Item At Index"
+      }
+    },
+    {
+      "id": "is.workflow.actions.getitemfromlist",
+      "p": {
+        "UUID": "B0BE0000-1320-4A00-9000-000000000001",
+        "CustomOutputName": "Build",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Split Text",
+            "OutputUUID": "B0BE0000-1301-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFItemIndex": "3",
+        "WFItemSpecifier": "Item At Index"
+      }
+    },
+    {
+      "id": "is.workflow.actions.getmyworkflows",
+      "p": {
+        "UUID": "B0BE0000-1304-4A00-9000-000000000001"
+      }
+    },
+    {
+      "id": "is.workflow.actions.filter.files",
+      "p": {
+        "UUID": "B0BE0000-1305-4A00-9000-000000000001",
+        "WFContentItemInputParameter": {
+          "Value": {
+            "OutputName": "My Shortcuts",
+            "OutputUUID": "B0BE0000-1304-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFContentItemFilter": {
+          "Value": {
+            "WFActionParameterFilterPrefix": 1,
+            "WFActionParameterFilterTemplates": [
+              {
+                "Operator": 4,
+                "Property": "Name",
+                "Removable": true,
+                "Values": {
+                  "String": {
+                    "Value": {
+                      "attachmentsByRange": {
+                        "{0, 1}": {
+                          "Type": "ActionOutput",
+                          "OutputName": "Shortcut name",
+                          "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001"
+                        }
+                      },
+                      "string": "￼"
+                    },
+                    "WFSerializationType": "WFTextTokenString"
+                  },
+                  "Unit": 4
+                }
+              }
+            ],
+            "WFContentPredicateBoundedDate": false
+          },
+          "WFSerializationType": "WFContentPredicateTableTemplate"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1398-4A00-9000-000000000001",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Shortcuts",
+              "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettypeaction",
+      "p": {
+        "UUID": "B0BE0000-1321-4A00-9000-000000000001",
+        "WFFileType": "public.json",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Shortcuts",
+            "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.text",
+      "p": {
+        "UUID": "B0BE0000-1322-4A00-9000-000000000001",
+        "WFInput": {
+          "Value": {
+            "OutputName": "File of Type",
+            "OutputUUID": "B0BE0000-1321-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1397-4A00-9000-000000000001",
+        "WFCondition": 99,
+        "WFControlFlowMode": 0,
+        "WFConditionalActionString": {
+          "Value": {
+            "string": "￼",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Build",
+                "OutputUUID": "B0BE0000-1320-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Text",
+              "OutputUUID": "B0BE0000-1322-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "B0BE0000-1323-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": true,
+        "WFAlertActionTitle": "Already installed",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "￼ is already build ￼.\n\nOK installs it again anyway. Cancel stops here.",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut name",
+                "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{19, 1}": {
+                "OutputName": "Build",
+                "OutputUUID": "B0BE0000-1320-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1397-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "B0BE0000-1324-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": true,
+        "WFAlertActionTitle": "Replacing",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "￼ will be replaced with build ￼.\n\nWhen the editor opens, paste.",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut name",
+                "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{30, 1}": {
+                "OutputName": "Build",
+                "OutputUUID": "B0BE0000-1320-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1397-4A00-9000-000000000001",
+        "UUID": "B0BE0000-1325-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1398-4A00-9000-000000000001",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "id": "is.workflow.actions.alert",
+      "p": {
+        "UUID": "B0BE0000-1326-4A00-9000-000000000001",
+        "WFAlertActionCancelButtonShown": true,
+        "WFAlertActionTitle": "Installing",
+        "WFAlertActionMessage": {
+          "Value": {
+            "string": "￼ is new: build ￼.\n\nWhen the editor opens, paste.",
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut name",
+                "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{16, 1}": {
+                "OutputName": "Build",
+                "OutputUUID": "B0BE0000-1320-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1398-4A00-9000-000000000001",
+        "UUID": "B0BE0000-1308-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "B0BE0000-1310-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "{\"op\":\"paste\",\"name\":\"￼\",\"from\":\"￼\",\"target\":\"￼\",\"build\":\"#BUILD#\"}",
+            "attachmentsByRange": {
+              "{22, 1}": {
+                "OutputName": "Shortcut name",
+                "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{33, 1}": {
+                "OutputName": "Payload URL",
+                "OutputUUID": "B0BE0000-1303-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              },
+              "{46, 1}": {
+                "OutputName": "Build",
+                "OutputUUID": "B0BE0000-1320-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-1311-4A00-9000-000000000001",
+        "WFWorkflowName": "Log-Repo",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Text",
+            "OutputUUID": "B0BE0000-1310-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1396-4A00-9000-000000000001",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "Shortcuts",
+              "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.DeleteWorkflowAction",
+      "p": {
+        "UUID": "B0BE0000-1307-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "DeleteWorkflowAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "entities": {
+          "Value": {
+            "OutputName": "Shortcuts",
+            "OutputUUID": "B0BE0000-1305-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.conditional",
+      "p": {
+        "GroupingIdentifier": "B0BE0000-1396-4A00-9000-000000000001",
+        "UUID": "B0BE0000-1330-4A00-9000-000000000001",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "id": "is.workflow.actions.runworkflow",
+      "p": {
+        "UUID": "B0BE0000-1312-4A00-9000-000000000001",
+        "WFWorkflowName": "Copy-ActionFromUrl",
+        "WFInput": {
+          "Value": {
+            "OutputName": "Payload URL",
+            "OutputUUID": "B0BE0000-1303-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.CreateWorkflowAction",
+      "p": {
+        "UUID": "B0BE0000-1313-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "CreateWorkflowAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "name": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "Shortcut name",
+                "OutputUUID": "B0BE0000-1302-4A00-9000-000000000001",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "￼"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "com.apple.shortcuts.OpenWorkflowAction",
+      "p": {
+        "UUID": "B0BE0000-1314-4A00-9000-000000000001",
+        "AppIntentDescriptor": {
+          "AppIntentIdentifier": "OpenWorkflowAction",
+          "BundleIdentifier": "com.apple.shortcuts",
+          "Name": "Shortcuts",
+          "TeamIdentifier": "0000000000"
+        },
+        "target": {
+          "Value": {
+            "OutputName": "Shortcut",
+            "OutputUUID": "B0BE0000-1313-4A00-9000-000000000001",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ],
+  "workflow": {
+    "WFWorkflowTypes": [
+      "WFWorkflowTypeShowInSearch"
+    ]
+  }
+}

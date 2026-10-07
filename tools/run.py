@@ -7,6 +7,7 @@
     python3 tools/run.py Show-Loop --text 'hello'    # bake the input in
     python3 tools/run.py --verify '<link>'           # read a link back
     python3 tools/run.py --pick Describe-Input Show-Table   # a Run-Pick menu link
+    python3 tools/run.py Get-FromJs --log --card     # the handover card, not a caption
 
 The other emitters here each address one fixed receiver: pack.py sends actions
 to Copy-ActionFromClaude, show.py sends a page to Show-Html. Nothing emitted a
@@ -20,17 +21,26 @@ on newlines and runs each name in turn with the previous result as input
 (workflows/run-steps.json). Its first pass has no Carry set, so the first
 shortcut runs with no input, which is what a bare diagnostic wants.
 
---unchecked skips the audit, which a name installed since the last dump needs.
-It says so on stderr rather than passing silently, because the whole value of the
-check is that a link nobody verified is indistinguishable from one that was.
+Every link is audited before it is emitted: each name is checked against the
+library index and the newest device manifest, and a name neither holds stops the
+link. The shape is validated first, so a newline forging a step or a payload with
+no slot is reported as itself rather than as a missing shortcut. --unchecked
+skips the audit, which a name installed since the last dump needs. It says so on
+stderr rather than passing silently, because the whole value of the check is that
+a link nobody verified is indistinguishable from one that was.
 
 --pick emits a Run-Pick link instead: the names become a menu on the device and
-the chosen one runs on the clipboard. It CHECKS each name against the library
-index and the newest device manifest first, because a link's names are unchecked
-strings and this repository has already lost a fortnight to two of them going
-stale. The manifest is what removes the false positive for a shortcut installed
-since the last dump (Speak-Text, on 2026-09-05, was in no dump and in the
-2026-09-02 manifest). One false positive remains: a name computed at run time.
+the chosen one runs on the clipboard. The audit above matters most here, because
+a link's names are unchecked strings and this repository has already lost a
+fortnight to two of them going stale. The manifest is what removes the false
+positive for a shortcut installed since the last dump (Speak-Text, on
+2026-09-05, was in no dump and in the 2026-09-02 manifest). One false positive
+remains: a name computed at run time.
+
+--card prints the handover card rather than the one-line caption: the header is
+the receiver and the body is its payload unpacked, so a sequence shows every
+step, marked and linked to its chain page, and a plain run shows one row. The
+format and the reasoning are in web-tools skills/shortcut-links.
 
 --log appends Log-Repo, which writes the payload to the clipboard first and
 unconditionally, then commits it to shortcuts/log/ in web-tools-private. That
@@ -39,9 +49,9 @@ is the return channel: the reader taps once and the answer is already here.
 import argparse, json, os, sys, urllib.parse
 from pathlib import Path
 
-ICON = "📲"
+ICON = "📲"   # the surfacing mark for "run a shortcut"
 PICKER = "Run-Pick"
-INDEX = Path(__file__).resolve().parent.parent.parent / "web-tools-private" / "shortcuts" / "index.json"  # 📲, the surfacing mark for "run a shortcut"
+INDEX = Path(__file__).resolve().parent.parent.parent / "web-tools-private" / "shortcuts" / "index.json"
 CHAIN = "Run-Steps"
 LOGGER = "Log-Repo"
 SCHEME = "shortcuts://run-shortcut?name=%s&input=text&text=%s"
@@ -113,6 +123,33 @@ def audit(names, index=INDEX):
     return [n for n in names if n not in have]
 
 
+def check(names, unchecked=False):
+    """Refuse a link whose names the library cannot account for.
+
+    This used to run only under --pick, while CLAUDE.md said `run.py` audits
+    "every link it emits". A rule stated in prose and enforced on one path in
+    three is the failure this estate keeps writing up: the cheaper statement was
+    the weaker one, so a session (this one, 2026-09-16) credited an audit to a
+    link that never had one.
+    """
+    if unchecked:
+        print("names not audited; a stale one will fail at the point of use",
+              file=sys.stderr)
+        return
+    missing = audit(names)
+    if missing is None:
+        print("no library index to check names against; the link is still emitted",
+              file=sys.stderr)
+    elif missing:
+        raise SystemExit(
+            "not in the library index: %s\n"
+            "A link's names are unchecked strings and a stale one fails at the "
+            "point of use. The index and the newest device manifest were both "
+            "read; the one false positive left is a name computed at run time. "
+            "Pass --unchecked to send it anyway."
+            % ", ".join(missing))
+
+
 def pick_link(names):
     """A Run-Pick link: the names are the menu, the clipboard is the payload."""
     if not names:
@@ -135,6 +172,43 @@ def markdown(link, targets, log=False, label=None):
     """
     name = label or " then ".join(list(targets) + ([LOGGER] if log else []))
     return "%s [%s](%s)" % (ICON, name, link)
+
+
+def step_row(name, first):
+    """One step of a sequence card: the mark, then the name, all in one span.
+
+    The mark is the whole notation. A step after the first runs on the one above
+    it, which is exactly what Run-Steps does, and no index appears because
+    nothing in a step list refers back.
+
+    No chain page here. A step is a shortcut already on the phone, so a link
+    invites reading where the card exists to remove it, and half of these names
+    could not carry one anyway: sixteen names the chains here call are held in no
+    chain file, and a directly addressed receiver can be device-only (`Open-URL`,
+    `Fav-Settings`). A list where some names are tappable and some are not reads
+    as an error. The page belongs to the install card, which is the one tap that
+    leaves something behind.
+    """
+    return "`%s %s`" % ("\u25b8" if first else "\u21b3", name)
+
+
+def card(link, steps, receiver, label=None):
+    """The handover card, which is the format the reader actually meets.
+
+    One table per tap. The header is the receiver and the body is its payload
+    unpacked, so a sequence shows its steps and a plain run shows nothing: there
+    is no body when the payload is data rather than a reference. Every step
+    prints, the logger included. A display of a payload that omits part of the
+    payload is the failure this format exists to prevent.
+
+    The rules and the other two shapes are in web-tools skills/shortcut-links.
+    """
+    rows = ["| %s [%s](%s) |" % (ICON, label or receiver, link)]
+    if len(steps) > 1:
+        rows.append("| --- |")
+        rows.append("| %s |" % "<br>".join(
+            step_row(n, i == 0) for i, n in enumerate(steps)))
+    return "\n".join(rows)
 
 
 def verify(link):
@@ -175,40 +249,46 @@ def main():
     ap.add_argument("--pick", action="store_true",
                     help="emit a Run-Pick menu link over the named verbs")
     ap.add_argument("--unchecked", action="store_true",
-                    help="emit a --pick link without auditing the names")
+                    help="emit the link without auditing the names")
+    ap.add_argument("--card", action="store_true",
+                    help="print the handover card instead of the one-line caption")
     args = ap.parse_args()
     if args.verify:
         if not args.targets:
             raise SystemExit("give a link to verify")
         return verify(args.targets[0])
     if args.pick:
+        if args.card:
+            # A menu is not a pipeline: its names are alternatives, so neither
+            # the marks nor the order mean what they mean on a sequence card.
+            # That shape is not settled, and inventing notation is the one thing
+            # the card format forbids.
+            raise SystemExit("--card has no shape for a %s menu yet; "
+                             "send the one-line caption" % PICKER)
         if args.text or args.log:
             raise SystemExit("--pick takes its payload from the clipboard, so "
                              "--text and --log have no slot; run those separately")
-        missing = None if args.unchecked else audit(args.targets)
-        if args.unchecked:
-            print("names not audited; a stale one will fail at the point of use",
-                  file=sys.stderr)
-        elif missing is None:
-            print("no library index to check names against; the link is still emitted",
-                  file=sys.stderr)
-        elif missing:
-            raise SystemExit(
-                "not in the library index: %s\n"
-                "A link's names are unchecked strings and a stale one fails at the "
-                "point of use. The index and the newest device manifest were both "
-                "read; the one false positive left is a name computed at run time. "
-                "Pass --unchecked to send it anyway."
-                % ", ".join(missing))
         link = pick_link(args.targets)
+        check(args.targets, args.unchecked)
         print(link)
         print("\n%s\n" % markdown(link, args.targets,
                                    label=args.label or " · ".join(args.targets)),
               file=sys.stderr)
         return
     link = build(args.targets, args.log, args.text)
+    steps = list(args.targets) + ([LOGGER] if args.log else [])
+    check(steps, args.unchecked)
     print(link)
-    print("\n%s\n" % markdown(link, args.targets, args.log, args.label), file=sys.stderr)
+    # stdout stays the link, always, so a caller piping this is unaffected by
+    # which caption shape was asked for.
+    if args.card:
+        receiver = CHAIN if len(steps) > 1 else steps[0]
+        head = args.label
+        if head is None and len(steps) == 1 and args.text is not None:
+            head = "%s: %s" % (steps[0], args.text)
+        print("\n%s\n" % card(link, steps, receiver, head), file=sys.stderr)
+    else:
+        print("\n%s\n" % markdown(link, args.targets, args.log, args.label), file=sys.stderr)
 
 
 if __name__ == "__main__":
