@@ -1,7 +1,7 @@
 {
  "meta": {
-  "chains": 84,
-  "installable": 59,
+  "chains": 85,
+  "installable": 60,
   "external_targets": 18
  },
  "external_targets": [
@@ -967,6 +967,20 @@
     "  5 end for each",
     "  6 text {\"op\":\"stage\",\"names\":\"«0»\"}",
     "  7 run Log-Repo ← «6»"
+   ]
+  },
+  {
+   "file": "local-open.json",
+   "label": "Local-Open: reopen a copied loopback URL against the PC's LAN address (3 actions)",
+   "name": "Local-Open",
+   "actions": 3,
+   "build": "8c7a90e",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 clipboard",
+    "  1 replace \"127\\.0\\.0\\.1|localhost|\\[::1\\]|0\\.0\\.0\\.0\"",
+    "  2 open «1»"
    ]
   },
   {
