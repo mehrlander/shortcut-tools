@@ -287,9 +287,9 @@
         }
         this.sketches[name] = 'loading';
         try {
-          // A slash is stored as a colon in the archive, matching how a device
-          // dump spells an entry name, so the sketch is looked up that way too.
-          const p = 'shortcuts/sketches/' + name.replace('/', ':') + '.txt';
+          // The sketch file is named by tools/sketch.py's file_name rule:
+          // each character Windows refuses in a file name becomes "_".
+          const p = 'shortcuts/sketches/' + name.replace(/[<>:"\/\\|?*]/g, '_') + '.txt';
           this.sketches[name] = (await this.gh.get(p)).text;
         } catch (e) {
           // A missing sketch is a gap in the archive rather than a failure of

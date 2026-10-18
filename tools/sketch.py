@@ -132,6 +132,18 @@ VERB = {
 }
 
 
+# Characters Windows refuses in a file name. A shortcut's name keeps them; the
+# file named after it has each replaced with "_", so the repos that hold these
+# files can be checked out on Windows. pages/library.html and web-tools'
+# pages/shortcut-log.html apply the same rule to find a sketch.
+UNSAFE = re.compile(r'[<>:"/\\|?*]')
+
+
+def file_name(name):
+    """The file name for a shortcut called `name`, without an extension."""
+    return UNSAFE.sub("_", name)
+
+
 def offset_of(rng):
     """The integer offset out of an "{offset, length}" attachment range key."""
     return int(rng.strip("{}").split(",")[0])
@@ -408,9 +420,7 @@ def main():
             failed += 1
             continue
         if out:
-            # ":" for "/", the same substitution a device dump makes in an entry
-            # name, so a sketch filename matches the name index.json carries.
-            (out / (name.replace("/", ":") + ".txt")).write_text(text + "\n")
+            (out / (file_name(name) + ".txt")).write_text(text + "\n")
             wrote += 1
         else:
             if i:
