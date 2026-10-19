@@ -364,15 +364,12 @@ log rows, so both sides can see what ran rather than inferring it from silence.
 
 ## Snags
 
-A trip goes in the Snag list, which holds every repo's snags: `lists/snag.json`
-in web-tools-private, shown in the Web Tools Lists view, each item naming the
-repo it belongs to (`mehrlander/shortcut-tools` for a trip here). The item
-shape and the recurrence rule are in web-tools'
-[`docs/views/lists.md`](https://github.com/mehrlander/web-tools/blob/main/docs/views/lists.md).
-A trip goes there rather than into a narrative paragraph, and a trip already
-listed gets another date in its `seen`, never a second item. The count is the
-length of that list, so nothing here needs regenerating. This repo kept its own
-log, `docs/SNAGS.md`, until 2026-10-20.
+A trip goes in the estate's Snag list, `lists/snag.json` in web-tools-private,
+as an item whose `repo` is `mehrlander/shortcut-tools`, rather than into a
+narrative paragraph. A repeat is another date in the item's `seen`, never a
+second item; web-tools'
+[`docs/views/lists.md`](https://github.com/mehrlander/web-tools/blob/main/docs/views/lists.md)
+has the full shape. This repo's own log, `docs/SNAGS.md`, retired on 2026-10-20.
 
 A claim found wrong is fixed in place; a dated record says so in an ordinary
 sentence with the date and a link to the successor, per web-tools
