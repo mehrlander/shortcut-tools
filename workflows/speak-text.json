@@ -1,6 +1,6 @@
 {
   "name": "Speak-Text",
-  "label": "Speak-Text: read the input aloud in chunks, with a menu to repeat, change speed or voice, or stop; the speed and voice are remembered (45 actions)",
+  "label": "Speak-Text: read the input aloud in chunks, with a menu to repeat, change speed or voice, or stop; the speed and voice are remembered (46 actions)",
   "workflow": {
     "WFWorkflowIcon": {
       "WFWorkflowIconGlyphNumber": 61440,
@@ -103,60 +103,28 @@
       }
     },
     {
-      "id": "is.workflow.actions.dictionary",
+      "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "5B0A0000-0004-4A00-9000-000000000002",
-        "WFItems": {
+        "UUID": "5B0A0000-0002-4A00-9000-000000000002",
+        "WFTextActionText": {
           "Value": {
-            "WFDictionaryFieldValueItems": [
-              {
-                "WFItemType": 3,
-                "WFKey": {
-                  "Value": {
-                    "string": "rate"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                },
-                "WFValue": {
-                  "Value": {
-                    "string": "0.59"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                }
-              },
-              {
-                "WFItemType": 3,
-                "WFKey": {
-                  "Value": {
-                    "string": "pitch"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                },
-                "WFValue": {
-                  "Value": {
-                    "string": "1.44"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                }
-              },
-              {
-                "WFItemType": 0,
-                "WFKey": {
-                  "Value": {
-                    "string": "voice"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                },
-                "WFValue": {
-                  "Value": {
-                    "string": "com.apple.ttsbundle.gryphon-neural_nora_en-US_premium"
-                  },
-                  "WFSerializationType": "WFTextTokenString"
-                }
-              }
-            ]
+            "string": "{\"rate\": 0.59, \"pitch\": 1.44, \"voice\": \"com.apple.ttsbundle.gryphon-neural_nora_en-US_premium\"}"
           },
-          "WFSerializationType": "WFDictionaryFieldValue"
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.detect.dictionary",
+      "p": {
+        "UUID": "5B0A0000-0003-4A00-9000-000000000002",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "5B0A0000-0002-4A00-9000-000000000002",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
         }
       }
     },
@@ -167,7 +135,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0004-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0003-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -177,15 +145,15 @@
     {
       "id": "is.workflow.actions.conditional",
       "p": {
+        "UUID": "5B0A0000-0004-4A00-9000-000000000002",
         "GroupingIdentifier": "5B0A1000-0001-4A00-9000-000000000002",
-        "WFControlFlowMode": 2,
-        "UUID": "5B0A0000-0006-4A00-9000-000000000002"
+        "WFControlFlowMode": 2
       }
     },
     {
       "id": "is.workflow.actions.text.match",
       "p": {
-        "UUID": "5B0A0000-0007-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0005-4A00-9000-000000000002",
         "WFMatchTextPattern": "\\S[\\s\\S]{0,398}(?:[.!?…][\"\\'”’)\\]]*(?=\\s|$)|(?=\\n)|$)|\\S[\\s\\S]{0,397}\\S(?=\\s)|\\S{1,400}",
         "text": {
           "Value": {
@@ -203,11 +171,11 @@
     {
       "id": "is.workflow.actions.count",
       "p": {
-        "UUID": "5B0A0000-0008-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0006-4A00-9000-000000000002",
         "Input": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0007-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0005-4A00-9000-000000000002",
             "OutputName": "Matches"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -222,7 +190,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0007-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0005-4A00-9000-000000000002",
             "OutputName": "Matches"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -232,7 +200,7 @@
     {
       "id": "is.workflow.actions.speaktext",
       "p": {
-        "UUID": "5B0A0000-0010-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0007-4A00-9000-000000000002",
         "WFSpeakTextWait": false,
         "WFText": {
           "Value": {
@@ -290,7 +258,7 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "5B0A0000-0011-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0008-4A00-9000-000000000002",
         "WFTextActionText": {
           "Value": {
             "string": "￼/￼ · speed ￼\n￼",
@@ -301,7 +269,7 @@
               },
               "{2, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0008-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0006-4A00-9000-000000000002",
                 "OutputName": "Count"
               },
               "{12, 1}": {
@@ -335,7 +303,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0011-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0008-4A00-9000-000000000002",
                 "OutputName": "Text"
               }
             }
@@ -371,7 +339,7 @@
     {
       "id": "is.workflow.actions.math",
       "p": {
-        "UUID": "5B0A0000-0015-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0009-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -392,7 +360,7 @@
     {
       "id": "is.workflow.actions.speaktext",
       "p": {
-        "UUID": "5B0A0000-0016-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0010-4A00-9000-000000000002",
         "WFSpeakTextWait": false,
         "WFText": {
           "Value": {
@@ -409,7 +377,7 @@
         "WFSpeakTextRate": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0015-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0009-4A00-9000-000000000002",
             "OutputName": "Calculation Result"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -470,7 +438,7 @@
     {
       "id": "is.workflow.actions.math",
       "p": {
-        "UUID": "5B0A0000-0019-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0011-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -491,11 +459,11 @@
     {
       "id": "is.workflow.actions.round",
       "p": {
-        "UUID": "5B0A0000-0020-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0012-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0019-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0011-4A00-9000-000000000002",
             "OutputName": "Calculation Result"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -506,7 +474,7 @@
     {
       "id": "is.workflow.actions.setvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0021-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0013-4A00-9000-000000000002",
         "WFDictionary": {
           "Value": {
             "Type": "Variable",
@@ -521,7 +489,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0020-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0012-4A00-9000-000000000002",
                 "OutputName": "Rounded Number"
               }
             }
@@ -537,7 +505,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0021-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0013-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -547,14 +515,14 @@
     {
       "id": "is.workflow.actions.documentpicker.save",
       "p": {
-        "UUID": "5B0A0000-0023-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0014-4A00-9000-000000000002",
         "WFAskWhereToSave": false,
         "WFSaveFileOverwrite": true,
         "WFFileDestinationPath": "Snippets/Managed/speak-text.json",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0021-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0013-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -572,7 +540,7 @@
     {
       "id": "is.workflow.actions.math",
       "p": {
-        "UUID": "5B0A0000-0025-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0015-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -593,11 +561,11 @@
     {
       "id": "is.workflow.actions.round",
       "p": {
-        "UUID": "5B0A0000-0026-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0016-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0025-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0015-4A00-9000-000000000002",
             "OutputName": "Calculation Result"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -608,7 +576,7 @@
     {
       "id": "is.workflow.actions.setvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0027-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0017-4A00-9000-000000000002",
         "WFDictionary": {
           "Value": {
             "Type": "Variable",
@@ -623,7 +591,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0026-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0016-4A00-9000-000000000002",
                 "OutputName": "Rounded Number"
               }
             }
@@ -639,7 +607,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0027-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0017-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -649,14 +617,14 @@
     {
       "id": "is.workflow.actions.documentpicker.save",
       "p": {
-        "UUID": "5B0A0000-0029-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0018-4A00-9000-000000000002",
         "WFAskWhereToSave": false,
         "WFSaveFileOverwrite": true,
         "WFFileDestinationPath": "Snippets/Managed/speak-text.json",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0027-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0017-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -674,7 +642,7 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "5B0A0000-0031-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0019-4A00-9000-000000000002",
         "WFTextActionText": {
           "Value": {
             "string": "{\"Nora, bright\": {\"voice\": \"com.apple.ttsbundle.gryphon-neural_nora_en-US_premium\", \"pitch\": 1.44}, \"Nora, lower\": {\"voice\": \"com.apple.ttsbundle.gryphon-neural_nora_en-US_premium\", \"pitch\": 1.16}, \"Aaron\": {\"voice\": \"com.apple.ttsbundle.gryphon-neural_aaron_en-US_premium\", \"pitch\": 1}, \"Simone\": {\"voice\": \"com.apple.ttsbundle.gryphon-neural_simone_en-US_premium\", \"pitch\": 1}, \"Damon\": {\"voice\": \"com.apple.ttsbundle.gryphon-neural_damon_en-US_premium\", \"pitch\": 1}}"
@@ -686,11 +654,11 @@
     {
       "id": "is.workflow.actions.detect.dictionary",
       "p": {
-        "UUID": "5B0A0000-0032-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0020-4A00-9000-000000000002",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0031-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0019-4A00-9000-000000000002",
             "OutputName": "Text"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -700,12 +668,12 @@
     {
       "id": "is.workflow.actions.getvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0033-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0021-4A00-9000-000000000002",
         "WFGetDictionaryValueType": "All Keys",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0032-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0020-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -715,12 +683,12 @@
     {
       "id": "is.workflow.actions.choosefromlist",
       "p": {
-        "UUID": "5B0A0000-0034-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0022-4A00-9000-000000000002",
         "WFChooseFromListActionPrompt": "Voice",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0033-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0021-4A00-9000-000000000002",
             "OutputName": "Dictionary Value"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -730,14 +698,14 @@
     {
       "id": "is.workflow.actions.getvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0035-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0023-4A00-9000-000000000002",
         "WFDictionaryKey": {
           "Value": {
             "string": "￼",
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0034-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0022-4A00-9000-000000000002",
                 "OutputName": "Chosen Item"
               }
             }
@@ -747,7 +715,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0032-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0020-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -757,7 +725,7 @@
     {
       "id": "is.workflow.actions.setvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0036-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0024-4A00-9000-000000000002",
         "WFDictionary": {
           "Value": {
             "Type": "Variable",
@@ -772,7 +740,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0035-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0023-4A00-9000-000000000002",
                 "OutputName": "Dictionary Value",
                 "Aggrandizements": [
                   {
@@ -790,11 +758,11 @@
     {
       "id": "is.workflow.actions.setvalueforkey",
       "p": {
-        "UUID": "5B0A0000-0037-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0025-4A00-9000-000000000002",
         "WFDictionary": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0036-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0024-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -806,7 +774,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "Type": "ActionOutput",
-                "OutputUUID": "5B0A0000-0035-4A00-9000-000000000002",
+                "OutputUUID": "5B0A0000-0023-4A00-9000-000000000002",
                 "OutputName": "Dictionary Value",
                 "Aggrandizements": [
                   {
@@ -828,7 +796,7 @@
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0037-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0025-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -838,14 +806,14 @@
     {
       "id": "is.workflow.actions.documentpicker.save",
       "p": {
-        "UUID": "5B0A0000-0039-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0026-4A00-9000-000000000002",
         "WFAskWhereToSave": false,
         "WFSaveFileOverwrite": true,
         "WFFileDestinationPath": "Snippets/Managed/speak-text.json",
         "WFInput": {
           "Value": {
             "Type": "ActionOutput",
-            "OutputUUID": "5B0A0000-0037-4A00-9000-000000000002",
+            "OutputUUID": "5B0A0000-0025-4A00-9000-000000000002",
             "OutputName": "Dictionary"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -863,24 +831,24 @@
     {
       "id": "is.workflow.actions.output",
       "p": {
-        "UUID": "5B0A0000-0041-4A00-9000-000000000002",
+        "UUID": "5B0A0000-0027-4A00-9000-000000000002",
         "WFOutput": ""
       }
     },
     {
       "id": "is.workflow.actions.choosefrommenu",
       "p": {
+        "UUID": "5B0A0000-0028-4A00-9000-000000000002",
         "GroupingIdentifier": "5B0A1000-0002-4A00-9000-000000000002",
-        "WFControlFlowMode": 2,
-        "UUID": "5B0A0000-0042-4A00-9000-000000000002"
+        "WFControlFlowMode": 2
       }
     },
     {
       "id": "is.workflow.actions.repeat.each",
       "p": {
+        "UUID": "5B0A0000-0029-4A00-9000-000000000002",
         "GroupingIdentifier": "5B0A1000-0003-4A00-9000-000000000002",
-        "WFControlFlowMode": 2,
-        "UUID": "5B0A0000-0043-4A00-9000-000000000002"
+        "WFControlFlowMode": 2
       }
     }
   ]

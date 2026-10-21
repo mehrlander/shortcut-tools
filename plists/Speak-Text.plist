@@ -12,7 +12,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>WFCommentActionText</key>
-				<string>Speak-Text build 87489b6. Speed, pitch and voice are kept in Snippets/Managed/speak-text.json; delete that file to return to the defaults set below.</string>
+				<string>Speak-Text build 676efe7. Speed, pitch and voice are kept in Snippets/Managed/speak-text.json; delete that file to return to the defaults set below.</string>
 			</dict>
 		</dict>
 		<dict>
@@ -110,93 +110,43 @@
 		</dict>
 		<dict>
 			<key>WFWorkflowActionIdentifier</key>
-			<string>is.workflow.actions.dictionary</string>
+			<string>is.workflow.actions.gettext</string>
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0004-4A00-9000-000000000002</string>
-				<key>WFItems</key>
+				<string>5B0A0000-0002-4A00-9000-000000000002</string>
+				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
 					<dict>
-						<key>WFDictionaryFieldValueItems</key>
-						<array>
-							<dict>
-								<key>WFItemType</key>
-								<integer>3</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>rate</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>0.59</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
-							<dict>
-								<key>WFItemType</key>
-								<integer>3</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>pitch</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>1.44</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
-							<dict>
-								<key>WFItemType</key>
-								<integer>0</integer>
-								<key>WFKey</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>voice</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-								<key>WFValue</key>
-								<dict>
-									<key>Value</key>
-									<dict>
-										<key>string</key>
-										<string>com.apple.ttsbundle.gryphon-neural_nora_en-US_premium</string>
-									</dict>
-									<key>WFSerializationType</key>
-									<string>WFTextTokenString</string>
-								</dict>
-							</dict>
-						</array>
+						<key>string</key>
+						<string>{"rate": 0.59, "pitch": 1.44, "voice": "com.apple.ttsbundle.gryphon-neural_nora_en-US_premium"}</string>
 					</dict>
 					<key>WFSerializationType</key>
-					<string>WFDictionaryFieldValue</string>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.detect.dictionary</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>5B0A0000-0003-4A00-9000-000000000002</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>5B0A0000-0002-4A00-9000-000000000002</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
 				</dict>
 			</dict>
 		</dict>
@@ -212,7 +162,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0004-4A00-9000-000000000002</string>
+						<string>5B0A0000-0003-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -231,7 +181,7 @@
 				<key>GroupingIdentifier</key>
 				<string>5B0A1000-0001-4A00-9000-000000000002</string>
 				<key>UUID</key>
-				<string>5B0A0000-0006-4A00-9000-000000000002</string>
+				<string>5B0A0000-0004-4A00-9000-000000000002</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
@@ -242,7 +192,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0007-4A00-9000-000000000002</string>
+				<string>5B0A0000-0005-4A00-9000-000000000002</string>
 				<key>WFMatchTextPattern</key>
 				<string>\S[\s\S]{0,398}(?:[.!?…]["\'”’)\]]*(?=\s|$)|(?=\n)|$)|\S[\s\S]{0,397}\S(?=\s)|\S{1,400}</string>
 				<key>text</key>
@@ -277,7 +227,7 @@
 						<key>OutputName</key>
 						<string>Matches</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0007-4A00-9000-000000000002</string>
+						<string>5B0A0000-0005-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -285,7 +235,7 @@
 					<string>WFTextTokenAttachment</string>
 				</dict>
 				<key>UUID</key>
-				<string>5B0A0000-0008-4A00-9000-000000000002</string>
+				<string>5B0A0000-0006-4A00-9000-000000000002</string>
 			</dict>
 		</dict>
 		<dict>
@@ -304,7 +254,7 @@
 						<key>OutputName</key>
 						<string>Matches</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0007-4A00-9000-000000000002</string>
+						<string>5B0A0000-0005-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -319,7 +269,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0010-4A00-9000-000000000002</string>
+				<string>5B0A0000-0007-4A00-9000-000000000002</string>
 				<key>WFSpeakTextPitch</key>
 				<dict>
 					<key>Value</key>
@@ -413,7 +363,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0011-4A00-9000-000000000002</string>
+				<string>5B0A0000-0008-4A00-9000-000000000002</string>
 				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
@@ -455,7 +405,7 @@
 								<key>OutputName</key>
 								<string>Count</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0008-4A00-9000-000000000002</string>
+								<string>5B0A0000-0006-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -498,7 +448,7 @@
 								<key>OutputName</key>
 								<string>Text</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0011-4A00-9000-000000000002</string>
+								<string>5B0A0000-0008-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -543,7 +493,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0015-4A00-9000-000000000002</string>
+				<string>5B0A0000-0009-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -577,7 +527,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0016-4A00-9000-000000000002</string>
+				<string>5B0A0000-0010-4A00-9000-000000000002</string>
 				<key>WFSpeakTextPitch</key>
 				<dict>
 					<key>Value</key>
@@ -606,7 +556,7 @@
 						<key>OutputName</key>
 						<string>Calculation Result</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0015-4A00-9000-000000000002</string>
+						<string>5B0A0000-0009-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -704,7 +654,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0019-4A00-9000-000000000002</string>
+				<string>5B0A0000-0011-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -738,7 +688,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0020-4A00-9000-000000000002</string>
+				<string>5B0A0000-0012-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -746,7 +696,7 @@
 						<key>OutputName</key>
 						<string>Calculation Result</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0019-4A00-9000-000000000002</string>
+						<string>5B0A0000-0011-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -763,7 +713,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0021-4A00-9000-000000000002</string>
+				<string>5B0A0000-0013-4A00-9000-000000000002</string>
 				<key>WFDictionary</key>
 				<dict>
 					<key>Value</key>
@@ -789,7 +739,7 @@
 								<key>OutputName</key>
 								<string>Rounded Number</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0020-4A00-9000-000000000002</string>
+								<string>5B0A0000-0012-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -814,7 +764,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0021-4A00-9000-000000000002</string>
+						<string>5B0A0000-0013-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -831,7 +781,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0023-4A00-9000-000000000002</string>
+				<string>5B0A0000-0014-4A00-9000-000000000002</string>
 				<key>WFAskWhereToSave</key>
 				<false/>
 				<key>WFFileDestinationPath</key>
@@ -843,7 +793,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0021-4A00-9000-000000000002</string>
+						<string>5B0A0000-0013-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -873,7 +823,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0025-4A00-9000-000000000002</string>
+				<string>5B0A0000-0015-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -907,7 +857,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0026-4A00-9000-000000000002</string>
+				<string>5B0A0000-0016-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -915,7 +865,7 @@
 						<key>OutputName</key>
 						<string>Calculation Result</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0025-4A00-9000-000000000002</string>
+						<string>5B0A0000-0015-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -932,7 +882,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0027-4A00-9000-000000000002</string>
+				<string>5B0A0000-0017-4A00-9000-000000000002</string>
 				<key>WFDictionary</key>
 				<dict>
 					<key>Value</key>
@@ -958,7 +908,7 @@
 								<key>OutputName</key>
 								<string>Rounded Number</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0026-4A00-9000-000000000002</string>
+								<string>5B0A0000-0016-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -983,7 +933,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0027-4A00-9000-000000000002</string>
+						<string>5B0A0000-0017-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1000,7 +950,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0029-4A00-9000-000000000002</string>
+				<string>5B0A0000-0018-4A00-9000-000000000002</string>
 				<key>WFAskWhereToSave</key>
 				<false/>
 				<key>WFFileDestinationPath</key>
@@ -1012,7 +962,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0027-4A00-9000-000000000002</string>
+						<string>5B0A0000-0017-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1042,7 +992,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0031-4A00-9000-000000000002</string>
+				<string>5B0A0000-0019-4A00-9000-000000000002</string>
 				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
@@ -1061,7 +1011,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0032-4A00-9000-000000000002</string>
+				<string>5B0A0000-0020-4A00-9000-000000000002</string>
 				<key>WFInput</key>
 				<dict>
 					<key>Value</key>
@@ -1069,7 +1019,7 @@
 						<key>OutputName</key>
 						<string>Text</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0031-4A00-9000-000000000002</string>
+						<string>5B0A0000-0019-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1084,7 +1034,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0033-4A00-9000-000000000002</string>
+				<string>5B0A0000-0021-4A00-9000-000000000002</string>
 				<key>WFGetDictionaryValueType</key>
 				<string>All Keys</string>
 				<key>WFInput</key>
@@ -1094,7 +1044,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0032-4A00-9000-000000000002</string>
+						<string>5B0A0000-0020-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1109,7 +1059,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0034-4A00-9000-000000000002</string>
+				<string>5B0A0000-0022-4A00-9000-000000000002</string>
 				<key>WFChooseFromListActionPrompt</key>
 				<string>Voice</string>
 				<key>WFInput</key>
@@ -1119,7 +1069,7 @@
 						<key>OutputName</key>
 						<string>Dictionary Value</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0033-4A00-9000-000000000002</string>
+						<string>5B0A0000-0021-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1134,7 +1084,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0035-4A00-9000-000000000002</string>
+				<string>5B0A0000-0023-4A00-9000-000000000002</string>
 				<key>WFDictionaryKey</key>
 				<dict>
 					<key>Value</key>
@@ -1146,7 +1096,7 @@
 								<key>OutputName</key>
 								<string>Chosen Item</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0034-4A00-9000-000000000002</string>
+								<string>5B0A0000-0022-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -1164,7 +1114,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0032-4A00-9000-000000000002</string>
+						<string>5B0A0000-0020-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1179,7 +1129,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0036-4A00-9000-000000000002</string>
+				<string>5B0A0000-0024-4A00-9000-000000000002</string>
 				<key>WFDictionary</key>
 				<dict>
 					<key>Value</key>
@@ -1214,7 +1164,7 @@
 								<key>OutputName</key>
 								<string>Dictionary Value</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0035-4A00-9000-000000000002</string>
+								<string>5B0A0000-0023-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -1233,7 +1183,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0037-4A00-9000-000000000002</string>
+				<string>5B0A0000-0025-4A00-9000-000000000002</string>
 				<key>WFDictionary</key>
 				<dict>
 					<key>Value</key>
@@ -1241,7 +1191,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0036-4A00-9000-000000000002</string>
+						<string>5B0A0000-0024-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1270,7 +1220,7 @@
 								<key>OutputName</key>
 								<string>Dictionary Value</string>
 								<key>OutputUUID</key>
-								<string>5B0A0000-0035-4A00-9000-000000000002</string>
+								<string>5B0A0000-0023-4A00-9000-000000000002</string>
 								<key>Type</key>
 								<string>ActionOutput</string>
 							</dict>
@@ -1295,7 +1245,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0037-4A00-9000-000000000002</string>
+						<string>5B0A0000-0025-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1312,7 +1262,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0039-4A00-9000-000000000002</string>
+				<string>5B0A0000-0026-4A00-9000-000000000002</string>
 				<key>WFAskWhereToSave</key>
 				<false/>
 				<key>WFFileDestinationPath</key>
@@ -1324,7 +1274,7 @@
 						<key>OutputName</key>
 						<string>Dictionary</string>
 						<key>OutputUUID</key>
-						<string>5B0A0000-0037-4A00-9000-000000000002</string>
+						<string>5B0A0000-0025-4A00-9000-000000000002</string>
 						<key>Type</key>
 						<string>ActionOutput</string>
 					</dict>
@@ -1354,7 +1304,7 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>5B0A0000-0041-4A00-9000-000000000002</string>
+				<string>5B0A0000-0027-4A00-9000-000000000002</string>
 				<key>WFOutput</key>
 				<string></string>
 			</dict>
@@ -1367,7 +1317,7 @@
 				<key>GroupingIdentifier</key>
 				<string>5B0A1000-0002-4A00-9000-000000000002</string>
 				<key>UUID</key>
-				<string>5B0A0000-0042-4A00-9000-000000000002</string>
+				<string>5B0A0000-0028-4A00-9000-000000000002</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
@@ -1380,7 +1330,7 @@
 				<key>GroupingIdentifier</key>
 				<string>5B0A1000-0003-4A00-9000-000000000002</string>
 				<key>UUID</key>
-				<string>5B0A0000-0043-4A00-9000-000000000002</string>
+				<string>5B0A0000-0029-4A00-9000-000000000002</string>
 				<key>WFControlFlowMode</key>
 				<integer>2</integer>
 			</dict>
