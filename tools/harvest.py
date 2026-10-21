@@ -37,6 +37,9 @@ it, so they are not one shortcut renamed.
 import argparse, collections, json, plistlib, sys, zipfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sketch import file_name  # noqa: E402
+
 RUN = "is.workflow.actions.runworkflow"
 
 
@@ -176,8 +179,7 @@ def main():
         chain = repoint(to_chain(name, doc), renames, log, name)
         if args.drop_call:
             chain = drop_calls(chain, set(args.drop_call), dropped, name)
-        safe = name.replace("/", "_").replace(":", "_")
-        (out / (safe + ".json")).write_text(
+        (out / (file_name(name) + ".json")).write_text(
             json.dumps(chain, indent=1, ensure_ascii=False) + "\n")
         written += 1
 

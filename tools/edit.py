@@ -82,7 +82,7 @@ def main():
     if a.save:
         day = datetime.date.today().isoformat()
         body["created"] = day
-        name = "%s-%s.json" % (a.name.replace("/", ":").replace(" ", "-"), day)
+        name = "%s-%s.json" % (S.file_name(a.name).replace(" ", "-"), day)
         out = Path(a.dir) / name
         out.parent.mkdir(exist_ok=True)
         out.write_text(json.dumps(body, ensure_ascii=False, indent=1) + "\n")
