@@ -136,6 +136,11 @@ INSTALL_VIA = "Library-Paste"
 TOGGLES = {"ActionExtension": "Show in Share Sheet", "Watch": "Show on Apple Watch",
            "NCWidget": "Show in Widgets", "MenuBar": "Pin in Menu Bar",
            "QuickActions": "Use as Quick Action"}
+# A new shortcut does nothing when it runs without input, so a declared
+# fallback is one more setting the paste loses.
+NO_INPUT = {"WFWorkflowNoInputBehaviorGetClipboard": "If there's no input: Get Clipboard",
+            "WFWorkflowNoInputBehaviorAskForInput": "If there's no input: Ask For",
+            "WFWorkflowNoInputBehaviorShowError": "If there's no input: Show Error"}
 
 
 def chain_at(chain_path, ref):
@@ -179,6 +184,9 @@ def install(chain_path, ref, via=INSTALL_VIA):
         via, urllib.parse.quote(text, safe=""))
     types = (chain.get("workflow") or {}).get("WFWorkflowTypes") or []
     toggles = [TOGGLES[t] for t in types if t in TOGGLES]
+    no_input = ((chain.get("workflow") or {}).get("WFWorkflowNoInputBehavior") or {}).get("Name")
+    if no_input:
+        toggles.append(NO_INPUT.get(no_input, "If there's no input: " + no_input))
     if "#BUILD#" not in json.dumps(chain, ensure_ascii=False):
         toggles.append("(no #BUILD# in this chain, so the up-front check cannot recognise it)")
     return link, toggles

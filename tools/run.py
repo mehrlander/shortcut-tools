@@ -56,6 +56,15 @@ CHAIN = "Run-Steps"
 LOGGER = "Log-Repo"
 SCHEME = "shortcuts://run-shortcut?name=%s&input=text&text=%s"
 BARE = "shortcuts://run-shortcut?name=%s"
+# The Claude iPhone app stopped opening a shortcuts:// link on 2026-10-18 (a tap
+# does nothing; an https link beside it opens), so the handover forms point at
+# web-tools' forwarder, which passes the link on. stdout stays the raw link.
+FORWARD = "https://mehrlander.github.io/web-tools/pages/shortcut-run.html#"
+
+
+def tappable(link):
+    """The address a chat reply links to: the raw link behind the forwarder."""
+    return FORWARD + link
 
 
 def build(targets, log=False, text=None):
@@ -163,15 +172,17 @@ def pick_link(names):
 def markdown(link, targets, log=False, label=None):
     """The handover form, which is the only one that arrives tappable.
 
-    Two rules from SURFACING.md, both of which fail silently when dropped. The
-    chat client will not autolink a custom scheme and renders a code span as
-    dead text, so a bare or fenced link is dead on arrival. And a run link
-    carries the icon, so the reader can see at a glance that something is being
-    asked of the device rather than offered to read. Emitted here rather than
-    remembered, for the same reason the link itself is.
+    Three rules, all of which fail silently when dropped. The chat client will
+    not autolink a custom scheme and renders a code span as dead text, so a bare
+    or fenced link is dead on arrival; the Claude iPhone app no longer opens a
+    markdown shortcuts:// link either, so the target is the forwarder
+    (`tappable`). And a run link carries the icon, so the reader can see at a
+    glance that something is being asked of the device rather than offered to
+    read. Emitted here rather than remembered, for the same reason the link
+    itself is.
     """
     name = label or " then ".join(list(targets) + ([LOGGER] if log else []))
-    return "%s [%s](%s)" % (ICON, name, link)
+    return "%s [%s](%s)" % (ICON, name, tappable(link))
 
 
 def step_row(name, first):
@@ -203,7 +214,7 @@ def card(link, steps, receiver, label=None):
 
     The rules and the other two shapes are in web-tools skills/shortcut-links.
     """
-    rows = ["| %s [%s](%s) |" % (ICON, label or receiver, link)]
+    rows = ["| %s [%s](%s) |" % (ICON, label or receiver, tappable(link))]
     if len(steps) > 1:
         rows.append("| --- |")
         rows.append("| %s |" % "<br>".join(
@@ -215,10 +226,15 @@ def verify(link):
     """Read a link back. Run this on the exact text about to be sent.
 
     A retyped or shortened link still looks well formed, so the only honest
-    check is decoding the string that is actually going out.
+    check is decoding the string that is actually going out. Either form reads
+    back, and the forwarded one is printed, so a raw link from another tool
+    becomes tappable without being typed.
     """
+    if link.startswith(FORWARD):
+        link = link[len(FORWARD):]
     if not link.startswith("shortcuts://run-shortcut?"):
         raise SystemExit("not a run-shortcut link")
+    print("tappable: %s" % tappable(link))
     q = urllib.parse.parse_qs(urllib.parse.urlparse(link).query, keep_blank_values=True)
     name = (q.get("name") or [""])[0]
     text = (q.get("text") or [""])[0]
