@@ -80,8 +80,20 @@ test("the handover carries the phone mark and an explicit markdown link", () => 
   // SURFACING.md: a run link is marked with the phone icon, and a bare or
   // code-spanned custom scheme renders as dead text in the chat client.
   assert.ok(md.startsWith("\u{1F4F2} ["), md);
-  assert.match(md, /\]\(shortcuts:\/\/run-shortcut\?/);
+  assert.match(md, /\]\(https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcut-run\.html#shortcuts:\/\/run-shortcut\?/);
   assert.match(md, /Get-FileInfo then Log-Repo/);
+});
+
+test("the handover forwards exactly the raw link, which stays alone on stdout", () => {
+  // The Claude iPhone app stopped opening a shortcuts:// link (2026-10-18), so
+  // the markdown target is web-tools' forwarder. stdout is still the raw link,
+  // so anything piping run.py is unaffected, and the two must not drift.
+  const link = run("Speak-Text", "--text", "hello");
+  assert.match(link, /^shortcuts:\/\//);
+  const md = handover("Speak-Text", "--text", "hello");
+  assert.ok(md.endsWith("(https://mehrlander.github.io/web-tools/pages/shortcut-run.html#" + link + ")"), md);
+  const back = run("--verify", "https://mehrlander.github.io/web-tools/pages/shortcut-run.html#" + link);
+  assert.match(back, /receiver: Speak-Text/, "--verify reads the forwarded form back too");
 });
 
 test("--label names the handover without changing the link", () => {
@@ -137,7 +149,7 @@ test("--unchecked sends an unaudited name, and says so", () => {
 
 test("a sequence card names the receiver and unpacks its payload", () => {
   const c = handover("Check-🎟️GitHubToken", "--log", "--card");
-  assert.match(c, /^\| 📲 \[Run-Steps\]\(shortcuts:\/\/run-shortcut\?name=Run-Steps/m);
+  assert.match(c, /^\| 📲 \[Run-Steps\]\(https:\/\/mehrlander\.github\.io\/web-tools\/pages\/shortcut-run\.html#shortcuts:\/\/run-shortcut\?name=Run-Steps/m);
   assert.match(c, /^\| --- \|$/m);
   // Every step prints, the logger included: a display of a payload that omits
   // part of the payload is the failure the format exists to prevent.
@@ -167,7 +179,7 @@ test("a step is a plain name, since the chain page belongs to the install card",
 
 test("a plain run is one row, since a data payload has nothing to unpack", () => {
   const c = handover("Speak-Text", "--text", "hello", "--card");
-  assert.strictEqual(c, "| 📲 [Speak-Text: hello](shortcuts://run-shortcut?name=Speak-Text&input=text&text=hello) |");
+  assert.strictEqual(c, "| 📲 [Speak-Text: hello](https://mehrlander.github.io/web-tools/pages/shortcut-run.html#shortcuts://run-shortcut?name=Speak-Text&input=text&text=hello) |");
 });
 
 test("a menu refuses a card rather than inventing notation for one", () => {
