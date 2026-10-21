@@ -145,6 +145,12 @@ test("--install names the toggles a paste cannot set, and refuses a chain with n
   const r = require("node:child_process").spawnSync("python3",
     [path.join("tools", "pack.py"), "workflows/stage-input.json", "--install"], { cwd: ROOT, encoding: "utf8" });
   assert.match(r.stderr, /Show in Share Sheet/);
+  // The no-input fallback lives in the file too. Speak-Text reads the clipboard
+  // when run bare, and a paste that drops that leaves it speaking nothing.
+  const s = require("node:child_process").spawnSync("python3",
+    [path.join("tools", "pack.py"), "workflows/speak-text.json", "--install", "--ref", "HEAD"],
+    { cwd: ROOT, encoding: "utf8" });
+  assert.match(s.stderr, /If there's no input: Get Clipboard/);
   assert.throws(() => pack("workflows/stage-input-card.json", "--install"), /Command failed/);
 });
 
