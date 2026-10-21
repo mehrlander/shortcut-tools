@@ -1,6 +1,6 @@
 {
   "name": "Speak-Text",
-  "label": "Speak-Text: read the input aloud in chunks, with a menu to repeat, change speed or voice, or stop; the speed and voice are remembered (44 actions)",
+  "label": "Speak-Text: read the input aloud in chunks, with a menu to repeat, change speed or voice, or stop; the speed and voice are remembered (45 actions)",
   "workflow": {
     "WFWorkflowIcon": {
       "WFWorkflowIconGlyphNumber": 61440,
@@ -40,6 +40,12 @@
     ]
   },
   "actions": [
+    {
+      "id": "is.workflow.actions.comment",
+      "p": {
+        "WFCommentActionText": "Speak-Text build #BUILD#. Speed, pitch and voice are kept in Snippets/Managed/speak-text.json; delete that file to return to the defaults set below."
+      }
+    },
     {
       "id": "is.workflow.actions.documentpicker.open",
       "p": {
