@@ -1632,7 +1632,7 @@
    "label": "Run-Op: name an op in web-tools, hand it one line of input, get its JSON back (8 actions)",
    "name": "Run-Op",
    "actions": 8,
-   "build": "508e4c5",
+   "build": "e3d0d7b",
    "settings": false,
    "targets": [
     "Get-JsonFromJs",
@@ -1643,7 +1643,7 @@
     "  1 item",
     "  2 item \"2\" ← «0»",
     "  3 base64 \"Encode\" ← «2»",
-    "  4 text (function(){var n='«1»';var i='«3»';var t='🎟️Git… (601 chars)",
+    "  4 text (function(){var n='«1»';var i='«3»';var t='🎟️Git… (703 chars)",
     "  5 run Inject-🎟️GitHubToken ← «4»",
     "  6 run Get-JsonFromJs ← «5»",
     "  7 output «6»"
