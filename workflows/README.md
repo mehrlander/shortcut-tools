@@ -547,9 +547,8 @@ row. The alternative, building a second JSON string around the first, is the
 
 `Back-DoubleTap` tests the current app five times, and each test is three
 control cards plus a body plus a Stop and Output. `run-app-determined` is the
-same dispatch as a lookup: a literal dictionary, one `Get Dictionary Value`
-keyed on the app, the else-less If for the default, and one Run Shortcut on the
-result. Seven actions.
+same dispatch as a lookup: `Get-AppRoute` keyed on the app, the else-less If for
+the default, and one Run Shortcut on the result. Six actions.
 
 **The card shape is not invented.** [`Nav-CurrentApp`](https://github.com/mehrlander/shortcut-tools)
 has been keying a dictionary on `Get Current App` on device since the 2026-08-13

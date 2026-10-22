@@ -115,35 +115,14 @@ python3 tools/run.py --verify '<link>'           # read one back before sending
 python3 tools/run.py --pick Get-FileInfo Show-Table   # a menu, run on the clipboard
 ```
 
-`--pick` emits a `Run-Pick` link: the names become a menu on the device and the
-one you choose runs on the clipboard, so a link is a menu definition rather than
-a command. It **checks each name against the library index first**, because a
-link's names are unchecked strings and this repository has already lost a
-fortnight to two of them going stale. Two false positives to expect, both from
-the index being a snapshot: anything installed since the last dump, and any name
-computed at run time. `--unchecked` skips the audit for those, and says on stderr
-that it did, because a link nobody verified is otherwise indistinguishable from
-one that was.
-
-Two or more targets, or `--log`, route through `Run-Steps`, which splits its
-input on newlines and runs each name with the previous result as its input. Its
-first pass has no `Carry` set, so the first shortcut runs with no input, which
-is what a bare diagnostic wants.
-
-`--log` appends `Log-Repo`, so a probe returns itself: the payload goes to the
-clipboard first and unconditionally, then to `shortcuts/log/` in
-web-tools-private. Tap once and the answer is already here. That is the rule
-this repository already stated and had no tool for, which is why every
-diagnostic ended by asking the reader to open the Shortcuts app and hunt for a
-name.
+Every link's names are audited against the library index and the newest device
+manifest before the link is emitted, and `--unchecked` skips the audit. The `run.py`
+docstring owns the routing through `Run-Steps`, `--pick`, `--log` and `--card`.
 
 The handover form goes to stderr, so the link itself pipes cleanly while the
-markdown arrives ready to paste: `📲 [label](shortcuts://…)`. Both halves are
-rules from SURFACING.md that fail silently when dropped. The phone mark tells
-the reader something is being asked of the device rather than offered to read,
-and a custom scheme rendered bare or in a code span is dead text, since the chat
-client will not autolink one. Emitted rather than remembered, which is the same
-argument as the link.
+markdown arrives ready to paste: `📲 [label](shortcuts://…)`. A custom scheme
+rendered bare or in a code span is dead text, since the chat client will not
+autolink one.
 
 Two refusals rather than a link that under-delivers. `--text` with several
 targets is rejected, because `Run-Steps` consumes its input as the step list and
@@ -282,8 +261,8 @@ this library has ever proven. Opening an editor and moving to a folder are
 
 | Receiver | Input | Cards | Source |
 | --- | --- | ---: | --- |
-| `Library-Open` | one name | 3 | [`workflows/library-open.json`](workflows/library-open.json) |
-| `Library-Stage` | names, newline-separated | 6 | [`workflows/library-stage.json`](workflows/library-stage.json) |
+| `Library-Open` | one name, then an optional note | 11 | [`workflows/library-open.json`](workflows/library-open.json) |
+| `Library-Stage` | names, newline-separated | 8 | [`workflows/library-stage.json`](workflows/library-stage.json) |
 
 **Neither can delete, and that is the design.** A receiver that could would make
 the page one tap from the thing the whole workflow exists to slow down.
@@ -366,7 +345,7 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
 | `toActionChain(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |
-| `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path now. See [Installing](#installing-a-generated-shortcut). |
+| `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path now. See [Installing](workflows/README.md#installing-one-rather-than-pasting-it). |
 
 **Wiring.** `tokenString(parts)` builds a text value with variables embedded in it, taking an alternating list of strings and refs and **deriving the anchor offsets** rather than making you count characters. `variable(ref)` is the other form, where the value *is* an output. A ref is `{ uuid, name }`, or `{ input: true }` for Shortcut Input, plus optional `key` to take one dictionary key and `as` to coerce.
 
