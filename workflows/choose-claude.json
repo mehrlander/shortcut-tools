@@ -1,6 +1,6 @@
 {
   "name": "Choose-Claude",
-  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (30 actions)",
+  "label": "Choose-Claude: the Claude-app menu, drawn from the session-menu op (32 actions)",
   "actions": [
     {
       "id": "is.workflow.actions.getclipboard",
@@ -11,15 +11,50 @@
     {
       "id": "is.workflow.actions.gettext",
       "p": {
-        "UUID": "C1A0DE00-0002-4A00-9000-000000000001",
+        "UUID": "C1A0DE00-0041-4A00-9000-000000000001",
         "WFTextActionText": {
           "Value": {
-            "string": "session-menu\n￼",
+            "string": "￼",
             "attachmentsByRange": {
-              "{13, 1}": {
+              "{0, 1}": {
                 "Type": "ActionOutput",
                 "OutputUUID": "C1A0DE00-0001-4A00-9000-000000000001",
                 "OutputName": "Clipboard"
+              }
+            }
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.base64encode",
+      "p": {
+        "UUID": "C1A0DE00-0040-4A00-9000-000000000001",
+        "WFEncodeMode": "Encode",
+        "WFBase64LineBreakMode": "None",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "C1A0DE00-0041-4A00-9000-000000000001",
+            "OutputName": "Text"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "id": "is.workflow.actions.gettext",
+      "p": {
+        "UUID": "C1A0DE00-0002-4A00-9000-000000000001",
+        "WFTextActionText": {
+          "Value": {
+            "string": "session-menu\nb64:￼",
+            "attachmentsByRange": {
+              "{17, 1}": {
+                "Type": "ActionOutput",
+                "OutputUUID": "C1A0DE00-0040-4A00-9000-000000000001",
+                "OutputName": "Base64 Encoded"
               }
             }
           },
