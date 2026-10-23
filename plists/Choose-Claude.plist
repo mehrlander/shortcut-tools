@@ -21,14 +21,14 @@
 			<key>WFWorkflowActionParameters</key>
 			<dict>
 				<key>UUID</key>
-				<string>C1A0DE00-0002-4A00-9000-000000000001</string>
+				<string>C1A0DE00-0041-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
 				<dict>
 					<key>Value</key>
 					<dict>
 						<key>attachmentsByRange</key>
 						<dict>
-							<key>{13, 1}</key>
+							<key>{0, 1}</key>
 							<dict>
 								<key>OutputName</key>
 								<string>Clipboard</string>
@@ -39,8 +39,66 @@
 							</dict>
 						</dict>
 						<key>string</key>
+						<string>￼</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.base64encode</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>C1A0DE00-0040-4A00-9000-000000000001</string>
+				<key>WFBase64LineBreakMode</key>
+				<string>None</string>
+				<key>WFEncodeMode</key>
+				<string>Encode</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>OutputName</key>
+						<string>Text</string>
+						<key>OutputUUID</key>
+						<string>C1A0DE00-0041-4A00-9000-000000000001</string>
+						<key>Type</key>
+						<string>ActionOutput</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.gettext</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>C1A0DE00-0002-4A00-9000-000000000001</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{17, 1}</key>
+							<dict>
+								<key>OutputName</key>
+								<string>Base64 Encoded</string>
+								<key>OutputUUID</key>
+								<string>C1A0DE00-0040-4A00-9000-000000000001</string>
+								<key>Type</key>
+								<string>ActionOutput</string>
+							</dict>
+						</dict>
+						<key>string</key>
 						<string>session-menu
-￼</string>
+b64:￼</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -502,7 +560,7 @@
 							</dict>
 						</dict>
 						<key>string</key>
-						<string>{"op":"menu-miss","name":"Choose-Claude","build":"61fef56","chosen":"￼","keys":"￼"}</string>
+						<string>{"op":"menu-miss","name":"Choose-Claude","build":"1251536","chosen":"￼","keys":"￼"}</string>
 					</dict>
 					<key>WFSerializationType</key>
 					<string>WFTextTokenString</string>
@@ -706,7 +764,7 @@
 				<key>UUID</key>
 				<string>C1A0DE00-0030-4A00-9000-000000000001</string>
 				<key>WFTextActionText</key>
-				<string>{"op":"menu-empty","name":"Choose-Claude","build":"61fef56"}</string>
+				<string>{"op":"menu-empty","name":"Choose-Claude","build":"1251536"}</string>
 			</dict>
 		</dict>
 		<dict>

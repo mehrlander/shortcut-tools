@@ -203,11 +203,24 @@ test("Choose-Claude is a shell: it asks the op for the whole menu and draws it",
   // The two-line input is built with Get Text and handed over by attachment,
   // which is the 2026-09-03 corrective: a field that interpolates a variable
   // itself arrives empty on the phone. The format notes carry the measurement.
-  const [clip, text, run] = choose.actions;
+  //
+  // THE WHOLE CLIPBOARD RIDES AS BASE64, since 2026-10-23. Run-Op hands an op
+  // its second line and nothing after it, and the op now matches a copied
+  // reply against the sessions that wrote it, which the first line alone does
+  // for 89% of copies and the whole clipboard for 99.9% (web-tools
+  // lib/ops/README.md). The clipboard is made text before it is encoded, so an
+  // image is never base64'd whole into the op's page.
+  const [clip, asText, encode, text, run] = choose.actions;
   assert.ok(clip.id.endsWith("getclipboard"), "the clipboard is read by an action, not inlined as a token");
+  assert.ok(asText.id.endsWith("gettext"), "the clipboard is made text first");
+  assert.strictEqual(asText.p.WFTextActionText.Value.attachmentsByRange["{0, 1}"].OutputUUID, clip.p.UUID);
+  assert.ok(encode.id.endsWith("base64encode"));
+  assert.strictEqual(encode.p.WFBase64LineBreakMode, "None", "one line, or Run-Op cuts it at the first break");
+  assert.strictEqual(encode.p.WFInput.Value.OutputUUID, asText.p.UUID);
   assert.ok(text.id.endsWith("gettext"), "the op's input is built as text first");
-  assert.strictEqual(text.p.WFTextActionText.Value.string, "session-menu\n\uFFFC",
+  assert.strictEqual(text.p.WFTextActionText.Value.string, "session-menu\nb64:\uFFFC",
     "Run-Op splits on newlines: the op's name, then one line of input");
+  assert.strictEqual(text.p.WFTextActionText.Value.attachmentsByRange["{17, 1}"].OutputUUID, encode.p.UUID);
   assert.strictEqual(run.p.WFWorkflowName, "Run-Op");
   assert.strictEqual(run.p.WFInput.Value.OutputUUID, text.p.UUID);
 
