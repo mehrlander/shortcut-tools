@@ -250,41 +250,18 @@ happens by opening `Show-Loop` and stepping.
 
 ## What the corpus says is wrong
 
-- **A rename is not propagated.** Twelve calls in the working core point at
-  names that no longer exist, and they are not one problem. Three are settled
-  and applied in the harvested core: `Get-Jina` to `Get-LinkSummaryJina`,
-  `Select-File` to `Select-FileText` (`Get-Text`'s own menu key reads
-  `selectfiletext`), and `Supply-Sample` to `Choose-Sample`. Two are probable:
-  `Speak-Text` to `Say-Input`, since the `Say-*` family exists and `Speak-Text`
-  does not, and `Show-Template` to `Show-Template 1`, a numbered copy that
-  outlived its original. **Two are not renames at all**: `Get-SafariVersions`
-  and `Get-JsonVersions` are missing handlers in `Show-Versions`'s type
-  dispatch, so `Text` and `Dictionary` inputs entered a branch that called
-  nothing; both branches are deleted in the harvested core, taking it from 27
-  actions to 21. Writing the handlers instead would grow a library being
-  pruned, and adding one back is one shortcut plus one branch, which is the
-  documented extension.
-
-  Two more looked like renames and are not, checked 2026-08-13.
-  **`Speak-Text` is not `Say-Input`**: `Say-Input` is `setvolume, ask "What
-  should I say?", speak`, so it prompts rather than speaking what it is handed,
-  and `Show-Loop` pipes a value in. The fix there is the native Speak Text
-  action, one action and no dependency. **`Show-Template` is not
-  `Show-Template 1`**: the numbered copy names its input `Input.txt` and gzips
-  the whole thing, where `Show-Ace` hands over a dictionary keyed `components`
-  expecting injection into a template. Different contracts.
-
-  That leaves five genuinely ambiguous: `Run-Choice`, `Show-URLs`,
-  `Select-Link`, `Get-RecentShortcut`, `Use-RecentShortcut`. `survey.py
-  --dangling` lists all of them.
-- **~~`Combine-JsonList` compares `count < 1` before joining~~. Wrong
-  2026-08-13: it does not.** `WFCondition` 2 is *greater than*, and an earlier
-  guess in `sketch.py` had it inverted, so a correct shortcut read as buggy and
-  this list reported it. `if count > 1 then join else pass through` is right.
-  The seven shortcuts that share the shape are all correct. Kept here rather
-  than deleted, because the lesson is the reusable part: a pseudocode renderer
-  is a claim about semantics, and a wrong word in its table manufactures bugs
-  that read as findings.
+- **A rename is not propagated.** `python3 tools/survey.py --dangling` lists
+  every call to a name that no longer exists, and not every one is a rename.
+  `Get-SafariVersions` and `Get-JsonVersions` were missing handlers in
+  `Show-Versions`'s type dispatch, and the harvested core deletes both branches;
+  adding one back is one shortcut plus one branch. `Show-Template 1` is not
+  `Show-Template`: it gzips an `Input.txt`, where `Show-Ace` hands over a
+  dictionary keyed `components`. `Say-Input` is not `Speak-Text`: it prompts
+  instead of speaking its input, and the native Speak Text action is the fix.
+- **A pseudocode renderer is a claim about semantics.** A wrong word in
+  `sketch.py`'s table manufactures bugs that read as findings: `WFCondition` 2
+  is *greater than*, and reading it as less-than made seven correct shortcuts
+  look broken.
 - **Duplicate-on-edit is never cleaned up.** 69 names are numbered copies or
   `Old`/`Test` suffixes, and in 8 cases the numbered copy is the live one
   because the original was deleted. See the survey's Sediment tier.

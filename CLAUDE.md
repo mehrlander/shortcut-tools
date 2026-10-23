@@ -44,17 +44,13 @@ rule 5 and the diagnostic-returns-itself rule below.
 **So the diagnostic ladder starts at the top, not at the bottom.** In order:
 
 0. **Search the corpus for a probe that already answers it**, by what it
-   measures rather than by the name you would have given it. `Check-🎟️GitHubToken`
-   has been installed since before this repo existed: three actions that call
-   `GET api.github.com/user` with the injected token and show `active`, `stale`
-   or `error`. On 2026-09-14 a session reasoned its way to "the token has
-   probably expired" from three silent writers and handed that over as a
-   hypothesis, with this shortcut sitting in the Other folder. Rule 1 above
-   already says to exhaust the free routes; it did not say that a *probe* is one
-   of the things to search for, and now it does.
+   measures rather than by the name you would have given it. For example,
+   `Check-🎟️GitHubToken` already answers whether the token is live: it calls
+   `api.github.com/user` and the private store with the injected token and
+   shows `active`, `limited`, `stale` or `error`.
 1. `python3 tools/run.py <Receiver> --log`, which routes through `Run-Steps` and
    appends `Log-Repo`, so the answer lands in `shortcuts/log/` and nobody reads
-   a screen. That tool's docstring has said this since it was written.
+   a screen.
 2. `python3 tools/run.py --pick <A> <B>`, when the probe should run against
    whatever is on the clipboard.
 3. A new **op** in web-tools `lib/ops/`, reached by `Run-Op`, when the probe
@@ -106,12 +102,15 @@ cheapest would have told you.
    is a permanent cost paid once. It is worth it only when it removes recurring
    in-app work.
 
-**Installing is an import, not a paste** (confirmed 2026-08-15). `Library-Import`
+**Installing is an import, not a paste.** `Library-Import`
 fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts:
 one tap plus Apple's own import sheet. That beats `Library-Install` on every
 axis, and it is the only route that can deliver **file-level** settings, since
 `WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the workflow
-file and no paste reaches them. Generate a full plist for anything new.
+file and no paste reaches them. Generate a full plist for anything new. Where a
+copy signed in the repo is committed, `Library-Fetch` installs it with no
+signing on the device; see
+[`workflows/README.md`](workflows/README.md#signing-here-so-the-device-never-does).
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
 only because nothing here holds a secret. And **importing over a name the
@@ -168,10 +167,9 @@ authored work, where it is earned.
 
 - `Library-Open`, `Library-Stage`, and `Log-Repo` pasted, named, Shortcut Input enabled.
 - `Library-Stage`'s Move card: **one tap** to pick the holding folder (`Stage`).
-  Reported here as unavoidable, which was wrong: `CreateFolderAction` exists and
-  takes a plain text name, so create-then-move may remove it. Left as it is
-  because the tap is already paid and rebuilding buys nothing in steady state
-  (rule 2), and noted so a fresh install can do better.
+  Create-then-move cannot remove it, because `CreateFolderAction` refuses a
+  folder that already exists. The tap is already paid, so the card stays as it
+  is (rule 2).
 
 Everything else the library view does is one tap from a web page, and it stays
 that way.
@@ -443,7 +441,9 @@ Apple's own UI decided.
 
 **Send the instruction with the destination.** Every handover, probe or not.
 
-- Open the target: `run.py Library-Open --text '<Name>'`.
+- Open the target: `run.py Library-Open --text '<Name>'`. `Library-Open` also
+  takes an optional second input line, a note shown as a blocking alert before
+  the editor opens.
 - Alert first; the UI move ends the chain (`ui-action-breaks-what-follows`).
 - Needed: a receiver taking a message and a URL, since `Open-URL` takes only the URL.
 
