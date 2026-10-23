@@ -251,23 +251,20 @@ happens by opening `Show-Loop` and stepping.
 ## What the corpus says is wrong
 
 - **A rename is not propagated.** `python3 tools/survey.py --dangling` lists
-  every call to a name that no longer exists. Not every dangling name is a
-  rename. `Get-SafariVersions` and `Get-JsonVersions` are missing handlers in
-  `Show-Versions`'s type dispatch; both branches are deleted in the harvested
-  core. Writing the handlers instead would grow a library being pruned, and
-  adding one back is one shortcut plus one branch, which is the documented
-  extension. `Show-Template` is not `Show-Template 1`: the numbered copy names
-  its input `Input.txt` and gzips the whole thing, where `Show-Ace` hands over a
-  dictionary keyed `components` expecting injection into a template. `Say-Input`
-  prompts rather than speaking what it is handed, so it is not `Speak-Text`; the
-  native Speak Text action is the fix.
+  every call to a name that no longer exists, and not every one is a rename.
+  `Get-SafariVersions` and `Get-JsonVersions` were missing handlers in
+  `Show-Versions`'s type dispatch, and the harvested core deletes both branches;
+  adding one back is one shortcut plus one branch. `Show-Template 1` is not
+  `Show-Template`: it gzips an `Input.txt`, where `Show-Ace` hands over a
+  dictionary keyed `components`. `Say-Input` is not `Speak-Text`: it prompts
+  instead of speaking its input, and the native Speak Text action is the fix.
 - **A pseudocode renderer is a claim about semantics.** A wrong word in
   `sketch.py`'s table manufactures bugs that read as findings: `WFCondition` 2
-  is *greater than*, and read as less-than it made seven correct shortcuts look
-  broken.
+  is *greater than*, and reading it as less-than made seven correct shortcuts
+  look broken.
 - **Duplicate-on-edit is never cleaned up.** 69 names are numbered copies or
-  `Old`/`Test` suffixes, and in 8 cases the numbered copy is the live one because
-  the original was deleted. See the survey's Sediment tier.
+  `Old`/`Test` suffixes, and in 8 cases the numbered copy is the live one
+  because the original was deleted. See the survey's Sediment tier.
 - **`Show-Html` carries a dead branch**, two `text.replace` actions reading the
   same source where one feeds nothing. Detail in
   [`shortcuts-format-notes.md`](shortcuts-format-notes.md).

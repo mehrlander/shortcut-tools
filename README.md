@@ -115,9 +115,9 @@ python3 tools/run.py --verify '<link>'           # read one back before sending
 python3 tools/run.py --pick Get-FileInfo Show-Table   # a menu, run on the clipboard
 ```
 
-Every link's names are audited against the library index and the newest device
-manifest before the link is emitted, and `--unchecked` skips the audit. The `run.py`
-docstring owns the routing through `Run-Steps`, `--pick`, `--log` and `--card`.
+Before emitting a link, `run.py` audits its names against the library index and
+the newest device manifest; `--unchecked` skips the audit. Its docstring covers
+`--pick`, `--log`, `--card` and the routing through `Run-Steps`.
 
 The handover form goes to stderr, so the link itself pipes cleanly while the
 markdown arrives ready to paste: `📲 [label](shortcuts://…)`. A custom scheme
