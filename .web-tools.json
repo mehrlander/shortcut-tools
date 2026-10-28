@@ -1,5 +1,6 @@
 {
   "icon": "ph-lightning",
+  "tone": "yellow",
   "estate": true,
   "group": "tools",
   "order": 40,
