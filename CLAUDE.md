@@ -103,7 +103,7 @@ copy signed in the repo is committed, `Library-Fetch` installs it with no
 signing on the device; see
 [`workflows/README.md`](workflows/README.md#signing-here-so-the-device-never-does).
 
-`Library-Import` carries two costs. The worker is third-party and plain
+`Library-Import` has two costs. The worker is third-party and plain
 `http://`, acceptable only because nothing here holds a secret. And
 **importing over a name the library already holds leaves both copies.**
 
@@ -168,9 +168,9 @@ that way.
 **Read [`docs/idioms.md`](docs/idioms.md) before authoring a chain**, and hold
 to its idiom 4: **past about five actions of real work, write the operation in
 JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
-typed result, `Run-Op` to fetch the code from web-tools by name). Parameter
-shapes are checked by `test/parameter-shapes.test.js`, against how the corpus
-uses each parameter, recorded in
+typed result, `Run-Op` to fetch the code from web-tools by name). Where the
+corpus writes a parameter one way only, `test/parameter-shapes.test.js` holds a
+chain here to that form; the counts are in
 [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md#parameter-shapes-by-census).
 
 ## Deletion is never one step
