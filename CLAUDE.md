@@ -30,8 +30,8 @@ Rank every delivery route by what it costs the person on the other end:
 | Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
 | **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing one of the two Back Tap stubs or an AssistiveTouch target costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
 
-**Running is cheap and installing is dear.** A repeat is fine. What is not fine
-is a repeat that asks for an **observation** each time, which is rule 5 and the
+**Running a link more than once is cheap.** A repeat that asks for an
+**observation** each time is not, which is rule 5 and the
 diagnostic-returns-itself rule below.
 
 **So the diagnostic ladder starts at the top, not at the bottom.** In order:
@@ -69,7 +69,7 @@ cheapest would have told you.
 1. **Exhaust the free routes first, then say what the search covered.** Parse
    the dumps and search the public record before asking the device anything. A
    probe sent for something the corpus already holds is wasted work.
-   **Search the ToolKit catalog too, and it is the one that answers.**
+   **Search the ToolKit catalog too.**
    `shortcuts-playground-plugin` ships Apple's own metadata as JSON: 2,731
    identifiers and 2,585 parameter tables against the 774 distinct identifiers
    behind this repo's 810 `actions.json` entries.
@@ -103,9 +103,9 @@ copy signed in the repo is committed, `Library-Fetch` installs it with no
 signing on the device; see
 [`workflows/README.md`](workflows/README.md#signing-here-so-the-device-never-does).
 
-Two costs it carries. The worker is third-party and plain `http://`, acceptable
-only because nothing here holds a secret. And **importing over a name the
-library already holds leaves both copies.**
+`Library-Import` carries two costs. The worker is third-party and plain
+`http://`, acceptable only because nothing here holds a secret. And
+**importing over a name the library already holds leaves both copies.**
 
 A duplicate takes the index: the original keeps the name, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
@@ -142,9 +142,9 @@ link tapped in a chat client is swallowed and one run from inside Shortcuts is
 not. The two `prefs:` URLs are in web-tools' `shortcut-links` skill,
 [Replacing a shortcut assigned to a gesture](https://github.com/mehrlander/web-tools/blob/main/skills/shortcut-links/SKILL.md#replacing-a-shortcut-assigned-to-a-gesture).
 
-Both come from `Fav-Settings`, which holds a 14-page settings menu; the second
-lands on the AssistiveTouch page, and the long-press customisation below it has
-no key recorded yet. Emit them like any other link:
+Both URLs come from `Fav-Settings`, which holds a 14-page settings menu; the
+second lands on the AssistiveTouch page, and the long-press customisation below
+it has no key recorded. Emit them like any other link:
 `python3 tools/run.py Open-URL --text '<the prefs URL>'`.
 
 **Replacing a generated receiver is free**, so spend no care on it. The
@@ -169,8 +169,9 @@ that way.
 to its idiom 4: **past about five actions of real work, write the operation in
 JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
 typed result, `Run-Op` to fetch the code from web-tools by name). Parameter
-shapes are a gate, `test/parameter-shapes.test.js`, and the census behind it is
-in the format notes.
+shapes are checked by `test/parameter-shapes.test.js`, against how the corpus
+uses each parameter, recorded in
+[`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md#parameter-shapes-by-census).
 
 ## Deletion is never one step
 
@@ -205,9 +206,10 @@ the other door. `--publish` removes what no chain claims and says how many, so
 withdrawing a chain is one command rather than a command plus a `rm` nobody
 remembers.
 
-Where two checks state one invariant, the cheaper one must not be weaker: a
-weaker fast check is a wrong answer, not a gap in coverage. So `--check` reports
-an orphan in the same breath as a stale file, as the suite does.
+Where two checks state one invariant, the faster one must be as strict as the
+slower: a fast check that passes what the suite fails gives a wrong answer. So
+the tools' own `--check` reports an orphan alongside a stale file, as the suite
+does.
 
 ## A name is not a reference until something checks it
 
