@@ -1,15 +1,14 @@
 # CLAUDE.md
 
 Working rules for this repository, on top of the portable conventions from
-`mehrlander/web-tools`: [`docs/SURFACING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/SURFACING.md),
-the surfacing primitives, and
+`mehrlander/web-tools`: [`docs/CONVERSATION.md`](https://github.com/mehrlander/web-tools/blob/main/docs/CONVERSATION.md),
+the conversation rules, and
 [`docs/QUALIFIED-WRITING.md`](https://github.com/mehrlander/web-tools/blob/main/docs/QUALIFIED-WRITING.md),
 the prose rules. They arrive through the `portable` plugin, in every session:
 its `invoke-default` hook prints one directive at session start and
-**`/portable:default`** loads both. A web-tools checkout is not delivery and has
-not been since 2026-09-12, when that repo cut the `@`-import that used to make
-it one. What follows is specific to this repo, and the first section governs
-every design decision made here.
+**`/portable:default`** loads both. A web-tools checkout is not delivery. What
+follows is specific to this repo, and the first section governs every design
+decision made here.
 
 ## The device is the expensive resource
 
@@ -31,15 +30,9 @@ Rank every delivery route by what it costs the person on the other end:
 | Expensive | Anything asking the user to configure a card, name a shortcut, enable Shortcut Input, or type an input. |
 | **Most expensive** | **Installing.** An import puts Apple's sheet on screen, and re-installing one of the two Back Tap stubs or an AssistiveTouch target costs a scroll through the whole library in Settings to re-select it, which a `prefs:` link shortens but does not remove. |
 
-**Running is cheap and installing is dear, and this table had it the other way
-round until 2026-09-14.** Stated by the owner, after a session diagnosed a
-failure by shipping two installs when one tap on an installed receiver would
-have measured it: *"It's quite simple for me to run a shortcut and see what the
-result is... you could give me a string of five of them to run... installing
-them is much more onerous."* The old row treating "run something more than
-once" as expensive was reading a repeat as tedium; the repeat is fine, and what
-is not fine is a repeat that asks for an **observation** each time, which is
-rule 5 and the diagnostic-returns-itself rule below.
+**Running is cheap and installing is dear.** A repeat is fine. What is not fine
+is a repeat that asks for an **observation** each time, which is rule 5 and the
+diagnostic-returns-itself rule below.
 
 **So the diagnostic ladder starts at the top, not at the bottom.** In order:
 
@@ -61,8 +54,8 @@ rule 5 and the diagnostic-returns-itself rule below.
 matters.** `Log-Repo`, `Sync-Manifest` and `Run-Op` all build their
 Authorization header through `Inject-🎟️GitHubToken`, so the return channel and
 the credential are one dependency. When that credential goes, every probe that
-would report it stops reporting, and the symptom is not an error but four days
-of silence across three unrelated-looking surfaces. **A diagnostic cannot return
+would report it stops reporting, and the symptom is not an error but silence
+across unrelated-looking surfaces. **A diagnostic cannot return
 itself when the return path is the thing under test.** So when the log has gone
 quiet, do not send another logging probe: send one that ends on screen, and say
 what to look at.
@@ -75,15 +68,13 @@ cheapest would have told you.
 
 1. **Exhaust the free routes first, then say what the search covered.** Parse
    the dumps and search the public record before asking the device anything. A
-   probe sent for something the corpus already holds is wasted work:
-   `OpenWorkflowAction` was in eight shortcuts when it was probed anyway.
+   probe sent for something the corpus already holds is wasted work.
    **Search the ToolKit catalog too, and it is the one that answers.**
    `shortcuts-playground-plugin` ships Apple's own metadata as JSON: 2,731
    identifiers and 2,585 parameter tables against the 774 distinct identifiers
    behind this repo's 810 `actions.json` entries.
    `python3 tools/coverage.py --exists <name> --catalog <toolkit-vNN-tool-ids.json>`.
-   It would have supplied every shape that was instead obtained by asking the
-   user to configure cards. **Search for a catalog, not just for an answer.**
+   **Search for a catalog, not just for an answer.**
    None of the three is a census: `actions.json` is curated and misses 18% of
    what the corpus alone uses, the corpus is one library's habits, and the
    catalog is one OS version. So a silent search licenses "I did not find one",
@@ -114,8 +105,7 @@ signing on the device; see
 
 Two costs it carries. The worker is third-party and plain `http://`, acceptable
 only because nothing here holds a secret. And **importing over a name the
-library already holds leaves both copies.** The owner has deleted the older one
-by hand after every import, across a day of them (2026-09-16).
+library already holds leaves both copies.**
 
 A duplicate takes the index: the original keeps the name, so every
 `shortcuts://run-shortcut?name=Name` link, and every `runworkflow` card naming
@@ -124,8 +114,7 @@ upgrade has done the opposite.
 
 **So a replace goes through `Library-Replace`**, which deletes by name, imports,
 and logs: one tap, no cleanup. `Library-Import` is for a name the library does
-not hold. Proven 2026-09-16 on `Probe-Route`, and the manifest taken after it
-showed one copy. The Chains view picks between them from the manifest; hand over
+not hold. The Chains view picks between them from the manifest; hand over
 `?name=<Chain>` rather than building the link.
 
 When the signing worker is down, install by paste: `python3 tools/pack.py
@@ -141,7 +130,7 @@ applies only to the stubs and to whatever AssistiveTouch is bound to, which is
 not yet recorded. A double back tap reaches `Run-BackTap` through the router's
 `[double-back]` line.
 
-**Replacing a bound shortcut breaks the binding** (reported 2026-08-31). Back
+**Replacing a bound shortcut breaks the binding.** Back
 Tap holds a reference that a re-install does not preserve, so the replacement
 has to be re-selected in Settings before the gesture works again. The failure
 is silent: the gesture simply stops doing anything.
@@ -153,9 +142,9 @@ link tapped in a chat client is swallowed and one run from inside Shortcuts is
 not. The two `prefs:` URLs are in web-tools' `shortcut-links` skill,
 [Replacing a shortcut assigned to a gesture](https://github.com/mehrlander/web-tools/blob/main/skills/shortcut-links/SKILL.md#replacing-a-shortcut-assigned-to-a-gesture).
 
-Both come from `Fav-Settings`, which has carried a 14-page settings menu all
-along; the second lands on the AssistiveTouch page, and the long-press
-customisation below it has no key recorded yet. Emit them like any other link:
+Both come from `Fav-Settings`, which holds a 14-page settings menu; the second
+lands on the AssistiveTouch page, and the long-press customisation below it has
+no key recorded yet. Emit them like any other link:
 `python3 tools/run.py Open-URL --text '<the prefs URL>'`.
 
 **Replacing a generated receiver is free**, so spend no care on it. The
@@ -179,11 +168,9 @@ that way.
 **Read [`docs/idioms.md`](docs/idioms.md) before authoring a chain**, and hold
 to its idiom 4: **past about five actions of real work, write the operation in
 JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
-typed result, `Run-Op` to fetch the code from web-tools by name). That document
-was the specification all along and `CLAUDE.md` never named it, which is how a
-21-action chain was hand-built on 2026-09-03 with parameter shapes copied from
-the one chain the README flagged as inferred. The shapes are now a gate,
-`test/parameter-shapes.test.js`, and the census behind it is in the format notes.
+typed result, `Run-Op` to fetch the code from web-tools by name). Parameter
+shapes are a gate, `test/parameter-shapes.test.js`, and the census behind it is
+in the format notes.
 
 ## Deletion is never one step
 
@@ -218,14 +205,9 @@ the other door. `--publish` removes what no chain claims and says how many, so
 withdrawing a chain is one command rather than a command plus a `rm` nobody
 remembers.
 
-The reason this needed fixing on 2026-08-27 is worth more than the fix. Both
-gates existed and they disagreed: the suite asserted one artifact per chain and
-failed on an orphan, while the tools' own `--check` looped over chains only and
-called the same tree current. The one a person runs for a fast answer was the
-one that lied, which is worse than having no check at all, and it is why
-`--check` now reports an orphan in the same breath as a stale file. Where two
-things state one invariant, the cheaper one being weaker is not a gap in
-coverage; it is a wrong answer.
+Where two checks state one invariant, the cheaper one must not be weaker: a
+weaker fast check is a wrong answer, not a gap in coverage. So `--check` reports
+an orphan in the same breath as a stale file, as the suite does.
 
 ## A name is not a reference until something checks it
 
