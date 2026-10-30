@@ -243,7 +243,7 @@ decide before the link goes out whether the existing shortcut is replaced
 through `Library-Replace` or the chain is renamed.
 
 **Resolve a stale by-name target by asking what the library *has* that does the
-job.** What the name used to mean cannot be recovered: a `.wflow` does not carry its own identifier, only a caller records
+job.** What the name used to mean cannot be recovered: a `.wflow` does not contain its own identifier, only a caller records
 it, and a rename leaves no record on the device.
 
 **A target name lives in one of three places, and `tools/catalog.py` reads all

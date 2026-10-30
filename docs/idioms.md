@@ -13,7 +13,8 @@ library, for the reason the [README](../README.md#reading-a-library-back) gives.
 **A claim about the design cites shortcuts in the core, and a claim about the
 corpus says so.** A raw frequency over 577 shortcuts is not evidence about the
 author's design, because 237 of them are imported. Five idioms were counted for
-reach, and the table gives the survey tier each one's shortcuts sit in:
+reach, and the table gives the main
+[survey tiers](../README.md#reading-a-library-back) each one's shortcuts sit in:
 
 | Idiom | Shortcuts | Where they sit |
 | --- | ---: | --- |
@@ -54,11 +55,8 @@ question to Claude or ChatGPT, dictation. So the prologue is not a hardcoded
 fixture, it is **dependency injection with a picker**: any verb can be exercised
 against any input in the library without editing it.
 
-It is the one property here a rebuild is most likely to drop, because from the
-outside it reads as boilerplate.
-
-**The cost, and it is real:** a self-call looks like recursion to anything
-reading the graph, and it inflates every caller count. Read
+**The cost:** a self-call looks like recursion to anything reading the graph,
+and it inflates every caller count. Read
 [`docs/shortcuts-format-notes.md`](shortcuts-format-notes.md) on `isSelf`, and
 discount self-calls before drawing conclusions.
 
@@ -87,7 +85,7 @@ dispatched, which is why every imported shortcut sits outside this machinery.
 And a rename silently changes a value's type, from shortcut-to-run to
 plain-parameter, with no error.
 
-## 3. One type system, consulted by everything that dispatches on type
+## 3. One type descriptor, `Get-FileInfo`, for dispatching on type
 
 `Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
 holding." It gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
