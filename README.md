@@ -44,7 +44,7 @@ Apple documents neither the file format nor the runtime, so three files under `d
 
 - [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
 - [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
-- [`docs/idioms.md`](docs/idioms.md): how a real library is **written**. Read from a 577-shortcut corpus: the self-demo prologue that is really a test harness, the naming convention as a runtime type, one type system everything that dispatches consults, and JavaScript through a `data:` URL as the escape hatch. It also records the four claims that did not survive being checked, and why raw frequency over a mixed corpus is not evidence about one author.
+- [`docs/idioms.md`](docs/idioms.md): how a real library is **written**. Read from a 577-shortcut corpus: the self-demo prologue that is really a test harness, the naming convention as a runtime type, one type system everything that dispatches consults, and JavaScript through a `data:` URL as the escape hatch. Each idiom carries its reach, since raw frequency over a mixed corpus is not evidence about one author.
 
 ## Chains and payloads
 
@@ -89,8 +89,7 @@ one collapses.
 | `pages/gh-recent-branches.html`, 5,768 chars | 9,621 | 4,560 |
 | a 100 KB baked page | ~172,000 | ~5,200 |
 
-Token injection survives the compression, which is the part worth knowing.
-`Show-Html` substitutes by text replacement and cannot see inside a gzip stream,
+Token injection survives the compression. `Show-Html` substitutes by text replacement and cannot see inside a gzip stream,
 so the shell keeps an uncompressed copy of each placeholder the page needs, takes
 the substitution there, and applies it to the page after inflating. Only the
 placeholders a page actually uses are carried, so a page with no secret in it is
@@ -104,7 +103,7 @@ without `DecompressionStream` needs (Safari gained it in 16.4).
 
 `pack.py` sends actions and `show.py` sends a page. [`tools/run.py`](tools/run.py)
 sends **nothing** and just runs what is already installed, which is the cheapest
-route in the table above and the one that had no emitter.
+route in [`CLAUDE.md`](CLAUDE.md)'s cost table.
 
 ```bash
 python3 tools/run.py Get-FromJs                  # one shortcut, no input
@@ -161,12 +160,11 @@ At list size the three are indistinguishable, because the display downsamples
 antialiased edge if a larger presentation ever needs it.
 
 Unlike a page, a `.vcf` cannot use the compression above, since that inflates in
-a browser and this payload has to land in Shortcuts. Picking the right encoder
-turned out to matter more than compression would have.
+a browser and this payload has to land in Shortcuts.
 
 ## Reading a library back
 
-The tools above send shortcuts to a device. These four read a device's library
+The tools above send shortcuts to a device. These read a device's library
 back, which is the other half and the one that makes pruning safe.
 
 ```bash
@@ -279,10 +277,8 @@ because a folder is picked by opaque identifier and the holding folder does not
 exist until you make it. Create it, tap the card, choose it once.
 
 [`workflows/manage-library-probe.json`](workflows/manage-library-probe.json) is
-the spent probe that produced the Move and Delete shapes, kept as the record of
-how they were learned. Nothing in the 577-shortcut corpus uses either action, so
-a copied card really was the only source; `Open` was already in the corpus three
-times over and needed no probe at all.
+the spent probe that produced the Move and Delete shapes, their only source:
+nothing in the 577-shortcut corpus uses either action.
 
 ## CLI
 
@@ -345,7 +341,7 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
 | `toActionChain(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |
-| `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path now. See [Installing](workflows/README.md#installing-one-rather-than-pasting-it). |
+| `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path. See [Installing](workflows/README.md#installing-one-rather-than-pasting-it). |
 
 **Wiring.** `tokenString(parts)` builds a text value with variables embedded in it, taking an alternating list of strings and refs and **deriving the anchor offsets** rather than making you count characters. `variable(ref)` is the other form, where the value *is* an output. A ref is `{ uuid, name }`, or `{ input: true }` for Shortcut Input, plus optional `key` to take one dictionary key and `as` to coerce.
 

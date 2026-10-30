@@ -26,10 +26,8 @@ embedded form remains correct and remains necessary for a payload that is not
 committed or not public. `--check` fails when `packed/` is behind `workflows/`,
 and the suite runs it.
 
-`--url` exists because this section previously showed the URL shape and nothing
-emitted it, so it was assembled by hand on every use, which is the exact failure
-`packed/` was built to end: the sender types a long string and the reader cannot
-tell a wrong one from a right one. **Emit both forms, never type either.**
+**Emit both forms, never type either.** The reader cannot tell a hand-typed link
+from a wrong one.
 
 | Chain | What it is for |
 | --- | --- |
@@ -81,7 +79,7 @@ tell a wrong one from a right one. **Emit both forms, never type either.**
 | `set-github-token` | The clipboard becomes the stored token. Eight actions on `set-shelf`'s write path with the key changed: read `Snippets/Managed/config.json`, set `🎟️GitHubToken`, rename, save with overwrite. It reaches the file the way `self-name` does, a bare `fileLocation` with no `crossDeviceItemID` and no `fileProviderDomainID`, so no iCloud account identifier rides into a public repo. Given no input it takes the clipboard, so the link needs no payload. It ends by running `check-github-token` rather than announcing success, which is the diagnostic-returns-itself rule applied to a write: the badge that said `stale` says `active`, or it does not. |
 | `find-shortcut` | Every shortcut whose name **contains** this one, and the copy you pick opened in the editor. Eleven actions. `contains` rather than `is` is the whole design: a duplicate is named `Foo 1`, so an exact match is the one test that cannot see the thing this exists to find. One copy is the ordinary case and it says nothing; more than one draws the picker, which is `count [2] 1`, the corpus's own idiom for "choosing needs more than one" (seven shortcuts). The Shortcuts app does offer a search action, `com.apple.shortcuts.SearchShortcutsAction`, spelled `searchinshortcuts` in this repo's own `actions.json`, taking a query and a Folder, and none of the 606 shortcuts in the corpus uses it. Of the other two candidates, `OpenNavigationDestinationAction` reaches folders and `Share Sheet` and takes no query, and `OpenWorkflowAction` resolves one shortcut and so returns the original rather than its duplicate. Whether `SearchShortcutsAction` returns matches or opens the app at a search is not settled here, and its parameter names are not in the dictionary, so this chain keeps `Get My Shortcuts` plus a `Name contains` filter until a device dump supplies the card. **It opens rather than deletes**, because deletion is the fourth step here and never the first, and the editor is where a person can see what they are about to lose. Returns the count, so a caller can branch on it. |
 | `self-name` | Reads the shortcut's own name out of `Managed/config.json` and re-enters itself with it, so a rename cannot break a caller. |
-| `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. |
+| `trace` | One timestamped log line behind a `Trace` flag. The debug idiom the library does not have. It builds the line and leaves the destination to the caller, since a file action pins a device-local location. |
 | `check-api-reply` | A GitHub reply in, the same reply out, and a notification if it refused. Six actions, and the one place every token-dependent write now goes to be judged. GitHub answers a `message` key only when it refused, on both the contents endpoints this repo uses, so one `Get Dictionary Value` decides it and no caller has to know an HTTP status. **The channel is a local notification on purpose**: the failure it exists to report is a dead credential, and every other channel here, `Log-Repo`, `Sync-Manifest`, `Run-Op`, the log page, needs that credential to be alive. A probe cannot return itself when the return path is what failed. Between 2026-09-10 and 2026-09-14 an expired token stopped three writers at once and the only symptom was four days of silence, which is the case this exists to make loud. It passes the reply through, so it sits inline in a chain rather than at the end of one. |
 | `log-repo` | The return channel. Writes the input to the clipboard first and unconditionally, then commits it to `shortcuts/log/` in web-tools-private, so a diagnostic ends in a commit rather than in a question. **Silent on success since 2026-09-25**: it runs in the middle of other shortcuts (`stage-input`, `library-paste`), so the Show Result it used to end on interrupted them and said nothing a person could use. A refused write still reaches the screen, as a notification from `check-api-reply`. A shortcut that wants to report ends on the log page itself, as the dumpers do. |
 | `capture-link` | The share sheet's end of that channel: whatever was shared, straight into the repo log. Two actions. |
@@ -138,24 +136,18 @@ never mentions the injector. The picker has no such helper, so it calls
 still wrong: the second pass finds nothing to replace, and the action reads as
 load-bearing to anyone who did not know that.
 
-Both were read from real exports on 2026-08-13, having been inferred from
-behavior until then. `Show-Html` runs five stages in an order that matters, the
-placeholder turns out to be a key in `Shortcuts/Managed/config.json` rather than
-an arbitrary sentinel, and one of the four text repairs is a dangling branch
-that never runs. All three in
+`Show-Html` runs five stages in an order that matters, the placeholder is a key
+in `Shortcuts/Managed/config.json` rather than an arbitrary sentinel, and one of
+the four text repairs is a dangling branch that never runs. All three in
 [`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
 
 <!-- doc-index -->
-**25 sections.** Generated by `python3 tools/doc-index.py --publish`.
+**17 sections.** Generated by `python3 tools/doc-index.py --publish`.
 
 - [`show-html-js`: the same job, mostly in JavaScript](#show-html-js-the-same-job-mostly-in-javascript)
-- [The two mechanisms the device library lacks](#the-two-mechanisms-the-device-library-lacks)
 - [Payloads live in `pages/`, not pasted into the chain](#payloads-live-in-pages-not-pasted-into-the-chain)
-- [Parameter shapes are load-bearing and only partly confirmed](#parameter-shapes-are-load-bearing-and-only-partly-confirmed)
-- [Both probes ran, 2026-08-12](#both-probes-ran-2026-08-12)
-- [The two probes, and why they were worth a tap](#the-two-probes-and-why-they-were-worth-a-tap)
+- [Parameter shapes are load-bearing](#parameter-shapes-are-load-bearing)
 - [Two walkers, and why one asks before it runs](#two-walkers-and-why-one-asks-before-it-runs)
-  - [`probe-step` ran, 2026-08-23](#probe-step-ran-2026-08-23)
 - [Three dumps, and which to use](#three-dumps-and-which-to-use)
 - [Why `dump-selected` exists beside `dump-shortcuts`](#why-dump-selected-exists-beside-dump-shortcuts)
 - [Signing here, so the device never does](#signing-here-so-the-device-never-does)
@@ -163,15 +155,11 @@ that never runs. All three in
 - [Keeping the corpus current without re-dumping it](#keeping-the-corpus-current-without-re-dumping-it)
   - [Get returns, Dump delivers](#get-returns-dump-delivers)
   - [The app is a key, not a branch](#the-app-is-a-key-not-a-branch)
-  - [Converting the dispatcher by splicing, not re-authoring](#converting-the-dispatcher-by-splicing-not-re-authoring)
-  - [The caption path was five shortcuts and is now one](#the-caption-path-was-five-shortcuts-and-is-now-one)
   - [Why the lookup and the default are separate shortcuts](#why-the-lookup-and-the-default-are-separate-shortcuts)
   - [A default in three actions](#a-default-in-three-actions)
   - [One wire format, because the others are derivable](#one-wire-format-because-the-others-are-derivable)
   - [The precise form: manifest, then named](#the-precise-form-manifest-then-named)
-  - [What the first device run changed](#what-the-first-device-run-changed)
   - [Launching a shortcut updates its modification date; being called does not](#launching-a-shortcut-updates-its-modification-date-being-called-does-not)
-  - [The dumper could not dump itself](#the-dumper-could-not-dump-itself)
 - [Reading a dump back](#reading-a-dump-back)
 <!-- /doc-index -->
 
@@ -221,35 +209,6 @@ reference does not.
 The payload is 14,190 characters, well past where a pasted link stops being
 trustworthy, so take it from [`packed/`](../packed/) by address.
 
-## The two mechanisms the device library lacks
-
-[`docs/idioms.md`](../docs/idioms.md) reads all 577 shortcuts and finds the
-design mostly better than a fresh start would produce. Two things it does not
-have come from imported shortcuts, and both are here as chains.
-
-**`self-name`.** A shortcut cannot ask its own name, so every self-call in the
-library hardcodes one, and a rename leaves the caller pointing at nothing:
-twelve live instances of exactly that. `vCard Menu Creator` solves it by
-keeping its name in a config dictionary and re-entering with
-`run $Settings[Name]`. Five actions:
-
-```
-get file config.json
-set Settings
-text $Settings[SelfName]
-set SelfName
-run $SelfName
-```
-
-The last action is the confirmed variable-target `runworkflow`, so this only
-became writable once that probe ran on 2026-08-12.
-
-**`trace`.** One timestamped line, guarded by a `Trace` variable, so a shortcut
-can say what it saw without a dialog. `Multi-stop navigation` guards 52 traces
-this way. The chain stops at building the line rather than appending to a file,
-because the destination is a per-library choice and a file action pins a
-device-local location.
-
 ## Payloads live in `pages/`, not pasted into the chain
 
 Anywhere a parameter takes a string, `{"$file": "pages/thing.html"}` reads that
@@ -266,67 +225,24 @@ resolves the directive before packing, so the plist only ever sees text.
 A missing path is a hard error rather than an empty payload, and a payload
 containing a raw U+FFFC is refused, since it would arrive as an unbound anchor.
 
-## Parameter shapes are load-bearing and only partly confirmed
+## Parameter shapes are load-bearing
 
 `actions.json` holds a bare identifier for 772 of 810 actions, so a chain's `p`
-is reconstructed rather than looked up. Three tiers applied here, and as of
-2026-08-13 the inferred tier is empty. The five actions inherited from
-`js-data-url` are confirmed by a chain that runs. `runworkflow` is confirmed
-against a real export, including the `WFWorkflow` dict and its device-local
-`workflowIdentifier`, which a chain cannot invent and has to read off the device
-it will run on. `run-html` is confirmed by a device run on 2026-08-11, which
-promotes `openurl` and the `ExtensionInput` attachment it reads its page from,
-and a generated menu ran on 2026-08-12, which does the same for `choosefromlist`
-and its contact coercion.
-
-The last four came from the library itself. Ten folder dumps hold 211 shortcuts,
-and reading them against these chains confirms `text.split` and `text.replace`
-(76 uses of the latter, every key optional), `WFChooseFromListActionPrompt`, and
-the `Notes` property `show-menu` reads the chosen row's action from. The device
-carries its own `Show-Menu`, and it matches the chain here action for action
-apart from a trailing `showresult`. Details in
+is reconstructed rather than looked up: from chains that run, real exports, and
+the corpus dumps. `test/parameter-shapes.test.js` requires the corpus's form
+wherever the corpus is unanimous. Details in
 [`docs/shortcuts-format-notes.md`](../docs/shortcuts-format-notes.md).
 
-## Both probes ran, 2026-08-12
-
-`WFWorkflowName` alone resolves, and it accepts a variable. Two things follow
-and both are in this directory now.
-
-**No chain here pins a target any more.** `gh-recent-branches` and its picker
-carried a `WFWorkflow` dict holding a `workflowIdentifier` minted on one install,
-which made them wrong on any other device. The dict is gone from both, and a
-test refuses a new one.
-
-**`run-steps` exists.** A list of shortcut names in, each one run with the
-previous one's result as its input, the last result out. It is the thing that
-ends the rule that a sequence needs a shortcut of its own: the verbs are named
-shortcuts, and the program is a newline-separated list that can ride in a link.
-`text.split` is the one inferred shape in it; everything else comes off exports.
-
-## The two probes, and why they were worth a tap
-
-`runworkflow` carries its target twice, and the second half is a
-`workflowIdentifier` minted per install, which a chain written elsewhere cannot
-invent. Every `runworkflow` in this repo therefore hardcodes an identifier read
-off one device, and is wrong on any other. If the **name alone** resolves, that
-constraint disappears and a chain becomes portable.
-
-`run-by-variable` asks the harder half. `Open URLs` on a constructed
-`shortcuts://run-shortcut?name=<computed>` already runs a shortcut chosen at run
-time, but control leaves and nothing comes back, so it cannot be a loop body. A
-`runworkflow` that accepts a variable name would return, which is what a generic
-`Run-Steps` needs: one shortcut that takes a list of names and runs them in
-order, with no new shortcut per sequence.
-
-Both open a page through `Run-Html` when they succeed, so the result is legible
-without reading anything. Failure is legible too and arrives earlier: a target
-Shortcuts cannot resolve pastes as an action with an empty picker, visible in
-the editor before the shortcut is ever run.
+**No chain here pins a target.** `WFWorkflowName` alone resolves, including from
+a variable, so a chain needs no `WFWorkflow` dict and its per-install
+`workflowIdentifier`, and a test refuses a new one. A target Shortcuts cannot
+resolve pastes as a Run Shortcut card with an empty picker, visible in the
+editor before anything runs.
 
 ## Two walkers, and why one asks before it runs
 
-`ask-report` and `probe-step` do the same job and differ only in ordering, which
-is the whole lesson. Both exist because diagnosing across chat was costing one
+`ask-report` and `probe-step` do the same job and differ only in ordering. Both
+exist because diagnosing across chat was costing one
 message per probe while the probes themselves ran in seconds.
 
 `ask-report` collects: hand it a list of questions, it asks each in turn and
@@ -353,23 +269,9 @@ what `ask-report` misses by collecting after the fact, and it is the reason
 `probe-step` is one step per tap rather than one loop over everything.
 
 Drive either with [`tools/run.py`](../tools/run.py), which emits the tappable
-link rather than asking anyone to type one.
-
-### `probe-step` ran, 2026-08-23
-
-Two taps, both branches. The first carried `-` as its question and a target, and
-committed its payload without asking anything. The second carried a question and
-`-` for both target and payload, asked, committed the question and the answer
-together, and fired nothing. So the split, the `-` conditionals, the
-run-by-variable target, and the `Log-Repo` return all hold on device.
-
-The second tap also demonstrated the rule it broke. It asked whether the first
-tap's commit had landed, which is a fact `shortcuts/log/` already held, so the
-tap bought nothing and the answer said so. A probe asks what only the device
-knows: what the Ask dialog rendered, whether a banner or a permissions sheet
-appeared, what Apple's UI decided. Anything a file in this estate can answer is
-answered here before the link is sent. Written up in
-[`CLAUDE.md`](../CLAUDE.md#a-diagnostic-returns-itself).
+link rather than asking anyone to type one. For one observation, `probe-watch`
+does better than both: it briefs, fires and asks in a single tap
+([`CLAUDE.md`](../CLAUDE.md#a-probe-carries-its-own-instructions)).
 
 ## Three dumps, and which to use
 
@@ -447,9 +349,7 @@ python3 tools/plist.py workflows/<chain>.json --link --ref <branch>
 ```
 
 It carries two lines, the name to install under and the plist to fetch, which is
-the shape `Library-Import` splits on. The form was recorded here and in the
-device log and nowhere emitted, so it was reassembled by hand on every install:
-the same failure `--url` already fixed for the paste route, and the same fix.
+the shape `Library-Import` splits on.
 
 **`Library-Import` is for a name the library does not hold.** Importing over a
 held name leaves two copies, and the original keeps the name, so every
@@ -464,9 +364,8 @@ first means the new chain runs against the old op. That is not a degraded menu,
 it is a stop: the old op answers without the key the new chain reads, the card
 reading it yields nothing, and the next required parameter is empty, which
 Shortcuts reports as "Please choose a value for each parameter in this action"
-under the name of whatever was launched at top level. Measured 2026-09-08, with
-`Choose-Claude` reading `menu` before web-tools carried it, and the notification
-naming `Run-BackTap` three levels above the failing card.
+under the name of whatever was launched at top level, which can be several
+levels above the failing card.
 
 **The merge is the whole publish**, and no purge follows it. `Run-Op` fetches an
 op through GitHub's contents API, which serves `private, max-age=60`: no shared
@@ -496,12 +395,8 @@ depend on being right about an enum nobody here has run.
 hard cap of 150. Widen the window far enough and an uncapped PUT is the whole
 library. The chain has no channel to report what it dropped, so
 `read-incoming.py` flags a dump that arrives at exactly the cap as probably
-truncated. The cap was 60 until the first real 7-day window returned exactly 60:
-the whole window by luck rather than a truncation, and one more edit that week
-would have lost data silently. The size fear behind the original number was also
-wrong, since that run committed 7.2 MB through the API without complaint.
-[`tools/read-incoming.py`](../tools/read-incoming.py) reads the result and
-`--zip` writes it as a dump the existing pipeline already accepts:
+truncated. [`tools/read-incoming.py`](../tools/read-incoming.py) reads the
+result and `--zip` writes it as a dump the existing pipeline already accepts:
 
 ```bash
 python3 tools/read-incoming.py <incoming.txt> --zip recent.zip
@@ -550,12 +445,11 @@ control cards plus a body plus a Stop and Output. `run-app-determined` is the
 same dispatch as a lookup: `Get-AppRoute` keyed on the app, the else-less If for
 the default, and one Run Shortcut on the result. Six actions.
 
-**The card shape is not invented.** [`Nav-CurrentApp`](https://github.com/mehrlander/shortcut-tools)
-has been keying a dictionary on `Get Current App` on device since the 2026-08-13
-dump, and its keys are plain display names (`ChatGPT`, `Claude`). That is how we
-know an app coerces to its display name in a key slot, without spending a probe
-on it: only four shortcuts in 636 use `Get Current App` at all, and that one
-answers it.
+**The card shape is not invented.** `Nav-CurrentApp` keys a dictionary on
+`Get Current App` on device, and its keys are plain display names (`ChatGPT`,
+`Claude`). That is how we know an app coerces to its display name in a key slot,
+without spending a probe on it: only four shortcuts in 636 use `Get Current App`
+at all, and that one answers it.
 
 **It reads the app rather than taking one.** Handing in an app name *and* a
 payload is two arguments across a `Run Shortcut` boundary, which
@@ -572,80 +466,27 @@ block is one line in the plist and one line in the field on device; adding one
 to a dictionary is a nested structure in the file and a row-at-a-time UI in the
 editor. Against that, a dictionary key matches exactly and a regex does not.
 
-One sharp edge survives, and one that looked inherent turned out not to be:
+One sharp edge remains, and the brackets remove another:
 
 - **An app name carrying a regex metacharacter breaks the pattern.** The name is
   interpolated into `(?<=\[<name>\]=).+`, so a display name with `+`, `(` or `.`
   matches something other than itself. Same class as the JSON quoting hazard that
   cost `dump-folder` its parse on a shortcut called `Say "hi"`.
-- **The keys are bracketed, `[GitHub]=Show-Repo`, and that is load-bearing.**
+- **The keys are bracketed, `[Claude]=Choose-Claude`, and that is load-bearing.**
   Unbracketed, an **empty** app name collapses the lookbehind to `(?<==)` and
   matches *every value in the map*, so a tap with no foreground app routes to
-  all five at once rather than to none. The bracket also retires the rule that no
+  every row at once rather than to none. The bracket also retires the rule that no
   key may end with another key, since `[` anchors the left side. One delimiter,
   two failures gone.
 
 `.` does not cross a newline by default, so `.+` stops at the end of its own row
 without anything being said about it.
 
-**The middle path, if the regex ever bites:** hold the map as JSON in a Text
-action and parse it with `Get Dictionary from Input`, which is one action more
-and buys exact key matching back while keeping the single editable block. That
-action has 226 real cards in the corpus, so it is not a gamble either.
-
 **Both halves of the mechanism are copied, not invented.** 25 of the corpus's
 146 Match Text cards carry a pattern built at run time, `Reddit Tracker`
 interpolating an output inside a lookahead. And a single match coerces straight
 to text in a token slot, which is how that same shortcut drops `Matches` into a
 URL string.
-
-### Converting the dispatcher by splicing, not re-authoring
-
-`run-backtap` is built from the device dump of `Back-DoubleTap`, keeping actions
-0 to 7 and 43 to 58 verbatim and replacing 8 to 42 with five: call
-`get-app-route`, and run what comes back if anything did. Every card kept is the
-card running on the phone today, moved rather than rebuilt, so the only
-behaviour that can change is the behaviour named here.
-
-| Section | Before | After |
-| --- | --- | --- |
-| No current app | 6 actions | unchanged |
-| GitHub, Audible, Music/Roku, Shortcuts | 35 actions | 5 |
-| Image, URL, dictation, fallthrough | 16 actions | unchanged |
-| **Total** | **59** | **29** |
-
-Three deliberate differences, none of them incidental:
-
-- **The GitHub arm is gone**, not reproduced. `Show-Repo` was retired the same
-  day for loading a `gh-fetch.js` path that 404s, and there is nothing working to
-  point a row at. GitHub taps now reach the same fallthrough as any unmapped app.
-- **The Shortcuts menu moved into `choose-backtap`** and took the clipboard
-  caption block with it, since the caption exists only to title that menu. The
-  `choosefromlist` prompt references the caption's End If by UUID, and lifting
-  both together keeps the reference intact.
-- **Seven Stop and Output cards become two.** The app arms no longer need one
-  each, because the lookup either answers and stops or returns nothing and lets
-  the type tests run, which is the property `get-app-route` exists to have.
-
-### The caption path was five shortcuts and is now one
-
-Lifting the menu exposed what titles it. `Get-FileCaption` runs `Get-FileInfo`
-and reads `detail.caption`; `Get-FileInfo` runs `Get-FileContext`,
-`Combine-JsonList` and `Get-JsonFromJs` around 4,449 characters of inline
-JavaScript. Five shortcuts deep, to put one line above a menu.
-
-[`describe-input`](describe-input.json) already does that whole job in one, and
-its README row has said so since it was written: same work, 17 actions, one text
-card, no Run Shortcut anywhere. It returns `{list, detail}` with
-`detail.caption`, which is the same key `Get-FileCaption` was digging out, so
-the swap is a drop-in: one card becomes two and four device dependencies leave
-the path.
-
-It was already installed, on 2026-08-26, and unchanged since, so nothing new had
-to reach the phone for this. **The lesson is the one worth keeping**: a
-replacement can sit installed and documented for a week while its callers keep
-walking the old route, because nothing points from the thing being replaced to
-the thing replacing it. Only reading the two side by side finds it.
 
 ### Why the lookup and the default are separate shortcuts
 
@@ -732,8 +573,6 @@ format switch is worth its actions only for a shortcut carrying `<data>` or a
 
 ### The precise form: manifest, then named
 
-
-
 A full dump is fourteen zips and a five-command regeneration, which is the right
 cost once and the wrong cost weekly. `sync-manifest` and `dump-named` are the two
 halves of the cheaper loop, and neither asks the user to decide anything:
@@ -760,47 +599,10 @@ Both chains open with an unconditional clipboard write before touching the
 network, copied from `log-repo` rather than reinvented: a failed commit should
 degrade to the cheap path, not lose the export.
 
-### What the first device run changed
-
-Run 2026-08-18, and it corrected the design twice. Both corrections are in the
-shipped code; this records why, since neither is guessable from the chain file.
-
-**The manifest arrives column-major.** A Text action evaluates its template
-once and expands each attachment into a newline-joined column, so the file is
-`==name==` followed by all 633 names, then `==actions==` followed by all 633
-counts, and so on. It is not one record per shortcut. The parser had been
-written to accept two possible join styles, and the real shape was a third, so
-the tolerance bought nothing: the only thing that settled it was running it.
-
-**Shortcuts drops an empty value when joining a list into text**, rather than
-emitting a blank line. The first run returned 633 names and 578 folders, because
-55 shortcuts sit in no folder, and nothing in the file says which 55. A column
-holding any empty value therefore cannot be aligned with its siblings by
-position. `folder` was removed from the template for that reason; the manifest
-now carries only the three fields that cannot be empty, and the parser refuses a
-file whose columns disagree rather than producing a plausible wrong answer.
-
-Two smaller findings, both in `manifest-delta.py`:
-
-- **A dump stores `/` as `:` in an entry name**, so `Unzip/Re-zip` on the device
-  is `Unzip:Re-zip` in `index.json`. Two of the first run's three apparent
-  deletions were this. The repair is narrow rather than a blanket substitution,
-  since `REF: Edit iCloud JSON` is a real name with a real colon.
-- **A corpus record that failed to parse has no action count**, and comparing
-  against it printed `actions None to 29`, which reads as a change of unknown
-  size. It is now named as what it is: the corpus never got a usable copy.
-- **The export list was asking for receivers this repo authored.** A plist in
-  `plists/` is rebuildable from git, which is the same reasoning that makes
-  deleting one before an import free, so the device is no longer asked for it.
-  Seven of the first delta's sixty-five, including the two chains being
-  installed at the time.
-
 ### Launching a shortcut updates its modification date; being called does not
 
-**Measured 2026-08-18 across two manifests taken 102 minutes apart, with the
-runs in between known from the log.** An earlier note here said flatly that
-running a shortcut moves its date. That was too broad, and the second manifest
-disproved it.
+**Measured across two manifests taken 102 minutes apart on 2026-08-18, with the
+runs in between known from the log.**
 
 | Shortcut | 19:49 | 21:31 | What happened between |
 | --- | --- | --- | --- |
@@ -818,31 +620,16 @@ still reads April.
 So the rule is **top-level launch**, not execution. A `shortcuts://run-shortcut`
 URL moves the date; a `runworkflow` card does not.
 
-**What that costs the sync is less than the broader claim would have.** Only a
-shortcut you launched yourself reports as changed, so the false positives are
-confined to things you actually reached for, and a heavily used sub-shortcut
-never generates one. The action count remains exact and independent.
+**What that costs the sync is small.** Only a shortcut you launched yourself
+reports as changed, so the false positives are confined to things you actually
+reached for, and a heavily used sub-shortcut never generates one. The action
+count remains exact and independent.
 
 **And it is what makes the Recent facet honest.** Ordering by this date is
 ordering by what you last *launched*, which is the useful reading for a launcher
 list. The limit worth knowing: a core shortcut that only ever runs as somebody
 else's sub-step sinks to the bottom however heavily it is used, because nothing
 here can see that traffic.
-
-### The dumper could not dump itself
-
-The first real dump was wide enough to include `Dump-Recent` and `Dump-Named`,
-whose own text templates carry the record markers. The file therefore held
-`==shortcut==` nine times where seven were records, an unanchored split cut two
-records in half, and both were reported as malformed JSON. Anchoring every split
-to a whole line fixes it, and is sound rather than lucky: JSON escapes a newline
-as two characters, so a marker embedded in a serialized shortcut is never alone
-on a line.
-
-A manifest cannot be repaired the same way, because there a name genuinely does
-sit alone on a line. A shortcut called exactly `==name==` opens a second column,
-and the equal-length guard turns that into a refusal rather than a confident
-wrong answer. That guard now earns its keep for two reasons rather than one.
 
 ## Reading a dump back
 

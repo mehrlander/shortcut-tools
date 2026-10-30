@@ -4,10 +4,18 @@
 [`tools/sketch.py`](../tools/sketch.py) renders. Frequencies are counted over
 that whole corpus; the readings are of the 42 in the working core.*
 
-**Reach, checked 2026-08-13 after a first draft overstated four of these.** A
-raw frequency over 577 shortcuts is not evidence about the author's design,
-because 237 of them are imported. Each idiom below carries the number of
-shortcuts that use it and where they sit, and the table is the honest summary:
+This document records the design the corpus shows: what each pattern buys and
+what it costs. The design arrived over years and was never written down, and
+most of it is better than what a fresh start would produce. The patterns are the
+specification for any rebuild, since a core library assembled without them would
+be a different, worse library that happened to have the same verbs. A pattern
+from an imported shortcut is labelled, because those are worth stealing but are
+not evidence about the author's own practice.
+
+**A claim about the design cites shortcuts in the core, and a claim about the
+corpus says so.** A raw frequency over 577 shortcuts is not evidence about the
+author's design, because 237 of them are imported. Each idiom below carries the
+number of shortcuts that use it and where they sit:
 
 | Idiom | Shortcuts | Where they sit |
 | --- | ---: | --- |
@@ -19,17 +27,6 @@ shortcuts that use it and where they sit, and the table is the honest summary:
 
 Only the first is broadly distributed. The rest are narrow, and the menu row
 inverts the reading a raw count gives: menus are mostly an imported trait.
-
-A library this size is not a pile of scripts. It has a design, arrived at over
-years and never written down, and most of it is better than what a fresh start
-would produce. This is what the corpus says the design is, what each pattern
-buys, and what it costs. Where a pattern comes from an imported shortcut rather
-than from this library, it is labelled, because those are worth stealing but are
-not evidence about the author's own practice.
-
-The point of writing it down is that the patterns are the specification for any
-rebuild. A core library assembled without them would be a different, worse
-library that happened to have the same verbs.
 
 ## 1. Every verb runs alone, and that is a test harness
 
@@ -60,10 +57,8 @@ fixture, it is **dependency injection with a picker**: any verb can be exercised
 against any input in the library without editing it.
 
 It is the one property here a rebuild is most likely to drop, because from the
-outside it reads as boilerplate. Calling it "the single most valuable" was the
-first draft's phrase and is more than the evidence carries: 72 of 577 shortcuts
-have the prologue, and it is the only idiom here spread across every tier
-rather than concentrated in one.
+outside it reads as boilerplate. 72 of 577 shortcuts have the prologue, and it
+is the only idiom here spread across every tier rather than concentrated in one.
 
 **The cost, and it is real:** a self-call looks like recursion to anything
 reading the graph, and it inflates every caller count. Read
@@ -86,12 +81,9 @@ forces the first reading.
 So `Verb-Noun` is not only a filing convention. Where `Run-List` is involved it
 is a **type**, tested at run time.
 
-**But its reach is 20 shortcuts, not 340,** and the first draft of this
-paragraph claimed the convention held because breaking it broke `Run-List`.
-That is unsupported. 340 names follow the convention and 20 shortcuts route
-through the interpreter, so discipline explains the convention and `Run-List`
-explains almost none of it. The mechanism is real and worth keeping; it is not
-why the library is consistent.
+**But its reach is 20 shortcuts, not 340.** 340 names follow the convention and
+20 shortcuts route through the interpreter, so discipline explains the
+convention and `Run-List` explains almost none of it.
 
 Two consequences worth stating. A shortcut named with a space cannot be
 dispatched, which is why every imported shortcut sits outside this machinery.
@@ -101,10 +93,8 @@ plain-parameter, with no error.
 ## 3. One type system, consulted by everything that dispatches on type
 
 `Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
-holding." A core mechanism, not a library-wide one: the first draft of this
-heading said "consulted by everything" and 14 of 577 does not support it. It
-gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to
-produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
+holding." A core mechanism, not a library-wide one. It gathers context, folds it
+to JSON, and runs a 4,449-character JavaScript function to produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
 `detail.caption`.
 
 Everything downstream branches on that descriptor rather than inspecting the
@@ -152,7 +142,7 @@ There is a second door, `com.sindresorhus.Actions`'s
 `TransformTextWithJavaScriptIntent`, used 47 times across 39 shortcuts. It
 needs a third-party app where the `data:` route needs nothing.
 
-## 5. A menu is the API surface
+## 5. Menus are mostly an imported habit
 
 The raw count, 1,961 uses across 79 files, does not make the menu this
 library's API surface. **54 of those 79 files are imported shortcuts**, and only
@@ -217,7 +207,7 @@ takes the first, and if it looks like a URL opens it, otherwise renders it as a
 `data:` URL. `Show-Html` strips fences as part of its text repair.
 
 The library assumes its input may be a model's reply and handles that shape
-natively. That assumption is now correct much more often than when it was made.
+natively.
 
 ## 9. Long code is assembled from Text actions
 
@@ -248,6 +238,10 @@ the top and guards each trace with it, 52 times, appending
 timestamped lines to a file. The library has no equivalent, and diagnosis
 happens by opening `Show-Loop` and stepping.
 
+This repository carries a chain for each pattern:
+[`workflows/self-name.json`](../workflows/self-name.json) stores the name, and
+[`workflows/trace.json`](../workflows/trace.json) builds one guarded log line.
+
 ## What the corpus says is wrong
 
 - **A rename is not propagated.** `python3 tools/survey.py --dangling` lists
@@ -269,23 +263,12 @@ happens by opening `Show-Loop` and stepping.
   same source where one feeds nothing. Detail in
   [`shortcuts-format-notes.md`](shortcuts-format-notes.md).
 
-## The recommendation, after checking
+## The tiers
 
-The grammar holds. Four of its claims did not, and all four failed the same
-way: a raw frequency over 577 shortcuts was read as evidence about one author's
-design, when 237 of those shortcuts are someone else's. The menu claim inverted
-under that check, and it was the confident one.
-
-So the rule this document now follows, and the reason to trust the rest of it:
-**a claim about the design cites shortcuts in the core, and a claim about the
-corpus says so.** Where an idiom is used mostly outside the working set, as
-`Choose-Sample` is, that is stated rather than smoothed over.
-
-Two things follow for the tiers as well, and both are in
-[`tools/survey.py`](../tools/survey.py) now. The five tiers are a cascade over
+The five tiers in [`tools/survey.py`](../tools/survey.py) are a cascade over
 three independent facts, not a taxonomy, so each row carries `provenance`,
 `lifecycle`, and `connectivity` and the tier is a recommended action over them.
-And the core is a floor: it is the closure of the named hubs, so it grows with
+The core is a floor: it is the closure of the named hubs, so it grows with
 every entry point the graph cannot see, running about 42 with none, 48 with
 five, 57 with ten. Quote 42 as "at least this much is live," never as the size
 of the working library.
