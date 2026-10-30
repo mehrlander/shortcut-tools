@@ -5,6 +5,7 @@
     python3 tools/log.py -n 40           # more
     python3 tools/log.py --since 09:00   # today, from a wall-clock time
     python3 tools/log.py --name Run-Pick # only entries naming one shortcut
+    python3 tools/log.py --drift         # installed builds that differ from main's
 
 `Log-Repo` commits every payload it is handed to `shortcuts/log/` in
 web-tools-private, and `Library-Import` ends by calling it, so **every install
@@ -31,14 +32,20 @@ copy that ran is the copy that is current. That question is the reason the
 build stamp exists and the one thing the stamp cannot answer alone; it cost a
 checkout and a hand-run hash on 2026-08-29. pages/shortcut-log.html renders the
 same two facts for whoever tapped the link, from the same two sources.
+
+A run is scored, and an install row carries no build of what it installed, so a
+row-by-row reader cannot see a name whose newest install is behind main. --drift
+reads every row for that, not a window; see drift().
 """
-import argparse, json, re, subprocess, sys
+import argparse, functools, hashlib, json, re, subprocess, sys
 from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent / "web-tools-private"
 REF = "origin/main"
 DIR = "shortcuts/log"
+HERE = Path(__file__).resolve().parent.parent   # shortcut-tools, which publishes the builds
+MAIN = "origin/main"
 
 
 def git(*args, repo=REPO):
@@ -93,12 +100,24 @@ def build_of(url):
     fetch rows in a row that named no version at all. A row whose version is
     missing looks exactly like a row that has one, which is the failure the ref
     exists to prevent.
+
+    `Library-Paste` reads packed/<chain>.json, and the same omission dropped its
+    ref until 2026-10-30. web-tools' kits/shortcut-evidence.js reads all three.
     """
-    m = re.search(r"/shortcut-tools/(.+?)/(?:plists|signed)/", url or "")
-    if not m:
+    src = source(url)
+    if not src:
         return ""
-    ref = m.group(1)
-    return ref[:7] if re.fullmatch(r"[0-9a-f]{40}", ref) else ref
+    ref = src[0]
+    return ref[:7] if SHA.fullmatch(ref) else ref
+
+
+SHA = re.compile(r"[0-9a-f]{40}")
+
+
+def source(url):
+    """(ref, folder) of the shortcut-tools file an install fetched, or None."""
+    m = re.search(r"/shortcut-tools/(.+?)/(plists|signed|packed)/", url or "")
+    return (m.group(1), m.group(2)) if m else None
 
 
 CAP = 96     # a single string's head, before its length is reported
@@ -144,6 +163,147 @@ def verdict(name, ran, table):
     if not now or not ran:
         return ""
     return "  ✓current" if ran == now else "  ⚠stale→%s" % now
+
+
+# The ops an installer logs, read off the chains that log them: Library-Import,
+# Library-Replace, Library-Fetch, Library-Paste, and Library-Install, which
+# bootstraps Library-Paste. A row's own `build` is the INSTALLER's stamp, never the build
+# of the chain it installed.
+INSTALLS = ("import", "replace", "fetch", "paste", "install")
+
+# Why a name's newest install gets no verdict. None of these is "current".
+WHY = {
+    "branch": "names a branch, not a commit",
+    "unbuilt": "names a commit whose plists/builds.json has no entry for it",
+    "signed": "fetched a signed copy not made from that commit's plist",
+    "nowhere": "names no shortcut-tools file",
+}
+
+
+def commit_reader(fetch=True, repo=HERE):
+    """(sha, path) -> that file's bytes at that shortcut-tools commit, or None.
+
+    An install names the commit it came from, which a squash merge can leave
+    off main and a shallow clone never has, so a missing commit is fetched by
+    id, once. A full clone stays full: --depth only where it is shallow already.
+    """
+    run = lambda *a: subprocess.run(["git", "-C", str(repo)] + list(a), capture_output=True)
+    present = lambda sha: run("cat-file", "-e", sha + "^{commit}").returncode == 0
+
+    @functools.lru_cache(maxsize=None)
+    def have(sha):
+        if present(sha):
+            return True
+        if fetch:
+            shallow = run("rev-parse", "--is-shallow-repository").stdout.strip() == b"true"
+            run("fetch", "-q", "--no-tags", "origin", sha, *(["--depth=1"] if shallow else []))
+            if present(sha):
+                return True
+        print("cannot read shortcut-tools %s, so no install from it is scored" % sha[:7],
+              file=sys.stderr)
+        return False
+
+    def show(sha, path):
+        if not have(sha):
+            return None
+        r = run("show", "%s:%s" % (sha, path))
+        return r.stdout if r.returncode == 0 else None
+    return show
+
+
+def installed(body, show):
+    """(build, '') for the build an install row put on the phone, or ('', why).
+
+    A paste row says it, as `target`. Import, replace and fetch rows carry no
+    build of what they installed, so it is read off plists/builds.json at the
+    commit `from` names. Only a commit answers: a branch name points somewhere
+    else by now, and builds.json at its head today would be a guess reading as
+    a lookup. A fetch installs signed/<Name>.shortcut, which nothing regenerates
+    with the plist, so it answers only where signed/manifest.json at that commit
+    records the hash of that commit's plist.
+    """
+    name = body.get("name", "")
+    if body.get("target"):
+        return str(body["target"]), ""
+    src = source(body.get("from"))
+    if not src:
+        return "", "nowhere"
+    ref, folder = src
+    if not SHA.fullmatch(ref):
+        return "", "branch"
+    try:
+        build = json.loads(show(ref, "plists/builds.json") or "{}").get(name, "")
+    except ValueError:
+        build = ""
+    if not build:
+        return "", "unbuilt"
+    if folder == "signed":
+        plist = show(ref, "plists/%s.plist" % name)
+        try:
+            signed = json.loads(show(ref, "signed/manifest.json") or "{}").get(name) or {}
+        except ValueError:
+            signed = {}
+        if not plist or signed.get("plist_sha256") != hashlib.sha256(plist).hexdigest():
+            return "", "signed"
+    return build, ""
+
+
+def drift(rows, main, show):
+    """Each name main publishes, scored by its newest install over the whole log.
+
+    A run scores itself as it is read. An install cannot, so a name whose newest
+    install predates a merge read as nothing at all: Route-Gesture did for
+    thirteen days from 2026-09-20 (snag branch-install-outlived-the-merge), and
+    the Chains view's window of the newest rows had dropped the install anyway.
+
+    `rows` is (stem, body) newest first, as entries() yields them; `main` is
+    name -> build. Returns (behind, unscored, never): `behind` holds
+    (name, stem, op, build, ref) for each newest install whose build is not
+    main's; `unscored` maps a WHY key to the names whose newest install ties to
+    no build, which are neither current nor behind; `never` is the names no
+    install row names.
+    """
+    newest = {}
+    for stem, body in rows:
+        if isinstance(body, dict) and body.get("op") in INSTALLS and body.get("name") in main:
+            newest.setdefault(body["name"], (stem, body))
+    behind, unscored = [], {}
+    for name in sorted(newest):
+        stem, body = newest[name]
+        build, why = installed(body, show)
+        if why:
+            unscored.setdefault(why, []).append(name)
+        elif build != main[name]:
+            behind.append((name, stem, body["op"], build, build_of(body.get("from"))))
+    return behind, unscored, sorted(set(main) - set(newest))
+
+
+def report_drift(fetch=True):
+    """drift() over the whole log against builds.json on main: a row per name to
+    reinstall, a count, then the names it cannot speak for and why."""
+    if fetch:
+        try:
+            git("fetch", "origin", "main", "-q", repo=HERE)
+        except subprocess.CalledProcessError as e:
+            print("fetch failed, scoring against what is already here: %s" % e, file=sys.stderr)
+    try:
+        table = json.loads(git("show", "%s:plists/builds.json" % MAIN, repo=HERE))
+        head = git("rev-parse", "--short", MAIN, repo=HERE).strip()
+    except (subprocess.CalledProcessError, ValueError):
+        raise SystemExit("cannot read plists/builds.json on %s, so nothing is scored" % MAIN)
+    behind, unscored, never = drift(entries(fetch=fetch), table, commit_reader(fetch))
+    for name, stem, op, build, ref in behind:
+        when = stamp(stem)
+        when = when.strftime("%Y-%m-%d %H:%M") if when else stem
+        print("%s  %-8s %-22s build=%s main=%s from=%s" % (when, op, name, build, table[name], ref))
+    scored = len(table) - len(never) - sum(len(v) for v in unscored.values())
+    print("%d of %d scored names differ from %s at %s" % (len(behind), scored, MAIN, head))
+    for why in WHY:
+        if why in unscored:
+            print("no verdict, newest install %s (%d): %s"
+                  % (WHY[why], len(unscored[why]), ", ".join(unscored[why])))
+    if never:
+        print("no verdict, no install row (%d): %s" % (len(never), ", ".join(never)))
 
 
 HEADER = re.compile(r"^(\w+)((?:\s+\w+=\S*)*)\s*$")
@@ -205,7 +365,12 @@ def main():
     ap.add_argument("--name", help="only entries whose text or name mentions this")
     ap.add_argument("--raw", action="store_true", help="print each payload whole")
     ap.add_argument("--no-fetch", action="store_true", help="skip the fetch and read what is here")
+    ap.add_argument("--drift", action="store_true",
+                    help="every name in plists/builds.json on main whose newest install "
+                         "is another build; reads the whole log, so -n, --since and --name do not apply")
     a = ap.parse_args()
+    if a.drift:
+        return report_drift(fetch=not a.no_fetch)
 
     cut = None
     if a.since:
