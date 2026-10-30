@@ -40,11 +40,11 @@ Those 38 parameter-bearing entries are exactly the 38 that carry a `WFControlFlo
 
 ## Documentation
 
-Apple documents neither the file format nor the runtime, so three files under `docs/` carry what is known. They split by question:
+Apple documents neither the file format nor the runtime, so three files under `docs/` hold what is known. They split by question:
 
 - [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
 - [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
-- [`docs/idioms.md`](docs/idioms.md): how a real library is **written**. Read from a 577-shortcut corpus: the self-demo prologue that is really a test harness, the naming convention as a runtime type, one type system everything that dispatches consults, and JavaScript through a `data:` URL as the escape hatch. Each idiom carries its reach, since raw frequency over a mixed corpus is not evidence about one author.
+- [`docs/idioms.md`](docs/idioms.md): how a real library is **written**, read from a 577-shortcut corpus: the self-demo prologue as a test harness, the naming convention read as a type at run time, the `Get-FileInfo` type descriptor, and JavaScript through a `data:` URL as the escape hatch.
 
 ## Chains and payloads
 
@@ -190,8 +190,8 @@ its docstring names the rest.
 `survey.py` tiers a library into core, called, uncalled, sediment and imported.
 Read the tiers as a recommended prune order, and take counts from the three
 facets it also emits (`provenance`, `lifecycle`, `connectivity`), since the
-tiers are a cascade over those and collapse pairs. The core is a floor: it is
-the closure of named hubs, so it grows with every entry point the call graph
+tiers are a cascade over those and collapse pairs. The core is a lower bound: it
+is the closure of named hubs, so it grows with every entry point the call graph
 cannot see.
 
 ## The library as an app view

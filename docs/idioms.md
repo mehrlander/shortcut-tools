@@ -4,31 +4,29 @@
 [`tools/sketch.py`](../tools/sketch.py) renders. Frequencies are counted over
 that whole corpus; the readings are of the 42 in the working core.*
 
-This document records the design the corpus shows: what each pattern buys and
-what it costs. The design arrived over years and was never written down, and
-most of it is better than what a fresh start would produce. The patterns are the
-specification for any rebuild, since a core library assembled without them would
-be a different, worse library that happened to have the same verbs. A pattern
-from an imported shortcut is labelled, because those are worth stealing but are
-not evidence about the author's own practice.
+This document records the design the corpus shows, what each pattern buys and
+what it costs, as the specification for any rebuild. A pattern from an imported
+shortcut is labelled, because those are worth stealing but are not evidence
+about the author's own practice. The core's 42 are a lower bound on the working
+library, for the reason the [README](../README.md#reading-a-library-back) gives.
 
 **A claim about the design cites shortcuts in the core, and a claim about the
 corpus says so.** A raw frequency over 577 shortcuts is not evidence about the
-author's design, because 237 of them are imported. Each idiom below carries the
-number of shortcuts that use it and where they sit:
+author's design, because 237 of them are imported. Five idioms were counted for
+reach, and the table gives the survey tier each one's shortcuts sit in:
 
 | Idiom | Shortcuts | Where they sit |
 | --- | ---: | --- |
-| Self-demo prologue | 72 | 17 core, 16 called, 27 uncalled, 6 residue, 6 imported |
+| Self-demo prologue | 72 | 17 core, 16 called, 27 uncalled, 6 sediment, 6 imported |
 | Menus | 79 | **54 imported**, 8 core, 12 uncalled |
-| Calls `Choose-Sample` | 24 | 1 core, 3 called, 9 uncalled, 8 residue, 3 imported |
+| Calls `Choose-Sample` | 24 | 1 core, 3 called, 9 uncalled, 8 sediment, 3 imported |
 | Calls `Run-List` | 20 | 6 core, 2 called, 10 uncalled |
 | Calls `Get-FileInfo` | 14 | 4 core, 2 called, 8 uncalled |
 
 Only the first is broadly distributed. The rest are narrow, and the menu row
 inverts the reading a raw count gives: menus are mostly an imported trait.
 
-## 1. Every verb runs alone, and that is a test harness
+## 1. The self-demo prologue is a test harness
 
 **72 shortcuts open with the same guard**, and 55 call themselves somewhere
 in the body.
@@ -48,17 +46,16 @@ five actions and one branch.
 
 What makes it more than a convenience is where the sample comes from.
 `Choose-Sample` has **24 callers** and `Supply-Sample` 6. Only one of those 24
-is in the core, and 8 are residue, so the injector is used more widely outside
+is in the core, and 8 are sediment, so the injector is used more widely outside
 the working set than inside it: the pattern is real and the core is not where
-it is concentrated. Each offers a menu:
+it is concentrated. `Choose-Sample` and `Supply-Sample` each offer a menu:
 clipboard, a list, a JSON API, a fixed text, a URL, a shortcut, a snippet, a
 question to Claude or ChatGPT, dictation. So the prologue is not a hardcoded
 fixture, it is **dependency injection with a picker**: any verb can be exercised
 against any input in the library without editing it.
 
 It is the one property here a rebuild is most likely to drop, because from the
-outside it reads as boilerplate. 72 of 577 shortcuts have the prologue, and it
-is the only idiom here spread across every tier rather than concentrated in one.
+outside it reads as boilerplate.
 
 **The cost, and it is real:** a self-call looks like recursion to anything
 reading the graph, and it inflates every caller count. Read
@@ -93,8 +90,7 @@ plain-parameter, with no error.
 ## 3. One type system, consulted by everything that dispatches on type
 
 `Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
-holding." A core mechanism, not a library-wide one. It gathers context, folds it
-to JSON, and runs a 4,449-character JavaScript function to produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
+holding." It gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
 `detail.caption`.
 
 Everything downstream branches on that descriptor rather than inspecting the
@@ -114,7 +110,7 @@ The handler names are the type names. Adding a type means adding a
 convention even though, per idiom 2, the convention's consistency is not caused
 by any mechanism.
 
-## 4. JavaScript is the escape hatch, and there is one door to it
+## 4. JavaScript is the escape hatch, and `Get-FromJs` is its main door
 
 Shortcuts cannot do string work, JSON work, or anything algorithmic without
 dozens of actions. The library's answer is to write the operation in JavaScript
@@ -149,7 +145,7 @@ library's API surface. **54 of those 79 files are imported shortcuts**, and only
 8 are in the core. A menu is overwhelmingly how third-party authors present a
 shortcut, and the raw frequency measures their habit, not this one.
 
-What survives is narrower and still worth keeping. Two core shortcuts,
+What the core does with menus is narrower and worth keeping. Two core shortcuts,
 `Show-Convert` and `Get-Text`, are built as menus, and they are the two with the
 widest surface.
 
@@ -262,16 +258,6 @@ This repository carries a chain for each pattern:
 - **`Show-Html` carries a dead branch**, two `text.replace` actions reading the
   same source where one feeds nothing. Detail in
   [`shortcuts-format-notes.md`](shortcuts-format-notes.md).
-
-## The tiers
-
-The five tiers in [`tools/survey.py`](../tools/survey.py) are a cascade over
-three independent facts, not a taxonomy, so each row carries `provenance`,
-`lifecycle`, and `connectivity` and the tier is a recommended action over them.
-The core is a floor: it is the closure of the named hubs, so it grows with
-every entry point the graph cannot see, running about 42 with none, 48 with
-five, 57 with ten. Quote 42 as "at least this much is live," never as the size
-of the working library.
 
 ## What a core library has to keep
 

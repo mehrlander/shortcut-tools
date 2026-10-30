@@ -218,19 +218,18 @@ what makes a chain portable, and the suite enforces it. It also trades a
 device-local pointer for a string nothing validates, so a target renamed on the
 phone leaves a card that looks correct and resolves to nothing.
 
-**Audit the names whenever a chain gains one, and always after stripping
-identifiers.** `run.py` audits every link it emits, against the library index
-and the newest device manifest together. `python3 tools/targets.py` checks every
-authored target against the newest manifest alone, the only list that can say a
-name is gone. It reads `catalog.json`, so run `python3 tools/catalog.py
---publish` first when a chain is new or changed. A name computed at run time is
-a token rather than a string, and neither tool can check it.
+**Audit the names whenever a chain gains one, and always after removing a
+card's `workflowIdentifier`.** `run.py` audits every link it emits, against the
+library index (`index.json`, a snapshot of the last dump) and the newest device
+manifest (the device's own list) together. `python3 tools/targets.py` checks
+every authored target against the newest manifest alone, the only list that can
+say a name is gone. `targets.py` reads `catalog.json`, which
+`python3 tools/catalog.py --publish` writes from the chains, so run that first
+when a chain is new or changed. A name computed at run time is a token rather
+than a string, so neither tool can confirm it.
 
-**Audit the chain's own name too, not only its targets.** A hit means the name
-is taken, and importing over it leaves both copies, so decide before the link
-goes out whether the existing shortcut is replaced through `Library-Replace` or
-the chain is renamed. The check, with `index.json` from `web-tools-private`'s
-`shortcuts/` folder:
+**Audit the chain's own name too, not only its targets**, with `index.json`
+from `web-tools-private`'s `shortcuts/` folder:
 
 ```python
 import json
@@ -239,26 +238,28 @@ name = json.load(open("<chain>.json")).get("name")
 if name in idx: print("name already in the library:", name)
 ```
 
+A hit means the name is taken, and importing over it leaves both copies, so
+decide before the link goes out whether the existing shortcut is replaced
+through `Library-Replace` or the chain is renamed.
+
 **Resolve a stale by-name target by asking what the library *has* that does the
-job**, not by recovering what the name used to mean. The old meaning cannot be
-recovered: a `.wflow` does not carry its own identifier, only a caller records
+job.** What the name used to mean cannot be recovered: a `.wflow` does not carry its own identifier, only a caller records
 it, and a rename leaves no record on the device.
 
-**A target name has three carriers, and `tools/catalog.py` reads all three:** a
-Run Shortcut card's `WFWorkflowName`; a router's dictionary values
+**A target name lives in one of three places, and `tools/catalog.py` reads all
+three:** a Run Shortcut card's `WFWorkflowName`; a router's dictionary values
 (`WFDictionaryFieldValueItems`), which no field name marks as shortcut names;
 and `Get-AppRoute`'s route block, a Text action of `[key]=Shortcut-Name` lines
 read back with a lookbehind match. `catalog.json` is where the three meet. A new
-carrier goes into `tools/catalog.py` in the commit that introduces it, or
-`tools/targets.py` cannot see its names.
+place for a target name goes into `tools/catalog.py` in the commit that
+introduces it, or `tools/targets.py` cannot see its names.
 
 ## Every handover reports itself, with its build id
 
-**Installs log themselves; runs do not.** `Library-Import` ends by calling
-`Log-Repo`, so every install lands in `shortcuts/log/` with the ref it came
-from. Nothing else logs unless a chain says so, so a session can always see what
-installed but usually not what ran, and cannot tell a stale copy from a fresh
-one that failed.
+`Library-Import` ends by calling `Log-Repo`, so every install lands in
+`shortcuts/log/` with the ref it came from. Nothing else logs unless a chain
+says so, so a session can always see what installed but usually not what ran,
+and cannot tell a stale copy from a fresh one that failed.
 
 Four things follow, and none is optional for anything handed over:
 
@@ -267,9 +268,9 @@ Four things follow, and none is optional for anything handed over:
    `origin/main` and fetches first, because the working tree can be days behind
    the device.
    **The reader is a pair, and both halves say the same thing.** web-tools'
-   `pages/shortcut-log.html` renders the same log for whoever tapped the link,
-   from the same two sources, since Show Result clips a payload and does not
-   scroll.
+   `pages/shortcut-log.html` renders the same log on the phone, from the same
+   two sources (the log on `origin/main` and `plists/builds.json`), because a
+   run's Show Result clips a payload and does not scroll.
 2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
    is JSON with `op`, `name` and `build`, so the reader can render it as a row
    rather than a wall of text.

@@ -41,16 +41,16 @@ from a wrong one.
 | `run-by-name` | Whether Run Shortcut resolves a target from `WFWorkflowName` alone, with no device-local `WFWorkflow` dict. One tap: a page opens if it does. |
 | `run-by-variable` | Whether that name can come from a variable rather than a literal. The gate on a generic `Run-Steps`, since a computed target is the whole point of one. |
 | `dump-shortcuts` | Every shortcut on the device as one combined JSON, onto the clipboard. Two actions plus a copy, because `Use-Shortcut` already does the work. |
-| `dump-folder-zip` | One folder's shortcuts, zipped whole and **committed**. The four cards the three-dumps note has always recommended, `Get My Shortcuts` with a Folder, `Get Dictionary from Input` to key them by name, `Make Archive`, `Set Clipboard`, with `dump-recent-zip`'s tail behind them. It declared no `name` until 2026-09-14 and so could only be pasted; it can be installed now because it answers a question nothing else here can. **The manifest carries no `folder` column**, deliberately, since a shortcut with no folder makes that column misalign, so nothing in this repo could otherwise say what is in a folder. Zipping one and committing it is the only reader of folder membership there is, which makes it the check on `library-move` as well as a dump. The Folder is `Ask`, as it is in all 15 corpus instances of that parameter: one tap at run time, and the same tap is the size control. **Ends on the log page** (2026-09-25): on a confirmed write it logs `{"op":"dump","file":…}` through `log-repo` and opens `shortcut-log.html` in a sheet, where the new row sorts to the top with the page's five-minute ring. Only after confirmation, so a refused write keeps its clipboard fallback and its Show Result. `sync-manifest` does not follow them: it runs unattended at 02:00, and a sheet then lands on a locked phone. |
+| `dump-folder-zip` | One folder's shortcuts, zipped whole and **committed**. The four cards [Three dumps](#three-dumps-and-which-to-use) recommends, `Get My Shortcuts` with a Folder, `Get Dictionary from Input` to key them by name, `Make Archive`, `Set Clipboard`, with `dump-recent-zip`'s tail behind them. It declared no `name` until 2026-09-14 and so could only be pasted; it can be installed now because it answers a question nothing else here can. **The manifest carries no `folder` column**, deliberately, since a shortcut with no folder makes that column misalign, so nothing in this repo could otherwise say what is in a folder. Zipping one and committing it is the only reader of folder membership there is, which makes it the check on `library-move` as well as a dump. The Folder is `Ask`, as it is in all 15 corpus instances of that parameter: one tap at run time, and the same tap is the size control. **Ends on the log page** (2026-09-25): on a confirmed write it logs `{"op":"dump","file":…}` through `log-repo` and opens `shortcut-log.html` in a sheet, where the new row sorts to the top with the page's five-minute ring. Only after confirmation, so a refused write keeps its clipboard fallback and its Show Result. `sync-manifest` does not follow them: it runs unattended at 02:00, and a sheet then lands on a locked phone. |
 | `dump-folder` | One folder's shortcuts as JSON lines. `Get My Shortcuts` takes a `Folder` parameter set to Ask Each Time, so the folder is chosen at run time and is the size control. |
 | `dump-selected` | Pick shortcuts from a list, copy them as JSON lines. Self-contained: it does the export itself rather than calling `Use-Shortcut`, and the picker is the size control. |
 | `sync-manifest` | The shape of the whole library (name, action count, last modified) committed to the repo in one tap. What the corpus should be compared against before anything is exported. |
-| `dump-recent-zip` | `dump-recent`'s selection with `dump-folder-zip`'s packaging: the same days parameter and the same Last Modified filter, then **`Get Dictionary from Input` and `Make Archive` instead of a Repeat**. 22 actions against 25, and the count is not the point: the loop is gone. `dump-recent` pairs `Get Name` with `Get File of Type` once per matching shortcut, and keying the set by name removes the only reason that pairing existed, which the three-dumps note above has argued since it was written. Spliced rather than re-authored: actions 0 to 9 and the authenticated PUT are `dump-recent`'s own cards, and the two replacing its loop have 192 and 33 corpus instances between them. It commits a `.zip` rather than a `.txt`, which is the format `index-dump.py` already reads, and it ends through `check-api-reply` and names what landed rather than asserting `Dumped.` over whatever came back. **Ends on the log page** (2026-09-25): on a confirmed write it logs `{"op":"dump","file":…}` through `log-repo` and opens `shortcut-log.html` in a sheet, where the new row sorts to the top with the page's five-minute ring. Only after confirmation, so a refused write keeps its clipboard fallback and its Show Result. `sync-manifest` does not follow them: it runs unattended at 02:00, and a sheet then lands on a locked phone. |
+| `dump-recent-zip` | `dump-recent`'s selection with `dump-folder-zip`'s packaging: the same days parameter and the same Last Modified filter, then **`Get Dictionary from Input` and `Make Archive` instead of a Repeat**. 22 actions against 25, and the count is not the point: the loop is gone. `dump-recent` pairs `Get Name` with `Get File of Type` once per matching shortcut, and keying the set by name removes the only reason that pairing existed, which [Three dumps](#three-dumps-and-which-to-use) argues. Spliced rather than re-authored: actions 0 to 9 and the authenticated PUT are `dump-recent`'s own cards, and the two replacing its loop have 192 and 33 corpus instances between them. It commits a `.zip` rather than a `.txt`, which is the format `index-dump.py` already reads, and it ends through `check-api-reply` and names what landed rather than asserting `Dumped.` over whatever came back. **Ends on the log page** (2026-09-25): on a confirmed write it logs `{"op":"dump","file":…}` through `log-repo` and opens `shortcut-log.html` in a sheet, where the new row sorts to the top with the page's five-minute ring. Only after confirmation, so a refused write keeps its clipboard fallback and its Show Result. `sync-manifest` does not follow them: it runs unattended at 02:00, and a sheet then lands on a locked phone. |
 | `dump-recent` | Every shortcut modified in the last N days, contents and all, committed in one tap. The device does the choosing, so nothing has to come back here first. |
 | `dump-named` | Exports only the shortcuts named in its input and commits them back. The precise form, for when a manifest has already said which. **Ends on the log page** (2026-09-25): on a confirmed write it logs `{"op":"dump","file":…}` through `log-repo` and opens `shortcut-log.html` in a sheet, where the new row sorts to the top with the page's five-minute ring. Only after confirmation, so a refused write keeps its clipboard fallback and its Show Result. `sync-manifest` does not follow them: it runs unattended at 02:00, and a sheet then lands on a locked phone. |
 | `get-shortcut-json` | One named shortcut as JSON, name included, **returned rather than sent**. Seven actions: a sample default through an else-less If, Filter Files to resolve the name, and `public.json` for the body. Nothing leaves the device. Not named `Get-Shortcut`: the device already has one, and three shortcuts run its result. |
 | `dump-shortcut` | The same result, delivered. Five actions: call `get-shortcut-json`, stamp `op` and `build` onto the dictionary it returns, hand it to `Log-Repo`. The whole delivery half, and it owns no retrieval of its own. |
-| `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `App=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
+| `get-app-route` | An app name in, the shortcut to run out, **or nothing**. Five actions: a text block of `[App]=Shortcut` rows and a built regex to read one. No default, which is what makes it usable inside a dispatcher that still has tests to run after it. Given no input it reads the current app. |
 | `choose-runlink` | A copied `shortcuts://run-shortcut` link in, the run offered, **or nothing**. 30 actions. **Never in the Claude app** (2026-10-28): there it outputs nothing, so `run-backtap` goes on to the Claude menu, because a copied reply usually carries run links and finding its session is what the back tap is for. The menu offers the copied link as a row of its own (web-tools `lib/ops/session-menu.js`). It reads the target's name out of `name=` and **checks that name against the device's own library** with the two cards `run-list` resolves a name with, `Get My Shortcuts` and a `Name is` filter, asked as a question instead of as a call. The answer is the picker's prompt, so a link naming something uninstalled says so before the tap rather than failing silently after it. The link itself is handed to Open URL, which is how `Fav` has run a `shortcuts://` link from inside a running shortcut since before this repo existed, and which leaves `name`, `input` and `text` to the same parser a tap uses. Declining is the row `Out`, spelled the way `choose-backtap` spells it, because the clipboard is sticky: a link copied once would otherwise shadow every other route until something else was copied. **Its callers recognise the link themselves and only then call it**, which is the opposite of `get-app-route`'s arrangement and deliberate: that receiver was already installed and proven when a dispatcher started calling it unconditionally, and this one was not. A `Run Shortcut` card at the top of the bound gesture makes every tap depend on a second install existing under exactly the right name, and when it does not the gesture dies before reading anything. Measured 2026-09-14, on the first tap after the first install. Given no input it reads the clipboard, and it matches the link itself, so it still works standalone and the caller's guard is not load-bearing twice. The prompt's emoji sit **after** every anchor, since a code-point offset and a UTF-16 offset disagree below an astral glyph: the anchor gate caught that here before it reached a device, which is the `🎟️` hazard `run-op` documents arriving through a picker title. |
 | `probe-route` | Asks `get-app-route` about a named app and logs the answer. Three actions. It exists because a `shortcuts://` link makes Shortcuts the current app, so a route keyed on anything else cannot be reached from a tap. |
 | `double-backtap` | **What Back Tap double is bound to**, and all it says is which gesture fired: the text `double-back`, handed to `route-gesture`. Two actions, and it never changes, so the dispatcher behind it is never the bound shortcut and a re-install never costs a Settings visit. It declares `WFWorkflowTypeShowInSearch` and nothing else: a shortcut has to be listed somewhere to appear in the Settings picker, and the no-input key that went missing for a fortnight cannot be missing from a file that reads no input. Named `Gesture-BackTap2` for one day, which is the suffix Apple appends to a declined save-over and which 58 of the library's 74 sediment-tier shortcuts carry; `Back-Double` was rejected for sitting beside the dead `Back-DoubleTap` and `Back-TripleTap` copies in the Settings list. |
@@ -124,7 +124,8 @@ once and then run from the Shortcuts app, while `Run-Html` exists to be handed a
 different page on every tap. `Show-Html` does the same job with credential
 injection and text repair on top, so `Run-Html` is for pages that need neither.
 
-Both branch chains carry the same page, and the page is written to serve both:
+`gh-recent-branches` and its picker carry the same page, and the page is written
+to serve both:
 its visible text is only ever the list itself, and its rows are separated by
 real newline characters rather than by block layout, so a text extraction
 yields the same lines whichever way it reads the DOM.
@@ -235,15 +236,15 @@ wherever the corpus is unanimous. Details in
 
 **No chain here pins a target.** `WFWorkflowName` alone resolves, including from
 a variable, so a chain needs no `WFWorkflow` dict and its per-install
-`workflowIdentifier`, and a test refuses a new one. A target Shortcuts cannot
+`workflowIdentifier`, and `test/gh-branches.test.js` refuses a new one. A target Shortcuts cannot
 resolve pastes as a Run Shortcut card with an empty picker, visible in the
 editor before anything runs.
 
 ## Two walkers, and why one asks before it runs
 
 `ask-report` and `probe-step` do the same job and differ only in ordering. Both
-exist because diagnosing across chat was costing one
-message per probe while the probes themselves ran in seconds.
+batch probes, so the answers arrive as commits rather than as one chat message
+per probe.
 
 `ask-report` collects: hand it a list of questions, it asks each in turn and
 commits the transcript through `Log-Repo`. It deliberately does not run the
@@ -260,13 +261,8 @@ what makes it crash-safe: a probe that dies takes down whatever follows it in
 the same run, so putting the ask at the top of the next run means a crashed
 probe still gets reported. A single looping walker cannot have that property.
 Each step commits its own question and answer, so nothing has to survive
-between runs. Three lines in, with `-` standing for an absent question, target,
-or payload.
-
-The value of an in-flow question is that it arrives while the screen is still in
-front of you, so the answer needs no explanation of what it answers. That is
-what `ask-report` misses by collecting after the fact, and it is the reason
-`probe-step` is one step per tap rather than one loop over everything.
+between runs. `probe-step` takes three lines, with `-` standing for an absent
+question, target, or payload.
 
 Drive either with [`tools/run.py`](../tools/run.py), which emits the tappable
 link rather than asking anyone to type one. For one observation, `probe-watch`
@@ -351,12 +347,9 @@ python3 tools/plist.py workflows/<chain>.json --link --ref <branch>
 It carries two lines, the name to install under and the plist to fetch, which is
 the shape `Library-Import` splits on.
 
-**`Library-Import` is for a name the library does not hold.** Importing over a
-held name leaves two copies, and the original keeps the name, so every
-`run-shortcut?name=Name` link and every `runworkflow` card naming it still
-resolves to the **old** copy. A replace goes through `Library-Replace`. The rule
-is owned by [`CLAUDE.md`](../CLAUDE.md), under "So a replace goes through
-`Library-Replace`".
+**`Library-Import` is for a name the library does not hold.** A replace goes
+through `Library-Replace`, for the reason [`CLAUDE.md`](../CLAUDE.md) gives under
+"So a replace goes through `Library-Replace`".
 
 **Install a chain AFTER the op it reads, never before.** An op is fetched from
 `@main` at run time and a chain is installed from a branch plist, so installing
