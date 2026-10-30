@@ -118,7 +118,7 @@ test("--workflows without --out never prunes, since the pair is not matched", ()
 test("--link emits the install link rather than leaving it to be typed", () => {
   // Same failure --url fixed for the paste route: the form was documented and
   // nothing emitted it, so it was retyped on every install.
-  const out = run("workflows/sync-manifest.json", "--link", "--ref", "some/branch").trim();
+  const out = run("workflows/sync-manifest.json", "--link", "--unchecked", "--ref", "some/branch").trim();
   assert.match(out, /^shortcuts:\/\/run-shortcut\?name=Library-Import&input=text&text=/);
   const payload = decodeURIComponent(out.split("&text=")[1]);
   const [name, url] = payload.split("\n");
