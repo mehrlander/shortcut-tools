@@ -266,7 +266,7 @@ Assembled from the above, in the order that matters:
 2. `Get-FromJs`, and the rule that anything over five actions becomes
    JavaScript.
 3. `Get-FileInfo`, or something that answers the type question, since every
-   dispatch depends on it.
+   type dispatch depends on it.
 4. `Run-List`, because the naming convention stops being executable without it.
 5. One menu convention, cases of one to three actions.
 6. One state mechanism. The shelf works; so would anything with a config file.
