@@ -4,34 +4,30 @@
 [`tools/sketch.py`](../tools/sketch.py) renders. Frequencies are counted over
 that whole corpus; the readings are of the 42 in the working core.*
 
-**Reach, checked 2026-08-13 after a first draft overstated four of these.** A
-raw frequency over 577 shortcuts is not evidence about the author's design,
-because 237 of them are imported. Each idiom below carries the number of
-shortcuts that use it and where they sit, and the table is the honest summary:
+This document records the design the corpus shows, what each pattern buys and
+what it costs, as the specification for any rebuild. A pattern from an imported
+shortcut is labelled, because those are worth stealing but are not evidence
+about the author's own practice. The core's 42 are a lower bound on the working
+library, for the reason the [README](../README.md#reading-a-library-back) gives.
+
+**A claim about the design cites shortcuts in the core, and a claim about the
+corpus says so.** A raw frequency over 577 shortcuts is not evidence about the
+author's design, because 237 of them are imported. Five idioms were counted for
+reach, and the table gives the main
+[survey tiers](../README.md#reading-a-library-back) each one's shortcuts sit in:
 
 | Idiom | Shortcuts | Where they sit |
 | --- | ---: | --- |
-| Self-demo prologue | 72 | 17 core, 16 called, 27 uncalled, 6 residue, 6 imported |
+| Self-demo prologue | 72 | 17 core, 16 called, 27 uncalled, 6 sediment, 6 imported |
 | Menus | 79 | **54 imported**, 8 core, 12 uncalled |
-| Calls `Choose-Sample` | 24 | 1 core, 3 called, 9 uncalled, 8 residue, 3 imported |
+| Calls `Choose-Sample` | 24 | 1 core, 3 called, 9 uncalled, 8 sediment, 3 imported |
 | Calls `Run-List` | 20 | 6 core, 2 called, 10 uncalled |
 | Calls `Get-FileInfo` | 14 | 4 core, 2 called, 8 uncalled |
 
 Only the first is broadly distributed. The rest are narrow, and the menu row
 inverts the reading a raw count gives: menus are mostly an imported trait.
 
-A library this size is not a pile of scripts. It has a design, arrived at over
-years and never written down, and most of it is better than what a fresh start
-would produce. This is what the corpus says the design is, what each pattern
-buys, and what it costs. Where a pattern comes from an imported shortcut rather
-than from this library, it is labelled, because those are worth stealing but are
-not evidence about the author's own practice.
-
-The point of writing it down is that the patterns are the specification for any
-rebuild. A core library assembled without them would be a different, worse
-library that happened to have the same verbs.
-
-## 1. Every verb runs alone, and that is a test harness
+## 1. The self-demo prologue is a test harness
 
 **72 shortcuts open with the same guard**, and 55 call themselves somewhere
 in the body.
@@ -51,22 +47,16 @@ five actions and one branch.
 
 What makes it more than a convenience is where the sample comes from.
 `Choose-Sample` has **24 callers** and `Supply-Sample` 6. Only one of those 24
-is in the core, and 8 are residue, so the injector is used more widely outside
+is in the core, and 8 are sediment, so the injector is used more widely outside
 the working set than inside it: the pattern is real and the core is not where
-it is concentrated. Each offers a menu:
+it is concentrated. `Choose-Sample` and `Supply-Sample` each offer a menu:
 clipboard, a list, a JSON API, a fixed text, a URL, a shortcut, a snippet, a
 question to Claude or ChatGPT, dictation. So the prologue is not a hardcoded
 fixture, it is **dependency injection with a picker**: any verb can be exercised
 against any input in the library without editing it.
 
-It is the one property here a rebuild is most likely to drop, because from the
-outside it reads as boilerplate. Calling it "the single most valuable" was the
-first draft's phrase and is more than the evidence carries: 72 of 577 shortcuts
-have the prologue, and it is the only idiom here spread across every tier
-rather than concentrated in one.
-
-**The cost, and it is real:** a self-call looks like recursion to anything
-reading the graph, and it inflates every caller count. Read
+**The cost:** a self-call looks like recursion to anything reading the graph,
+and it inflates every caller count. Read
 [`docs/shortcuts-format-notes.md`](shortcuts-format-notes.md) on `isSelf`, and
 discount self-calls before drawing conclusions.
 
@@ -86,25 +76,19 @@ forces the first reading.
 So `Verb-Noun` is not only a filing convention. Where `Run-List` is involved it
 is a **type**, tested at run time.
 
-**But its reach is 20 shortcuts, not 340,** and the first draft of this
-paragraph claimed the convention held because breaking it broke `Run-List`.
-That is unsupported. 340 names follow the convention and 20 shortcuts route
-through the interpreter, so discipline explains the convention and `Run-List`
-explains almost none of it. The mechanism is real and worth keeping; it is not
-why the library is consistent.
+**But its reach is 20 shortcuts, not 340.** 340 names follow the convention and
+20 shortcuts route through the interpreter, so discipline explains the
+convention and `Run-List` explains almost none of it.
 
 Two consequences worth stating. A shortcut named with a space cannot be
 dispatched, which is why every imported shortcut sits outside this machinery.
 And a rename silently changes a value's type, from shortcut-to-run to
 plain-parameter, with no error.
 
-## 3. One type system, consulted by everything that dispatches on type
+## 3. One type descriptor, `Get-FileInfo`, for dispatching on type
 
 `Get-FileInfo` has **14 callers**, 4 of them in the core, and answers "what am I
-holding." A core mechanism, not a library-wide one: the first draft of this
-heading said "consulted by everything" and 14 of 577 does not support it. It
-gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to
-produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
+holding." It gathers context, folds it to JSON, and runs a 4,449-character JavaScript function to produce a descriptor: `Type`, `detail.type`, `detail.fileName`,
 `detail.caption`.
 
 Everything downstream branches on that descriptor rather than inspecting the
@@ -124,7 +108,7 @@ The handler names are the type names. Adding a type means adding a
 convention even though, per idiom 2, the convention's consistency is not caused
 by any mechanism.
 
-## 4. JavaScript is the escape hatch, and there is one door to it
+## 4. JavaScript is the escape hatch, and `Get-FromJs` is its main door
 
 Shortcuts cannot do string work, JSON work, or anything algorithmic without
 dozens of actions. The library's answer is to write the operation in JavaScript
@@ -152,14 +136,14 @@ There is a second door, `com.sindresorhus.Actions`'s
 `TransformTextWithJavaScriptIntent`, used 47 times across 39 shortcuts. It
 needs a third-party app where the `data:` route needs nothing.
 
-## 5. A menu is the API surface
+## 5. Menus are mostly an imported habit
 
 The raw count, 1,961 uses across 79 files, does not make the menu this
 library's API surface. **54 of those 79 files are imported shortcuts**, and only
 8 are in the core. A menu is overwhelmingly how third-party authors present a
 shortcut, and the raw frequency measures their habit, not this one.
 
-What survives is narrower and still worth keeping. Two core shortcuts,
+What the core does with menus is narrower and worth keeping. Two core shortcuts,
 `Show-Convert` and `Get-Text`, are built as menus, and they are the two with the
 widest surface.
 
@@ -217,7 +201,7 @@ takes the first, and if it looks like a URL opens it, otherwise renders it as a
 `data:` URL. `Show-Html` strips fences as part of its text repair.
 
 The library assumes its input may be a model's reply and handles that shape
-natively. That assumption is now correct much more often than when it was made.
+natively.
 
 ## 9. Long code is assembled from Text actions
 
@@ -248,6 +232,10 @@ the top and guards each trace with it, 52 times, appending
 timestamped lines to a file. The library has no equivalent, and diagnosis
 happens by opening `Show-Loop` and stepping.
 
+This repository carries a chain for each pattern:
+[`workflows/self-name.json`](../workflows/self-name.json) stores the name, and
+[`workflows/trace.json`](../workflows/trace.json) builds one guarded log line.
+
 ## What the corpus says is wrong
 
 - **A rename is not propagated.** `python3 tools/survey.py --dangling` lists
@@ -269,27 +257,6 @@ happens by opening `Show-Loop` and stepping.
   same source where one feeds nothing. Detail in
   [`shortcuts-format-notes.md`](shortcuts-format-notes.md).
 
-## The recommendation, after checking
-
-The grammar holds. Four of its claims did not, and all four failed the same
-way: a raw frequency over 577 shortcuts was read as evidence about one author's
-design, when 237 of those shortcuts are someone else's. The menu claim inverted
-under that check, and it was the confident one.
-
-So the rule this document now follows, and the reason to trust the rest of it:
-**a claim about the design cites shortcuts in the core, and a claim about the
-corpus says so.** Where an idiom is used mostly outside the working set, as
-`Choose-Sample` is, that is stated rather than smoothed over.
-
-Two things follow for the tiers as well, and both are in
-[`tools/survey.py`](../tools/survey.py) now. The five tiers are a cascade over
-three independent facts, not a taxonomy, so each row carries `provenance`,
-`lifecycle`, and `connectivity` and the tier is a recommended action over them.
-And the core is a floor: it is the closure of the named hubs, so it grows with
-every entry point the graph cannot see, running about 42 with none, 48 with
-five, 57 with ten. Quote 42 as "at least this much is live," never as the size
-of the working library.
-
 ## What a core library has to keep
 
 Assembled from the above, in the order that matters:
@@ -299,7 +266,7 @@ Assembled from the above, in the order that matters:
 2. `Get-FromJs`, and the rule that anything over five actions becomes
    JavaScript.
 3. `Get-FileInfo`, or something that answers the type question, since every
-   dispatch depends on it.
+   type dispatch depends on it.
 4. `Run-List`, because the naming convention stops being executable without it.
 5. One menu convention, cases of one to three actions.
 6. One state mechanism. The shelf works; so would anything with a config file.
