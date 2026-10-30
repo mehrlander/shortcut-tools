@@ -350,6 +350,8 @@ def main():
                     help="sign here and write signed/<Name>.shortcut, so no device signs")
     ap.add_argument("--fetch", action="store_true",
                     help="--link through Library-Fetch, which installs an already-signed file")
+    ap.add_argument("--unchecked", action="store_true",
+                    help="--link without asking the signing worker first")
     args = ap.parse_args()
     if args.write_signed:
         if not args.chain:
@@ -371,7 +373,16 @@ def main():
                              "no receiver does both; pass one")
         target = (FETCH_TARGET if args.fetch else
                   REPLACE_TARGET if args.replace else IMPORT_TARGET)
-        print(link(args.chain, args.ref, target))
+        url = link(args.chain, args.ref, target)
+        # Import and Replace sign on the device through the worker, which has
+        # answered "offline until further notice" since 2026-09-24 (the snag
+        # signing-worker-outage-reads-as-a-bad-plist). One try here, and on a
+        # refusal the paste route instead of a link that fails on the phone.
+        if target != FETCH_TARGET and not args.unchecked and not sign_bytes(args.chain, tries=1):
+            raise SystemExit("the signing worker refused, so this link would fail on the device; "
+                             "install by paste instead:\n  python3 tools/pack.py %s --install --ref %s"
+                             % (args.chain, args.ref))
+        print(url)
         return
     if args.publish or args.check:
         return publish(args.check,
