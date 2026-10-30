@@ -218,128 +218,71 @@ what makes a chain portable, and the suite enforces it. It also trades a
 device-local pointer for a string nothing validates, so a target renamed on the
 phone leaves a card that looks correct and resolves to nothing.
 
-That is not hypothetical. Stripping the identifiers out of `Back-DoubleTap`
-exposed two names that had been stale for at least a fortnight, still working
-only because the identifier beside them was carrying the call:
-`Use-RecentShortcut`, since renamed to `Open-RecentShortcut`, and `Repo-Viewer`,
-now pointed at `Show-Repo`.
+**Audit the names whenever a chain gains one, and always after stripping
+identifiers.** `run.py` audits every link it emits, against the library index
+and the newest device manifest together. `python3 tools/targets.py` checks every
+authored target against the newest manifest alone, the only list that can say a
+name is gone. It reads `catalog.json`, so run `python3 tools/catalog.py
+--publish` first when a chain is new or changed. A name computed at run time is
+a token rather than a string, and neither tool can check it.
 
-**The corpus settled the second one without a tap, and the way it did is the
-method.** The identifier was no help: `962A04D2-78A9-4AD8-91B9-A51E3F3F6CB1`
-appears in the corpus only inside `Back-DoubleTap` itself, since a `.wflow` does
-not carry its own identifier and only a *caller* records a target's. What
-settled it was elimination. `Repo-Viewer` exists nowhere in 605 names or 15
-dumps, and exactly one repo browser does exist, `Show-Repo`, whose two actions
-build a `gh-fetch` page and hand it to `Show-Html`. The branch calling it fires
-when the current app is GitHub, which is what that page is for. Retargeting is
-not merely the best guess available, it is strictly better than any alternative:
-the old name resolves to nothing, so the branch was dead either way.
-
-The general shape, since this will recur: a stale by-name target is resolved by
-asking what the library *has* that does the job, not by recovering what the name
-used to mean. The device cannot answer the second question either, since a
-rename leaves no record on it.
-
-**So audit the names against the library index whenever a chain gains one, and
-always after stripping identifiers.** `run.py` does this for every link it
-emits, against `index.json` and the newest `manifests/*.txt` together, since
-the manifest is the device's own list and the index is a snapshot of the last
-dump. By hand, `web-tools-private`'s `shortcuts/index.json` is one row per
-shortcut in the last dump:
-
-```bash
-python3 - <<'EOF'
-import json
-idx = {r["name"] for r in json.load(open("index.json"))}
-for a in json.load(open("<chain>.json"))["actions"]:
-    names = [a["p"].get("WFWorkflowName")]
-    # A router keeps its targets as dictionary values, where WFWorkflowName
-    # never looks. Read those too, or the audit passes a map full of dead names.
-    for item in (a["p"].get("WFItems", {}).get("Value", {})
-                 .get("WFDictionaryFieldValueItems", []) or []):
-        names.append(item.get("WFValue", {}).get("Value", {}).get("string"))
-    for n in names:
-        if isinstance(n, str) and n not in idx: print("missing:", n)
-EOF
-```
-
-Two false positives to expect, both from the index being a snapshot: anything
-installed since the last dump, which the newest `manifests/*.txt` settles (read
-both, as `run.py` does), and any name computed at run time, which is a token
-rather than a string and cannot be checked this way at all.
-
-**Audit the chain's own name too, not only its targets.** `Get-ShortcutJson`
-was published on 2026-08-30 over a 4-action predecessor doing nearly the same
-job, because the collision check was run against `Get-Shortcut` and never
-against the name actually chosen. Nothing called the predecessor and the
-replacement is a superset, so it cost nothing, and the device log settled that
-the new copy is the one running. The check is one line and belongs beside the
-target audit:
+**Audit the chain's own name too, not only its targets.** A hit means the name
+is taken, and importing over it leaves both copies, so decide before the link
+goes out whether the existing shortcut is replaced through `Library-Replace` or
+the chain is renamed. The check, with `index.json` from `web-tools-private`'s
+`shortcuts/` folder:
 
 ```python
+import json
+idx = {r["name"] for r in json.load(open("index.json"))}
 name = json.load(open("<chain>.json")).get("name")
 if name in idx: print("name already in the library:", name)
 ```
 
-A hit is not automatically wrong. It means the install will offer to save over
-something, and the question of whether that something is wanted has to be
-answered before the link goes out rather than after.
+**Resolve a stale by-name target by asking what the library *has* that does the
+job**, not by recovering what the name used to mean. The old meaning cannot be
+recovered: a `.wflow` does not carry its own identifier, only a caller records
+it, and a rename leaves no record on the device.
 
-**A route block is a third carrier, and it hid four names until 2026-09-14.**
-`Get-AppRoute` stores its table as a Text action of `[key]=Shortcut-Name` lines
-and reads a value back with a lookbehind match, so the target name is a
-substring of a literal: `WFWorkflowName` does not hold it, no dictionary value
-holds it, and the `Run Shortcut` card that consumes it carries a computed name
-the audit deliberately drops. Four live targets were therefore invisible to
-every check here. `tools/catalog.py` reads the block now, and `catalog.json` is
-where all three carriers meet.
-
-**A dictionary value is a shortcut name that no field name marks as one**, which
-is the whole cost of routing through a map rather than a ladder of `Run Shortcut`
-cards. The map itself is perfectly visible: `WFDictionaryFieldValueItems` is
-plain key and value strings in the chain file, as readable and as diffable as
-any other parameter. What changes is that the names stop living in
-`WFWorkflowName`, which is the only field the audit knew to read, so the audit
-reads both now. Any future carrier for a target name has to be added here in the
-same commit that introduces it.
+**A target name has three carriers, and `tools/catalog.py` reads all three:** a
+Run Shortcut card's `WFWorkflowName`; a router's dictionary values
+(`WFDictionaryFieldValueItems`), which no field name marks as shortcut names;
+and `Get-AppRoute`'s route block, a Text action of `[key]=Shortcut-Name` lines
+read back with a lookbehind match. `catalog.json` is where the three meet. A new
+carrier goes into `tools/catalog.py` in the commit that introduces it, or
+`tools/targets.py` cannot see its names.
 
 ## Every handover reports itself, with its build id
 
-**Confirming an install was never the problem; confirming a RUN was.**
-`Library-Import` ends by calling `Log-Repo`, so every install lands in
-`shortcuts/log/` with the ref it came from. Nothing else logs unless a chain says
-so, which means a session can always see what installed and usually cannot see
-what ran. That asymmetry cost this session hours: a link was handed over, nothing
-came back, and there was no way to tell a stale copy from a fresh one that
-failed, so the next move was rework rather than a fix.
+**Installs log themselves; runs do not.** `Library-Import` ends by calling
+`Log-Repo`, so every install lands in `shortcuts/log/` with the ref it came
+from. Nothing else logs unless a chain says so, so a session can always see what
+installed but usually not what ran, and cannot tell a stale copy from a fresh
+one that failed.
 
 Four things follow, and none is optional for anything handed over:
 
 1. **Read the log, do not reconstruct it.** `python3 tools/log.py` prints the
    entries newest first, with the build each install came from. It reads
-   `origin/main` and fetches first, because the working tree is a checkout from
-   whenever the session last pulled; reading the tree showed entries three days
-   stale while the device had committed minutes earlier.
+   `origin/main` and fetches first, because the working tree can be days behind
+   the device.
    **The reader is a pair, and both halves say the same thing.** web-tools'
    `pages/shortcut-log.html` renders the same log for whoever tapped the link,
-   from the same two sources, because until it existed the useful half of a run
-   was legible from a checkout and invisible on the phone: Show Result clips a
-   payload and does not scroll.
+   from the same two sources, since Show Result clips a payload and does not
+   scroll.
 2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
    is JSON with `op`, `name` and `build`, so the reader can render it as a row
    rather than a wall of text.
 3. **The chain stamps its own build.** `#BUILD#` anywhere in a string is replaced
    with a short content hash of the chain, by **both** mirrors. The token is
    exactly as wide as the id, so U+FFFC anchor offsets beside it survive. Held by
-   `test/plist.test.js`; a directive one mirror resolves and the other does not
-   is the `$file` defect over again.
+   `test/plist.test.js`.
 4. **And the id is scored, because alone it answers nothing.** A stamp says
    which copy ran; it takes `plists/builds.json` (name -> id, published by
    `plist.py --publish`) to say whether that copy is current. Both readers mark
    a row `current` or `stale`, and both stay **silent when the manifest is
    unknown**: an unlooked-up answer reading as a good one is worse than no
-   verdict. Getting this by hand cost a checkout and a hashed chain on
-   2026-08-29, which is the rework the stamp was added to prevent.
+   verdict.
 
 **And report it back.** A reply that hands over a link ends by showing the actual
 log rows, so both sides can see what ran rather than inferring it from silence.
@@ -351,7 +294,7 @@ as an item whose `repo` is `mehrlander/shortcut-tools`, rather than into a
 narrative paragraph. A repeat is another date in the item's `seen`, never a
 second item; web-tools'
 [`docs/views/lists.md`](https://github.com/mehrlander/web-tools/blob/main/docs/views/lists.md)
-has the full shape. This repo's own log, `docs/SNAGS.md`, retired on 2026-10-20.
+has the full shape.
 
 A claim found wrong is fixed in place; a dated record says so in an ordinary
 sentence with the date and a link to the successor, per web-tools
@@ -369,9 +312,6 @@ interaction is: tap the link, and the result is either already in the repo or
 one paste away. The clipboard write runs **first and unconditionally**, so a
 failed commit degrades to the cheap path rather than losing the result.
 
-This is why the repo carries a logger at all. It is not telemetry, it is the
-return channel that makes a probe cost one tap.
-
 **And a question is worth a tap only when the repo cannot answer it.** The rule
 above stops a probe ending in "what did you see?"; this one stops the question
 that survives it. Before asking anything, answer it here: read
@@ -382,21 +322,12 @@ but the device. Anything derivable from a file in this estate is a `git pull`
 dressed up as a favor, and it costs a tap, a context switch, and the reader's
 willingness to answer the next one.
 
-Measured 2026-08-23, validating `Probe-Step`. The second of two taps asked
-whether the first tap's commit had landed. It had, in `shortcuts/log/`, two
-commits away from the session that asked. The reply was "Come on, this is not
-what you should be asking me. You can see these things yourself," which is the
-correct answer and the reason this paragraph exists. The tap was not wasted
-because the walker failed, it worked; it was wasted because the question was
-already answered before it was sent. This is judgment and stays prose: no check
-can read a question and tell whether the repo holds its answer.
-
 ## A probe carries its own instructions
 
 **The reader arrives knowing nothing, and should not have to.** Running a link
-is cheap and the user has said so. What costs is having to remember what the
-tap was for, watch for the right thing without being told what it is, and work
-out afterwards which part mattered. That is the expensive kind of ask, and it
+is cheap. What costs is having to remember what the tap was for, watch for the
+right thing without being told what it is, and work out afterwards which part
+mattered. That is the expensive kind of ask, and it
 is the one that hides inside a link that looks like one tap.
 
 So a probe that needs an observation says all three parts on the device, in
@@ -413,15 +344,9 @@ order:
 the payload is three lines: brief, target, question. It logs `Ran:`, `Q:` and
 `A:` through `Log-Repo`, so the answer arrives here without a paste.
 
-**This is why `Probe-Step` was not enough.** It asks before it fires, so its
-question is about the *previous* tap: on 2026-08-23 that meant asking about a
-commit from twenty minutes earlier, and the honest reply was that the repo
-already held the answer. Announce, fire, then ask, all in one tap, is what
-removes the remembering.
-
-The rule above still governs what the question may be: ask only what the repo
-cannot answer, which is what the screen did, what the dialog rendered, what
-Apple's own UI decided.
+**Use `Probe-Watch`, not `Probe-Step`, for an observation.** `Probe-Step` asks
+before it fires, so its question is about the *previous* tap. Announce, fire,
+then ask, all in one tap, is what removes the remembering.
 
 **Send the instruction with the destination.** Every handover, probe or not.
 
@@ -437,8 +362,7 @@ Apple's own UI decided.
 [`workflows/README.md`](workflows/README.md) already says. Prefer `--url`, the
 address form, over the embedded payload: it is about 200 characters, a wrong
 character 404s instead of silently delivering less than it claims, and it
-cannot be mangled in transit. A retyped embedded payload has already cost one
-round trip here.
+cannot be mangled in transit.
 
 Use 📋 when the payoff is content on the clipboard, which every packed link is.
 📲 is for a link whose payoff is anything else.
@@ -446,6 +370,4 @@ Use 📋 when the payoff is content on the clipboard, which every packed link is
 **And the card around the link is emitted too.** `python3 tools/run.py <names>
 --card` prints the whole handover table: the header is the receiver, the body is
 its payload unpacked. Its three shapes, and the reasoning behind each element,
-are owned upstream by web-tools' `shortcut-links` skill, not restated here. What
-is local is why it exists: the shape was typed by hand every time and drifted
-from the tool printing half of it, twice in two days.
+are owned upstream by web-tools' `shortcut-links` skill, not restated here.
