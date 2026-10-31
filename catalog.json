@@ -1,6 +1,6 @@
 {
  "meta": {
-  "chains": 85,
+  "workflows": 85,
   "installable": 60,
   "external_targets": 18
  },

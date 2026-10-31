@@ -32,19 +32,19 @@ python3 tools/vcard.py menus/demo.json --data
 That runner cannot hold per-row behavior, so each row carries its own as a URL
 in its `action` field, written to the card's `NOTE` and read back as the chosen
 contact's Notes. A row can therefore run a named shortcut, open a page, or open
-an app, but it cannot inline an arbitrary action the way a chain can. In
+an app, but it cannot inline an arbitrary action the way pasted actions can. In
 exchange there is nothing to paste per menu: the link opens the menu directly.
 
 The demo's four rows measure 2,868 characters as a `--data` link against 15,757
-as a chain, and the difference is the whole chain shipping every time.
+as packed actions, and the difference is the whole action list shipping every time.
 
-## The whole menu as a chain
+## The whole menu as a workflow
 
-`--chain` emits the file *and* the dispatch as a [`pack.py`](../tools/pack.py)
-chain, so a spec becomes a tappable link:
+`--workflow` emits the file *and* the dispatch as a workflow for
+[`pack.py`](../tools/pack.py), so a spec becomes a tappable link:
 
 ```bash
-python3 tools/vcard.py menus/demo.json --chain --out /tmp/menu.json
+python3 tools/vcard.py menus/demo.json --workflow --out /tmp/menu.json
 python3 tools/pack.py /tmp/menu.json
 ```
 
@@ -54,10 +54,10 @@ them is a legal empty branch, which is what a menu entry looks like before it
 does anything. This is the route to use when a row must do something no URL can
 name; otherwise prefer `--data`.
 
-Nothing generated is committed. The spec is the source; the `.vcf`, the chain,
+Nothing generated is committed. The spec is the source; the `.vcf`, the workflow,
 and the link are all built on demand, which is also why the icons can be
 refetched at a different size, weight, or depth without a migration.
 
-Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as a chain
+Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as a workflow
 the link is 15,757 characters. The gap is the packed route's own overhead, a
 full plist document per action, base64'd and then percent-encoded.

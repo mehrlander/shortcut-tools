@@ -23,7 +23,7 @@ column cannot happen here: nothing is being zipped by position.
 
 `Dump-Recent` caps itself at 60 records because a time window, unlike a count,
 can name the whole library; a dump that arrives at exactly the cap is flagged
-here, since the chain itself has no way to report what it left behind.
+here, since the shortcut itself has no way to report what it left behind.
 
 `--zip` writes one `.wflow` per shortcut in exactly the shape
 `workflows/dump-folder-zip.json` produces, which is what makes this worth
@@ -50,13 +50,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # Dump-Recent's own safety cap. A time window is not self-limiting: widen it far
-# enough and the PUT is the whole library, so the chain takes the newest N and
+# enough and the PUT is the whole library, so the shortcut takes the newest N and
 # stops. Raised from 60 to 150 on 2026-08-18: the first 7-day window returned
 # exactly 60, which was the whole window by luck rather than a truncation, and
 # one more edit that week would have lost data with only this warning to say so.
 # The size fear behind the original number was also wrong: that run committed
 # 7.2 MB through the API without complaint. A dump arriving at exactly that many is the shape of a truncation, and
-# saying so is the only way the reader can tell: the chain has no channel to
+# saying so is the only way the reader can tell: the shortcut has no channel to
 # report what it dropped.
 DUMP_RECENT_CAP = 150
 
@@ -73,7 +73,7 @@ def parse_dump(text):
 
     Dump-Named emits `==shortcut==`/`==json==` and Dump-Recent adds
     `==modified==` between them. Reading both the same way costs one optional
-    field and means the two chains never need to agree on a version.
+    field and means the two shortcuts never need to agree on a version.
 
     **Every split is anchored to a whole line, and the first real dump is why.**
     Both dumpers carry these markers inside their own text templates, so a dump

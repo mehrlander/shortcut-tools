@@ -195,7 +195,7 @@ without spending an action:
 Offsets count the rendered string, so `"The text said: ￼"` anchors at `{15, 1}`.
 Several consumers may share one producer.
 
-**Aggrandizements chain, in array order.** One attachment may carry a coercion
+**Aggrandizements apply in array order.** One attachment may carry a coercion
 and then a key lookup, which is how a file becomes a dictionary and then one of
 its values without spending an action on either step:
 
@@ -221,13 +221,13 @@ its values without spending an action on either step:
 ```
 
 Every export read carries both, and `workflowIdentifier` is minted per install,
-which made the dict look load-bearing and a chain written elsewhere look
+which made the dict look load-bearing and a workflow written elsewhere look
 unportable. **It is not.** Two things are now measured, by
 [`run-by-name`](../workflows/run-by-name.json) and
 [`run-by-variable`](../workflows/run-by-variable.json), each pasted and run:
 
 1. **`WFWorkflowName` alone resolves.** With no `WFWorkflow` dict at all, Run
-   Shortcut finds the target by name. So a chain can call a shortcut on a device
+   Shortcut finds the target by name. So a workflow can call a shortcut on a device
    it has never seen, and nothing here needs an identifier read off an export.
 2. **The name may be a variable.** `WFWorkflowName` accepts a `WFTextTokenString`
    with an attachment, so the target can be computed at run time.
@@ -295,7 +295,7 @@ matters to anything that calls it:
   in the browser, so it is fully interactive: links navigate, and async work has
   no capture moment to race.
 - **It returns the cleaned HTML**, wrapped in a one-item `is.workflow.actions.list`.
-  Not a result from the page. Nothing useful chains after it.
+  Not a result from the page. Nothing useful follows it.
 
 Two details worth carrying. The data URL it builds is
 `data:text/html;charset=utf-8, ￼` with a **space** after the comma, anchoring at
@@ -309,7 +309,7 @@ note above about vestigial-looking actions counsels confirming on device first.
 
 ## Parameter shapes, by census
 
-*Measured 2026-09-03, over every action in the fifteen dumps, after a chain
+*Measured 2026-09-03, over every action in the fifteen dumps, after `Claude-Session`
 handed `Inject-🎟️GitHubToken` an empty input and the injector ran its demo.*
 
 A text field and a variable slot serialise differently, and the difference is
@@ -357,17 +357,17 @@ Replace Text an attachment for both fields, the action produced nothing, and
 the injector's first branch (`WFCondition` 101, no input) built its demo page
 and opened it through `Show-Html`. What appeared on the phone, a `data:` page
 of GitHub API JSON with Repo, Commit and Branch tabs and a jsDelivr connection
-prompt, was that demo, and the chain then coerced the demo's text and offered
+prompt, was that demo, and `Claude-Session` then coerced the demo's text and offered
 its button labels as a menu. The shape had been copied from
-`gh-recent-branches-picker`, which the workflows README described as "the only
-chain still carrying inferred parameter shapes"; it is corrected in the same
+`gh-recent-branches-picker`, which the workflows README then named as the only
+workflow still carrying inferred parameter shapes; it is corrected in the same
 commit.
 
 ## The token-injection pattern
 
 *Observed 2026-08-10, from `Inject-🎟️GitHubToken`.*
 
-Secrets do not belong in a chain, and a page delivered as a `data:` URL is
+Secrets do not belong in a workflow file, and a page delivered as a `data:` URL is
 nothing but a string, so the token is substituted into that string on device
 just before the page is encoded. The mechanism, worth copying because it
 generalizes past GitHub:
@@ -379,7 +379,7 @@ generalizes past GitHub:
   (`WFCondition` 99, *contains*), it opens `Snippets/Managed/config.json` from
   the Shortcuts iCloud folder with `documentpicker.open` and a `WFGetFilePath`,
   coerces the file to a dictionary, takes the key of the same name through the
-  chained aggrandizements above, and runs `text.replace`.
+  sequence of aggrandizements above, and runs `text.replace`.
 - Given **no** input at all (`WFCondition` 101, *does not have any value*) the
   same shortcut runs a demo of itself instead. The two branches are sequential
   top-level `If`s with no `Otherwise`, which is the compact-`If` switch that
@@ -441,7 +441,7 @@ with nothing between them but the sheet.
 
 Nothing had measured it. Both `Probe-WebView` and `Probe-WebViewCaps` end *at*
 the sheet, so neither could see past it, and the corpus was already leaning the
-other way unread: of the 17 chains using `showwebpage`, 11 put it last in a
+other way unread: of the 17 shortcuts using `showwebpage`, 11 put it last in a
 branch, and the ones that do not follow it with a menu or an exit, which is what
 resuming on dismissal looks like.
 
@@ -451,8 +451,8 @@ announce itself from behind one either: an alert, a notification and a
 `Log-Repo` commit are all equally stalled, so there is no gate to hang a capture
 on. A live page under a screenshot has to go through Safari and `Open URL`.
 The sheet stays the right way to *show* a person something, which is what
-`Show-Log` and `Dictate` use it for. It is simply not a place a chain can work
-while.
+`Show-Log` and `Dictate` use it for. It is simply not a place a shortcut can keep
+working behind.
 
 It is not a fringe action: **32 shortcuts in the library use it**, and one of
 them, `Show-WebView`, is already the generic receiver. Three of its seven
@@ -564,7 +564,7 @@ Safari 16.4 and later; a device below that needs the page sent raw.
 [`xhr-probe`](../pages/xhr-probe.html). It reported `sync: 200, 33 bytes` and
 `async: 33 bytes`, replacing the static text the page ships with, so Safari
 inflated the payload, `document.write` produced a document whose script ran, and
-that script reached the network both ways. The chain's three actions are
+that script reached the network both ways. `Run-Html`'s three actions are
 confirmed by that run, `ExtensionInput` among them.
 
 **The substitution half is confirmed too, 2026-08-12**, by tapping a `show.py`
@@ -597,7 +597,7 @@ Three steps make that work and two of them are not guessable:
    the next step has.
 2. **`Choose from List` coerces the named text itself**, through a
    `WFContactContentItem` aggrandizement on its own `WFInput`. There is no Get
-   Contacts from Input action anywhere in the chain. Same mechanism as the rich
+   Contacts from Input action anywhere in the shortcut. Same mechanism as the rich
    text and dictionary coercions above; contacts is simply another member.
 3. **The choice reads back through `Last Name`**, a
    `WFPropertyVariableAggrandizement` on the Chosen Item. This is why the cards
@@ -622,7 +622,7 @@ its own round trip, so this fails loudly instead of shipping a payload that
 quietly changed. The export this was read from stores its cards with plain
 newlines, which is both the workaround and the evidence that Apple's parser
 accepts them. `tools/vcard.py` keeps CRLF in the standalone `.vcf` it writes and
-converts on the way into a chain.
+converts on the way into a workflow.
 
 **A menu ships its own images, so the encoder is the size story.** A glyph is two
 colors and a browser's canvas encoders are built for photographs, so neither of
@@ -651,11 +651,11 @@ type.
 That example is the one that matters here: `is.workflow.actions.getmyworkflows`
 takes a **`Folder`** parameter, which nothing in `actions.json` reveals, since
 the dictionary holds a bare identifier for it. So the library can be dumped a
-folder at a time with no filtering logic, and `Ask` is how the chain defers the
+folder at a time with no filtering logic, and `Ask` is how `dump-folder` defers the
 choice to run time rather than hardcoding a folder that only exists on one
 device.
 
-Worth generalizing: a parameter that is absent from a chain is not necessarily a
+Worth generalizing: a parameter that is absent from a workflow is not necessarily a
 parameter the action lacks. Copying the action out of the editor and reading it
 with `tools/unpack.py` is the only way to see the full set.
 
@@ -710,7 +710,7 @@ name that `getmyworkflows` can then be filtered against.
 *Measured 2026-08-13, across ten folder dumps: 211 shortcuts, 5,905 actions.*
 
 A dump is not only a backup. It is a corpus of working actions, and reading it
-against this repo's chains promotes four shapes out of the inferred tier, where
+against this repo's workflows promotes four shapes out of the inferred tier, where
 a wrong key would have pasted an action with an empty field.
 
 **`Show-Menu` exists on the device and matches `workflows/show-menu.json`
@@ -726,7 +726,7 @@ device version is five actions to our four, the extra one a trailing
 **`text.split` and `text.combine` take their input under a lowercase `text`
 key**, not `WFInput`, and `WFTextSeparator` takes a display string. Three
 values appear across 22 uses: `New Lines`, `Spaces`, and `Custom`, the last
-paired with `WFTextCustomSeparator`. The chains here already wrote
+paired with `WFTextCustomSeparator`. The workflows here already wrote
 `"New Lines"` and are correct.
 
 **`text.replace` has five keys and every one is optional.** Across 76 uses,
@@ -737,7 +737,7 @@ action, and `WFInput`, `WFReplaceTextReplace`,
 editor's default, not a malformed action.
 
 One shape the corpus adds that this repo did not have: **aggrandizements
-chain.** `Get-vCardChoice` feeds `choosefromlist` a coercion to
+in sequence.** `Get-vCardChoice` feeds `choosefromlist` a coercion to
 `WFContactContentItem` *followed by* `PropertyName: "Phone Numbers"` with
 `PropertyUserInfo: 3`, in one `Aggrandizements` array. That is how a menu
 displays a field other than the name while still being a contact list, and it
@@ -798,7 +798,7 @@ The file is reached by `is.workflow.actions.documentpicker.open` with
 `WFGetFilePath: "config.json"` and a `WFFile` location of
 `{"WFFileLocationType": "Shortcuts", "displayName": "Managed"}`, which is the
 app's own iCloud folder rather than a picker prompt. The replacement value is a
-second aggrandizement chain: coerce to `WFDictionaryContentItem`, then
+second pair of aggrandizements: coerce to `WFDictionaryContentItem`, then
 `DictionaryKey: "🎟️GitHubToken"`.
 
 **So the placeholder is a config key, not an arbitrary sentinel.** The emoji
@@ -872,7 +872,7 @@ under **called by nothing** is often an entry point precisely because it is
 runnable alone.
 
 `isSelf: true` in the `WFWorkflow` dict is how the export marks the self-call.
-Since `WFWorkflowName` alone resolves a target, a chain can write the same thing
+Since `WFWorkflowName` alone resolves a target, a workflow can write the same thing
 without it.
 
 ### Condition codes, settled by branch semantics
@@ -1089,8 +1089,8 @@ completion(bench.call("md", "<base64>"))
 ```
 
 web-tools' `pages/bench.html` is that page and
-no chain drives it any more; `bench-call` was withdrawn with the rest of the
-bench chains on 2026-08-29, for the reason under **Withdrawn** below. It would
+no shortcut drives it any more; `bench-call` was withdrawn with the rest of the
+bench shortcuts on 2026-08-29, for the reason under **Withdrawn** below. It would
 have to be reached at its own hosted address, and the 🥏 toss is not a substitute
 for one: `toss-render.html` mounts a page in an **iframe** on a `blob:` URL, so
 the script this action sends runs in the top document, where `bench` does not
@@ -1123,7 +1123,7 @@ coercion.** The shortcut had no page in it. `plist.py` did not resolve
 since it was introduced; the plist mirror never did, and nothing errored at any
 point. The shortcut generated, imported, ran, and returned an empty string.
 
-**Two mirrors of one chain set have to resolve a directive the same way, or the
+**Two mirrors of `workflows/` have to resolve a directive the same way, or the
 cheaper one lies.** This repo already learned that on 2026-08-27, when the suite
 and `--check` disagreed about orphans, and wrote down that where two things state
 one invariant the weaker one is a wrong answer rather than a gap. The same shape
@@ -1176,13 +1176,13 @@ script in a `vm` against a stubbed document and XHR, the way `show.test.js` runs
 the shell's.
 
 **Withdrawn 2026-08-29: the `Bench` receiver, `Bench-Call` and `Probe-Bench`.**
-The route is measured and the page is tested; the chains around them were not
+The route is measured and the page is tested; the shortcuts around them were not
 worth keeping. `Bench` returned an empty string on device and never worked, and
 all three rebuilt, worse, machinery this library already had: `Get-FileContext`
 types and coerces an input before encoding it, `Get-FileInfo` produces the
 descriptor everything dispatches on, and `Run-Choice` picks a verb and applies
-it. A page that works with no chain is a better record than three chains that
-duplicate the library and one of which is broken.
+it. A page that works with no shortcut around it is a better record than three
+shortcuts that duplicate the library and one of which is broken.
 
 **Leg `c` carries a trap worth keeping.** Coercing a plain-text `https` URL
 returns Safari's generated document, `<html><head><meta name="color-scheme">…`
@@ -1290,7 +1290,7 @@ Web Page` action's interpreter; this route is a real WebKit render.
 `ai.x.GrokApp.AskGrok` was written up here as a four-action receiver on
 2026-08-27: Shortcut Input to text, the intent, the reply to the clipboard, the
 reply shown. It installed and it did not work on device. The cause was not
-diagnosed and the chain was withdrawn the same day rather than debugged, so this
+diagnosed and the receiver was withdrawn the same day rather than debugged, so this
 records only where it stopped.
 
 **What is worth carrying forward is the shape of the gap, since it will recur
@@ -1346,7 +1346,7 @@ was not a stale reading: the shortcut had been opening a page whose script never
 loaded, and nothing said so, because a page that renders empty looks like a page.
 
 **This is the failure [`idioms.md`](idioms.md) predicts** in "Payloads live in
-`pages/`, not pasted into the chain". A hosted page follows its repository when a
+`pages/`, not pasted into the workflow". A hosted page follows its repository when a
 file moves; 14 KB pasted into a Text action on a phone does not, and no check
 here can see inside it. Retired rather than repaired, on the owner's call.
 
@@ -1471,7 +1471,7 @@ row is evidence about the plist; one is not.
 Two consequences worth stating. `Library-Install` is the fallback and also the
 discriminator, since it fetches the packed actions and pastes them without
 touching the worker, at the cost of one paste; it reaches everything except
-file-level settings, so it suits any chain not declaring `WFWorkflowTypes` or
+file-level settings, so it suits any workflow not declaring `WFWorkflowTypes` or
 input classes. And the 2026-08-29 commit that fixed `plist.py`'s unresolved
 `$file` attributed `Probe-Coercion`'s import failure to that bug. The bug was
 real and worth fixing, but the fix and a retry happened in the same step, so
@@ -1536,7 +1536,7 @@ and then withdrawn, because the answer changes nothing that matters. It would
 take `Library-Open` from three cards to one, in a receiver that is installed and
 working, and the cost is a manual run in the app with a typed input. That trade
 fails rule 2 in [CLAUDE.md](../CLAUDE.md): a device ask must buy something in
-steady state, and tidying a working chain is not that. **Do not re-propose it**
+steady state, and tidying a working receiver is not that. **Do not re-propose it**
 on its own. Fold it into the next probe that has a real reason to exist.
 
 ### The best public catalog: shortcuts-playground-plugin's ToolKit dumps
@@ -1749,7 +1749,7 @@ above, and defines a couple of dozen App Intents actions including
 project.
 
 **Bound to a variable, it is an ordinary attachment**, which is what makes these
-reachable from a generated chain at all:
+reachable from a generated shortcut at all:
 
 ```xml
 <key>target</key>
@@ -1822,8 +1822,8 @@ itself: the screenshot taken at the moment of failure shows the app parked
 inside the destination folder. Whatever the app is doing there, the cards after
 the loop could not run in it.
 
-**So order the chain by what touches the UI.** Resolve first, log second, and
-put anything that moves the app last with nothing behind it. The rebuilt chain
+**So order the actions by what touches the UI.** Resolve first, log second, and
+put anything that moves the app last with nothing behind it. The rebuilt `Library-Move`
 does the whole resolution pass into a variable, commits the row, and only then
 moves, which means the row survives even when the move does not.
 
@@ -1845,15 +1845,15 @@ does not have.** `Library-Replace` is not installed, its `Name is` filter
 returned an empty list, and the Repeat ended there. Every name after it was
 untouched.
 
-Nothing said so. The chain logs through `Log-Repo` as its last action, so a
+Nothing said so. `Library-Move` logs through `Log-Repo` as its last action, so a
 Repeat that dies never reaches the log, and the person running it saw churn and
 then nothing. The fix is an `If` on the filter result around the body, so a miss
 is skipped rather than fatal.
 
 **`CreateFolderAction` refuses a folder that already exists**, reported from
-the device the next day, which makes a create-then-move chain single-use: it
+the device the next day, which makes a create-then-move shortcut single-use: it
 works once and fails at its first action forever after. So the folder cannot be
-created in the chain that needs it, and it cannot be omitted either, which
+created in the shortcut that needs it, and it cannot be omitted either, which
 leaves one shape that works: a folder entity present in the card, pointing at a
 real folder, which a person re-points once in the editor. That is how
 `Library-Stage` came to carry `Stage`, and it is the only route the two
@@ -1878,11 +1878,11 @@ partial failure with a different cause.
 *Measured 2026-09-14, from the first zip dump that put the device's own copies
 beside the plists they came from.*
 
-Eleven chains installed that day were compared with `plists/` action by action.
+Eleven shortcuts installed that day were compared with `plists/` action by action.
 Six are byte-identical. **Five carry exactly one extra action, always the same
 one: a trailing Stop and Output.**
 
-| Chain | Published | Installed | Last action published |
+| Shortcut | Published | Installed | Last action published |
 | --- | --- | --- | --- |
 | `Library-Import` | 13 | 14 | Run Shortcut |
 | `Get-ShortcutJson` | 7 | 8 | Get Text |
@@ -1893,16 +1893,16 @@ one: a trailing Stop and Output.**
 The six that gained nothing end in a control-flow closer (`Run-BackTap`,
 `Choose-Claude`), a Show Result (`Log-Repo`, `Sync-Manifest`), a Nothing
 (`Choose-RunLink`), or an explicit Stop and Output (`Check-ApiReply`,
-`Find-Shortcut`). So the pattern is that a chain whose last action **produces a
+`Find-Shortcut`). So the pattern is that a shortcut whose last action **produces a
 value** arrives with a Stop and Output appended, and one that already terminates
 does not. Consistent across all eleven, and an inference about the importer
 rather than something isolated on its own: neither the signing worker nor
 Shortcuts' import sheet has been tested separately.
 
 **Why it matters more than it sounds.** Action count is the only currency signal
-the manifest carries, so those five chains read as one behind forever and a naive
+the manifest carries, so those five shortcuts read as one behind forever and a naive
 comparison calls them stale when they are current. The `#BUILD#` stamp is the
-answer where a chain has one, and the zip dump is the answer where it does not.
+answer where a shortcut has one, and the zip dump is the answer where it does not.
 
 **And it is the second place this session where a count proved nothing.** The
 same day, `Run-Op` read 8 against 8 while the question was whether a string
@@ -1915,7 +1915,7 @@ inside one of those 8 had changed. Only the dumped copy settled it.
 A shortcut's behaviour is not all in `WFWorkflowActions`. Four sibling keys sit
 beside it in the workflow file and decide how the shortcut is reached and what
 it receives: `WFWorkflowNoInputBehavior`, `WFWorkflowInputContentItemClasses`,
-`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A chain file
+`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A workflow file
 carries them in its optional `"workflow"` block, and `tools/plist.py` supplies
 its own defaults for every key the block omits.
 
@@ -1935,9 +1935,9 @@ unmapped apps, which fall past the lookup to the type tests, saw the empty
 input. A file-level setting that half the paths route around does not fail
 loudly; it fails in the corner nobody is looking at.
 
-Two things make this hard to see. The chain file reads as complete, because a
-missing block is indistinguishable from a chain that never wanted one: 33 of the
-45 named chains here declare no block and are correct not to. And the count in
+Two things make this hard to see. The workflow file reads as complete, because a
+missing block is indistinguishable from a file that never wanted one: 33 of the
+45 named workflows here declare no block and are correct not to. And the count in
 the label, the action table, and every `--check` in the repo all compare
 actions, so each one passed.
 
@@ -1947,7 +1947,7 @@ write `AskForInput`, 3 write `ShowError`, and 502 do not write the key at all. T
 appears when the setting is chosen, so a file without it is not a file that
 chose the clipboard.
 
-**The rule:** when a chain is derived from another shortcut rather than
+**The rule:** when a workflow is derived from another shortcut rather than
 authored, diff the top-level keys of the two plists, not the action lists. One
 `plistlib.load` and a set comparison answers it, and nothing else in this repo
 does.

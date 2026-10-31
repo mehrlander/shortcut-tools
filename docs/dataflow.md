@@ -63,7 +63,7 @@ The action can behave as a conditional transformation: replace the current value
 
 ## A switch-like pattern
 
-This makes chains of independent tests much closer to a switch or dispatch construct than their visual form suggests.
+This makes a sequence of independent tests much closer to a switch or dispatch construct than its visual form suggests.
 
 An explicit version might use a variable solely to carry the selected result:
 
@@ -104,7 +104,7 @@ End If
 Show final If Result
 ```
 
-A matching branch replaces the flowing value. Later non-matching `If` actions preserve it. The final `If Result` can therefore represent the value surviving the whole chain, rather than only a value created inside the final branch.
+A matching branch replaces the flowing value. Later non-matching `If` actions preserve it. The final `If Result` can therefore represent the value surviving the whole sequence, rather than only a value created inside the final branch.
 
 This can eliminate repeated `Set Variable` and `Get Variable` actions whose only purpose is to carry a result across control flow.
 

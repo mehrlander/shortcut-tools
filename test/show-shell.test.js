@@ -6,7 +6,7 @@ const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
 const SHELL = path.join(ROOT, "tools", "show-shell.html");
-const CHAIN = path.join(ROOT, "workflows", "show-html-js.json");
+const WORKFLOW = path.join(ROOT, "workflows", "show-html-js.json");
 
 const PAGE = "📄PageBase64";
 const CLIP = "📋ClipboardBase64";
@@ -141,26 +141,26 @@ test("repair runs before substitution, so a value is delivered as written", () =
   assert.ok(html.includes(b64("a “quoted” word")), "the clipboard base64 is untouched");
 });
 
-test("the chain wires each action to the next and pins no device-local identifier", () => {
-  const chain = JSON.parse(fs.readFileSync(CHAIN, "utf8"));
-  const ids = chain.actions.map(a => a.id.replace("is.workflow.actions.", ""));
+test("the workflow wires each action to the next and pins no device-local identifier", () => {
+  const wf = JSON.parse(fs.readFileSync(WORKFLOW, "utf8"));
+  const ids = wf.actions.map(a => a.id.replace("is.workflow.actions.", ""));
   assert.deepStrictEqual(ids, ["base64encode", "base64encode", "gettext", "text.replace",
                                "text.replace", "runworkflow", "base64encode", "url", "openurl"]);
   assert.ok(ids.length < 23, "the point is that it is shorter than the shortcut it replaces");
 
-  const run3 = chain.actions[5].p;
+  const run3 = wf.actions[5].p;
   assert.strictEqual(run3.WFWorkflowName, "Inject-🎟️GitHubToken");
   assert.ok(!("WFWorkflow" in run3),
     "a WFWorkflow dict carries a workflowIdentifier minted on one device");
 
-  const url = chain.actions[7].p.WFURLActionURL.Value;
+  const url = wf.actions[7].p.WFURLActionURL.Value;
   assert.strictEqual(url.string, "data:text/html;charset=utf-8;base64,￼");
   assert.strictEqual(Object.keys(url.attachmentsByRange)[0], "{36, 1}");
 
   // Each replace has to find something in the shell, or it is a silent no-op.
   const shell = fs.readFileSync(SHELL, "utf8");
   for (const i of [3, 4]) {
-    assert.ok(shell.includes(chain.actions[i].p.WFReplaceTextFind),
-      chain.actions[i].p.WFReplaceTextFind + " should be in the shell");
+    assert.ok(shell.includes(wf.actions[i].p.WFReplaceTextFind),
+      wf.actions[i].p.WFReplaceTextFind + " should be in the shell");
   }
 });

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """A proposed hand edit to a device-only shortcut, as a page that shows where it goes.
 
-    python3 tools/edit.py <Name> --after <index> <chain.json> [--why "<reason>"] [--ref <sha>]
+    python3 tools/edit.py <Name> --after <index> <workflow.json> [--why "<reason>"] [--ref <sha>]
 
 A shortcut that exists only on the device cannot be replaced by paste
 without losing its file settings (share sheet, input types, icon), so a
 change to one is a hand edit: cards pasted at one place in the editor. This
-applies the chain's cards to the newest exported copy of <Name>, after action
+applies the workflow's cards to the newest exported copy of <Name>, after action
 <index> as the sketch numbers it, and sketches the shortcut before and after.
 Both listings travel gzipped in the fragment of web-tools'
 pages/shortcut-edit.html, which draws the after listing with the added lines
@@ -45,7 +45,7 @@ def private():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("name")
-    ap.add_argument("chain", help="a workflows/ chain holding the cards to paste")
+    ap.add_argument("workflow", help="a workflows/ file holding the cards to paste")
     ap.add_argument("--after", type=int, required=True, help="the sketch index the cards go after")
     ap.add_argument("--ref", default="main", help="the shortcut-tools ref the cards are fetched at")
     ap.add_argument("--why", default="", help="one or two sentences on why, shown under the added cards")
@@ -64,15 +64,15 @@ def main():
     if not 0 <= a.after < len(acts):
         raise SystemExit("--after %d is outside 0..%d" % (a.after, len(acts) - 1))
 
-    chain = json.loads(Path(a.chain).read_text())
-    cards = P.build(chain, a.chain)["WFWorkflowActions"]
+    wf = json.loads(Path(a.workflow).read_text())
+    cards = P.build(wf, a.workflow)["WFWorkflowActions"]
     edited = dict(doc, WFWorkflowActions=acts[:a.after + 1] + cards + acts[a.after + 1:])
 
     body = {
         "name": a.name,
         "before": S.sketch(doc, annotate=True),
         "after": S.sketch(edited, annotate=True),
-        "cards": RAW % (a.ref, Path(a.chain).name),
+        "cards": RAW % (a.ref, Path(a.workflow).name),
     }
     if a.why:
         body["why"] = a.why

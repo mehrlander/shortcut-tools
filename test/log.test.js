@@ -115,7 +115,7 @@ test("drift reads an install's build off the commit it came from", () => {
 
 test("a fetch row's own build is Library-Fetch's, and a paste's is Library-Paste's", () => {
   // Scoring `build` for an install compared the installer's hash against the
-  // installed chain's and called every paste stale; the kit says so too.
+  // installed shortcut's and called every paste stale; the kit says so too.
   const paste = (target) => [["2026-10-03-153036", { op: "paste", name: "Route-Gesture",
     from: `${RAW}/a67a58c744c9e0ee5b12317c362d93c1c7fe0a52/packed/route-gesture.json`,
     target, build: "f18efdb" }]];

@@ -217,7 +217,7 @@ def repo_owned():
     the same reasoning CLAUDE.md uses to make deleting one before an import
     free. Asking the device to export it back would spend a tap to fetch a copy
     of something the repo authored, and the first real delta wanted eight of
-    them, including the two chains that were being installed at the time.
+    them, including the two shortcuts that were being installed at the time.
     """
     return {p.stem for p in (ROOT / "plists").glob("*.plist")}
 

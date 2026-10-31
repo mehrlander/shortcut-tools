@@ -43,7 +43,7 @@ const entries = (zip) => execFileSync("python3", ["-c",
 
 const PLIST = path.join(ROOT, "plists", "Sync-Manifest.plist");
 const JSON_BODY = asJson(PLIST);
-// Derived, not pinned. The fixture is a live chain, so a hard-coded count
+// Derived, not pinned. The fixture is a live shortcut, so a hard-coded count
 // fails this file whenever Sync-Manifest gains an action, which says nothing
 // about the pipeline this file exists to test (2026-09-14, +3 actions).
 const ACTIONS = JSON.parse(JSON_BODY).WFWorkflowActions.length;
@@ -72,7 +72,7 @@ test("a name with a slash is stored the way a device dump stores it", () => {
 });
 
 test("both dumpers' formats read the same, with or without a modified field", () => {
-  // Dump-Named omits ==modified==; Dump-Recent includes it. Neither chain
+  // Dump-Named omits ==modified==; Dump-Recent includes it. Neither shortcut
   // should have to know what the other emits.
   const withDate = run(record("Sync-Manifest", JSON_BODY, "2026-08-18T19:49:20-07:00"));
   const without = run(record("Sync-Manifest", JSON_BODY));
@@ -107,7 +107,7 @@ test("a file that is not a dump is refused rather than read as empty", () => {
 });
 
 test("a dump arriving at Dump-Recent's cap is flagged as probably truncated", () => {
-  // A window can name the whole library, so the chain stops at 150. It has no
+  // A window can name the whole library, so the shortcut stops at 150. It has no
   // channel to say it dropped anything, which leaves the count as the only tell.
   const many = Array.from({ length: 150 }, (_, i) =>
     record("S" + i, JSON_BODY, "2026-08-18T19:49:20-07:00")).join("");

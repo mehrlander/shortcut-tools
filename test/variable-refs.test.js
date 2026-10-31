@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const WORKFLOWS = path.join(__dirname, "..", "workflows");
 
-// Shortcuts supplies these inside a Repeat block; no action in the chain sets
+// Shortcuts supplies these inside a Repeat block; no action in the workflow sets
 // them and none has to.
 const BUILTIN = new Set(["Repeat Item", "Repeat Index"]);
 
@@ -27,14 +27,14 @@ function varRefs(node, out = []) {
 test("every variable a receiver reads is one it sets", () => {
   const broken = [];
   for (const file of fs.readdirSync(WORKFLOWS).filter(f => f.endsWith(".json"))) {
-    const chain = JSON.parse(fs.readFileSync(path.join(WORKFLOWS, file), "utf8"));
+    const wf = JSON.parse(fs.readFileSync(path.join(WORKFLOWS, file), "utf8"));
     // Fragments without a name are demos that may read an ambient variable the
-    // embedding chain sets; trace.json reads $Trace on purpose.
-    if (!chain.name) continue;
-    const set = new Set(chain.actions
+    // embedding shortcut sets; trace.json reads $Trace on purpose.
+    if (!wf.name) continue;
+    const set = new Set(wf.actions
       .filter(a => /\.(setvariable|appendvariable)$/.test(a.id))
       .map(a => a.p && a.p.WFVariableName));
-    for (const name of new Set(varRefs(chain.actions)))
+    for (const name of new Set(varRefs(wf.actions)))
       if (!BUILTIN.has(name) && !set.has(name)) broken.push(`${file}: ${name}`);
   }
   assert.deepStrictEqual(broken, [],

@@ -37,7 +37,7 @@ test("--check names every unfolded export and exits 1", () => {
 // The harvest flags used to live in README prose. With them in a file, the
 // same output has to come out of --config as out of the flags, or the gate
 // freshness.py runs over core/ is checking against a different pipeline.
-test("harvest --config reproduces the same chains as the flags", () => {
+test("harvest --config reproduces the same workflow files as the flags", () => {
   const priv = process.env.WEB_TOOLS_PRIVATE || path.join(ROOT, "..", "web-tools-private");
   const cfg = path.join(priv, "shortcuts", "core", "harvest.json");
   if (!fs.existsSync(cfg)) return;

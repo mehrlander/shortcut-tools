@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Check that every shortcut an authored chain calls still exists on the device.
+"""Check that every shortcut an authored workflow calls still exists on the device.
 
 A row of output is one target name. Resolving a Run Shortcut card by name rather
-than by `workflowIdentifier` is what makes a chain portable, and it trades a
+than by `workflowIdentifier` is what makes a workflow portable, and it trades a
 device-local pointer for a string nothing validates: a target renamed or deleted
 on the phone leaves a card that looks correct and resolves to nothing.
 
@@ -13,7 +13,7 @@ on the phone leaves a card that looks correct and resolves to nothing.
 The checkout is resolved from --private, then $WEB_TOOLS_PRIVATE, then the
 sibling ../web-tools-private, the same order `tools/freshness.py` uses. Exit
 codes are its contract too: 0 everything resolves, 1 a target is absent (the
-chains that call it are named), 2 no checkout, so a public-only clone should
+workflows that call it are named), 2 no checkout, so a public-only clone should
 skip rather than fail.
 
 **It reads the newest manifest ALONE, and that is the whole point of it.**
@@ -91,7 +91,7 @@ def main():
     on_device = manifest_names(man.read_text())
 
     catalog = json.loads((ROOT / "catalog.json").read_text())
-    # A chain's target is either another authored chain, which this repo can
+    # A workflow's target is either another authored workflow, which this repo can
     # install and the catalog therefore holds, or an external name that exists
     # only because someone put it on the phone. Both are checked, and they fail
     # differently: an absent internal target is an install away, an absent
@@ -118,7 +118,7 @@ def main():
             # there, and a menu like Choose-GPT keeps its destinations there
             # too, so the catalog carries both and cannot tell them apart. This
             # can: nothing on the phone is called https://anything, so a target
-            # with a scheme is an address the chain opens, not a name it runs.
+            # with a scheme is an address the shortcut opens, not a name it runs.
             # Three such rows arrived with Choose-GPT on 2026-09-20 and read as
             # three absent shortcuts until this line.
             if "://" in t:
@@ -127,14 +127,14 @@ def main():
 
     absent = []
     for target in sorted(callers):
-        kind = "chain" if target in authored else "external"
+        kind = "workflow" if target in authored else "external"
         ok = target in on_device
         if not ok:
             absent.append((target, kind))
         if args.all:
             print("  %-26s %-9s %s" % (target, kind, "on device" if ok else "ABSENT"))
 
-    print("%d targets across %d chains, against %s (%d names)"
+    print("%d targets across %d workflows, against %s (%d names)"
           % (len(callers), len(catalog["rows"]), man.name, len(on_device)))
     if computed:
         print("%d computed target%s not checkable: %s"
@@ -151,7 +151,7 @@ def main():
     # unbound predecessor, so the call was dead either way. One line of context
     # would have stopped an hour of chasing it.
     #
-    # Reachability here is only what the catalog can see: a chain nothing in
+    # Reachability here is only what the catalog can see: a shortcut nothing in
     # `workflows/` calls may still be launched by a gesture, a share sheet or a
     # tap, so this says "nothing here calls it" and never "nothing runs it".
     called_here = {t for row in catalog["rows"] for t in (row.get("targets") or [])}
@@ -161,7 +161,7 @@ def main():
         print("\nABSENT  %s (%s)" % (target, kind))
         for name in who:
             # A self-call is its own answer, so it is named as one rather than
-            # reported as a chain that calls itself and is not called.
+            # reported as a workflow that calls itself and is not called.
             if [name] == who and name == target:
                 note = "calls itself"
             elif name not in called_here:
@@ -169,7 +169,7 @@ def main():
             else:
                 note = ""
             print("        called by: %s%s" % (name, "  (%s)" % note if note else ""))
-        if kind == "chain":
+        if kind == "workflow":
             print("        fix: install it, `python3 tools/plist.py workflows/… --link`")
         else:
             # The repo's own rule, and it is the reason this prints advice rather

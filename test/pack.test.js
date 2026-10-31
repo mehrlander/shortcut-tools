@@ -9,9 +9,9 @@ const pack = (...args) =>
   execFileSync("python3", [path.join("tools", "pack.py"), ...args],
                { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
-// The point of $file is that a chain carrying an HTML payload references the
+// The point of $file is that a workflow carrying an HTML payload references the
 // real page instead of a pasted copy of it. If the inlining silently stopped
-// working, the chain would still pack, and the payload would be the literal
+// working, the workflow would still pack, and the payload would be the literal
 // JSON object. So assert the page's own text comes out the far end.
 test("a $file parameter inlines the file's text, not the directive", () => {
   const link = pack(path.join("workflows", "sync-xhr-probe.json")).trim();
@@ -27,19 +27,19 @@ test("a $file parameter inlines the file's text, not the directive", () => {
 });
 
 test("a missing $file fails loudly instead of packing an empty payload", () => {
-  const chain = path.join(ROOT, "workflows", ".tmp-missing.json");
-  fs.writeFileSync(chain, JSON.stringify({
+  const file = path.join(ROOT, "workflows", ".tmp-missing.json");
+  fs.writeFileSync(file, JSON.stringify({
     label: "x", actions: [{ id: "is.workflow.actions.gettext",
                             p: { WFTextActionText: { $file: "pages/nope.html" } } }]
   }));
   try {
     assert.throws(() => pack(path.join("workflows", ".tmp-missing.json")), /Command failed/);
   } finally {
-    fs.unlinkSync(chain);
+    fs.unlinkSync(file);
   }
 });
 
-test("every committed chain packs and round-trips", () => {
+test("every committed workflow packs and round-trips", () => {
   for (const f of fs.readdirSync(path.join(ROOT, "workflows")).filter(f => f.endsWith(".json"))) {
     const link = pack(path.join("workflows", f)).trim();
     assert.match(link, /^shortcuts:\/\/run-shortcut\?name=/, f);
@@ -53,32 +53,32 @@ test("every committed chain packs and round-trips", () => {
 // transcribing it may be a model rather than a person. packed/ exists so a link
 // can carry an address instead, which is short enough to get right and 404s
 // when it is not.
-test("packed/ holds a payload for every chain, and is current", () => {
+test("packed/ holds a payload for every workflow, and is current", () => {
   pack("--check");   // throws with the command to run when it is behind
-  const chains = fs.readdirSync(path.join(ROOT, "workflows")).filter(f => f.endsWith(".json"));
+  const workflows = fs.readdirSync(path.join(ROOT, "workflows")).filter(f => f.endsWith(".json"));
   const packed = fs.readdirSync(path.join(ROOT, "packed")).filter(f => f.endsWith(".json"));
-  assert.deepStrictEqual(packed.sort(), chains.sort(), "one payload per chain, no orphans");
+  assert.deepStrictEqual(packed.sort(), workflows.sort(), "one payload per workflow, no orphans");
 });
 
-// A withdrawn chain used to leave its payload behind, and --check called the
+// A withdrawn workflow used to leave its payload behind, and --check called the
 // tree current while the assertion above failed on it: two gates stating one
 // invariant, and the one a person runs for a fast answer was the one that lied.
 //
 // IN A TEMP TREE, NOT packed/. An orphan made briefly visible in the real
 // directory is the race this repo already documents in plist.py, and the
 // assertion above is exactly what would see it.
-test("a payload no chain claims is reported by --check and removed by --publish", () => {
+test("a payload no workflow claims is reported by --check and removed by --publish", () => {
   const os = require("node:os");
   const src = fs.mkdtempSync(path.join(os.tmpdir(), "pack-src-"));
   const out = fs.mkdtempSync(path.join(os.tmpdir(), "pack-out-"));
   try {
-    const chain = { label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
-    fs.writeFileSync(path.join(src, "kept.json"), JSON.stringify(chain));
+    const wf = { label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
+    fs.writeFileSync(path.join(src, "kept.json"), JSON.stringify(wf));
     pack("--publish", "--workflows", src, "--out", out);
     fs.writeFileSync(path.join(out, "withdrawn.json"), "{}");
 
     assert.throws(() => pack("--check", "--workflows", src, "--out", out),
-      /withdrawn\.json \(no chain claims it\)/,
+      /withdrawn\.json \(no workflow claims it\)/,
       "--check must name the orphan, and name it as unclaimed rather than stale");
 
     const said = pack("--publish", "--workflows", src, "--out", out);
@@ -92,7 +92,7 @@ test("a payload no chain claims is reported by --check and removed by --publish"
 });
 
 // The prune has to be able to delete, so the one thing it must never do is
-// delete from a directory that does not answer to the chains it was given.
+// delete from a directory that does not answer to the workflows it was given.
 test("--workflows without --out never prunes, since the pair is not matched", () => {
   const os = require("node:os");
   const src = fs.mkdtempSync(path.join(os.tmpdir(), "pack-foreign-"));
@@ -103,7 +103,7 @@ test("--workflows without --out never prunes, since the pair is not matched", ()
     pack("--publish", "--workflows", src);
     assert.deepStrictEqual(
       fs.readdirSync(path.join(ROOT, "packed")).filter(f => f !== "lone.json").sort(), before,
-      "a foreign chain set must not take the real payload mirror with it");
+      "a foreign set of workflows must not take the real payload mirror with it");
   } finally {
     fs.rmSync(path.join(ROOT, "packed", "lone.json"), { force: true });
     fs.rmSync(src, { recursive: true, force: true });
@@ -121,7 +121,7 @@ test("--url emits the address link rather than leaving it to be typed", () => {
   assert.ok(link.length < 200, `an address link should stay short, got ${link.length}`);
 });
 
-test("--ref addresses a branch, since a chain is testable before it merges", () => {
+test("--ref addresses a branch, since a workflow is testable before it merges", () => {
   const url = decodeURIComponent(
     pack("workflows/show-html-js.json", "--url", "--ref", "claude/x").trim().split("&text=")[1]);
   assert.match(url, /shortcut-tools\/claude\/x\/packed\/show-html-js\.json$/);
@@ -141,7 +141,7 @@ test("--install hands the name and the payload address to Library-Paste", () => 
   assert.match(via, /name=Library-Install&/, "--via bootstraps the receiver through the older one");
 });
 
-test("--install names the toggles a paste cannot set, and refuses a chain with no name", () => {
+test("--install names the toggles a paste cannot set, and refuses a workflow with no name", () => {
   const r = require("node:child_process").spawnSync("python3",
     [path.join("tools", "pack.py"), "workflows/stage-input.json", "--install"], { cwd: ROOT, encoding: "utf8" });
   assert.match(r.stderr, /Show in Share Sheet/);
@@ -154,7 +154,7 @@ test("--install names the toggles a paste cannot set, and refuses a chain with n
   assert.throws(() => pack("workflows/stage-input-card.json", "--install"), /Command failed/);
 });
 
-test("--url refuses a chain that is not published, rather than minting a 404", () => {
+test("--url refuses a workflow that is not published, rather than minting a 404", () => {
   assert.throws(() => pack("workflows/nonesuch.json", "--url"), /Command failed/);
 });
 
@@ -164,8 +164,8 @@ test("--url refuses a chain that is not published, rather than minting a 404", (
 // string. Show-Convert's "Condense lines" replaces with "\n\n", so compacting
 // it would have deleted blank lines instead of collapsing them, silently.
 test("a whitespace-only value survives, since compaction would erase it", () => {
-  const chain = path.join(ROOT, "workflows", ".tmp-compact.json");
-  fs.writeFileSync(chain, JSON.stringify({
+  const file = path.join(ROOT, "workflows", ".tmp-compact.json");
+  fs.writeFileSync(file, JSON.stringify({
     label: "x", actions: [{ id: "is.workflow.actions.text.replace",
                             p: { WFReplaceTextFind: "a", WFReplaceTextReplace: "\n\n" } }]
   }));
@@ -178,13 +178,13 @@ test("a whitespace-only value survives, since compaction would erase it", () => 
     assert.strictEqual(JSON.parse(decoded), "\n\n",
       "the replacement must arrive as two newlines, not as an empty string");
   } finally {
-    fs.unlinkSync(chain);
+    fs.unlinkSync(file);
   }
 });
 
 test("a payload compaction leaves alone is still compacted", () => {
-  const chain = path.join(ROOT, "workflows", ".tmp-tight.json");
-  fs.writeFileSync(chain, JSON.stringify({
+  const file = path.join(ROOT, "workflows", ".tmp-tight.json");
+  fs.writeFileSync(file, JSON.stringify({
     label: "x", actions: [{ id: "is.workflow.actions.gettext",
                             p: { WFTextActionText: "plain" } }]
   }));
@@ -194,7 +194,7 @@ test("a payload compaction leaves alone is still compacted", () => {
     const xml = Buffer.from(body.actions[0], "base64").toString();
     assert.ok(!/>\s+</.test(xml), "nothing here needs the loose form");
   } finally {
-    fs.unlinkSync(chain);
+    fs.unlinkSync(file);
   }
 });
 
@@ -209,8 +209,8 @@ test("a published payload is what the receiver expects, not a link", () => {
 });
 
 test("Copy-ActionFromUrl coerces the download to text before handing it on", () => {
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "copy-action-from-url.json"), "utf8"));
-  const [get, run] = chain.actions;
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "copy-action-from-url.json"), "utf8"));
+  const [get, run] = wf.actions;
   assert.strictEqual(get.id, "is.workflow.actions.downloadurl");
   assert.strictEqual(run.p.WFWorkflowName, "Copy-ActionFromClaude");
   // Get Contents of URL parses a JSON response into a dictionary, and the

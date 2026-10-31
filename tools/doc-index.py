@@ -47,7 +47,7 @@ def headings(text):
     """Every ## and ### below the index block, in document order.
 
     Headings inside a fenced code block are not headings, and this repo's docs
-    are full of fenced chain listings whose comment lines start with #.
+    are full of fenced workflow listings whose comment lines start with #.
     """
     out, fenced = [], False
     for line in text.split("\n"):

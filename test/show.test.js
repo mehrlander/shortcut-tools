@@ -143,9 +143,9 @@ test("a truncated link fails loudly, at either end", () => {
 });
 
 test("Run-Html builds the data URL the way js-data-url does", () => {
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-html.json"), "utf8"));
-  const [encode, url, open] = chain.actions;
-  assert.deepStrictEqual(chain.actions.map(a => a.id), [
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-html.json"), "utf8"));
+  const [encode, url, open] = wf.actions;
+  assert.deepStrictEqual(wf.actions.map(a => a.id), [
     "is.workflow.actions.base64encode", "is.workflow.actions.url", "is.workflow.actions.openurl"]);
   assert.strictEqual(encode.p.WFInput.Value.Type, "ExtensionInput",
     "the page arrives as Shortcut Input, not as another action's output");

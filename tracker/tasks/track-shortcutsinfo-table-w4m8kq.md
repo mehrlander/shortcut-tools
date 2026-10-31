@@ -18,23 +18,23 @@ through the per-row toast. The sync channel added on
 `claude/shortcuts-recent-display-5k31ag` makes that field load-bearing, which is
 a reason to be able to see and re-sort on it.
 
-**The chain is not tracked here.** It exists only inside
+**The shortcuts are not tracked here.** They exist only inside
 `dumps/2026-08-13-01.zip`, so the fix cannot be made in this repo and published.
-Bringing it in means writing `get-shortcuts-info` and `show-shortcuts-info` as
-chain files, which drags in two dependencies worth deciding about first:
+Bringing them in means writing `get-shortcuts-info` and `show-shortcuts-info` as
+workflow files, which drags in two dependencies worth deciding about first:
 
 - the `toRows()` and `sortModified()` transforms live in an on-device
   `Snippets/Managed/transforms.json` that nothing here can see, so a tracked
-  chain either vendors them or drops the JS step, and dropping it means the
+  workflow either vendors them or drops the JS step, and dropping it means the
   device-side JSON hazard the manifests already avoid with marker text
 - the third-party Actions app supplies the JS action at all
 
 Replacing the live copy is solved: `Library-Replace` deletes by name, imports
 and logs in one tap (proven 2026-09-16), so callers no longer resolve to the old
 copy. What remains is that `Get-ShortcutsInfo` was authored on the device, so it
-needs a dump of the current version before a tracked chain replaces it.
+needs a dump of the current version before a tracked workflow replaces it.
 
-Done when the table's chain is committed here, the plist installs it, and
+Done when the table's two workflows are committed here, their plists install them, and
 `lastModified` is a visible sortable column.
 
 ## Progress log

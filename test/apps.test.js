@@ -151,7 +151,7 @@ test("a vendor-only row gets a name from its bundle id and can join", () => {
   assert.equal(rows[0].installed, true);
 });
 
-// A payload from a chain running two recognizers is a dict per screenshot. One
+// A payload from a shortcut running two recognizers is a dict per screenshot. One
 // engine space-joins a screen, losing the line breaks that mark a label's end,
 // so the parse must take the richer read rather than the first one.
 test("a dual-read payload parses from the richer engine", () => {

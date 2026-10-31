@@ -232,7 +232,7 @@ the top and guards each trace with it, 52 times, appending
 timestamped lines to a file. The library has no equivalent, and diagnosis
 happens by opening `Show-Loop` and stepping.
 
-This repository carries a chain for each pattern:
+This repository carries a workflow for each pattern:
 [`workflows/self-name.json`](../workflows/self-name.json) stores the name, and
 [`workflows/trace.json`](../workflows/trace.json) builds one guarded log line.
 

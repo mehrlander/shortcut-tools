@@ -43,14 +43,14 @@ Those 38 parameter-bearing entries are exactly the 38 that carry a `WFControlFlo
 Apple documents neither the file format nor the runtime, so three files under `docs/` hold what is known. They split by question:
 
 - [`docs/shortcuts-format-notes.md`](docs/shortcuts-format-notes.md): how a shortcut is **serialized**. Control-flow blocks pairing through `GroupingIdentifier` and `WFControlFlowMode`, variable references binding by producing UUID, the derived `WFCondition` table, the Run JavaScript performance cliff, and the limits of the builder in `shortcut.js`.
-- [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like conditional chains it makes possible.
+- [`docs/dataflow.md`](docs/dataflow.md): how values **flow at runtime**. Implicit passthrough through a compact `If`, and the switch-like sequences of conditionals it makes possible.
 - [`docs/idioms.md`](docs/idioms.md): how a real library is **written**, read from a 577-shortcut corpus: the self-demo prologue as a test harness, the naming convention read as a type at run time, the `Get-FileInfo` type descriptor, and JavaScript through a `data:` URL as the escape hatch.
 
-## Chains and payloads
+## Workflows and payloads
 
-`workflows/` holds action chains as source, and `tools/pack.py` turns one into a
+`workflows/` holds action lists as JSON source, and `tools/pack.py` turns one into a
 tappable link that pastes those actions onto the device clipboard. `pages/` holds
-the HTML payloads a chain carries, referenced as `{"$file": "pages/x.html"}` so
+the HTML payloads a workflow carries, referenced as `{"$file": "pages/x.html"}` so
 each page has exactly one copy and stays testable in a browser.
 
 The worked example is `gh-recent-branches`: two actions that build a page and
@@ -61,7 +61,7 @@ yours, each one a link. See [`workflows/README.md`](workflows/README.md), plus
 and [the token-injection pattern](docs/shortcuts-format-notes.md#the-token-injection-pattern)
 behind it.
 
-## Sending a page, not a chain
+## Sending a page, not actions
 
 `tools/pack.py` sends **actions to paste**. [`tools/show.py`](tools/show.py) is
 its sibling and sends **a page to run**: one link that hands an HTML file to a
@@ -172,7 +172,7 @@ python3 tools/index-dump.py dumps/*.zip --json index.json   # what exists, what 
 python3 tools/survey.py index.json -o library.html          # tiered, browsable, with facets
 python3 tools/sketch.py dumps/*.zip --name Show-Loop        # 54 KB of XML as 1.8 KB of pseudocode
 python3 tools/restore.py dumps/*.zip Show-Loop              # a paste link that puts it back
-python3 tools/harvest.py dumps/*.zip --index index.json -o core/   # editable chain files
+python3 tools/harvest.py dumps/*.zip --index index.json -o core/   # editable workflow files
 ```
 
 A dump comes from [`workflows/dump-folder-zip.json`](workflows/dump-folder-zip.json),
@@ -324,7 +324,7 @@ const { getAction, searchActions, listApps, getActionsByApp,
 
 Every lookup returns an **array**, because one name can hold several variants. Only `choosefrommenu` does today, but code that assumes a single object breaks on it.
 
-**Building.** `new Shortcut(name)` then chain:
+**Building.** `new Shortcut(name)`, then call these methods in sequence (each returns the builder):
 
 | Method | Notes |
 |---|---|
@@ -339,7 +339,7 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `menuBegin(prompt)` / `menuItem(title)` / `menuEnd()`, `menu(prompt, items)` | `items` maps a title to a callback. |
 | `build()` | The workflow plist as a plain object. |
 | `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
-| `toActionChain(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
+| `toActionList(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |
 | `export(path)` | Write the XML plist. An unsigned `.shortcut` will not import, but `Library-Import` remote-signs one and installs it, so this **is** an install path. See [Installing](workflows/README.md#installing-one-rather-than-pasting-it). |
 

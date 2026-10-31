@@ -39,7 +39,7 @@ remains: a name computed at run time.
 
 --card prints the handover card rather than the one-line caption: the header is
 the receiver and the body is its payload unpacked, so a sequence shows every
-step, marked and linked to its chain page, and a plain run shows one row. The
+step, marked and linked to its workflow page, and a plain run shows one row. The
 format and the reasoning are in web-tools skills/shortcut-links.
 
 --log appends Log-Repo, which writes the payload to the clipboard first and
@@ -52,7 +52,7 @@ from pathlib import Path
 ICON = "📲"   # the surfacing mark for "run a shortcut"
 PICKER = "Run-Pick"
 INDEX = Path(__file__).resolve().parent.parent.parent / "web-tools-private" / "shortcuts" / "index.json"
-CHAIN = "Run-Steps"
+STEPS = "Run-Steps"
 LOGGER = "Log-Repo"
 SCHEME = "shortcuts://run-shortcut?name=%s&input=text&text=%s"
 BARE = "shortcuts://run-shortcut?name=%s"
@@ -89,8 +89,8 @@ def build(targets, log=False, text=None):
         # silently drops the value the sender meant to bake in.
         raise SystemExit("--text cannot ride a multi-step link: %s takes the step "
                          "list as its own input. Send one target, or wrap the "
-                         "payload in a chain of its own." % CHAIN)
-    return SCHEME % (urllib.parse.quote(CHAIN, safe=""),
+                         "payload in a shortcut of its own." % STEPS)
+    return SCHEME % (urllib.parse.quote(STEPS, safe=""),
                      urllib.parse.quote("\n".join(steps), safe=""))
 
 
@@ -192,10 +192,10 @@ def step_row(name, first):
     it, which is exactly what Run-Steps does, and no index appears because
     nothing in a step list refers back.
 
-    No chain page here. A step is a shortcut already on the phone, so a link
+    No workflow page here. A step is a shortcut already on the phone, so a link
     invites reading where the card exists to remove it, and half of these names
-    could not carry one anyway: sixteen names the chains here call are held in no
-    chain file, and a directly addressed receiver can be device-only (`Open-URL`,
+    could not carry one anyway: sixteen names the workflows here call are held in no
+    workflow file, and a directly addressed receiver can be device-only (`Open-URL`,
     `Fav-Settings`). A list where some names are tappable and some are not reads
     as an error. The page belongs to the install card, which is the one tap that
     leaves something behind.
@@ -239,7 +239,7 @@ def verify(link):
     name = (q.get("name") or [""])[0]
     text = (q.get("text") or [""])[0]
     print("receiver: %s" % name)
-    if name == CHAIN:
+    if name == STEPS:
         for i, step in enumerate(text.split("\n"), 1):
             print("  %d. %s" % (i, step))
     elif name == PICKER:
@@ -298,7 +298,7 @@ def main():
     # stdout stays the link, always, so a caller piping this is unaffected by
     # which caption shape was asked for.
     if args.card:
-        receiver = CHAIN if len(steps) > 1 else steps[0]
+        receiver = STEPS if len(steps) > 1 else steps[0]
         head = args.label
         if head is None and len(steps) == 1 and args.text is not None:
             head = "%s: %s" % (steps[0], args.text)

@@ -3,12 +3,12 @@
 
     python3 tools/restore.py <dump.zip …> <Name>        # one paste link
     python3 tools/restore.py <dump.zip …> --list        # what is in the archive
-    python3 tools/restore.py <dump.zip …> <Name> --chain  # the chain file instead
+    python3 tools/restore.py <dump.zip …> <Name> --workflow  # the workflow file instead
 
 This is the answer to "is it safe to delete these off the phone." The archive
 holds unsigned plists, and iOS will not import one: there is no open-this-file
 route back. What there is is the paste route this repository already runs on.
-`unpack.py` turns the plist into a chain and `pack.py` turns the chain into a
+`unpack.py` turns the plist into a workflow file and `pack.py` turns that into a
 link that `Copy-ActionFromClaude` puts on the clipboard, and the round trip is
 exact: parameters compare equal action for action.
 
@@ -61,7 +61,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("zip", nargs="+", help="dump zips, then the shortcut name")
     ap.add_argument("--list", action="store_true", help="print what the archive holds")
-    ap.add_argument("--chain", action="store_true", help="emit the chain file, not a link")
+    ap.add_argument("--workflow", action="store_true", help="emit the workflow file, not a link")
     args = ap.parse_args()
 
     paths, name = args.zip, None
@@ -85,17 +85,17 @@ def main():
     path, info = found[name]
     import plistlib
     doc = plistlib.loads(zipfile.ZipFile(path).read(info))
-    chain = unpacker.to_chain(unpacker.actions_in(doc), "%s (restored)" % name)
+    wf = unpacker.to_workflow(unpacker.actions_in(doc), "%s (restored)" % name)
 
-    if args.chain:
-        print(json.dumps(chain, indent=2, ensure_ascii=False))
+    if args.workflow:
+        print(json.dumps(wf, indent=2, ensure_ascii=False))
         return
 
-    link = packer.build(chain)
+    link = packer.build(wf)
     # The name is not in the plist, so say it here or it is lost on the way.
     print("Name the new shortcut: %s" % name, file=sys.stderr)
     print("%d actions, %d chars of link, from %s" % (
-        len(chain["actions"]), len(link), Path(path).name), file=sys.stderr)
+        len(wf["actions"]), len(link), Path(path).name), file=sys.stderr)
     print(link)
 
 
