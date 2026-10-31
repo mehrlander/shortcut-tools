@@ -48,9 +48,9 @@ Apple documents neither the file format nor the runtime, so three files under `d
 
 ## Workflows and payloads
 
-`workflows/` holds action lists as JSON source, and `tools/pack.py` turns one into a
-tappable link that pastes those actions onto the device clipboard. `pages/` holds
-the HTML payloads a workflow carries, referenced as `{"$file": "pages/x.html"}` so
+`workflows/` holds the JSON source files, and `tools/pack.py` turns one into a
+tappable link that pastes its actions onto the device clipboard. `pages/` holds
+the HTML payloads a workflow embeds, referenced as `{"$file": "pages/x.html"}` so
 each page has exactly one copy and stays testable in a browser.
 
 The worked example is `gh-recent-branches`: two actions that build a page and
@@ -337,7 +337,7 @@ Every lookup returns an **array**, because one name can hold several variants. O
 | `repeatBegin(n)` / `repeatEnd()`, `repeat(n, fn)` | Repeat N times. |
 | `repeatEachBegin()` / `repeatEachEnd()` | Repeat with each. |
 | `menuBegin(prompt)` / `menuItem(title)` / `menuEnd()`, `menu(prompt, items)` | `items` maps a title to a callback. |
-| `build()` | The workflow plist as a plain object. |
+| `build()` | The shortcut's plist as a plain object. |
 | `lastUUID()` | The UUID of the action just added, for wiring the next one to it. |
 | `toActionList(label)` | `{ label, actions: [{ id, p }] }`, the shape `tools/pack.py` packs into a link. **The delivery path.** |
 | `toJSON()` / `toXMLPlist()` | Serialize. |

@@ -451,8 +451,8 @@ announce itself from behind one either: an alert, a notification and a
 `Log-Repo` commit are all equally stalled, so there is no gate to hang a capture
 on. A live page under a screenshot has to go through Safari and `Open URL`.
 The sheet stays the right way to *show* a person something, which is what
-`Show-Log` and `Dictate` use it for. It is simply not a place a shortcut can keep
-working behind.
+`Show-Log` and `Dictate` use it for. Nothing else in the shortcut runs while the
+sheet is up.
 
 It is not a fringe action: **32 shortcuts in the library use it**, and one of
 them, `Show-WebView`, is already the generic receiver. Three of its seven
@@ -1913,10 +1913,10 @@ inside one of those 8 had changed. Only the dumped copy settled it.
 *Measured in the repo 2026-09-14, from files rather than from a device.*
 
 A shortcut's behaviour is not all in `WFWorkflowActions`. Four sibling keys sit
-beside it in the workflow file and decide how the shortcut is reached and what
+beside it in the shortcut's plist and decide how the shortcut is reached and what
 it receives: `WFWorkflowNoInputBehavior`, `WFWorkflowInputContentItemClasses`,
-`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A workflow file
-carries them in its optional `"workflow"` block, and `tools/plist.py` supplies
+`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A JSON file under
+`workflows/` holds them in its optional `"workflow"` block, and `tools/plist.py` supplies
 its own defaults for every key the block omits.
 
 **So a conversion that copies actions and no block silently changes the
@@ -1935,7 +1935,7 @@ unmapped apps, which fall past the lookup to the type tests, saw the empty
 input. A file-level setting that half the paths route around does not fail
 loudly; it fails in the corner nobody is looking at.
 
-Two things make this hard to see. The workflow file reads as complete, because a
+Two things make this hard to see. A workflow's JSON reads as complete, because a
 missing block is indistinguishable from a file that never wanted one: 33 of the
 45 named workflows here declare no block and are correct not to. And the count in
 the label, the action table, and every `--check` in the repo all compare

@@ -213,7 +213,7 @@ trustworthy, so take it from [`packed/`](../packed/) by address.
 ## Payloads live in `pages/`, not pasted into the workflow
 
 Anywhere a parameter takes a string, `{"$file": "pages/thing.html"}` reads that
-file instead, resolved from the repository root. A workflow that carries an HTML
+file instead, resolved from the repository root. A workflow that embeds an HTML
 payload therefore references the page rather than holding a copy of it, so the
 page stays editable, testable in a browser, and reviewable as a diff. `pack.py`
 resolves the directive before packing, so the plist only ever sees text.
@@ -588,8 +588,8 @@ proves works on this device, and the parsing moves to Python, where escaping
 exists. `dump-named` carries its records the same way, which is what lets it
 succeed on a name `dump-selected` would fail on.
 
-`sync-manifest` and `dump-named` both open with an unconditional clipboard write before touching the
-network, copied from `log-repo` rather than reinvented: a failed commit should
+`sync-manifest` writes the manifest to the clipboard, unconditionally, before it
+touches the network, a step copied from `log-repo` rather than reinvented: a failed commit should
 degrade to the cheap path, not lose the export.
 
 ### Launching a shortcut updates its modification date; being called does not

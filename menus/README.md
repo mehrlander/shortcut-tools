@@ -58,6 +58,6 @@ Nothing generated is committed. The spec is the source; the `.vcf`, the workflow
 and the link are all built on demand, which is also why the icons can be
 refetched at a different size, weight, or depth without a migration.
 
-Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as a workflow
+Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as actions
 the link is 15,757 characters. The gap is the packed route's own overhead, a
 full plist document per action, base64'd and then percent-encoded.

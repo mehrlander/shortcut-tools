@@ -97,8 +97,8 @@ cheapest would have told you.
 fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts:
 one tap plus Apple's own import sheet. That beats `Library-Install` on every
 axis, and it is the only route that can deliver **file-level** settings, since
-`WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the workflow
-file and no paste reaches them. Generate a full plist for anything new. Where a
+`WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the shortcut's
+plist and no paste reaches them. Generate a full plist for anything new. Where a
 copy signed in the repo is committed, `Library-Fetch` installs it with no
 signing on the device; see
 [`workflows/README.md`](workflows/README.md#signing-here-so-the-device-never-does).
