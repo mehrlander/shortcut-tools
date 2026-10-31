@@ -48,10 +48,11 @@ Apple documents neither the file format nor the runtime, so three files under `d
 
 ## Workflows and payloads
 
-`workflows/` holds the JSON source files, and `tools/pack.py` turns one into a
-tappable link that pastes its actions onto the device clipboard. `pages/` holds
-the HTML payloads a workflow embeds, referenced as `{"$file": "pages/x.html"}` so
-each page has exactly one copy and stays testable in a browser.
+`workflows/` holds the workflows, each a list of actions as JSON, and
+`tools/pack.py` turns one into a tappable link that pastes those actions onto
+the device clipboard. `pages/` holds the HTML payloads a workflow delivers,
+referenced as `{"$file": "pages/x.html"}` so each page has exactly one copy and
+stays testable in a browser.
 
 The worked example is `gh-recent-branches`: two actions that build a page and
 hand it to `Show-Html`, which substitutes the credential and opens it. The page
@@ -263,7 +264,7 @@ this library has ever proven. Opening an editor and moving to a folder are
 | `Library-Stage` | names, newline-separated | 8 | [`workflows/library-stage.json`](workflows/library-stage.json) |
 
 **Neither can delete, and that is the design.** A receiver that could would make
-the page one tap from the thing the whole workflow exists to slow down.
+the page one tap from the thing the whole sequence exists to slow down.
 
 Both are **find, then act**: `getmyworkflows`, then `filter.files` on `Name`,
 then the entity slot bound to that filter's output, since these actions address
@@ -324,7 +325,7 @@ const { getAction, searchActions, listApps, getActionsByApp,
 
 Every lookup returns an **array**, because one name can hold several variants. Only `choosefrommenu` does today, but code that assumes a single object breaks on it.
 
-**Building.** `new Shortcut(name)`, then call these methods in sequence (each returns the builder):
+**Building.** `new Shortcut(name)`, then these methods:
 
 | Method | Notes |
 |---|---|

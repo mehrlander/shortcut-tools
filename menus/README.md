@@ -32,7 +32,7 @@ python3 tools/vcard.py menus/demo.json --data
 That runner cannot hold per-row behavior, so each row carries its own as a URL
 in its `action` field, written to the card's `NOTE` and read back as the chosen
 contact's Notes. A row can therefore run a named shortcut, open a page, or open
-an app, but it cannot inline an arbitrary action the way pasted actions can. In
+an app, but it cannot inline an arbitrary action the way a workflow can. In
 exchange there is nothing to paste per menu: the link opens the menu directly.
 
 The demo's four rows measure 2,868 characters as a `--data` link against 15,757

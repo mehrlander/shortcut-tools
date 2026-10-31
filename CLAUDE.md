@@ -175,7 +175,7 @@ requires that form here; the counts are in
 
 ## Deletion is never one step
 
-The prune workflow is nominate, stage, wait, delete, and the page and its
+The prune sequence is nominate, stage, wait, delete, and the page and its
 receivers can only do the first two. This is the one place where friction is
 the feature, and it does not contradict the section above: the cost being
 avoided there is tedium, and the cost being kept here is an irreversible act on
@@ -192,13 +192,13 @@ thing.
 | Mirror | Holds | For |
 | --- | --- | --- |
 | `packed/` | every workflow, as a clipboard payload | pasting actions |
-| `plists/` | the workflows declaring `"name"`, as whole shortcut files | installing a shortcut |
+| `plists/` | the workflows declaring `"name"`, as whole shortcut plists | installing a shortcut |
 
 A workflow opts into `plists/` by declaring a name, because most workflows are
 probes and demos rather than receivers. Deriving the name from the label instead put 27
 workflows into 24 files, three overwriting each other in silence.
 
-**A mirror is `workflows/` exactly, which means deleting too.** A workflow removed,
+**A mirror is the workflow set, which means deleting too.** A workflow removed,
 renamed, or giving up its `name` leaves behind an artifact no workflow
 regenerates, and that artifact keeps serving a link that works and delivers
 something the repo has retracted: the same failure as a stale one, arriving by
@@ -240,7 +240,7 @@ if name in idx: print("name already in the library:", name)
 
 A hit means the name is taken, and importing over it leaves both copies, so
 decide before the link goes out whether the existing shortcut is replaced
-through `Library-Replace` or the new one takes another name.
+through `Library-Replace` or the workflow declares another name.
 
 **Resolve a stale by-name target by asking what the library *has* that does the
 job.** What the name used to mean cannot be recovered: a `.wflow` does not contain its own identifier, only a caller records
@@ -258,8 +258,8 @@ introduces it, or `tools/targets.py` cannot see its names.
 
 `Library-Import` ends by calling `Log-Repo`, so every install lands in
 `shortcuts/log/` with the ref it came from. Nothing else logs unless a shortcut
-calls `Log-Repo` itself, so a session can always see what installed but usually not what ran,
-and cannot tell a stale copy from a fresh one that failed.
+calls `Log-Repo`, so a session can always see what installed but usually not
+what ran, and cannot tell a stale copy from a fresh one that failed.
 
 Four things follow, and none is optional for anything handed over:
 

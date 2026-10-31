@@ -18,7 +18,7 @@
     {
       "path": "pages/library.html",
       "title": "Shortcuts",
-      "note": "The device's Shortcuts library, browsable on axes the app does not have, with a staged prune workflow.",
+      "note": "The device's Shortcuts library, browsable on axes the app does not have, with a staged prune.",
       "appView": true,
       "viewLabel": "Shortcuts",
       "icon": "ph-lightning",
