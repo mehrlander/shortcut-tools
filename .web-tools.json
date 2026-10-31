@@ -72,7 +72,7 @@
     {
       "path": "pages/bench-inline.html",
       "title": "Bench, inline",
-      "note": "The timing bench a shortcut carries inline, for the Run JavaScript performance cliff.",
+      "note": "The timing bench a shortcut holds inline, for the Run JavaScript performance cliff.",
       "icon": "ph-timer",
       "order": 60
     },

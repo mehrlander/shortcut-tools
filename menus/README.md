@@ -36,7 +36,8 @@ an app, but it cannot inline an arbitrary action the way a workflow can. In
 exchange there is nothing to paste per menu: the link opens the menu directly.
 
 The demo's four rows measure 2,868 characters as a `--data` link against 15,757
-as packed actions, and the difference is the whole action list shipping every time.
+as a packed workflow, and the difference is the whole workflow shipping every
+time.
 
 ## The whole menu as a workflow
 
@@ -58,6 +59,6 @@ Nothing generated is committed. The spec is the source; the `.vcf`, the workflow
 and the link are all built on demand, which is also why the icons can be
 refetched at a different size, weight, or depth without a migration.
 
-Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as actions
+Sizes for the four-row demo: the `.vcf` is 2,234 bytes, and packed as a workflow
 the link is 15,757 characters. The gap is the packed route's own overhead, a
 full plist document per action, base64'd and then percent-encoded.

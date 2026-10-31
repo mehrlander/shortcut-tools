@@ -195,7 +195,7 @@ without spending an action:
 Offsets count the rendered string, so `"The text said: ￼"` anchors at `{15, 1}`.
 Several consumers may share one producer.
 
-**Aggrandizements apply in array order.** One attachment may carry a coercion
+**Aggrandizements apply in array order.** One attachment may hold a coercion
 and then a key lookup, which is how a file becomes a dictionary and then one of
 its values without spending an action on either step:
 
@@ -295,7 +295,7 @@ matters to anything that calls it:
   in the browser, so it is fully interactive: links navigate, and async work has
   no capture moment to race.
 - **It returns the cleaned HTML**, wrapped in a one-item `is.workflow.actions.list`.
-  Not a result from the page. Nothing useful follows it.
+  Not a result from the page. Nothing useful can take it as input.
 
 Two details worth carrying. The data URL it builds is
 `data:text/html;charset=utf-8, ￼` with a **space** after the comma, anchoring at
@@ -360,7 +360,7 @@ of GitHub API JSON with Repo, Commit and Branch tabs and a jsDelivr connection
 prompt, was that demo, and `Claude-Session` then coerced the demo's text and offered
 its button labels as a menu. The shape had been copied from
 `gh-recent-branches-picker`, which the workflows README then named as the only
-workflow still carrying inferred parameter shapes; it is corrected in the same
+workflow still using inferred parameter shapes; it is corrected in the same
 commit.
 
 ## The token-injection pattern
@@ -1900,7 +1900,7 @@ rather than something isolated on its own: neither the signing worker nor
 Shortcuts' import sheet has been tested separately.
 
 **Why it matters more than it sounds.** Action count is the only currency signal
-the manifest carries, so those five shortcuts read as one behind forever and a naive
+the manifest holds, so those five shortcuts read as one behind forever and a naive
 comparison calls them stale when they are current. The `#BUILD#` stamp is the
 answer where a shortcut has one, and the zip dump is the answer where it does not.
 
