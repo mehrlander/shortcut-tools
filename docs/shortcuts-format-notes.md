@@ -1845,9 +1845,9 @@ does not have.** `Library-Replace` is not installed, its `Name is` filter
 returned an empty list, and the Repeat ended there. Every name after it was
 untouched.
 
-Nothing said so. `Library-Move` logs through `Log-Repo` as its last action, so a
-Repeat that dies never reaches the log, and the person running it saw churn and
-then nothing. The fix is an `If` on the filter result around the body, so a miss
+Nothing said so. The `Library-Move` that ran logged through `Log-Repo` as its
+last action, so a Repeat that dies never reaches the log, and the person running
+it saw churn and then nothing. The fix is an `If` on the filter result around the body, so a miss
 is skipped rather than fatal.
 
 **`CreateFolderAction` refuses a folder that already exists**, reported from
@@ -1915,8 +1915,8 @@ inside one of those 8 had changed. Only the dumped copy settled it.
 A shortcut's behaviour is not all in `WFWorkflowActions`. Four sibling keys sit
 beside it in the shortcut's plist and decide how the shortcut is reached and what
 it receives: `WFWorkflowNoInputBehavior`, `WFWorkflowInputContentItemClasses`,
-`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A JSON file under
-`workflows/` holds them in its optional `"workflow"` block, and `tools/plist.py` supplies
+`WFWorkflowOutputContentItemClasses`, and `WFWorkflowTypes`. A workflow file
+holds them in its optional `"workflow"` block, and `tools/plist.py` supplies
 its own defaults for every key the block omits.
 
 **So a conversion that copies actions and no block silently changes the
@@ -1935,8 +1935,8 @@ unmapped apps, which fall past the lookup to the type tests, saw the empty
 input. A file-level setting that half the paths route around does not fail
 loudly; it fails in the corner nobody is looking at.
 
-Two things make this hard to see. A workflow's JSON reads as complete, because a
-missing block is indistinguishable from a file that never wanted one: 33 of the
+Two things make this hard to see. The workflow file reads as complete, because a
+missing block is indistinguishable from a workflow that never wanted one: 33 of the
 45 named workflows here declare no block and are correct not to. And the count in
 the label, the action table, and every `--check` in the repo all compare
 actions, so each one passed.
