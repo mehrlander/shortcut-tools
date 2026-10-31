@@ -34,8 +34,8 @@ and logs in one tap (proven 2026-09-16), so callers no longer resolve to the old
 copy. What remains is that `Get-ShortcutsInfo` was authored on the device, so it
 needs a dump of the current version before a tracked workflow replaces it.
 
-Done when the table's two workflows are committed here, their plists install them, and
-`lastModified` is a visible sortable column.
+Done when the table's two workflows are committed here, their plists install
+them, and `lastModified` is a visible sortable column.
 
 ## Progress log
 - 2026-08-19: filed while building the sync channel, which needed the same four
