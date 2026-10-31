@@ -36,8 +36,7 @@ an app, but it cannot inline an arbitrary action the way a workflow can. In
 exchange there is nothing to paste per menu: the link opens the menu directly.
 
 The demo's four rows measure 2,868 characters as a `--data` link against 15,757
-as a packed workflow, and the difference is the whole workflow shipping every
-time.
+as a packed workflow, and the difference is the whole workflow shipping every time.
 
 ## The whole menu as a workflow
 

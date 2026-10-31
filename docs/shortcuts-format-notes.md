@@ -295,7 +295,7 @@ matters to anything that calls it:
   in the browser, so it is fully interactive: links navigate, and async work has
   no capture moment to race.
 - **It returns the cleaned HTML**, wrapped in a one-item `is.workflow.actions.list`.
-  Not a result from the page. Nothing useful can take it as input.
+  Not a result from the page.
 
 Two details worth carrying. The data URL it builds is
 `data:text/html;charset=utf-8, ￼` with a **space** after the comma, anchoring at
