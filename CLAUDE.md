@@ -194,8 +194,7 @@ thing.
 | `packed/` | every workflow, as a clipboard payload | pasting actions |
 | `plists/` | the workflows declaring `"name"`, as whole shortcut plists | installing a shortcut |
 
-A workflow opts into `plists/` by declaring a name: a receiver declares one,
-and a workflow meant only to be pasted does not. Deriving the name from the
+A workflow opts into `plists/` by declaring a name. Deriving the name from the
 label instead put 27 workflows into 24 files, three overwriting each other in
 silence.
 
