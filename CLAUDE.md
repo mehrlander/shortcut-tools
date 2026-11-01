@@ -194,10 +194,6 @@ thing.
 | `packed/` | every workflow, as a clipboard payload | pasting actions |
 | `plists/` | the workflows declaring `"name"`, as whole shortcut plists | installing a shortcut |
 
-A workflow opts into `plists/` by declaring a name. Deriving the name from the
-label instead put 27 workflows into 24 files, three overwriting each other in
-silence.
-
 **A mirror is the workflow set, which means deleting too.** A workflow removed,
 renamed, or giving up its `name` leaves behind an artifact no workflow
 regenerates, and that artifact keeps serving a link that works and delivers
