@@ -38,7 +38,7 @@ letters = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
 def reads(text):
     """Every OCR read in a payload, keyed by the action that produced it.
 
-    A chain running one recognizer returns plain text. Running two returns a
+    A shortcut running one recognizer returns plain text. Running two returns a
     dict per screenshot, keyed by action label, which is the shape to prefer:
     a second engine is the only witness available to a capture that cannot be
     taken again.

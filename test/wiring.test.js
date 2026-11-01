@@ -54,17 +54,17 @@ test("lastUUID wires one action to the next", () => {
   assert.strictEqual(ref.OutputUUID, u);
 });
 
-test("toActionChain emits the { id, p } shape tools/pack.py consumes", () => {
-  const chain = new Shortcut("Demo").add("comment", { WFCommentActionText: "x" }).toActionChain();
-  assert.strictEqual(chain.label, "Demo");
-  assert.deepStrictEqual(Object.keys(chain.actions[0]).sort(), ["id", "p"]);
-  assert.strictEqual(chain.actions[0].id, "is.workflow.actions.comment");
-  assert.strictEqual(chain.actions[0].p.WFCommentActionText, "x");
+test("toActionList emits the { id, p } shape tools/pack.py consumes", () => {
+  const list = new Shortcut("Demo").add("comment", { WFCommentActionText: "x" }).toActionList();
+  assert.strictEqual(list.label, "Demo");
+  assert.deepStrictEqual(Object.keys(list.actions[0]).sort(), ["id", "p"]);
+  assert.strictEqual(list.actions[0].id, "is.workflow.actions.comment");
+  assert.strictEqual(list.actions[0].p.WFCommentActionText, "x");
 });
 
-test("toActionChain carries control flow through intact", () => {
+test("toActionList carries control flow through intact", () => {
   const s = new Shortcut("m").menu("Pick", { A: (x) => x.comment("a"), B: (x) => x.comment("b") });
-  const modes = s.toActionChain().actions
+  const modes = s.toActionList().actions
     .filter((a) => a.id === "is.workflow.actions.choosefrommenu")
     .map((a) => a.p.WFControlFlowMode);
   assert.strictEqual(modes.filter((m) => m === 0).length, 1);

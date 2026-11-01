@@ -10,7 +10,7 @@ const SRC = fs.readFileSync(path.join(ROOT, "pages", "bench-run.html"), "utf8");
 // The page runs inside a data: URL on a phone, and this sandbox's Chromium gives
 // a data: document no network at all, so a headless browser cannot exercise the
 // library path either. Run the real script here instead, the way show.test.js
-// runs the shell's: substituted exactly as the chain substitutes it, against a
+// runs the shell's: substituted exactly as the shortcut substitutes it, against a
 // stubbed document and a stubbed XMLHttpRequest.
 //
 // What is NOT covered, and cannot be: whether the device's rich-text coercion
@@ -41,7 +41,7 @@ function run(op, input, xhr) {
 }
 
 test("each placeholder occurs exactly once in the file", () => {
-  // Both were also written in the page's own comment, so the chain's first
+  // Both were also written in the page's own comment, so the shortcut's first
   // Replace Text landed there and the page reported an op it was never given.
   assert.strictEqual((SRC.match(/__OP__/g) || []).length, 1, "__OP__");
   assert.strictEqual((SRC.match(/__IN__/g) || []).length, 1, "__IN__");

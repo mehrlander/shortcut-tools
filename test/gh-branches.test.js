@@ -247,33 +247,33 @@ test("the request is synchronous, which is the whole reason it is an XHR", () =>
   assert.match(html, /\.open\('POST', 'https:\/\/api\.github\.com\/graphql', false\)/);
 });
 
-const chain = (f) =>
+const workflow = (f) =>
   JSON.parse(fs.readFileSync(path.join(__dirname, "..", "workflows", f), "utf8"));
 
-test("the picker calls the injector itself, since nothing else in that chain will", () => {
-  const inject = chain("gh-recent-branches-picker.json")
+test("the picker calls the injector itself, since nothing else in that shortcut will", () => {
+  const inject = workflow("gh-recent-branches-picker.json")
     .actions.find(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER);
   assert.ok(inject, "the picker should call the injector");
 });
 
 // The WFWorkflow dict carries a workflowIdentifier minted per install, which
-// pinned every chain here to one device. run-by-name showed the name alone
+// pinned every workflow here to one device. run-by-name showed the name alone
 // resolves, so carrying it is not portability-neutral, it is the opposite.
-test("no chain pins a target by device-local identifier", () => {
+test("no workflow pins a target by device-local identifier", () => {
   for (const f of fs.readdirSync(path.join(__dirname, "..", "workflows")).filter(f => f.endsWith(".json"))) {
-    for (const a of chain(f).actions) {
+    for (const a of workflow(f).actions) {
       if (a.id !== "is.workflow.actions.runworkflow") continue;
       assert.ok(a.p.WFWorkflowName, f + ": a target needs a name");
-      assert.ok(!a.p.WFWorkflow, f + ": WFWorkflow pins this chain to one install");
+      assert.ok(!a.p.WFWorkflow, f + ": WFWorkflow pins this workflow to one install");
     }
   }
 });
 
-test("the Show-Html chain does not inject, because Show-Html already does", () => {
+test("the workflow that calls Show-Html does not inject, because Show-Html already does", () => {
   // Injecting first is harmless, since the second pass finds no placeholder to
   // replace. It is still an action that does nothing, and the reason it does
-  // nothing is not visible from this chain.
-  const actions = chain("gh-recent-branches.json").actions;
+  // nothing is not visible from this workflow.
+  const actions = workflow("gh-recent-branches.json").actions;
   assert.strictEqual(actions.length, 2);
   assert.ok(!actions.some(a => a.p.WFWorkflowName === "Inject-" + PLACEHOLDER),
     "Show-Html substitutes the placeholder on the way through");
@@ -288,7 +288,7 @@ test("the page still carries the placeholder, since Show-Html is what resolves i
 test("the picker opens its URL the way the exports do it", () => {
   // Open URLs takes an attachment referencing a url action, which references a
   // text action. Handing it a bare string skips the coercion the export shows.
-  const a = chain("gh-recent-branches-picker.json").actions.slice(-3);
+  const a = workflow("gh-recent-branches-picker.json").actions.slice(-3);
   assert.deepStrictEqual(a.map(x => x.id), [
     "is.workflow.actions.gettext", "is.workflow.actions.url", "is.workflow.actions.openurl"]);
   assert.strictEqual(a[1].p.WFURLActionURL.Value.OutputUUID, a[0].p.UUID);
@@ -296,12 +296,12 @@ test("the picker opens its URL the way the exports do it", () => {
   assert.strictEqual(a[1].p.WFURLActionURL.WFSerializationType, "WFTextTokenAttachment");
 });
 
-// Every chain, not a named few: an anchor is written by hand, the offset is
-// counted by hand, and a new chain is exactly where that goes wrong.
+// Every workflow, not a named few: an anchor is written by hand, the offset is
+// counted by hand, and a new workflow is exactly where that goes wrong.
 test("every anchor offset lands on the glyph it addresses", () => {
   const dir = path.join(__dirname, "..", "workflows");
   for (const f of fs.readdirSync(dir).filter(f => f.endsWith(".json"))) {
-    for (const action of chain(f).actions) {
+    for (const action of workflow(f).actions) {
       for (const v of Object.values(action.p)) {
         if (v && v.WFSerializationType !== "WFTextTokenString") continue;
         if (!v || !v.Value || !v.Value.attachmentsByRange) continue;

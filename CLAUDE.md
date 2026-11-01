@@ -88,7 +88,7 @@ cheapest would have told you.
 4. **Bake the input in.** A probe that needs a value should carry a value, not
    ask for one to be typed. Anything the sender can decide, the sender decides.
 5. **Never ask for a repeat.** "Run it with a few different inputs" is a script
-   the sender should have written into the chain.
+   the sender should have written into the probe.
 6. **Count the one-time setup, and say what it is.** Every receiver installed
    is a permanent cost paid once. It is worth it only when it removes recurring
    in-app work.
@@ -97,8 +97,8 @@ cheapest would have told you.
 fetches a generated plist, gzips it, remote-signs it, and hands it to Shortcuts:
 one tap plus Apple's own import sheet. That beats `Library-Install` on every
 axis, and it is the only route that can deliver **file-level** settings, since
-`WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the workflow
-file and no paste reaches them. Generate a full plist for anything new. Where a
+`WFWorkflowTypes` and `WFWorkflowInputContentItemClasses` live in the shortcut's
+plist and no paste reaches them. Generate a full plist for anything new. Where a
 copy signed in the repo is committed, `Library-Fetch` installs it with no
 signing on the device; see
 [`workflows/README.md`](workflows/README.md#signing-here-so-the-device-never-does).
@@ -114,11 +114,11 @@ upgrade has done the opposite.
 
 **So a replace goes through `Library-Replace`**, which deletes by name, imports,
 and logs: one tap, no cleanup. `Library-Import` is for a name the library does
-not hold. The Chains view picks between them from the manifest; hand over
-`?name=<Chain>` rather than building the link.
+not hold. The Workflows view picks between them from the manifest; hand over
+`?name=<Name>` rather than building the link.
 
 When the signing worker is down, install by paste: `python3 tools/pack.py
-<chain> --install --ref <sha>` emits a `Library-Paste` link, which says whether
+<workflow> --install --ref <sha>` emits a `Library-Paste` link, which says whether
 that build is already installed, deletes any copy by that name, creates the
 empty shortcut, opens it, and leaves the actions on the clipboard. A paste
 cannot set file-level settings, so the tool prints the toggles to set by hand.
@@ -163,9 +163,9 @@ authored work, where it is earned.
 Everything else the library view does is one tap from a web page, and it stays
 that way.
 
-## A chain is built the way the library builds chains
+## A workflow is built the way the library builds shortcuts
 
-**Read [`docs/idioms.md`](docs/idioms.md) before authoring a chain**, and hold
+**Read [`docs/idioms.md`](docs/idioms.md) before authoring a workflow**, and hold
 to its idiom 4: **past about five actions of real work, write the operation in
 JavaScript and call `Get-FromJs`** (or a layer on it: `Get-JsonFromJs` for a
 typed result, `Run-Op` to fetch the code from web-tools by name). Where the
@@ -175,7 +175,7 @@ requires that form here; the counts are in
 
 ## Deletion is never one step
 
-The prune workflow is nominate, stage, wait, delete, and the page and its
+The prune sequence is nominate, stage, wait, delete, and the page and its
 receivers can only do the first two. This is the one place where friction is
 the feature, and it does not contradict the section above: the cost being
 avoided there is tedium, and the cost being kept here is an irreversible act on
@@ -191,19 +191,19 @@ thing.
 
 | Mirror | Holds | For |
 | --- | --- | --- |
-| `packed/` | every chain, as a clipboard payload | pasting actions |
-| `plists/` | the chains declaring `"name"`, as whole workflows | installing a shortcut |
+| `packed/` | every workflow, as a clipboard payload | pasting actions |
+| `plists/` | the workflows declaring `"name"`, as whole shortcut plists | installing a shortcut |
 
-A chain opts into `plists/` by declaring a name, because most of them are probes
-and demos rather than receivers. Deriving the name from the label instead put 27
-chains into 24 files, three overwriting each other in silence.
+A workflow opts into `plists/` by declaring a name, because most workflows are
+probes and demos rather than receivers. Deriving the name from the label instead put 27
+workflows into 24 files, three overwriting each other in silence.
 
-**A mirror is the chain set, which means deleting too.** A chain removed,
-renamed, or giving up its `name` leaves behind an artifact no chain
+**A mirror is the workflow set, which means deleting too.** A workflow removed,
+renamed, or giving up its `name` leaves behind an artifact no workflow
 regenerates, and that artifact keeps serving a link that works and delivers
 something the repo has retracted: the same failure as a stale one, arriving by
-the other door. `--publish` removes what no chain claims and says how many, so
-withdrawing a chain is one command rather than a command plus a `rm` nobody
+the other door. `--publish` removes what no workflow claims and says how many, so
+withdrawing a workflow is one command rather than a command plus a `rm` nobody
 remembers.
 
 Where two checks state one invariant, the faster one must be as strict as the
@@ -214,33 +214,33 @@ does.
 ## A name is not a reference until something checks it
 
 Resolving a Run Shortcut target by name rather than by `workflowIdentifier` is
-what makes a chain portable, and the suite enforces it. It also trades a
+what makes a workflow portable, and the suite enforces it. It also trades a
 device-local pointer for a string nothing validates, so a target renamed on the
 phone leaves a card that looks correct and resolves to nothing.
 
-**Audit the names whenever a chain gains one, and always after removing a
+**Audit the names whenever a workflow gains one, and always after removing a
 card's `workflowIdentifier`.** `run.py` audits every link it emits, against the
 library index (`index.json`, a snapshot of the last dump) and the newest device
 manifest (the device's own list) together. `python3 tools/targets.py` checks
 every authored target against the newest manifest alone, the only list that can
 say a name is gone. `targets.py` reads `catalog.json`, which
-`python3 tools/catalog.py --publish` writes from the chains, so run that first
-when a chain is new or changed. A name computed at run time is a token rather
+`python3 tools/catalog.py --publish` writes from `workflows/`, so run that first
+when a workflow is new or changed. A name computed at run time is a token rather
 than a string, so neither tool can confirm it.
 
-**Audit the chain's own name too, not only its targets**, with `index.json`
+**Audit the workflow's own name too, not only its targets**, with `index.json`
 from `web-tools-private`'s `shortcuts/` folder:
 
 ```python
 import json
 idx = {r["name"] for r in json.load(open("index.json"))}
-name = json.load(open("<chain>.json")).get("name")
+name = json.load(open("<workflow>.json")).get("name")
 if name in idx: print("name already in the library:", name)
 ```
 
 A hit means the name is taken, and importing over it leaves both copies, so
 decide before the link goes out whether the existing shortcut is replaced
-through `Library-Replace` or the chain is renamed.
+through `Library-Replace` or the workflow declares another name.
 
 **Resolve a stale by-name target by asking what the library *has* that does the
 job.** What the name used to mean cannot be recovered: a `.wflow` does not contain its own identifier, only a caller records
@@ -257,9 +257,9 @@ introduces it, or `tools/targets.py` cannot see its names.
 ## Every handover reports itself, with its build id
 
 `Library-Import` ends by calling `Log-Repo`, so every install lands in
-`shortcuts/log/` with the ref it came from. Nothing else logs unless a chain
-says so, so a session can always see what installed but usually not what ran,
-and cannot tell a stale copy from a fresh one that failed.
+`shortcuts/log/` with the ref it came from. Nothing else logs unless a shortcut
+calls `Log-Repo`, so a session can always see what installed but usually not
+what ran, and cannot tell a stale copy from a fresh one that failed.
 
 Four things follow, and none is optional for anything handed over:
 
@@ -271,11 +271,11 @@ Four things follow, and none is optional for anything handed over:
    `pages/shortcut-log.html` renders the same log on the phone, from the same
    two sources (the log on `origin/main` and `plists/builds.json`), because a
    run's Show Result clips a payload and does not scroll.
-2. **A chain handed over for verification ends in `Log-Repo`**, and its payload
+2. **A shortcut handed over for verification ends in `Log-Repo`**, and its payload
    is JSON with `op`, `name` and `build`, so the reader can render it as a row
    rather than a wall of text.
-3. **The chain stamps its own build.** `#BUILD#` anywhere in a string is replaced
-   with a short content hash of the chain, by **both** mirrors. The token is
+3. **The workflow stamps its own build.** `#BUILD#` anywhere in a string is replaced
+   with a short content hash of the workflow file, by **both** mirrors. The token is
    exactly as wide as the id, so U+FFFC anchor offsets beside it survive. Held by
    `test/plist.test.js`.
 4. **And the id is scored, because alone it answers nothing.** A stamp says
@@ -354,7 +354,7 @@ then ask, all in one tap, is what removes the remembering.
 - Open the target: `run.py Library-Open --text '<Name>'`. `Library-Open` also
   takes an optional second input line, a note shown as a blocking alert before
   the editor opens.
-- Alert first; the UI move ends the chain (`ui-action-breaks-what-follows`).
+- Alert first; nothing after the UI move runs (`ui-action-breaks-what-follows`).
 - Needed: a receiver taking a message and a URL, since `Open-URL` takes only the URL.
 
 ## Handing over a link

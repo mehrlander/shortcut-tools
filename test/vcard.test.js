@@ -98,13 +98,13 @@ test("a row with no subtitle still emits ORG, since the field is positional", ()
 // The dispatch half, whose two mechanisms came off an export rather than a
 // guess: Set Name supplies the type hint, and Choose from List coerces the
 // named text to contacts in its own input attachment, so there is no Get
-// Contacts from Input action anywhere in the chain.
-function chain(spec, icons, extra = []) {
-  return JSON.parse(run(spec, icons, ["--chain", ...extra]));
+// Contacts from Input action anywhere in the action list.
+function workflow(spec, icons, extra = []) {
+  return JSON.parse(run(spec, icons, ["--workflow", ...extra]));
 }
 
-test("the chain names the file, then coerces it to contacts in place", () => {
-  const c = chain(SPEC, ICONS);
+test("the workflow names the file, then coerces it to contacts in place", () => {
+  const c = workflow(SPEC, ICONS);
   const [text, name, choose] = c.actions;
   assert.strictEqual(text.id, "is.workflow.actions.gettext");
   assert.strictEqual(name.p.WFName, "MainMenu.vcf", "the extension is the only type hint");
@@ -116,7 +116,7 @@ test("the chain names the file, then coerces it to contacts in place", () => {
 });
 
 test("each row is a compact If reading the choice's Last Name", () => {
-  const c = chain(SPEC, ICONS);
+  const c = workflow(SPEC, ICONS);
   const opens = c.actions.filter(a => a.p.WFControlFlowMode === 0);
   assert.strictEqual(opens.length, 2);
   assert.deepStrictEqual(opens.map(a => a.p.WFConditionalActionString), ["First", "Second"]);
@@ -126,7 +126,7 @@ test("each row is a compact If reading the choice's Last Name", () => {
 });
 
 test("every block is balanced and no two rows share a grouping", () => {
-  const c = chain(SPEC, ICONS);
+  const c = workflow(SPEC, ICONS);
   const groups = {};
   for (const a of c.actions.filter(a => a.p.GroupingIdentifier))
     (groups[a.p.GroupingIdentifier] = groups[a.p.GroupingIdentifier] || []).push(a.p.WFControlFlowMode);
@@ -137,7 +137,7 @@ test("every block is balanced and no two rows share a grouping", () => {
 test("a row's own actions land inside its branch", () => {
   const spec = { rows: [{ icon: "a", title: "First", actions: [{ id: "is.workflow.actions.nothing", p: {} }] },
                         { icon: "b", title: "Second" }] };
-  const ids = chain(spec, ICONS).actions.map(a => a.id);
+  const ids = workflow(spec, ICONS).actions.map(a => a.id);
   const i = ids.indexOf("is.workflow.actions.nothing");
   assert.ok(i > 0 && ids[i - 1] === "is.workflow.actions.conditional");
   assert.strictEqual(ids[i + 1], "is.workflow.actions.conditional");
@@ -147,7 +147,7 @@ test("a row's own actions land inside its branch", () => {
 // so a CRLF card would not survive packing. pack.py asserts the round trip, so
 // this fails loudly rather than shipping a payload that quietly changed.
 test("the packed card carries no CR, which a plist cannot hold", () => {
-  const text = chain(SPEC, ICONS).actions[0].p.WFTextActionText;
+  const text = workflow(SPEC, ICONS).actions[0].p.WFTextActionText;
   assert.ok(!text.includes("\r"), "CRLF belongs to the standalone file, not this route");
   assert.ok(text.includes("BEGIN:VCARD\nVERSION:3.0\n"));
 });
@@ -174,9 +174,9 @@ test("the type parameter is read off the bytes, not assumed", () => {
 });
 
 test("a spec's prompt titles the sheet, since the system default says 'Which one?'", () => {
-  const withPrompt = chain({ ...SPEC, prompt: "Pick a thing" }, ICONS);
+  const withPrompt = workflow({ ...SPEC, prompt: "Pick a thing" }, ICONS);
   assert.strictEqual(withPrompt.actions[2].p.WFChooseFromListActionPrompt, "Pick a thing");
-  assert.ok(!("WFChooseFromListActionPrompt" in chain(SPEC, ICONS).actions[2].p),
+  assert.ok(!("WFChooseFromListActionPrompt" in workflow(SPEC, ICONS).actions[2].p),
     "and no key at all rather than an empty one when the spec is silent");
 });
 
@@ -195,12 +195,12 @@ test("--data hands the file to the runner rather than shipping the behavior", ()
   assert.match(link, /^shortcuts:\/\/run-shortcut\?name=Show-Menu&input=text&text=/);
   const vcf = decodeURIComponent(link.split("&text=")[1]);
   assert.strictEqual(vcf, run(SPEC, ICONS), "the payload is the file, unchanged");
-  assert.ok(link.length < run(SPEC, ICONS, ["--chain"]).length,
-    "and it is smaller than shipping the chain");
+  assert.ok(link.length < run(SPEC, ICONS, ["--workflow"]).length,
+    "and it is smaller than shipping the workflow");
 });
 
-test("--chain and --data are refused together, since they are opposite answers", () => {
-  assert.throws(() => run(SPEC, ICONS, ["--chain", "--data"]), /Command failed/);
+test("--workflow and --data are refused together, since they are opposite answers", () => {
+  assert.throws(() => run(SPEC, ICONS, ["--workflow", "--data"]), /Command failed/);
 });
 
 test("Show-Menu reads the chosen row's Notes and opens it", () => {

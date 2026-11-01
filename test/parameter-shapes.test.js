@@ -5,19 +5,19 @@ const path = require("node:path");
 
 // Parameter shapes, held to the census rather than to inference.
 //
-// On 2026-09-03 a chain handed Inject-🎟️GitHubToken an empty input and the
+// On 2026-09-03 a shortcut handed Inject-🎟️GitHubToken an empty input and the
 // injector ran its demo instead, opening a GitHub API dump in Safari. The
 // cause was a Replace Text action whose input and replacement were serialised
 // as variable attachments, a shape that appears in none of the 754 uses of
-// that action across fifteen library dumps. The chain had copied it from the
-// one chain the README flagged as carrying inferred shapes.
+// that action across fifteen library dumps. The workflow had copied it from the
+// one workflow the README flagged as carrying inferred shapes.
 //
 // So the census is a gate now: for the parameters where the corpus is
-// unanimous, a chain here must use the corpus's form. Each rule below names
+// unanimous, a workflow here must use the corpus's form. Each rule below names
 // its count; docs/shortcuts-format-notes.md carries the table.
 
 const ROOT = path.join(__dirname, "..");
-const chains = fs.readdirSync(path.join(ROOT, "workflows"))
+const workflows = fs.readdirSync(path.join(ROOT, "workflows"))
   .filter((f) => f.endsWith(".json"))
   .map((f) => [f, JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", f), "utf8"))]);
 
@@ -25,7 +25,7 @@ const kind = (v) => (v === undefined ? "absent" : typeof v === "string" ? "liter
 
 test("Replace Text: input and replacement are token strings or literals, never attachments (600 + 88 of 754, 0 attachments)", () => {
   const bad = [];
-  for (const [f, c] of chains)
+  for (const [f, c] of workflows)
     for (const a of c.actions)
       if (a.id.endsWith("text.replace"))
         for (const field of ["WFInput", "WFReplaceTextReplace"])
@@ -38,7 +38,7 @@ test("Run Shortcut: the input is an attachment or absent, never a token string (
   // handed a token string shows an empty parameter, and Shortcuts stops with
   // "Please choose a value for each parameter in this action".
   const bad = [];
-  for (const [f, c] of chains)
+  for (const [f, c] of workflows)
     for (const a of c.actions)
       if (a.id.endsWith("runworkflow") && kind(a.p.WFInput) === "WFTextTokenString") bad.push(f);
   assert.deepStrictEqual(bad, []);
@@ -50,7 +50,7 @@ test("If: a text condition on a Get Dictionary Value output reads it as text (15
   // coerced to WFStringContentItem, which every corpus instance does.
   const TEXT = new Set([4, 5, 8, 9, 99, 999]);
   const bad = [];
-  for (const [f, c] of chains) {
+  for (const [f, c] of workflows) {
     const kinds = Object.fromEntries(c.actions.filter((a) => a.p.UUID).map((a) => [a.p.UUID, a.id.split(".").pop()]));
     for (const a of c.actions) {
       if (!a.id.endsWith("conditional") || a.p.WFControlFlowMode !== 0 || !TEXT.has(a.p.WFCondition)) continue;
@@ -65,13 +65,13 @@ test("If: a text condition on a Get Dictionary Value output reads it as text (15
 
 test("Get Dictionary Value: a variable key is a token string (276 of 911, 0 attachments)", () => {
   const bad = [];
-  for (const [f, c] of chains)
+  for (const [f, c] of workflows)
     for (const a of c.actions)
       if (a.id.endsWith("getvalueforkey") && kind(a.p.WFDictionaryKey) === "WFTextTokenAttachment") bad.push(f);
   assert.deepStrictEqual(bad, []);
 });
 
-test("every U+FFFC anchor sits where its range says, in every chain", () => {
+test("every U+FFFC anchor sits where its range says, in every workflow", () => {
   const walk = (node, f, seen) => {
     if (Array.isArray(node)) return node.forEach((n) => walk(n, f, seen));
     if (!node || typeof node !== "object") return;
@@ -85,15 +85,15 @@ test("every U+FFFC anchor sits where its range says, in every chain", () => {
     Object.values(node).forEach((v) => walk(v, f, seen));
   };
   const seen = { n: 0 };
-  for (const [f, c] of chains) walk(c.actions, f, seen);
+  for (const [f, c] of workflows) walk(c.actions, f, seen);
   assert.ok(seen.n > 50, "expected many anchored strings across the library, saw " + seen.n);
 });
 
-// ── The op route, as the two chains carry it ────────────────────────────────
+// ── The op route, as the two workflows carry it ─────────────────────────────
 
-const runOp = chains.find(([f]) => f === "run-op.json")[1];
-const claude = chains.find(([f]) => f === "claude-session.json")[1];
-const choose = chains.find(([f]) => f === "choose-claude.json")[1];
+const runOp = workflows.find(([f]) => f === "run-op.json")[1];
+const claude = workflows.find(([f]) => f === "claude-session.json")[1];
+const choose = workflows.find(([f]) => f === "choose-claude.json")[1];
 
 test("Run-Op fetches the op through the API that needs no purge, evaluates it synchronously, and spells the token placeholder once", () => {
   const expr = runOp.actions.find((a) => a.id.endsWith("gettext")).p.WFTextActionText.Value.string;
@@ -195,7 +195,7 @@ test("Claude-Session's error arm logs with its build id before showing", () => {
 
 test("Choose-Claude is a shell: it asks the op for the whole menu and draws it", () => {
   // The menu moved into web-tools' lib/ops/session-menu.js on 2026-09-08, so
-  // this chain names no row, no address and no session. That is the point: the
+  // this workflow names no row, no address and no session. That is the point: the
   // menu's wording, order and verbs are now a commit there rather than an
   // install here, and shortcut-tools' CLAUDE.md ranks the device as the
   // expensive resource.
@@ -324,7 +324,7 @@ test("Run-BackTap opens a link copied as text, not only a URL-typed item", () =>
   // Text and fell to Show-Loop, whose menu has no Open row. Show-Html, the
   // owner's own, already tests "type is URL or text begins with http", which is
   // the shape someone writes after a text-typed link has caught them out.
-  const back = chains.find(([f]) => f === "run-backtap.json")[1];
+  const back = workflows.find(([f]) => f === "run-backtap.json")[1];
   const ids = back.actions.map((a) => a.id.replace("is.workflow.actions.", ""));
   const typeArm = back.actions.findIndex((a) => a.p.WFConditionalActionString === "URL");
   const match = back.actions.findIndex((a) => a.p.CustomOutputName === "Address");

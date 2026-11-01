@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Turn a chain file into a complete workflow plist, ready to sign and import.
+"""Turn a workflows/ file into a complete workflow plist, ready to sign and import.
 
-    python3 tools/plist.py workflows/<chain>.json        # one, to plists/
-    python3 tools/plist.py --publish                     # every chain
+    python3 tools/plist.py workflows/<workflow>.json     # one, to plists/
+    python3 tools/plist.py --publish                     # every workflow
     python3 tools/plist.py --check                       # fail if plists/ is behind
 
 `pack.py` emits **actions to paste**; this emits **a shortcut to install**. The
@@ -16,10 +16,10 @@ The envelope is copied from a real export rather than invented, `4711` and `900`
 being what this device's Shortcuts writes.
 
 **Two fields are derived, not authored.** `WFWorkflowHasShortcutInputVariables`
-is true when any action references `ExtensionInput`, because a chain that reads
+is true when any action references `ExtensionInput`, because a workflow that reads
 Shortcut Input and a file that says it does not is the mismatch that makes an
 imported shortcut look broken for no visible reason. Everything else comes from
-an optional `"workflow"` block in the chain file, which is how `capture-link`
+an optional `"workflow"` block in the workflow file, which is how `capture-link`
 asks for the share sheet.
 """
 import argparse, json, plistlib, sys, urllib.parse
@@ -43,8 +43,8 @@ IMPORT_TARGET = "Library-Import"
 #
 # `--link` defaults to Import because **this
 # tool has no device read.** Which receiver is correct is a fact about the
-# phone, not about the chain, so the only caller that can decide it is one
-# holding a manifest. pages/shortcuts.html is that caller and picks per chain;
+# phone, not about the workflow, so the only caller that can decide it is one
+# holding a manifest. pages/shortcuts.html is that caller and picks per workflow;
 # here Import is the honest default, because Replace on a guess deletes on the
 # strength of an assumption. Pass `--replace` when you know the name is there.
 REPLACE_TARGET = "Library-Replace"
@@ -71,15 +71,15 @@ ENVELOPE = {
 }
 
 
-def shortcut_name(chain, path):
+def shortcut_name(wf, path):
     """The name to install under, declared rather than derived.
 
-    Deriving it from the label collided: 27 chains produced 24 files, three
-    silently overwriting each other. Most chains are probes and demos meant to
-    be pasted, not shortcuts meant to be installed, so a chain opts in by
+    Deriving it from the label collided: 27 workflows produced 24 files, three
+    silently overwriting each other. Most workflows are probes and demos meant to
+    be pasted, not shortcuts meant to be installed, so a workflow opts in by
     declaring `"name"`. `plists/` then holds receivers and nothing else.
     """
-    return chain.get("name")
+    return wf.get("name")
 
 
 def uses_shortcut_input(actions):
@@ -94,39 +94,39 @@ def uses_shortcut_input(actions):
     return walk(actions)
 
 
-def build(chain, path):
-    """The chain as a workflow plist, with every {"$file": path} already read in.
+def build(wf, path):
+    """The workflow as a plist document, with every {"$file": path} already read in.
 
     The resolver is imported from `pack` rather than reimplemented. It was
     missing here entirely until 2026-08-29, and the failure it caused is the
     argument for sharing it: `pack.py` resolved the directive and this did not,
-    so a chain carrying a page packed correctly and installed as a shortcut whose
+    so a workflow carrying a page packed correctly and installed as a shortcut whose
     Text action held the literal dictionary {"$file": "pages/..."}. Nothing
     errored. Probe-InlineBench imported, ran, and returned an empty string, which
     was read as evidence about the rich-text coercion for a day. Two mirrors of
-    one chain set have to resolve it the same way or the cheaper one lies.
+    one set of workflows have to resolve it the same way or the cheaper one lies.
     """
-    stamp = build_id(chain)
-    wf = dict(ENVELOPE)
-    wf["WFWorkflowActions"] = [
+    stamp = build_id(wf)
+    doc = dict(ENVELOPE)
+    doc["WFWorkflowActions"] = [
         {"WFWorkflowActionIdentifier": a["id"],
          "WFWorkflowActionParameters": resolve(a["p"], stamp)}
-        for a in chain["actions"]]
-    wf["WFWorkflowHasShortcutInputVariables"] = uses_shortcut_input(chain["actions"])
-    wf.update(chain.get("workflow", {}))
-    return wf
+        for a in wf["actions"]]
+    doc["WFWorkflowHasShortcutInputVariables"] = uses_shortcut_input(wf["actions"])
+    doc.update(wf.get("workflow", {}))
+    return doc
 
 
 def render(path):
-    chain = json.loads(Path(path).read_text())
-    return shortcut_name(chain, path), plistlib.dumps(build(chain, path), fmt=plistlib.FMT_XML)
+    wf = json.loads(Path(path).read_text())
+    return shortcut_name(wf, path), plistlib.dumps(build(wf, path), fmt=plistlib.FMT_XML)
 
 
-def chains(src=None):
-    """Only the chains that declare a name: the installable receivers.
+def named_workflows(src=None):
+    """Only the workflows that declare a name: the installable receivers.
 
     `src` exists for the tests. Probing the duplicate-name failure means having
-    two chains that claim one name, and writing those into the real workflows/
+    two workflows that claim one name, and writing those into the real workflows/
     made them briefly visible to every other test globbing that directory,
     which is a race that passes until the day it does not.
     """
@@ -155,50 +155,50 @@ def publish(check=False, src=None, out=None):
 
     A one-pass loop wrote each plist as it rendered, so a duplicate name was
     caught only after the first claimant had already landed on disk: the
-    publish failed, and left behind a file no chain would ever regenerate.
+    publish failed, and left behind a file no workflow would ever regenerate.
     One did, and sat in plists/ across two pull requests failing the
     receivers-only check. Resolving every name before writing any file is the
     difference between a publish that fails and a publish that fails dirty.
 
-    THE MIRROR IS THE CHAIN SET, WHICH MEANS DELETING TOO. A chain that is
+    THE MIRROR IS THE SET OF WORKFLOWS, WHICH MEANS DELETING TOO. A workflow that is
     removed, renamed, or gives up its `name` leaves a plist behind that no
-    chain regenerates and nothing here used to notice: the loop above only ever
-    asked whether each chain's own file was current. So a withdrawn receiver
+    workflow regenerates and nothing here used to notice: the loop above only ever
+    asked whether each workflow's own plist was current. So a withdrawn receiver
     kept serving an install link that worked and delivered something the repo
     had already retracted, which is the failure a stale plist is guarded
-    against, arriving by the other door. Publishing now removes what no chain
+    against, arriving by the other door. Publishing now removes what no workflow
     claims and --check reports it, so this agrees with the receivers-only test
     rather than passing a tree that test fails.
 
     PRUNE ONLY WHERE THE DESTINATION BELONGS TO THE SOURCE SET. `--workflows`
-    alone aims a foreign set of chains at the real plists/, which is exactly
+    alone aims a foreign set of workflows at the real plists/, which is exactly
     what the duplicate-name probe does; deleting every unclaimed file there
     would take the whole receiver mirror with it. Passing both, or neither, is
     a matched pair and safe to prune.
 
-    AND A MANIFEST, BECAUSE A BUILD ID ANSWERS NOTHING ALONE. A chain stamps
+    AND A MANIFEST, BECAUSE A BUILD ID ANSWERS NOTHING ALONE. A workflow stamps
     its own id and a run logs it, which says WHICH copy ran and not whether
     that copy is the current one. Answering the second took a checkout and a
     hand-run hash on 2026-08-29, which is the rework the stamp exists to
     prevent. `builds.json` publishes name -> id for the installable set, so a
     reader with no checkout compares the two directly. It is a `.json` beside
     a `*.plist` glob, so the prune above does not see it; --check holds it to
-    the chains like everything else here.
+    the workflows like everything else here.
     """
     dest = out or OUT
     paired = (src is None) == (out is None)
     dest.mkdir(parents=True, exist_ok=True)
     stale, seen, pending, builds = [], {}, [], {}
-    for c in chains(src):
+    for c in named_workflows(src):
         name, data = render(c)
         if name in seen:
-            raise SystemExit("two chains both name themselves %r: %s and %s"
+            raise SystemExit("two workflows both name themselves %r: %s and %s"
                              % (name, seen[name], c.name))
         seen[name] = c.name
         builds[name] = build_id(json.loads(c.read_text()))
         pending.append((dest / (name + ".plist"), data))
     # Whole-set, so it answers to the same pairing rule as the prune below: an
-    # unpaired --workflows aims a foreign chain set at the real plists/, and
+    # unpaired --workflows aims a foreign set of workflows at the real plists/, and
     # writing this from that set would replace the real manifest with the
     # probe's two rows. The suite caught exactly that.
     manifest = dest / "builds.json" if paired else None
@@ -214,7 +214,7 @@ def publish(check=False, src=None, out=None):
     if check:
         if manifest and (not manifest.exists() or manifest.read_text() != want):
             stale.append(shown(manifest))
-        bad = stale + ["%s (no chain claims it)" % shown(p) for p in orphans]
+        bad = stale + ["%s (no workflow claims it)" % shown(p) for p in orphans]
         if bad:
             raise SystemExit("stale, run `python3 tools/plist.py --publish`:\n  "
                              + "\n  ".join(bad))
@@ -229,7 +229,7 @@ def publish(check=False, src=None, out=None):
         file=sys.stderr)
 
 
-def link(chain_path, ref, target=IMPORT_TARGET):
+def link(wf_path, ref, target=IMPORT_TARGET):
     """The tappable install link, emitted rather than assembled by hand.
 
     `Library-Import` splits Shortcut Input on newlines and reads two lines: the
@@ -239,11 +239,11 @@ def link(chain_path, ref, target=IMPORT_TARGET):
     paste route: a generated link is one the sender did not type, and a wrong
     character 404s instead of quietly installing the wrong thing.
     """
-    chain = json.loads(Path(chain_path).read_text())
-    name = shortcut_name(chain, chain_path)
+    wf = json.loads(Path(wf_path).read_text())
+    name = shortcut_name(wf, wf_path)
     if not name:
         raise SystemExit("%s declares no name, so there is nothing to install"
-                         % Path(chain_path).name)
+                         % Path(wf_path).name)
     if target == FETCH_TARGET:
         if not (SIGNED / (name + ".shortcut")).is_file():
             raise SystemExit("no signed/%s.shortcut yet; run --write-signed first" % name)
@@ -258,7 +258,7 @@ def link(chain_path, ref, target=IMPORT_TARGET):
 SIGNER = "http://shortcuts.gluebyte.workers.dev/"
 
 
-def sign_bytes(chain_path, tries=4):
+def sign_bytes(wf_path, tries=4):
     """POST the built plist to the signing worker; True when a shortcut comes back.
 
     The worker signs by calling Apple's iCloud service, and when that call fails
@@ -271,7 +271,7 @@ def sign_bytes(chain_path, tries=4):
     handing over an install link; a tap spent on an outage is a tap wasted.
     """
     import gzip, subprocess, tempfile
-    name, data = render(chain_path)
+    name, data = render(wf_path)
     body = gzip.compress(data)
     with tempfile.NamedTemporaryFile(suffix=".gz") as f:
         f.write(body); f.flush()
@@ -296,7 +296,7 @@ def sign_bytes(chain_path, tries=4):
     return None
 
 
-def write_signed(chain_path):
+def write_signed(wf_path):
     """Sign here and keep the result, with the provenance that makes it checkable.
 
     The signed file is NOT byte-deterministic: the worker stamps a fresh inner
@@ -307,7 +307,7 @@ def write_signed(chain_path):
     works and delivers the wrong shortcut.
     """
     import hashlib, json as _json, datetime
-    got = sign_bytes(chain_path)
+    got = sign_bytes(wf_path)
     if not got:
         return None
     name, plist_bytes, signed = got
@@ -332,10 +332,10 @@ def write_signed(chain_path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("chain", nargs="?")
+    ap.add_argument("workflow", nargs="?")
     ap.add_argument("--publish", action="store_true")
     ap.add_argument("--check", action="store_true")
-    ap.add_argument("--workflows", help="read chains from here instead of workflows/")
+    ap.add_argument("--workflows", help="read workflow files from here instead of workflows/")
     ap.add_argument("--out", help="write plists here instead of plists/; pair it with "
                                   "--workflows, since only a matched pair is pruned")
     ap.add_argument("--link", action="store_true", help="emit the Library-Import link")
@@ -354,16 +354,16 @@ def main():
                     help="--link without asking the signing worker first")
     args = ap.parse_args()
     if args.write_signed:
-        if not args.chain:
-            raise SystemExit("give a chain to sign")
-        raise SystemExit(0 if write_signed(args.chain) else 1)
+        if not args.workflow:
+            raise SystemExit("give a workflow to sign")
+        raise SystemExit(0 if write_signed(args.workflow) else 1)
     if args.sign:
-        if not args.chain:
-            raise SystemExit("give a chain to sign-check")
-        raise SystemExit(0 if sign_bytes(args.chain) else 1)
+        if not args.workflow:
+            raise SystemExit("give a workflow to sign-check")
+        raise SystemExit(0 if sign_bytes(args.workflow) else 1)
     if args.link:
-        if not args.chain:
-            raise SystemExit("give a chain to link")
+        if not args.workflow:
+            raise SystemExit("give a workflow to link")
         # The two flags name receivers on different axes: --fetch is pre-signed
         # and never deletes, --replace deletes and signs through the worker. No
         # receiver does both, so a link can carry only one, and until 2026-09-20
@@ -373,24 +373,24 @@ def main():
                              "no receiver does both; pass one")
         target = (FETCH_TARGET if args.fetch else
                   REPLACE_TARGET if args.replace else IMPORT_TARGET)
-        url = link(args.chain, args.ref, target)
+        url = link(args.workflow, args.ref, target)
         # Import and Replace sign on the device through the worker, which has
         # answered "offline until further notice" since 2026-09-24 (the snag
         # signing-worker-outage-reads-as-a-bad-plist). One try here, and on a
         # refusal the paste route instead of a link that fails on the phone.
-        if target != FETCH_TARGET and not args.unchecked and not sign_bytes(args.chain, tries=1):
+        if target != FETCH_TARGET and not args.unchecked and not sign_bytes(args.workflow, tries=1):
             raise SystemExit("the signing worker refused, so this link would fail on the device; "
                              "install by paste instead:\n  python3 tools/pack.py %s --install --ref %s"
-                             % (args.chain, args.ref))
+                             % (args.workflow, args.ref))
         print(url)
         return
     if args.publish or args.check:
         return publish(args.check,
                        Path(args.workflows) if args.workflows else None,
                        Path(args.out) if args.out else None)
-    if not args.chain:
-        raise SystemExit("give a chain, or --publish")
-    name, data = render(args.chain)
+    if not args.workflow:
+        raise SystemExit("give a workflow, or --publish")
+    name, data = render(args.workflow)
     OUT.mkdir(exist_ok=True)
     (OUT / (name + ".plist")).write_bytes(data)
     print("wrote plists/%s.plist (%d bytes)" % (name, len(data)), file=sys.stderr)

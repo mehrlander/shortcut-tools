@@ -414,7 +414,7 @@ class Shortcut {
   }
 
   /**
-   * The actions as a delivery chain: { label, actions: [{ id, p }] }.
+   * The action list, ready to deliver: { label, actions: [{ id, p }] }.
    *
    * This is the shape tools/pack.py packs into a shortcuts:// link, which is
    * the route that actually installs anything. Individual actions need only
@@ -422,7 +422,7 @@ class Shortcut {
    * needs Apple's signature, which is why export() below is a serialization
    * format rather than a way to install.
    */
-  toActionChain(label) {
+  toActionList(label) {
     return {
       label: label || this.name,
       actions: this.actions.map((action) => ({
@@ -436,7 +436,7 @@ class Shortcut {
    * Write a .shortcut file (XML plist).
    *
    * A serialization format, not an install path: an unsigned .shortcut file is
-   * not something the Shortcuts app will take. Use toActionChain() and
+   * not something the Shortcuts app will take. Use toActionList() and
    * tools/pack.py to deliver actions to a device.
    */
   export(filePath) {

@@ -3,7 +3,7 @@
 
     python3 tools/vcard.py menus/<name>.json [--out Choice.vcf]
     python3 tools/vcard.py menus/<name>.json --data              # a tappable link
-    python3 tools/vcard.py menus/<name>.json --chain             # the whole thing to paste
+    python3 tools/vcard.py menus/<name>.json --workflow          # the whole thing to paste
     python3 tools/vcard.py menus/<name>.json --icons icons.json  # no network, no browser
 
 Choose from List shows a plain line per row. Given contacts it shows an image, a
@@ -207,8 +207,8 @@ def attachment(uuid, name, aggrandizements=None):
     return {"Value": value, "WFSerializationType": "WFTextTokenAttachment"}
 
 
-def chain(spec, vcf):
-    """The whole menu as a pack.py chain: the file, the list, and the dispatch.
+def workflow(spec, vcf):
+    """The whole menu as a workflow for pack.py: the file, the list, and the dispatch.
 
     Confirmed against an export rather than inferred. Two steps are the ones
     nobody would guess. Set Name gives the text a `.vcf` extension, which is the
@@ -285,8 +285,8 @@ def main():
     ap.add_argument("--icons", help="prerendered {name: base64 jpeg}, skipping network and browser")
     ap.add_argument("--out", help="write here instead of stdout")
     ap.add_argument("--fold", action="store_true", help="fold the photo line at 75 octets")
-    ap.add_argument("--chain", action="store_true",
-                    help="emit the whole menu as a pack.py chain rather than the file alone")
+    ap.add_argument("--workflow", action="store_true",
+                    help="emit the whole menu as a workflow for pack.py rather than the file alone")
     ap.add_argument("--data", action="store_true",
                     help="emit a link handing the file to %s, which is already on the device" % RUNNER)
     ap.add_argument("--runner", default=RUNNER, help="the shortcut --data addresses")
@@ -296,10 +296,10 @@ def main():
     spec = json.load(open(args.spec))
     icons = json.load(open(args.icons)) if args.icons else None
     vcf = build(spec, icons, args.fold, args.bits)
-    if args.chain and args.data:
-        raise SystemExit("--chain ships the behavior, --data ships only the menu; pick one")
-    if args.chain:
-        out = json.dumps(chain(spec, vcf), ensure_ascii=False, indent=2)
+    if args.workflow and args.data:
+        raise SystemExit("--workflow ships the behavior, --data ships only the menu; pick one")
+    if args.workflow:
+        out = json.dumps(workflow(spec, vcf), ensure_ascii=False, indent=2)
     elif args.data:
         # The runner takes the file as text. CRLF survives a URL, unlike a plist.
         out = "shortcuts://run-shortcut?name=%s&input=text&text=%s" % (

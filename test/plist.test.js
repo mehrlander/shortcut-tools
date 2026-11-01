@@ -13,11 +13,11 @@ const named = () => fs.readdirSync(path.join(ROOT, "workflows"))
   .map(f => JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", f), "utf8")))
   .filter(c => c.name);
 
-test("plists/ holds a file for every named chain, and nothing else", () => {
+test("plists/ holds a file for every named workflow, and nothing else", () => {
   const want = new Set(named().map(c => c.name + ".plist"));
   const have = new Set(fs.readdirSync(path.join(ROOT, "plists")).filter(f => f.endsWith(".plist")));
   assert.deepStrictEqual([...have].sort(), [...want].sort(),
-    "plists/ is receivers only: a chain opts in by declaring a name");
+    "plists/ is receivers only: a workflow opts in by declaring a name");
 });
 
 // A stale plist serves an install that works and delivers the wrong shortcut,
@@ -28,7 +28,7 @@ test("plists/ is current with workflows/", () => {
 
 test("a shortcut reading Shortcut Input says so in the file", () => {
   // The mismatch that makes an imported shortcut look broken for no visible
-  // reason: the chain reads ExtensionInput, the envelope claims it does not.
+  // reason: the workflow reads ExtensionInput, the envelope claims it does not.
   const src = fs.readFileSync(path.join(ROOT, "plists", "Log-Repo.plist"), "utf8");
   assert.match(src, /<key>WFWorkflowHasShortcutInputVariables<\/key>\s*<true\/>/);
 });
@@ -43,17 +43,17 @@ test("file-level settings only a plist can carry survive the build", () => {
     "the packed form carries actions only, by construction");
 });
 
-test("two chains claiming one name fail loudly rather than overwriting", () => {
-  // In a temp directory, not workflows/: two chains claiming one name are
+test("two workflows claiming one name fail loudly rather than overwriting", () => {
+  // In a temp directory, not workflows/: two workflows claiming one name are
   // exactly what every other test globbing that directory must never see.
   const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "plist-"));
-  const chain = { name: "Dupe-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
-  fs.writeFileSync(path.join(dir, "a.json"), JSON.stringify(chain));
-  fs.writeFileSync(path.join(dir, "b.json"), JSON.stringify(chain));
+  const wf = { name: "Dupe-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] };
+  fs.writeFileSync(path.join(dir, "a.json"), JSON.stringify(wf));
+  fs.writeFileSync(path.join(dir, "b.json"), JSON.stringify(wf));
   try {
     assert.throws(() => run("--publish", "--workflows", dir), /both name themselves/);
     // And it fails clean. A one-pass publish wrote the first claimant before
-    // noticing the second, leaving a plist no chain regenerates; one such file
+    // noticing the second, leaving a plist no workflow regenerates; one such file
     // sat in plists/ across two pull requests, failing the check above.
     assert.ok(!fs.existsSync(path.join(ROOT, "plists", "Dupe-Probe.plist")),
       "a refused publish must not leave a partial write behind");
@@ -70,7 +70,7 @@ test("two chains claiming one name fail loudly rather than overwriting", () => {
 // In a temp pair, for the reason the duplicate-name probe above gives: an
 // orphan visible in the real plists/ is precisely what that first assertion
 // would trip over.
-test("a plist no chain claims is reported by --check and removed by --publish", () => {
+test("a plist no workflow claims is reported by --check and removed by --publish", () => {
   const os = require("node:os");
   const src = fs.mkdtempSync(path.join(os.tmpdir(), "plist-src-"));
   const out = fs.mkdtempSync(path.join(os.tmpdir(), "plist-out-"));
@@ -81,7 +81,7 @@ test("a plist no chain claims is reported by --check and removed by --publish", 
     fs.writeFileSync(path.join(out, "Withdrawn-Probe.plist"), "not a plist");
 
     assert.throws(() => run("--check", "--workflows", src, "--out", out),
-      /Withdrawn-Probe\.plist \(no chain claims it\)/,
+      /Withdrawn-Probe\.plist \(no workflow claims it\)/,
       "--check must name the orphan as unclaimed, not as stale");
 
     run("--publish", "--workflows", src, "--out", out);
@@ -96,7 +96,7 @@ test("a plist no chain claims is reported by --check and removed by --publish", 
 });
 
 // The prune can delete, so the case that must hold is the one the duplicate
-// probe already exercises: --workflows alone aims a foreign chain set at the
+// probe already exercises: --workflows alone aims a foreign set of workflows at the
 // real plists/, where deleting everything unclaimed would take all 21.
 test("--workflows without --out never prunes, since the pair is not matched", () => {
   const os = require("node:os");
@@ -108,7 +108,7 @@ test("--workflows without --out never prunes, since the pair is not matched", ()
     run("--publish", "--workflows", src);
     assert.deepStrictEqual(
       fs.readdirSync(path.join(ROOT, "plists")).filter(f => f !== "Lone-Probe.plist").sort(),
-      before, "a foreign chain set must not take the real receiver mirror with it");
+      before, "a foreign set of workflows must not take the real receiver mirror with it");
   } finally {
     fs.rmSync(path.join(ROOT, "plists", "Lone-Probe.plist"), { force: true });
     fs.rmSync(src, { recursive: true, force: true });
@@ -127,20 +127,20 @@ test("--link emits the install link rather than leaving it to be typed", () => {
                     "some/branch/plists/Sync-Manifest.plist");
 });
 
-test("--link refuses a chain that declares no name", () => {
-  // A chain without a name has no plist, so the link would 404 on tap.
+test("--link refuses a workflow that declares no name", () => {
+  // A workflow without a name has no plist, so the link would 404 on tap.
   assert.throws(() => run("workflows/menu.json", "--link"), /declares no name/);
 });
 
 test("no plist ships an unresolved $file directive", () => {
   // The bug this replaces cost a day of wrong conclusions. pack.py resolved
-  // {"$file": path} and plist.py did not, so a chain carrying a page packed
+  // {"$file": path} and plist.py did not, so a workflow carrying a page packed
   // correctly and installed as a shortcut whose Text action held the literal
   // dictionary. Nothing errored anywhere: the shortcut imported, ran, and
   // returned an empty string, which was read as evidence about the rich-text
   // coercion rather than as a missing page.
   //
-  // Checked on the parsed plist, not the text, because a chain may legitimately
+  // Checked on the parsed plist, not the text, because a workflow may legitimately
   // mention "$file" in a comment and Probe-Coercion does.
   const bad = [];
   for (const f of fs.readdirSync(path.join(ROOT, "plists")).filter(n => n.endsWith(".plist"))) {
@@ -157,8 +157,8 @@ test("#BUILD# resolves in both mirrors, and anchor offsets survive it", () => {
   // just pushed: an install logs the ref it came from, a run had no way to say,
   // so a stale copy and a fresh failure looked identical. The token is the same
   // width as the id it becomes, so every U+FFFC offset beside it stays valid.
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
-  const card = chain.actions.find(a => {
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const card = wf.actions.find(a => {
     const t = a.p && a.p.WFTextActionText;
     return t && t.Value && String(t.Value.string).startsWith("run name=");
   });
@@ -187,17 +187,17 @@ test("run-pick puts the clipboard back after logging", () => {
   // Log-Repo writes its payload to the clipboard first and unconditionally, so
   // without this the next run reads the log line instead of the user's text: a
   // tool poisoning its own input. Caught by the first run that actually logged.
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
-  const ids = chain.actions.map(a => a.id);
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const ids = wf.actions.map(a => a.id);
   const clip = ids.indexOf("is.workflow.actions.getclipboard");
-  // The Log-Repo call specifically, not the last Run Shortcut: the chain ends by
+  // The Log-Repo call specifically, not the last Run Shortcut: the workflow ends by
   // calling Show-Log, so lastIndexOf finds the wrong one.
-  const logged = chain.actions.findIndex(a => (a.p || {}).WFWorkflowName === "Log-Repo");
+  const logged = wf.actions.findIndex(a => (a.p || {}).WFWorkflowName === "Log-Repo");
   const restore = ids.lastIndexOf("is.workflow.actions.setclipboard");
   assert.ok(clip >= 0 && logged > clip, "it reads the clipboard, then logs");
   assert.ok(restore > logged, "and puts the clipboard back after logging, not before");
-  const back = chain.actions[restore].p.WFInput.Value;
-  assert.strictEqual(back.OutputUUID, chain.actions[clip].p.UUID,
+  const back = wf.actions[restore].p.WFInput.Value;
+  assert.strictEqual(back.OutputUUID, wf.actions[clip].p.UUID,
     "restoring the value Get Clipboard captured, not something else");
 });
 
@@ -205,11 +205,11 @@ test("run-pick ends by opening the log, not by clipping it into Show Result", ()
   // Show Result renders a long payload as a few lines that do not scroll, so the
   // useful half of a run was legible to the session reading git and not to the
   // person who ran it. Show-Log is the same log, on the device, scrollable.
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
-  const last = chain.actions[chain.actions.length - 1];
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "run-pick.json"), "utf8"));
+  const last = wf.actions[wf.actions.length - 1];
   assert.strictEqual(last.id, "is.workflow.actions.runworkflow");
   assert.strictEqual(last.p.WFWorkflowName, "Show-Log");
-  assert.ok(!chain.actions.some(a => a.id === "is.workflow.actions.showresult"),
+  assert.ok(!wf.actions.some(a => a.id === "is.workflow.actions.showresult"),
     "Show Result is what this replaces");
 });
 
@@ -217,8 +217,8 @@ test("show-log takes a hosted URL, never HTML text", () => {
   // Show Web View accepts either, and the difference decides whether it works:
   // HTML text lands at a file:// origin, a different storage partition, where
   // localStorage.ghToken is not, and the page needs it to read a private repo.
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "show-log.json"), "utf8"));
-  const web = chain.actions.find(a => a.id === "is.workflow.actions.showwebpage");
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "show-log.json"), "utf8"));
+  const web = wf.actions.find(a => a.id === "is.workflow.actions.showwebpage");
   assert.ok(web, "it shows a web page");
   assert.strictEqual(typeof web.p.WFURL, "string", "a plain https string, not a rich-text payload");
   // The log inside the app, as the dumpers open it (#51): the same origin, so the
@@ -226,11 +226,11 @@ test("show-log takes a hosted URL, never HTML text", () => {
   assert.match(web.p.WFURL, /^https:\/\/mehrlander\.github\.io\/web-tools\/app\/\?app=shortcut-log&shell=full$/);
 });
 
-// WHAT THE MANIFEST IS FOR. A chain stamps its own build id and a run logs it,
+// WHAT THE MANIFEST IS FOR. A workflow stamps its own build id and a run logs it,
 // which says which copy ran and not whether that copy is current. Answering
 // the second took a checkout and a hand-run hash; plists/builds.json publishes
 // name -> id so a reader with no checkout compares the two directly.
-test("builds.json names every installable chain with its build id", () => {
+test("builds.json names every installable workflow with its build id", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"));
   const named = fs.readdirSync(path.join(ROOT, "workflows"))
     .filter(f => f.endsWith(".json"))
@@ -240,7 +240,7 @@ test("builds.json names every installable chain with its build id", () => {
     "the manifest is the installable set, exactly");
   for (const [name, id] of Object.entries(manifest))
     assert.match(id, /^[0-9a-f]{7}$/, `${name} must carry a short content hash`);
-  // The id a chain stamps into itself and the id published for it are one
+  // The id a workflow stamps into itself and the id published for it are one
   // value. Two derivations of one number is the $file defect over again.
   const stamped = require("node:child_process")
     .execSync("python3 -c \"import sys,json;sys.path.insert(0,'tools');"
@@ -251,7 +251,7 @@ test("builds.json names every installable chain with its build id", () => {
 });
 
 // The doctrine this file already states, now held: an unpaired --workflows
-// aims a foreign chain set at the real plists/. The prune is gated on that,
+// aims a foreign set of workflows at the real plists/. The prune is gated on that,
 // and the manifest is whole-set too, so it must be gated the same way. It was
 // not, and a two-row probe set briefly replaced the real manifest.
 test("an unpaired publish leaves the real builds.json alone", () => {
@@ -262,7 +262,7 @@ test("an unpaired publish leaves the real builds.json alone", () => {
       { name: "Solo-Probe", label: "x", actions: [{ id: "is.workflow.actions.comment", p: {} }] }));
     run("--publish", "--workflows", dir);
     assert.equal(fs.readFileSync(path.join(ROOT, "plists", "builds.json"), "utf8"), before,
-      "a foreign chain set must not rewrite the real manifest");
+      "a foreign set of workflows must not rewrite the real manifest");
   } finally {
     fs.rmSync(path.join(ROOT, "plists", "Solo-Probe.plist"), { force: true });
     fs.rmSync(dir, { recursive: true, force: true });
@@ -271,25 +271,25 @@ test("an unpaired publish leaves the real builds.json alone", () => {
 
 // LOG-REPO IS SILENT ON SUCCESS (2026-09-25). It ended on a Show Result, first
 // of the whole PUT response and then of "Logged <stem> / Confirmed: <name>",
-// and it runs in the middle of other chains, so the box interrupted them and
+// and it runs in the middle of other shortcuts, so the box interrupted them and
 // told the owner nothing they used. A shortcut that wants to report now ends on
 // the log page itself. What must survive is the failure signal: a refused write
 // still passes through Check-ApiReply, which notifies.
 test("Log-Repo shows no result, and a refused write still reaches Check-ApiReply", () => {
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
-  assert.ok(!chain.actions.some(a => a.id.endsWith("showresult")), "no box on success");
-  const put = chain.actions.find(a => a.id.endsWith("downloadurl")).p.UUID;
-  const check = chain.actions.find(a => a.id.endsWith("runworkflow") && a.p.WFWorkflowName === "Check-ApiReply");
-  assert.ok(check, "the refusal channel is still in the chain");
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
+  assert.ok(!wf.actions.some(a => a.id.endsWith("showresult")), "no box on success");
+  const put = wf.actions.find(a => a.id.endsWith("downloadurl")).p.UUID;
+  const check = wf.actions.find(a => a.id.endsWith("runworkflow") && a.p.WFWorkflowName === "Check-ApiReply");
+  assert.ok(check, "the refusal channel is still in the workflow");
   assert.equal(check.p.WFInput.Value.OutputUUID, put, "and it judges the PUT's own reply");
-  assert.ok(chain.actions[chain.actions.length - 1].id.endsWith("output"), "the input still passes through");
+  assert.ok(wf.actions[wf.actions.length - 1].id.endsWith("output"), "the input still passes through");
 });
 
 // The viewer cannot live inside Log-Repo: probe-coercion calls it five times, so
 // a web view there would be five sheets. It stays one card in Show-Log, which a
-// chain calls once at the end when it wants the rich view.
+// shortcut calls once at the end when it wants the rich view.
 test("Log-Repo shows a sheet nowhere, whatever it is called from", () => {
-  const chain = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
-  assert.ok(!chain.actions.some(a => a.id.endsWith("showwebpage")),
+  const wf = JSON.parse(fs.readFileSync(path.join(ROOT, "workflows", "log-repo.json"), "utf8"));
+  assert.ok(!wf.actions.some(a => a.id.endsWith("showwebpage")),
     "a logger called N times must not open N sheets");
 });

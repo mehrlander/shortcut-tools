@@ -1,7 +1,7 @@
 # proposals
 
 One file per proposed hand edit to a shortcut whose only copy is the phone,
-written by `python3 tools/edit.py <Name> <chain> --after <line> --why "<reason>" --save`.
+written by `python3 tools/edit.py <Name> <workflow> --after <line> --why "<reason>" --save`.
 
 A proposal holds the shortcut's listing before and after, the address of the
 cards to paste, the reason, and two action-type sequences: `base`, the shortcut

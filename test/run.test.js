@@ -167,13 +167,13 @@ test("the first step is marked as the start and the rest as running on it", () =
   assert.ok(!/[⁰¹²³]/.test(body), body);
 });
 
-test("a step is a plain name, since the chain page belongs to the install card", () => {
+test("a step is a plain name, since the workflow page belongs to the install card", () => {
   const c = handover("Open-URL", "Log-Repo", "--card");
   assert.ok(c.includes("`▸ Open-URL`"), c);
   assert.ok(c.includes("`↳ Log-Repo`"), c);
   // A step is already on the phone, so a link invites reading where the card
   // exists to remove it, and half of these names could not carry one: Open-URL
-  // is on the device and in no chain file here.
+  // is on the device and in no workflow file here.
   assert.ok(!c.includes("shortcuts.html"), c);
 });
 

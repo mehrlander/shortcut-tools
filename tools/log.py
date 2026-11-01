@@ -9,7 +9,7 @@
 
 `Log-Repo` commits every payload it is handed to `shortcuts/log/` in
 web-tools-private, and `Library-Import` ends by calling it, so **every install
-lands here**. Nothing else does unless a chain says so, which is the asymmetry
+lands here**. Nothing else does unless a shortcut says so, which is the asymmetry
 this tool exists to make visible rather than to fix: a session can always see
 what installed and usually cannot see what ran.
 
@@ -18,7 +18,7 @@ meant it was checked when someone thought of it rather than every time. That is
 the actual defect. One command, run at the end of any turn that handed over a
 link, replaces guessing about whether something worked.
 
-Entries are JSON where the chain wrote JSON and bare text where it did not; both
+Entries are JSON where the shortcut wrote JSON and bare text where it did not; both
 are shown, because a probe's output is deliberately a line of text.
 
 A run's payload is usually JSON carrying one enormous base64 field. Eliding
@@ -101,7 +101,7 @@ def build_of(url):
     missing looks exactly like a row that has one, which is the failure the ref
     exists to prevent.
 
-    `Library-Paste` reads packed/<chain>.json, and the same omission dropped its
+    `Library-Paste` reads packed/<workflow>.json, and the same omission dropped its
     ref until 2026-10-30. web-tools' kits/shortcut-evidence.js reads all three.
     """
     src = source(url)
@@ -165,10 +165,10 @@ def verdict(name, ran, table):
     return "  ✓current" if ran == now else "  ⚠stale→%s" % now
 
 
-# The ops an installer logs, read off the chains that log them: Library-Import,
+# The ops an installer logs, read off the workflows that log them: Library-Import,
 # Library-Replace, Library-Fetch, Library-Paste, and Library-Install, which
 # bootstraps Library-Paste. A row's own `build` is the INSTALLER's stamp, never the build
-# of the chain it installed.
+# of the shortcut it installed.
 INSTALLS = ("import", "replace", "fetch", "paste", "install")
 
 # Why a name's newest install gets no verdict. None of these is "current".
@@ -254,7 +254,7 @@ def drift(rows, main, show):
     A run scores itself as it is read. An install cannot, so a name whose newest
     install predates a merge read as nothing at all: Route-Gesture did for
     thirteen days from 2026-09-20 (snag branch-install-outlived-the-merge), and
-    the Chains view's window of the newest rows had dropped the install anyway.
+    the Workflows view's window of the newest rows had dropped the install anyway.
 
     `rows` is (stem, body) newest first, as entries() yields them; `main` is
     name -> build. Returns (behind, unscored, never): `behind` holds

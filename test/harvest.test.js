@@ -46,7 +46,7 @@ const flow = (mode, gid) =>
         `<key>WFControlFlowMode</key><integer>${mode}</integer>` });
 const plain = { id: "is.workflow.actions.list", p: "" };
 
-// A workflowIdentifier is minted per install, so a harvested chain that keeps
+// A workflowIdentifier is minted per install, so a harvested workflow that keeps
 // one is wrong on every other device. The name alone resolves.
 test("the device-local pin is dropped from every call, renamed or not", () => {
   const h = harvest(archive({ A: [run("Untouched")] }), "--name", "A");

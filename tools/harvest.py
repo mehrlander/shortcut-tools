@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Harvest shortcuts out of an archive into editable chain files.
+"""Harvest shortcuts out of an archive into editable workflow files.
 
     python3 tools/harvest.py <dump.zip …> --index <index.json> -o <dir>
     python3 tools/harvest.py <dump.zip …> --name Show-Loop -o <dir>
@@ -13,7 +13,7 @@ shapes. Until 2026-09-05 those arguments lived only in the private
 fell two shortcuts behind its own tier without a word. With the file committed,
 `freshness.py` gates `core/` the way it gates `library.json`.
 
-A zip of plists is a backup. A directory of `{label, actions}` chain files is
+A zip of plists is a backup. A directory of `{label, actions}` workflow files is
 source: it diffs, it reviews, `pack.py` turns any of it back into a paste link,
 and a rewrite can be applied to all of it at once. This is the step between
 having the library archived and being able to work on it.
@@ -60,7 +60,7 @@ def entries(paths):
     return out
 
 
-def to_chain(name, doc):
+def to_workflow(name, doc):
     return {"label": "%s (harvested, %d actions)" % (name, len(doc.get("WFWorkflowActions", []))),
             "actions": [{"id": a["WFWorkflowActionIdentifier"],
                          "p": a.get("WFWorkflowActionParameters", {})}
@@ -70,7 +70,7 @@ def to_chain(name, doc):
 COND = "is.workflow.actions.conditional"
 
 
-def drop_calls(chain, targets, log, source):
+def drop_calls(wf, targets, log, source):
     """Remove calls to a name nothing can resolve, and the branch left behind.
 
     A dead call is not always a rename. `Show-Versions` dispatches on type and
@@ -83,7 +83,7 @@ def drop_calls(chain, targets, log, source):
     becomes empty goes with it. Only a block that held nothing else: anything
     with a surviving sibling is left alone, since that is a judgment.
     """
-    acts = chain["actions"]
+    acts = wf["actions"]
     doomed = set()
     for i, a in enumerate(acts):
         # A computed target is a token dict, not a string, and is unhashable.
@@ -107,19 +107,19 @@ def drop_calls(chain, targets, log, source):
                 break                       # something else lives in there
             doomed.update(members)
             break
-    chain["actions"] = [a for k, a in enumerate(acts) if k not in doomed]
-    return chain
+    wf["actions"] = [a for k, a in enumerate(acts) if k not in doomed]
+    return wf
 
 
-def repoint(chain, renames, log, source):
+def repoint(wf, renames, log, source):
     """Rewrite Run Shortcut targets, and drop the device-local pin while here.
 
     A `WFWorkflow` dict carries a `workflowIdentifier` minted on one install,
-    so a harvested chain that keeps it is wrong on any other device. Since the
+    so a harvested workflow that keeps it is wrong on any other device. Since the
     name alone resolves, dropping it is strictly better and is the one edit
-    applied to every chain rather than only to renamed ones.
+    applied to every workflow rather than only to renamed ones.
     """
-    for action in chain["actions"]:
+    for action in wf["actions"]:
         if action["id"] != RUN:
             continue
         p = action["p"]
@@ -128,7 +128,7 @@ def repoint(chain, renames, log, source):
             p["WFWorkflowName"] = renames[target]
             log.append((source, target, renames[target]))
         p.pop("WFWorkflow", None)
-    return chain
+    return wf
 
 
 def main():
@@ -176,14 +176,14 @@ def main():
             continue
         path, info = found[name]
         doc = plistlib.loads(zipfile.ZipFile(path).read(info))
-        chain = repoint(to_chain(name, doc), renames, log, name)
+        wf = repoint(to_workflow(name, doc), renames, log, name)
         if args.drop_call:
-            chain = drop_calls(chain, set(args.drop_call), dropped, name)
+            wf = drop_calls(wf, set(args.drop_call), dropped, name)
         (out / (file_name(name) + ".json")).write_text(
-            json.dumps(chain, indent=1, ensure_ascii=False) + "\n")
+            json.dumps(wf, indent=1, ensure_ascii=False) + "\n")
         written += 1
 
-    print("harvested %d chains to %s" % (written, out), file=sys.stderr)
+    print("harvested %d workflows to %s" % (written, out), file=sys.stderr)
     if missing:
         print("not in the archive: %s" % ", ".join(missing), file=sys.stderr)
     for source, old, new in log:

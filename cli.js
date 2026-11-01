@@ -144,7 +144,7 @@ switch (command) {
     console.log(`Exported to: ${outPath}`);
     console.log(`\nA serialization of the workflow, not an installable file:`);
     console.log(`an unsigned .shortcut will not import. To get these actions onto`);
-    console.log(`a device, pack the chain into a shortcuts:// link (see workflows/).`);
+    console.log(`a device, pack them into a shortcuts:// link (see workflows/).`);
     break;
   }
 
