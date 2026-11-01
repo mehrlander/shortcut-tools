@@ -75,9 +75,9 @@ def shortcut_name(wf, path):
     """The name to install under, declared rather than derived.
 
     Deriving it from the label collided: 27 workflows produced 24 files, three
-    silently overwriting each other. Most workflows are probes and demos meant to
-    be pasted, not shortcuts meant to be installed, so a workflow opts in by
-    declaring `"name"`. `plists/` then holds receivers and nothing else.
+    silently overwriting each other. Not every workflow is meant to be
+    installed, so a workflow opts in by declaring `"name"`, and `plists/` holds
+    the named workflows and nothing else.
     """
     return wf.get("name")
 

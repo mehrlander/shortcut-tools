@@ -17,7 +17,7 @@ test("plists/ holds a file for every named workflow, and nothing else", () => {
   const want = new Set(named().map(c => c.name + ".plist"));
   const have = new Set(fs.readdirSync(path.join(ROOT, "plists")).filter(f => f.endsWith(".plist")));
   assert.deepStrictEqual([...have].sort(), [...want].sort(),
-    "plists/ is receivers only: a workflow opts in by declaring a name");
+    "plists/ holds the named workflows only: a workflow opts in by declaring a name");
 });
 
 // A stale plist serves an install that works and delivers the wrong shortcut,
