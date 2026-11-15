@@ -271,6 +271,18 @@ def publish(check=False, src=None, out=None):
         len(want), ", removed %d unclaimed" % len(orphans) if orphans else ""))
 
 
+def emit(link):
+    """Print the raw link, then the forwarded form a chat reply must link to.
+
+    The Claude iPhone app does not open a bare shortcuts:// link (run.py's
+    FORWARD), so stdout stays raw for --verify and the tappable form goes to
+    stderr, as run.py --verify prints it.
+    """
+    from run import tappable
+    print(link)
+    print("tappable: " + tappable(link), file=sys.stderr)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("workflow", nargs="?", help="a workflows/ file, or a link with --verify")
@@ -297,16 +309,16 @@ def main():
     if args.verify:
         return verify(args.workflow)
     if args.url:
-        return print(address(args.workflow, args.ref))
+        return emit(address(args.workflow, args.ref))
     if args.install:
         link, toggles = install(args.workflow, args.ref, args.via)
-        print(link)
+        emit(link)
         if toggles:
             print("after pasting, set by hand: " + ", ".join(toggles), file=sys.stderr)
         return
     wf = json.load(open(args.workflow))
     link = build(wf, args.target)
-    print(link)
+    emit(link)
     print("\n%d actions, %d chars" % (len(wf["actions"]), len(link)), file=sys.stderr)
 
 

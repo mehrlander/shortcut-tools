@@ -382,7 +382,9 @@ def main():
             raise SystemExit("the signing worker refused, so this link would fail on the device; "
                              "install by paste instead:\n  python3 tools/pack.py %s --install --ref %s"
                              % (args.workflow, args.ref))
+        from run import tappable  # a bare shortcuts:// link does not open in the Claude app
         print(url)
+        print("tappable: " + tappable(url), file=sys.stderr)
         return
     if args.publish or args.check:
         return publish(args.check,
