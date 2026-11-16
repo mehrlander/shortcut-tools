@@ -121,6 +121,19 @@ test("--url emits the address link rather than leaving it to be typed", () => {
   assert.ok(link.length < 200, `an address link should stay short, got ${link.length}`);
 });
 
+// A paste-only workflow has no plist, yet its handover card still needs the
+// listing, so pack.py renders it in memory rather than leaving it to be typed.
+test("--url prints the action listing card on stderr, stdout unchanged", () => {
+  const r = require("node:child_process").spawnSync("python3",
+    [path.join("tools", "pack.py"), "workflows/message-reaction-guard.json", "--url"],
+    { cwd: ROOT, encoding: "utf8" });
+  assert.strictEqual(r.stdout.trim().split("\n").length, 1, "stdout is the link alone");
+  const card = r.stderr.split("\n").find(l => l.startsWith("card: "));
+  assert.ok(card, "stderr carries a card: line");
+  assert.match(card, /^card: `\u2070 \u2502 match /);
+  assert.match(card, /<br>`\u2074 \u2502 end if`$/);
+});
+
 test("--ref addresses a branch, since a workflow is testable before it merges", () => {
   const url = decodeURIComponent(
     pack("workflows/show-html-js.json", "--url", "--ref", "claude/x").trim().split("&text=")[1]);

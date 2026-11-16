@@ -1,6 +1,6 @@
 {
  "meta": {
-  "workflows": 85,
+  "workflows": 86,
   "installable": 60,
   "external_targets": 18
  },
@@ -1125,6 +1125,22 @@
     "  5 case Three",
     "  6   show \"You picked Three.\"",
     "  7 end menu"
+   ]
+  },
+  {
+   "file": "message-reaction-guard.json",
+   "label": "Message-Reaction-Guard: stop a Messages automation on a tapback, notify instead (5 actions, paste at the top of Message)",
+   "name": null,
+   "actions": 5,
+   "build": "97a1645",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 match \"^(Liked|Loved|Disliked|Laughed at|Emphasized|Emp… (116 chars)\"",
+    "  1 if «0» has value",
+    "  2   notify $input",
+    "  3   output reaction",
+    "  4 end if"
    ]
   },
   {
