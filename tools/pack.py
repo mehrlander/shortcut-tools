@@ -271,16 +271,30 @@ def publish(check=False, src=None, out=None):
         len(want), ", removed %d unclaimed" % len(orphans) if orphans else ""))
 
 
-def emit(link):
+def listing(wf):
+    """The workflow's action listing card, as `sketch.py <plist> --card` prints it.
+
+    A paste-only workflow declares no `name` and so has no file in plists/, but
+    the card needs no name: `plist.build` makes the document in memory and
+    `sketch.card` reads it, so every link pack.py emits can carry its listing.
+    """
+    import plist, sketch
+    return sketch.card(plist.build(wf, None))
+
+
+def emit(link, wf=None):
     """Print the raw link, then the forwarded form a chat reply must link to.
 
     The Claude iPhone app does not open a bare shortcuts:// link (run.py's
     FORWARD), so stdout stays raw for --verify and the tappable form goes to
-    stderr, as run.py --verify prints it.
+    stderr, as run.py --verify prints it, followed by the listing card when the
+    workflow is given.
     """
     from run import tappable
     print(link)
     print("tappable: " + tappable(link), file=sys.stderr)
+    if wf is not None:
+        print("card: " + listing(wf), file=sys.stderr)
 
 
 def main():
@@ -309,16 +323,16 @@ def main():
     if args.verify:
         return verify(args.workflow)
     if args.url:
-        return emit(address(args.workflow, args.ref))
+        return emit(address(args.workflow, args.ref), workflow_at(args.workflow, args.ref))
     if args.install:
         link, toggles = install(args.workflow, args.ref, args.via)
-        emit(link)
+        emit(link, workflow_at(args.workflow, args.ref))
         if toggles:
             print("after pasting, set by hand: " + ", ".join(toggles), file=sys.stderr)
         return
     wf = json.load(open(args.workflow))
     link = build(wf, args.target)
-    emit(link)
+    emit(link, wf)
     print("\n%d actions, %d chars" % (len(wf["actions"]), len(link)), file=sys.stderr)
 
 
