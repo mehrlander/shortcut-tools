@@ -1129,10 +1129,10 @@
   },
   {
    "file": "message-reaction-guard.json",
-   "label": "Message-Reaction-Guard: stop a Messages automation on a tapback, notify instead (5 actions, paste at the top)",
+   "label": "Message-Reaction-Guard: stop a Messages automation on a tapback, notify instead (5 actions, paste at the top of Message)",
    "name": null,
    "actions": 5,
-   "build": "a8ffb39",
+   "build": "97a1645",
    "settings": false,
    "targets": [],
    "sketch": [
