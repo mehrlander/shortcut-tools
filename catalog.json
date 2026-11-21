@@ -1,7 +1,7 @@
 {
  "meta": {
-  "workflows": 85,
-  "installable": 60,
+  "workflows": 86,
+  "installable": 61,
   "external_targets": 18
  },
  "external_targets": [
@@ -1125,6 +1125,19 @@
     "  5 case Three",
     "  6   show \"You picked Three.\"",
     "  7 end menu"
+   ]
+  },
+  {
+   "file": "open-now.json",
+   "label": "Open-Now: the laptop's Now page in Safari, over Tailscale (2 actions)",
+   "name": "Open-Now",
+   "actions": 2,
+   "build": "fcd2ca5",
+   "settings": false,
+   "targets": [],
+   "sketch": [
+    "  0 url \"https://t14may23.tailee9aca.ts.net/\"",
+    "  1 open «0»"
    ]
   },
   {
