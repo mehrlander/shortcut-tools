@@ -1,0 +1,27 @@
+{
+  "name": "Open-Now",
+  "label": "Open-Now: the laptop's Now page in Safari, over Tailscale (2 actions)",
+  "actions": [
+    {
+      "id": "is.workflow.actions.url",
+      "p": {
+        "UUID": "4E0A0000-0001-4A00-9000-000000000001",
+        "WFURLActionURL": "https://t14may23.tailee9aca.ts.net/"
+      }
+    },
+    {
+      "id": "is.workflow.actions.openurl",
+      "p": {
+        "UUID": "4E0A0000-0002-4A00-9000-000000000002",
+        "WFInput": {
+          "Value": {
+            "Type": "ActionOutput",
+            "OutputUUID": "4E0A0000-0001-4A00-9000-000000000001",
+            "OutputName": "URL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ]
+}
