@@ -84,10 +84,15 @@ test("a missing icon fails loudly instead of writing a card with no photo", () =
 });
 
 test("--fold keeps every line inside the format's limit", () => {
-  const vcf = run(SPEC, ICONS, ["--fold"]);
-  for (const line of vcf.split("\r\n")) assert.ok(line.length <= 76, JSON.stringify(line.slice(0, 90)));
+  // The test JPEG's PHOTO line never folds, so fold a photo long enough to
+  // need several continuation lines.
+  const big = Buffer.concat([Buffer.from([0xff, 0xd8]), Buffer.alloc(400, 0x41)]).toString("base64");
+  const icons = { a: big, b: big };
+  const vcf = run(SPEC, icons, ["--fold"]);
+  assert.ok(/\r\n /.test(vcf), "the photo line should have folded");
+  for (const line of vcf.split("\r\n")) assert.ok(line.length <= 75, JSON.stringify(line.slice(0, 90)));
   // Folded or not, the photo has to survive the round trip unchanged.
-  assert.strictEqual(photos(vcf.replace(/\r\n /g, ""))[0], photos(run(SPEC, ICONS))[0]);
+  assert.strictEqual(photos(vcf.replace(/\r\n /g, ""))[0], photos(run(SPEC, icons))[0]);
 });
 
 test("a row with no subtitle still emits ORG, since the field is positional", () => {

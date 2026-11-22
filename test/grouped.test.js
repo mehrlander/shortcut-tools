@@ -59,14 +59,18 @@ test("the grouped file carries the suffixed control-flow forms", () => {
 test("getActionsByApp returns names that getAction resolves", () => {
   const api = require("../index");
   const unresolvable = [];
+  const fallbacks = [];
   for (const { appId } of api.listApps()) {
     for (const name of api.getActionsByApp(appId)) {
       // Entries with no unambiguous name fall back to the identifier.
-      if (name.includes(".")) continue;
+      if (name.includes(".")) { fallbacks.push(name); continue; }
       if (!api.getAction(name)) unresolvable.push(name);
     }
   }
   assert.deepEqual(unresolvable, []);
+  // Skipping fallbacks must not pass vacuously: only the 15 ambiguous leaves
+  // (14 conditional operators and useractivity.open) lack a name.
+  assert.ok(fallbacks.length <= 15, `${fallbacks.length} entries fell back to an identifier`);
 });
 
 test("getActionsByApp accepts a full bundle id and a bare source", () => {

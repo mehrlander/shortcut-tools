@@ -75,6 +75,13 @@ test("a CDN failure is reported rather than thrown", () => {
   assert.match(run("md", "hi", () => ({ status: 503, responseText: "" })), /^BENCH ERR: .*503/);
 });
 
+test("any non-200 from the CDN is reported as a CDN failure, not evaluated", () => {
+  // A 404 page fed to eval reports a SyntaxError, and a status-0 miss reports "no global".
+  for (const [status, body] of [[404, "<!doctype html><title>404</title>"], [0, ""]])
+    assert.strictEqual(run("md", "hi", () => ({ status, responseText: body })),
+      `BENCH ERR: Error: CDN ${status} for npm/marked/marked.min.js`, `status ${status}`);
+});
+
 test("an unknown op names the ones that exist", () => {
   const out = run("nope", "x");
   assert.match(out, /^BENCH ERR: Error: no op nope/);
