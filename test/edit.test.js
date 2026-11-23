@@ -23,6 +23,17 @@ test("edit.py puts the cards right after the named line, and says nothing else c
   assert.match(b.cards, /packed\/stop-output-card\.json$/);
 });
 
+test("edit.py lands a multi-card workflow in the order the workflow gives it",
+  { skip: !fs.existsSync(path.join(PRIVATE, "shortcuts", "dumps")) && "no web-tools-private checkout" }, () => {
+  const r = spawnSync("python3", ["tools/edit.py", "Show-Loop", "workflows/open-wifi.json", "--after", "26", "--payload"],
+    { cwd: ROOT, encoding: "utf8" });
+  assert.strictEqual(r.status, 0, r.stderr);
+  const b = JSON.parse(r.stdout);
+  assert.match(b.after.split("\n")[27], /^ 27\s+url /);
+  assert.match(b.after.split("\n")[28], /^ 28\s+open «27»$/);
+  assert.deepStrictEqual(b.expect.slice(27, 29), ["is.workflow.actions.url", "is.workflow.actions.openurl"]);
+});
+
 test("edit.py --save writes a proposal with the sequences the page checks against",
   { skip: !fs.existsSync(path.join(PRIVATE, "shortcuts", "dumps")) && "no web-tools-private checkout" }, () => {
   const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "proposals-"));

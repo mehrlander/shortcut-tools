@@ -24,6 +24,11 @@ test("several tokens each anchor after the anchors before them", () => {
 
 test("the anchor is one UTF-16 unit, so offsets are string lengths", () => {
   assert.strictEqual(ANCHOR.length, 1);
+  // An astral character is two UTF-16 units and one code point; the offset
+  // counts units, as NSString does.
+  const t = tokenString(["😀 ", { uuid: "U-1" }]);
+  assert.deepStrictEqual(Object.keys(t.Value.attachmentsByRange), ["{3, 1}"]);
+  assert.strictEqual(t.Value.string.indexOf(ANCHOR), 3);
 });
 
 test("attachment covers action output, Shortcut Input, and both aggrandizements", () => {

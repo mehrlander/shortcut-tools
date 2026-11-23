@@ -49,6 +49,11 @@ test("--list names everything in the archive, emoji included", () => {
   assert.deepStrictEqual(out.sort(), ["Inject-🎟️Token", "Show-Thing"]);
 });
 
+test("--list strips only the extension, so a dot inside a name survives", () => {
+  const dotted = run(archive({ "Show v1.2": [], "Show v1.3": [] }), "--list").trim().split("\n");
+  assert.deepStrictEqual(dotted.sort(), ["Show v1.2", "Show v1.3"]);
+});
+
 // The whole claim behind deleting a shortcut off the device is that this comes
 // back unchanged. Assert the parameters survive, not merely the identifiers.
 test("a restored link decodes back to the archived actions, parameters included", () => {
@@ -89,6 +94,13 @@ test("a name the archive does not hold fails loudly", () => {
 test("a near miss suggests what is there, since the name has to be exact", () => {
   const proc = require("node:child_process").spawnSync("python3",
     [path.join("tools", "restore.py"), archive(FIXTURE), "Thing"], { cwd: ROOT, encoding: "utf8" });
+  assert.notStrictEqual(proc.status, 0);
+  assert.match(proc.stderr, /did you mean: Show-Thing/);
+});
+
+test("a miss by case alone still suggests the right name", () => {
+  const proc = require("node:child_process").spawnSync("python3",
+    [path.join("tools", "restore.py"), archive(FIXTURE), "show-thing"], { cwd: ROOT, encoding: "utf8" });
   assert.notStrictEqual(proc.status, 0);
   assert.match(proc.stderr, /did you mean: Show-Thing/);
 });

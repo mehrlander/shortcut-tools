@@ -82,6 +82,13 @@ test("a page with no placeholder is handed no token", () => {
   assert.match(payload, /var S = \[\]/, "the substitution list should be empty");
 });
 
+test("a large page with no placeholder is handed no token either", () => {
+  const big = execFileSync("python3", [path.join("tools", "show.py"), "-"],
+    { cwd: ROOT, encoding: "utf8", input: "<p>" + "x".repeat(200000) + "</p>", stdio: ["pipe", "pipe", "pipe"] });
+  assert.match(decodeURIComponent(big.trim().split("&text=")[1]), /var S = \[\]/,
+    "a page with no placeholder carries an empty substitution list at any size");
+});
+
 test("a token-bearing page cannot be sent to a target that does not inject", () => {
   assert.throws(() => show(path.join("pages", "gh-recent-branches.html"), "--target", "Run-Html"),
     /Command failed/, "Run-Html has no injector, so the page would load unauthenticated");
@@ -103,6 +110,13 @@ test("compressing beats sending the page raw, on every page in the repo", () => 
 test("the same page always yields the same link", () => {
   const f = path.join("pages", "xhr-probe.html");
   assert.strictEqual(show(f), show(f), "gzip's header mtime must be zeroed");
+});
+
+test("the gzip header's mtime field is zero in the link itself", () => {
+  const link = show(path.join("pages", "xhr-probe.html"));
+  const g = decodeURIComponent(link.split("&text=")[1]).match(/G = "([^"]*)"/)[1];
+  const gz = Buffer.from(g.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+  assert.strictEqual(gz.readUInt32LE(4), 0, "bytes 4-7 of the gzip header are MTIME");
 });
 
 // Most pages worth sending are written in a session and not committed yet.

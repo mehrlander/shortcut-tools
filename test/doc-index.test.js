@@ -39,6 +39,18 @@ test("the generated anchors match GitHub's slug for this repo's heading shapes",
   }
 });
 
+// The opted-in docs hold no repeated heading and no heading-shaped line inside a
+// fence, so neither rule is exercised by them: run the generator on a fixture.
+test("a repeat takes GitHub's -1, -2 suffix, and a fenced # line is not a heading", () => {
+  const block = execFileSync("python3", ["-c",
+    "import importlib.util as u,sys;s=u.spec_from_file_location('d',sys.argv[1]);" +
+    "m=u.module_from_spec(s);s.loader.exec_module(m);print(m.block(sys.stdin.read()))",
+    path.join(ROOT, "tools", "doc-index.py")],
+    { input: "## Same\n\n## Same\n\n```\n## fake\n```\n\n## Same\n", encoding: "utf8" });
+  assert.deepStrictEqual([...block.matchAll(/\(#([^)]+)\)/g)].map(m => m[1]),
+    ["same", "same-1", "same-2"]);
+});
+
 for (const rel of DOCS) {
   test(`${rel}: every index row points at a heading, and no anchor repeats`, () => {
     const text = fs.readFileSync(path.join(ROOT, rel), "utf8");

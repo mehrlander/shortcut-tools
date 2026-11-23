@@ -110,8 +110,9 @@ test("a date past the corpus cutoff is enough on its own", () => {
   const out = run(manifest([
     ["Show-Table", 11, "2026-08-19T00:00:00-07:00"],
     ["Log-Repo", 8, "2026-08-01T00:00:00-07:00"],
-    ["Get-Text", 4, "2026-08-01T00:00:00-07:00"],
+    ["Get-Text", 4, "2026-08-13T10:00:00-07:00"],
   ]), CORPUS);
+  // Get-Text is stamped on the cutoff day itself, which is not past it.
   assert.deepEqual(out.changed.map((c) => c.name), ["Show-Table"]);
   assert.match(out.changed[0].why, /modified 2026-08-19/);
 });
@@ -164,6 +165,11 @@ test("links chunk by estimated payload, not by count", () => {
   const big = ["Huge", 2000, "2026-08-19T00:00:00-07:00"];
   const small = ["Tiny", 1, "2026-08-19T00:00:00-07:00"];
   assert.ok(run(manifest([big, small]), []).links.length > 1, "a 2000-action export should split");
+  // The incoming item counts too: a big one after a small one starts its own
+  // link. Names are sorted before chunking, so the small one must sort first.
+  assert.equal(run(manifest([["A-Tiny", 1, "2026-08-19T00:00:00-07:00"],
+                             ["Z-Huge", 2000, "2026-08-19T00:00:00-07:00"]]), []).links.length, 2,
+    "the big item is weighed before it joins the small one's link");
   assert.equal(run(manifest([small, ["Tiny2", 1, "2026-08-19T00:00:00-07:00"]]), []).links.length, 1);
 });
 

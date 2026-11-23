@@ -77,6 +77,13 @@ test("--drop-call removes the call and the branch it emptied", () => {
   assert.match(h.stderr, /A: dropped the call to Gone/);
 });
 
+test("a branch emptied by several dropped calls goes too", () => {
+  const h = harvest(archive({ A: [plain, flow(0, "g"), run("Gone"), run("Gone"), flow(2, "g"), plain] }),
+                    "--name", "A", "--drop-call", "Gone");
+  const ids = h.read("A").actions.map(a => a.id.replace("is.workflow.actions.", ""));
+  assert.deepStrictEqual(ids, ["list", "list"], "two dead calls empty the block as surely as one");
+});
+
 test("a branch with a surviving sibling keeps its block", () => {
   const h = harvest(archive({ A: [flow(0, "g"), run("Gone"), plain, flow(2, "g")] }),
                     "--name", "A", "--drop-call", "Gone");

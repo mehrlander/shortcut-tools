@@ -118,6 +118,8 @@ test("Run-Op fetches the op through the API that needs no purge, evaluates it sy
   // still sets to 60 seconds. Cheap to defeat, and it keeps "current" meaning
   // current (2026-09-03, two runs of an already-replaced op under the old CDN).
   assert.ok(expr.includes("&_='+Date.now()"), "the op address defeats the client cache");
+  assert.ok(expr.includes("lib/ops/'+n+'.js?ref=main&_='"),
+    "the op is read off main, the branch a merge lands on, so a merge is the whole publish");
   assert.strictEqual(expr.split("🎟️GitHubToken").length - 1, 1, "the placeholder is spelled once in the expression");
   // BOTH ANCHORS SIT ABOVE THE PLACEHOLDER, deliberately. U+FFFC offsets are
   // stored as one number, and `🎟️` is two code points but three UTF-16 units,
